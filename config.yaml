@@ -11,14 +11,14 @@ simulator:
   target_orders: 350000
   # Injected fraud pattern sizes (accounts unless noted)
   patterns:
-    ato_accounts: 120
-    stolen_accounts: 200
+    ato_accounts: 190
+    stolen_accounts: 320
     synth_rings: 3
-    synth_accounts: 150
-    neverpay_accounts: 300
-    inr_abuse_accounts: 80
+    synth_accounts: 240
+    neverpay_accounts: 480
+    inr_abuse_accounts: 130
     promo_clusters: 2
-    promo_accounts: 120
+    promo_accounts: 190
     merchant_bustouts: 2
 
 db:
