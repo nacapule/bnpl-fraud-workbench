@@ -96,10 +96,11 @@ class ClaudeCLIClient:
     def __init__(self, binary: str | None = None):
         self.binary = binary or os.environ.get("CLAUDE_CLI_BIN", "claude")
 
-    def complete(self, prompt: str, model: str, timeout_s: int = 300) -> LLMResponse:
+    def complete(self, prompt: str, model: str, timeout_s: int = 420) -> LLMResponse:
         t0 = time.monotonic()
         proc = subprocess.run(
-            [self.binary, "-p", "--output-format", "json", "--model", model],
+            [self.binary, "-p", "--output-format", "stream-json", "--verbose",
+             "--model", model],
             input=prompt,
             capture_output=True,
             text=True,
@@ -108,17 +109,37 @@ class ClaudeCLIClient:
         dur = int((time.monotonic() - t0) * 1000)
         if proc.returncode != 0:
             raise RuntimeError(f"{self.binary} exited {proc.returncode}: {proc.stderr[:500]}")
-        payload = json.loads(proc.stdout)
-        if payload.get("is_error"):
-            raise RuntimeError(f"CLI error result: {payload.get('result', '')[:500]}")
-        usage = payload.get("usage") or {}
-        tin = usage.get("input_tokens")
-        tout = usage.get("output_tokens")
+        result: dict[str, Any] | None = None
+        tin: int | None = None
+        tout = 0
+        saw_usage = False
+        for line in proc.stdout.splitlines():
+            try:
+                d = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if d.get("type") == "assistant":
+                u = d.get("message", {}).get("usage") or {}
+                if "output_tokens" in u:
+                    saw_usage = True
+                    tout = max(tout, int(u["output_tokens"]))
+                    cand = int(u.get("input_tokens", 0)) + int(
+                        u.get("cache_read_input_tokens", 0) or 0
+                    ) + int(u.get("cache_creation_input_tokens", 0) or 0)
+                    tin = max(tin or 0, cand)
+            elif d.get("type") == "result":
+                result = d
+        if result is None:
+            raise RuntimeError(f"no result event from {self.binary}: {proc.stdout[-300:]}")
+        if result.get("is_error"):
+            raise RuntimeError(f"CLI error result: {result.get('result', '')[:500]}")
+        if not saw_usage:
+            tin, tout = None, None  # type: ignore[assignment]
         return LLMResponse(
-            text=payload["result"],
+            text=result["result"],
             model=model,
             backend=self.backend,
-            duration_ms=payload.get("duration_ms", dur),
+            duration_ms=result.get("duration_ms", dur),
             input_tokens=tin,
             output_tokens=tout,
             cost_usd=_api_equivalent_cost(model, tin, tout),
