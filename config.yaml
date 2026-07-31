@@ -1,0 +1,86 @@
+# bnpl-fraud-workbench configuration
+# Single source of truth for seeds, volumes, costs, thresholds, and model routing.
+
+seed: 416
+
+simulator:
+  start_date: "2025-07-01"
+  months: 12
+  n_users: 40000
+  n_merchants: 150
+  target_orders: 350000
+  # Injected fraud pattern sizes (accounts unless noted)
+  patterns:
+    ato_accounts: 120
+    stolen_accounts: 200
+    synth_rings: 3
+    synth_accounts: 150
+    neverpay_accounts: 300
+    inr_abuse_accounts: 80
+    promo_clusters: 2
+    promo_accounts: 120
+    merchant_bustouts: 2
+
+db:
+  host: 127.0.0.1
+  port: 3306
+  user: fraud
+  password: fraudpw          # local docker-compose only; not a secret
+  database: bnpl
+
+costs:
+  review_cost_usd: 2.50          # per manual case review (assumption, documented)
+  false_decline_margin_pct: 0.05 # lost margin on falsely declined order
+  false_decline_ltv_usd: 15.00   # customer-lifetime proxy lost on insult (assumption)
+
+rules:
+  # Score = sum of fired rule weights. Bands tuned in rules/tuning.py.
+  bands:
+    review: 40      # score >= review -> analyst queue
+    decline: 80     # score >= decline -> auto-decline pending review
+
+queue:
+  analysts:
+    - {name: A1, shift_days: [6, 0, 1, 2, 3], shift_start: "08:00", productive_hours: 6.5}  # Sun-Thu
+    - {name: A2, shift_days: [1, 2, 3, 4, 5], shift_start: "09:00", productive_hours: 6.5}  # Tue-Sat
+  service_time_mean_min: 7.0
+  service_time_sigma: 0.6
+  fulfillment_lag_hours: 12
+  sla_target_hours: 4          # business hours to decision
+  sla_target_attainment: 0.90
+
+model:
+  train_months: 9              # chronological: months 1-9 train, 10-12 holdout
+  review_capacity_per_day: 40  # precision@capacity uses this
+
+# ---------------------------------------------------------------------------
+# LLM routing. Every AI task in this repo resolves its model HERE (or via env
+# override LLM_MODEL_<TASK> / --model flag). Backends:
+#   cli: any Claude Code-compatible CLI (binary from CLAUDE_CLI_BIN, default
+#        `claude`), invoked `-p --output-format json --model <model>`
+#   api: official anthropic SDK, needs ANTHROPIC_API_KEY
+# All eval-set responses are cached to llm/eval/cache and committed, so the
+# repo reproduces offline with no key and no CLI.
+# ---------------------------------------------------------------------------
+llm:
+  backend: cli                 # cli | api  (env LLM_BACKEND overrides)
+  temperature: 0
+  max_retries: 2
+  tasks:
+    triage_memo:               # per-alert investigation memo + action + priority
+      model: claude-sonnet-5
+      eval_arms:               # arms compared by llm/eval/harness.py
+        - claude-sonnet-5
+        - claude-haiku-4-5-20251001
+      prompt_version: memo_v2  # active version in llm/prompts/
+
+llm_eval:
+  n_cases: 200                 # stratified holdout eval set size
+  hard_negatives_min: 60
+  consistency_cases: 50
+  consistency_runs: 3
+
+vendor:
+  # Live lookups optional; sanitized fixtures committed in vendor/fixtures.
+  ipqs_sample_flagged: 100
+  ipqs_sample_benign: 100

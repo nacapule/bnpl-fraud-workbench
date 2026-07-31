@@ -1,0 +1,12 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+data/*.csv
+data/*.jsonl
+mysql-data/
+reports/*.tmp
+.DS_Store
+.briefs/
