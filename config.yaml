@@ -72,6 +72,8 @@ llm:
       eval_arms:               # arms compared by llm/eval/harness.py
         - claude-sonnet-5
         - claude-haiku-4-5-20251001
+        - gpt-5.6-luna           # cross-vendor arms via the codex CLI backend
+        - gpt-5.6-terra          # (memo_v2 only; see ITERATION.md)
       prompt_version: memo_v2  # active; memo_v1 kept for the ITERATION.md comparison
 
 llm_eval:

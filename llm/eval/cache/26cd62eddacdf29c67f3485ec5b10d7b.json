@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "4cfe9cbcae00575b8400bc9dd00423f85007a0046d75fcfce5ef8342ebcd3f11",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 31603,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Alert score 100 and band decline\",\"R02: 5 accounts have transacted on device d_5181696 as of this order\",\"R06: shared_root_accounts=80 and disposable_domain=False\",\"R08: ship-to address a_2899014 already used by 33 distinct accounts\",\"Linkage reports 4 other accounts on the device\",\"Linkage reports 39 other accounts on the ship address\",\"Linkage reports 79 other accounts with the same email root\",\"Order 351294 amount 84.2, status approved, at 2025-08-27 06:36:13\",\"Account has tenure_days 19 and n_orders_prior 2\",\"Repayment history shows installments_due 2, paid 2.0, late 0.0, failed_or_written_off 0.0\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The shared device, ship-to address, and email root link this account to multiple other accounts. These independent device/linkage and identity/address signal families support a coordinated multi-account pattern.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"The packet does not support a traveler, mover, gift-buyer, hardship, verification-typo, or new-phone mimic for the shared device, address, and email-root linkage.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"Repayment history shows paid 2.0, late 0.0, and failed_or_written_off 0.0.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 action ladder\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Query whether the linked accounts share confirmed fraud outcomes or common payment instruments.\",\"Review merchant-side fulfillment and account linkage context for suspected merchant complicity.\"],\"memo_markdown\":\"**Assessment:** High likelihood of a synthetic-ring pattern. R02, R06, and R08 identify shared device, email-root, and ship-to-address activity across multiple accounts. The linkage record reports 4 other accounts on the device, 39 other accounts on the ship address, and 79 other accounts with the same email root. The alert score is 100 and the order status is approved.\\n\\nRepayment behavior does not support never-pay: installments_due is 2, paid is 2.0, late is 0.0, and failed_or_written_off is 0.0. The packet does not establish a benign traveler, mover, gift-buyer, hardship, verification-typo, or new-phone explanation.\\n\\n**Recommendation:** Escalate for human review because the linkage evidence meets FP-1\u2019s multi-account-ring threshold. Confirm linked-account fraud outcomes and assess merchant-side involvement before final disposition.\"}"
+ },
+ "task": "triage_memo"
+}
