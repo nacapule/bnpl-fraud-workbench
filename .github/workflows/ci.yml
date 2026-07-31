@@ -1,0 +1,48 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: rootpw
+          MYSQL_DATABASE: bnpl
+          MYSQL_USER: fraud
+          MYSQL_PASSWORD: fraudpw
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -ufraud -pfraudpw"
+          --health-interval 5s --health-timeout 3s --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q -e ".[dev]"
+      - name: Lint
+        run: .venv/bin/ruff check simulator db rules queue_sim model llm vendor tests
+      - name: Generate scaled world + load
+        env:
+          SIM_SCALE: "0.05"
+        run: |
+          .venv/bin/python -m simulator.generate
+          .venv/bin/python db/load.py
+      - name: Rules engine + tuning (scaled)
+        run: |
+          .venv/bin/python -m rules.engine
+          .venv/bin/python -m rules.tuning
+      - name: Tests
+        run: .venv/bin/python -m pytest tests/ -q
+        # Note: LLM eval tests run offline against the committed cache; no keys in CI.
