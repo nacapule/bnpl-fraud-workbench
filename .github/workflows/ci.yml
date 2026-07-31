@@ -45,4 +45,5 @@ jobs:
           .venv/bin/python -m rules.tuning
       - name: Tests
         run: .venv/bin/python -m pytest tests/ -q
-        # Note: LLM eval tests run offline against the committed cache; no keys in CI.
+      - name: LLM eval (offline, committed cache — no keys)
+        run: .venv/bin/python -m llm.eval.harness --offline --no-consistency
