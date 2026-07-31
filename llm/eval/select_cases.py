@@ -32,17 +32,23 @@ PATTERN_TO_TAXONOMY = {
     "P-MERCH": "merchant_bustout",
 }
 
-# Ground-truth action mapping, defined once (FP-1 §3/§5 ladder):
-TRUTH_ACTION = {
-    "account_takeover": "decline_block",
-    "stolen_card": "decline_block",
-    "synthetic_ring": "decline_block",
-    "never_pay": "decline_block",
-    "inr_abuse": "hold_contact",
-    "promo_abuse": "hold_contact",
-    "merchant_bustout": "escalate",
-    "benign": "clear",
+# Ground-truth actions, derived from the FP-1 §3/§5 ladder. Where the policy
+# itself names more than one defensible action, the truth is a SET and accuracy
+# means "chose an in-policy action" (primary action listed first — used for
+# reporting). Corrected 2026-07-31 after the v1 run exposed that the original
+# single-action mapping contradicted FP-1 §5 (rings escalate); the correction
+# is logged in ITERATION.md and applied to every arm/version equally.
+TRUTH_ACTIONS: dict[str, list[str]] = {
+    "account_takeover": ["decline_block", "escalate"],  # §5-ATO; §3 escalate >$2k aggregate
+    "stolen_card": ["decline_block"],
+    "synthetic_ring": ["escalate", "decline_block"],    # §5: rings escalate with linkage
+    "never_pay": ["decline_block"],
+    "inr_abuse": ["hold_contact"],
+    "promo_abuse": ["hold_contact", "escalate"],        # §3: clusters are suspected rings
+    "merchant_bustout": ["escalate"],
+    "benign": ["clear"],
 }
+TRUTH_ACTION = {k: v[0] for k, v in TRUTH_ACTIONS.items()}
 
 
 def main() -> None:

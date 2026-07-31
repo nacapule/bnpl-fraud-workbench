@@ -72,7 +72,7 @@ llm:
       eval_arms:               # arms compared by llm/eval/harness.py
         - claude-sonnet-5
         - claude-haiku-4-5-20251001
-      prompt_version: memo_v1  # active version in llm/prompts/ (bumped after iteration)
+      prompt_version: memo_v2  # active; memo_v1 kept for the ITERATION.md comparison
 
 llm_eval:
   n_cases: 200                 # stratified holdout eval set size

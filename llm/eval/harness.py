@@ -2,7 +2,9 @@
 
 Metrics (definitions repeated in ITERATION.md; ground truth from cases.json):
 
-1. action accuracy        recommended_action == truth_action
+1. action accuracy        recommended_action ∈ the policy-derived acceptable
+                          set for the true pattern (cases.json truth_actions;
+                          single-action for most patterns, see select_cases.py)
 2. decline precision/recall   positive class = decline_block ONLY (escalate is
                           not counted as a decline — strict on the dangerous
                           direction)
@@ -67,6 +69,7 @@ def evaluate_arm(
     rows = []
     for c in cases:
         packet = json.loads((EVAL_DIR / "packets" / f"{c['alert_id']}.json").read_text())
+        acceptable = c.get("truth_actions", [c["truth_action"]])
         try:
             memo, resp = draft_memo(
                 packet, model=model, prompt_version=prompt_version, offline=offline
@@ -81,8 +84,10 @@ def evaluate_arm(
             {
                 "alert_id": c["alert_id"],
                 "truth_action": c["truth_action"],
+                "acceptable_actions": acceptable,
                 "truth_pattern": c["truth_pattern"],
                 "action": memo["recommended_action"],
+                "action_ok": memo["recommended_action"] in acceptable,
                 "priority": memo["priority"],
                 "top_pattern": top_hypothesis(memo),
                 "hallucinated": v["hallucinated"],
@@ -135,9 +140,7 @@ def evaluate_arm(
         sub = [r for r in rows if r["truth_pattern"] == pat]
         per_pattern[pat] = {
             "n": len(sub),
-            "action_accuracy": round(
-                sum(r["action"] == r["truth_action"] for r in sub) / len(sub), 3
-            ),
+            "action_accuracy": round(sum(r["action_ok"] for r in sub) / len(sub), 3),
             "pattern_id_rate": round(
                 sum(r["top_pattern"] == r["truth_pattern"] for r in sub) / len(sub), 3
             ),
@@ -147,7 +150,7 @@ def evaluate_arm(
         "model": model,
         "prompt_version": prompt_version,
         "n_cases": n,
-        "action_accuracy": round(sum(r["action"] == r["truth_action"] for r in rows) / n, 3),
+        "action_accuracy": round(sum(r["action_ok"] for r in rows) / n, 3),
         "decline_precision": round(tp / (tp + fp), 3) if tp + fp else None,
         "decline_recall": round(tp / (tp + fn), 3) if tp + fn else None,
         "pattern_id_rate": round(
@@ -162,7 +165,10 @@ def evaluate_arm(
         "latency_p50_ms": int(statistics.median(r["duration_ms"] for r in rows)),
         "cache_hit_rate": round(sum(r["cached"] for r in rows) / n, 3),
         "per_pattern": per_pattern,
-        "action_confusion": dict(Counter((r["truth_action"], r["action"]) for r in rows)),
+        "action_confusion": {
+            f"{t}->{a}": c
+            for (t, a), c in Counter((r["truth_action"], r["action"]) for r in rows).items()
+        },
         "rows": rows,
     }
 

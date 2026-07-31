@@ -64,19 +64,48 @@ def claim_tokens(claim: str) -> list[str]:
     return tokens
 
 
-def check_claim(claim: str, haystack: str) -> dict[str, Any]:
+def _numeric_match(tok: str, numbers: list[float]) -> bool:
+    """A numeric token matches if some packet number rounds to it at the
+    token's own precision — models legitimately round (101.11857 → "101.12");
+    they may NOT invent or compute new values (sums/averages stay unsupported)."""
+    t = _normalize_number(tok)
+    try:
+        val = float(t)
+    except ValueError:
+        return False
+    dp = len(t.split(".")[1]) if "." in t else 0
+    return any(abs(round(n, dp) - val) < 10 ** -(dp + 6) for n in numbers)
+
+
+def _packet_numbers(haystack: str) -> list[float]:
+    nums = []
+    for m in re.finditer(r"-?\d+(?:\.\d+)?", haystack):
+        try:
+            nums.append(float(m.group()))
+        except ValueError:  # pragma: no cover
+            pass
+    return nums
+
+
+def check_claim(claim: str, haystack: str, numbers: list[float] | None = None
+                ) -> dict[str, Any]:
     toks = claim_tokens(claim)
+    numbers = numbers if numbers is not None else _packet_numbers(haystack)
     missing = []
     for tok in toks:
         norm = _normalize_number(tok)
-        if norm and norm not in haystack:
-            missing.append(tok)
+        if not norm or norm in haystack:
+            continue
+        if _numeric_match(tok, numbers):
+            continue
+        missing.append(tok)
     return {"claim": claim, "tokens": toks, "missing": missing, "supported": not missing}
 
 
 def verify_memo(memo: dict[str, Any], packet: dict[str, Any]) -> dict[str, Any]:
     hay = packet_haystack(packet)
-    checks = [check_claim(c, hay) for c in memo.get("signals_observed", [])]
+    nums = _packet_numbers(hay)
+    checks = [check_claim(c, hay, nums) for c in memo.get("signals_observed", [])]
     fired = {
         str(r.get("id"))
         for r in (packet.get("alert", {}).get("fired_rules") or [])

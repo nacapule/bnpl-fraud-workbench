@@ -78,7 +78,9 @@ class LLMResponse:
         end = t.rfind("}")
         if start == -1 or end == -1:
             raise ValueError(f"no JSON object in response: {t[:200]!r}")
-        return json.loads(t[start : end + 1])
+        # strict=False tolerates literal control characters inside strings
+        # (models occasionally emit raw newlines in memo_markdown)
+        return json.loads(t[start : end + 1], strict=False)
 
 
 def _api_equivalent_cost(model: str, tin: int | None, tout: int | None) -> float | None:

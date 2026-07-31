@@ -2,1001 +2,1687 @@
  {
   "alert_id": 3942,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 8353,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 4000,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 5929,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 987,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 842,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 8548,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 7180,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 3700,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 644,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 3034,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 3495,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 2466,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 4147,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 2028,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 5568,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 8866,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 1883,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 1376,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 9092,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 3164,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 235,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 8999,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 2980,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 3477,
   "truth_pattern": "merchant_bustout",
-  "truth_action": "escalate"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate"
+  ]
  },
  {
   "alert_id": 8704,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 8282,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 7290,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 5787,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 729,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 5979,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 5097,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 6245,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 7909,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 7390,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 8669,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 5198,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 727,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 5511,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 2951,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 4069,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 1043,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 2655,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 7146,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 775,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 1433,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 6732,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 4462,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 1828,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 2220,
   "truth_pattern": "merchant_bustout",
-  "truth_action": "escalate"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate"
+  ]
  },
  {
   "alert_id": 7317,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 3415,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 5830,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 8702,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 981,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 1089,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 8563,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 848,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 7264,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 6635,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 9180,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 6664,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 8195,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 3015,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 6764,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 9107,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 2395,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 5449,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 5535,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 3688,
   "truth_pattern": "merchant_bustout",
-  "truth_action": "escalate"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate"
+  ]
  },
  {
   "alert_id": 686,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 3720,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 7476,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 4898,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 6900,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 3444,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 7610,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 882,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 1365,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 3682,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 8407,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 736,
   "truth_pattern": "never_pay",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 6188,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 4398,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 3389,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 1233,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 4866,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 3419,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 698,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 5968,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 484,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 6267,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 6605,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 4964,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 2184,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 5832,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 3589,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 1016,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 8618,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 1595,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 7045,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 7331,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 8715,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 7607,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 3219,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 5276,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 508,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 6697,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 8149,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 1112,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 3948,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 5978,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 1225,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 8668,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 3136,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 2538,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 6084,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 3325,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 6784,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 7291,
   "truth_pattern": "never_pay",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 517,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 8508,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 2010,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 7941,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 5239,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 1412,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 1833,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 3545,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 8608,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 477,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 4960,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 9000,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 3369,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 7398,
   "truth_pattern": "never_pay",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 5318,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 414,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 1673,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 6470,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 2556,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 7009,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 5565,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 3306,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 3240,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 5098,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 8747,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 6231,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 9145,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 8404,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 2994,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 5615,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 984,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 993,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 1512,
   "truth_pattern": "never_pay",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 2529,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 4309,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 526,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 8164,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 3760,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 4468,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 7206,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 2446,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 8767,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 1743,
   "truth_pattern": "never_pay",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 4464,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 1658,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 5412,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 5309,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 1978,
   "truth_pattern": "never_pay",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 7200,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 1590,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 3090,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 5500,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 910,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 9219,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 2210,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 2894,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 6935,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 4320,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 7718,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 751,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 1980,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 6955,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 2502,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 6391,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 587,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 5279,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 2845,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 9344,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 5395,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 2512,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 2587,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 5275,
   "truth_pattern": "benign",
-  "truth_action": "clear"
+  "truth_action": "clear",
+  "truth_actions": [
+   "clear"
+  ]
  },
  {
   "alert_id": 2417,
   "truth_pattern": "never_pay",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 1080,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 3797,
   "truth_pattern": "inr_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact"
+  ]
  },
  {
   "alert_id": 3310,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  },
  {
   "alert_id": 2475,
   "truth_pattern": "synthetic_ring",
-  "truth_action": "decline_block"
+  "truth_action": "escalate",
+  "truth_actions": [
+   "escalate",
+   "decline_block"
+  ]
  },
  {
   "alert_id": 8014,
   "truth_pattern": "stolen_card",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block"
+  ]
  },
  {
   "alert_id": 5625,
   "truth_pattern": "promo_abuse",
-  "truth_action": "hold_contact"
+  "truth_action": "hold_contact",
+  "truth_actions": [
+   "hold_contact",
+   "escalate"
+  ]
  },
  {
   "alert_id": 4861,
   "truth_pattern": "account_takeover",
-  "truth_action": "decline_block"
+  "truth_action": "decline_block",
+  "truth_actions": [
+   "decline_block",
+   "escalate"
+  ]
  }
 ]
