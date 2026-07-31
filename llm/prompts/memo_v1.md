@@ -26,7 +26,11 @@ Return ONLY a JSON object, no prose around it, with exactly these fields:
                        2026-02-11 03:12 from new device d_88121"],
   "hypotheses": [{"pattern": "<taxonomy value>", "likelihood": "low|med|high",
                   "reasoning": "one or two sentences"}...
-                 — include the most plausible benign explanation as one entry],
+                 — include the most plausible benign explanation as one entry.
+                 "pattern" MUST be exactly one of: account_takeover, stolen_card,
+                 synthetic_ring, never_pay, inr_abuse, promo_abuse, merchant_bustout,
+                 benign. A traveler/mover/gift-buyer/hardship explanation is pattern
+                 "benign" (name the mimic in "reasoning")],
   "policy_citations": [rule ids and sections that apply, e.g. "R01", "FP-1 §6.1"],
   "recommended_action": "clear|hold_contact|decline_block|escalate",
   "priority": "P0|P1|P2|P3",
