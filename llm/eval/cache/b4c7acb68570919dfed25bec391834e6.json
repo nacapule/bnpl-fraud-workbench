@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "5d553985246202925825c70a1cc0f03f0ec6ab4008de3ac6a2f1ee9fd0500cf4",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 45782,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country GB vs IP country US with AVS=Y/CVV=N\",\"Alert amount is 87.31 and score is 35\",\"Account has 12 prior orders and tenure_days is 924\",\"Prior AVS mismatches are 0.0 and prior CVV mismatches are 1.0\",\"Repayment history shows installments_due 34, paid 34.0, late 0.0, and failed_or_written_off 0.0\",\"Other accounts on device, ship address, and same email root are all 0\",\"Card has declines_on_card_24h of 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The GB card BIN used from a US IP with CVV=N triggered R03. This supports a payment-credential concern, but there is no device, address, email-root, velocity, or repayment corroboration.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A verification typo or legitimate cross-border card use could explain the R03 signal. The established account has 12 prior approved orders, stable US IP history, no linkage to other accounts, and repayment history shows paid 34.0 with late 0.0.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"There is no evidence of credential manipulation, new device use, or linked accounts; account_events_90d shows device_id 34244 for the listed logins.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"Linkage counts are 0 for other accounts on the device, ship address, and same email root.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"Repayment history shows failed_or_written_off 0.0, late 0.0, and paid 34.0.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action ladder\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Run step-up customer verification focused on card ownership and the GB card use from the US IP.\",\"Check whether the cardholder is traveling or otherwise legitimately using a GB-issued card in the US.\"],\"memo_markdown\":\"R03 fired on order 334138: the card BIN country is GB while the IP country is US, with AVS=Y and CVV=N. The order amount is 87.31 and the score is 35.\\n\\nStolen_card is a medium-likelihood hypothesis, but the packet lacks corroboration from other signal families. The account has 12 prior orders, tenure_days 924, no linked accounts, declines_on_card_24h 0, and strong repayment history: paid 34.0, late 0.0, failed_or_written_off 0.0. A verification typo or legitimate cross-border card use remains plausible.\\n\\nRecommend hold_contact for reversible step-up verification. Verification should determine card ownership and whether the GB-issued card is legitimately being used from the US.\"}"
+ },
+ "task": "triage_memo"
+}

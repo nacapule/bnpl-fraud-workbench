@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "851068c9fdab743759c551a7a99d94f0a2885f1fae3a05f79593bbdfe3ffcf84",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 32013,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R07 card testing: 6 declined attempts on this card/device in the prior 24h, then this approval\",\"card_id 52146 has 6 declines_on_card_24h\",\"device_id 5181529 appears on the approved order and declined orders 350766, 350767, 350768, 350769, 350770, and 350771\",\"approved order 350773 amount 269.85 in electronics\",\"approved order 350773 has avs_result Y and cvv_result M\",\"account has n_orders_prior 0 and tenure_days 0\",\"linkage shows other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0\",\"IP country US and card BIN country US\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"high\",\"reasoning\":\"The card had 6 declined attempts on the same card/device in the prior 24h followed by an approval, matching card-testing behavior. Velocity and device continuity independently corroborate the fraud hypothesis.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The account has tenure_days 0 and n_orders_prior 0, but the packet contains no credential manipulation or account-event evidence.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"There is no multi-account linkage: other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler, mover, gift buyer, hardship defaulter, verification typo, or new-phone mimic does not explain the card-testing sequence; IP country US and card BIN country US are aligned.\"}],\"policy_citations\":[\"R07\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"decline_block\",\"priority\":\"P0\",\"evidence_gaps\":[\"Check cardholder authorization or issuer/card-testing status for card_id 52146.\",\"Review fulfillment status and shipment-risk details for order_id 350773.\",\"Query payment instrument history beyond the prior 24h for card_id 52146.\"],\"memo_markdown\":\"**Assessment:** High likelihood of stolen-card/card-testing activity. R07 records 6 declined attempts on card_id 52146 and device_id 5181529 in the prior 24h, followed by approved order 350773 for 269.85 in electronics. The same device appears across the declined sequence and the approval, providing velocity and device-continuity corroboration.\\\\n\\\\nThe account is newly created with tenure_days 0, n_orders_prior 0, and total_spent_prior 0.0. No multi-account linkage is present, so synthetic_ring is low likelihood. US IP and US card BIN are aligned, and the approved transaction returned AVS Y and CVV M; these facts do not outweigh the card-testing sequence.\\\\n\\\\n**Recommendation:** decline_block, subject to human analyst review, with P0 priority because fulfillment may follow an active burst.\"}"
+ },
+ "task": "triage_memo"
+}

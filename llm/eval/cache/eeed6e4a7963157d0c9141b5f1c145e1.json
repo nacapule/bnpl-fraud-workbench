@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "1a38bf8171f6f4b0b81e0704604b9c3c375201dd2c53b17263a73007b7c4ac39",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 24366,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"Order 50054 was approved at 2025-08-30 10:56:38 for 59.01\",\"Account has 0.0 prior AVS mismatches and 0.0 prior CVV mismatches\",\"Prior order 21609 was approved at 2025-07-27 05:26:06 with AVS=Y, CVV=M, device_id 25332, and IP country US\",\"account_events_90d is empty\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"declines_on_card_24h is 0\",\"repayment history shows installments_due 2, paid 2.0, late 0.0, and failed_or_written_off 0.0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler mimic is plausible: the CA BIN is paired with a US IP, while account_events_90d is empty and the prior approved order also used a US IP and device_id 25332. The isolated AVS=N result is consistent with FP-1 \u00a76 verification-typo noise, and CVV=M.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The geography and AVS mismatch support review, but there is no credential manipulation, linkage, card decline velocity, or adverse repayment behavior in the packet.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"account_events_90d is empty and the prior approved order used device_id 25332; the packet provides no credential-change evidence.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 \u00a76.1\",\"FP-1 action selection step 3\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the AVS=N result reflects a billing-address entry typo or issuer response detail.\",\"Confirm whether IP 40.190.117.165 is consistent with prior account login geography.\"],\"memo_markdown\":\"R03 fired because the card BIN country is CA while the IP country is US, with AVS=N and CVV=M. The approved order is 59.01 at pure-depot-45. The same device_id 25332 and US IP country appeared on prior approved order 21609, which had AVS=Y and CVV=M. account_events_90d is empty; linkage counts are 0; declines_on_card_24h is 0; and repayment history shows paid 2.0 with late 0.0 and failed_or_written_off 0.0. A traveler mimic plus an isolated AVS mismatch is the strongest explanation. Clear under FP-1 action selection step 3.\"}"
+ },
+ "task": "triage_memo"
+}

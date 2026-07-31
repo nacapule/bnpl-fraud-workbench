@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "60f55ea6dafd4c565834be172ad736b346ffb921d982f2efac19a4ba1b64d4d6",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 39693,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"Current order amount is 59.83 and status is approved\",\"Account has n_avs_mismatch_prior 0.0 and n_cvv_mismatch_prior 0.0\",\"Account has n_orders_prior 2 and tenure_days 677\",\"Linkage counts are other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0\",\"Repayment history shows failed_or_written_off 0.0, installments_due 5, late 0.0, and paid 5.0\",\"Card has declines_on_card_24h 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"R03 shows a card BIN country CA versus IP country US with AVS=N/CVV=M. This is a geography and verification signal, but there is no linkage or velocity corroboration.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows no credential manipulation and device and linkage counts are zero for other accounts.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"Repayment history shows failed_or_written_off 0.0, late 0.0, and paid 5.0.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic could explain the foreign IP because the packet shows no credential changes; a verification typo is also a plausible explanation for the AVS mismatch.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the customer was traveling in the US at 2025-12-26 22:54:34.\",\"Run step-up verification of card and billing-address ownership, including the AVS and CVV details.\"],\"memo_markdown\":\"R03 fired on a CA card BIN versus US IP with AVS=N/CVV=M. The account has no prior AVS or CVV mismatches, but also shows no credential manipulation, no account linkage, no card declines in 24h, and clean repayment history. The leading fraud hypothesis is stolen_card at medium likelihood, with benign traveler and verification-typo mimics also plausible. Because the evidence is limited to geography and verification, decline_block is not supported. Recommend hold_contact for reversible step-up verification. Priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

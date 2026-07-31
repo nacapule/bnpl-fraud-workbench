@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "2c838a5df282582c8224d85a98775e81d529a0d5bf274eb7797a72915fc5508e",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 32990,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 345154 was approved at 2026-06-21 11:59:36 for 105.31\",\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"account tenure_days is 779 with n_orders_prior of 43\",\"the alert and listed prior orders use device_id 21361\",\"account_events_90d lists logins on device_id 21361\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"repayment_history shows installments_due of 114, paid of 110.0, late of 4.0, and failed_or_written_off of 0.0\",\"n_avs_mismatch_prior is 1.0 and n_cvv_mismatch_prior is 0.0\",\"declines_on_card_24h is 0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler benign mimic is plausible: the CA card and US IP mismatch is present across the listed recent orders, while device_id 21361 is consistent. The AVS=N result is also consistent with the stated verification-typo benign noise consideration and the account has prior repayment activity.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The alert has an AVS=N result and CA BIN country versus US IP country, but there is no linkage cluster, no card declines in 24 hours, and the listed orders use device_id 21361.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether any credential changes occurred before 2026-06-21 11:59:36.\",\"Confirm the cardholder's current location or travel status for the US IP activity.\",\"Confirm whether the AVS=N result reflects an address-entry error.\"],\"memo_markdown\":\"**Recommendation: clear (P2).**\\n\\nOrder 345154 was approved for 105.31 at 2026-06-21 11:59:36. R03 fired because the card BIN country is CA, the IP country is US, and AVS=N/CVV=M. The US IP pattern also appears in the listed prior orders, all on device_id 21361. Account tenure is 779 days with 43 prior orders; repayment history shows 110.0 paid, 4.0 late, and 0.0 failed_or_written_off. Linkage fields are 0 and declines_on_card_24h is 0.\\n\\nThe most supported explanation is the FP-1 \u00a76 traveler mimic together with an AVS entry issue; n_avs_mismatch_prior is 1.0. The packet does not provide independent corroboration for a fraud pattern, so the action-selection criteria do not support hold_contact or decline_block.\"}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "7469b66f6d34179b6102d5d3a728bf5d5ee9936f0047141b45afb6ec72a3b156",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 25709,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R08 fired: ship-to address a_26630 already used by 3 distinct accounts.\",\"linkage.other_accounts_on_ship_address: 3.\",\"linkage.other_accounts_on_device: 0.\",\"linkage.other_accounts_same_email_root: 0.\",\"Alert amount: 64.51; status: approved; timestamp: 2026-04-02 21:10:47.\",\"AVS result: Y; CVV result: M.\",\"IP country: CA; KYC country: CA; card BIN country: CA.\",\"Account tenure_days: 799; n_orders_prior: 37.\",\"Repayment history: paid: 99.0, installments_due: 100, late: 1.0, failed_or_written_off: 0.0.\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"med\",\"reasoning\":\"The ship-to address is linked to 3 other accounts, meeting the FP-1 escalation linkage threshold. No device or email-root linkage is present, and the packet provides no vendor score.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A gift-buyer/shared-household mimic is possible because the only fired rule is a shared ship-to address. The account has tenure_days of 799, n_orders_prior of 37, and repayment history of paid: 99.0 out of installments_due: 100.\"}],\"policy_citations\":[\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the 3 other accounts using ship-to address a_26630 for confirmed fraud outcomes, shared payment instruments, and order timing.\",\"Check whether order 267963 is pending fulfillment or has shipped.\",\"Verify whether the shared address is a household, forwarding location, or gift recipient. \"],\"memo_markdown\":\"R08 fired because ship-to address a_26630 was already used by 3 distinct accounts; linkage reports 3 other accounts on the ship address. This meets FP-1\u2019s linkage threshold for escalation. The current approved order is 64.51 at pure-goods-92, with AVS Y, CVV M, and CA IP, KYC, and BIN country alignment. The account also has tenure_days of 799, n_orders_prior of 37, and repayment history of paid: 99.0 out of installments_due: 100, so a shared-household or gift-buyer mimic remains plausible. Escalate for cross-account review rather than treating this single signal as proof of fraud.\"}"
+ },
+ "task": "triage_memo"
+}

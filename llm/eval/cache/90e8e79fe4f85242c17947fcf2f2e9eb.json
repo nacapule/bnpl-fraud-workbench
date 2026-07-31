@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "3aa6939507f26fc4424c2d1221a5d40cbc5504ef89fccde272c28a026ff95120",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 22149,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 350939 was approved at 2025-08-15 16:48:28 for 758.76 in electronics\",\"R03 fired: card BIN country US vs IP country ES with AVS=N/CVV=M\",\"card network is visa and bin_country is US\",\"the prior approved electronics order 350937 was 376.98 at 2025-08-15 15:40:51 from IP country ES with AVS=Y/CVV=M\",\"both listed orders used device_id 5181574\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"declines_on_card_24h is 0\",\"account_events_90d is []\",\"n_avs_mismatch_prior is 0.0 and n_cvv_mismatch_prior is 0.0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US BIN versus ES IP with AVS=N/CVV=M on an approved 758.76 electronics order supports a card-verification concern. No device, address, or email-root linkage is present.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic is plausible because both listed approved orders used IP country ES and the same device_id 5181574, while account_events_90d is []. FP-1 \u00a76 notes that foreign IP without credential changes can be benign, although the current AVS=N remains unresolved.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 \u00a76.1\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Step-up customer verification for order_id 350939\",\"Confirm whether the customer recognizes card_id 52191 and order_id 350939\",\"Check whether the ES IP 77.172.236.144 is consistent with the customer's verified travel or location history\"],\"memo_markdown\":\"P1 review: order_id 350939 is approved for 758.76 in electronics. R03 fired because card BIN country is US while IP country is ES, with AVS=N/CVV=M. A stolen-card hypothesis is plausible, but linkage is absent: other_accounts_on_device, other_accounts_on_ship_address, and other_accounts_same_email_root are each 0. The preceding approved order used the same device_id and ES IP country, and account_events_90d is empty, supporting the FP-1 \u00a76 traveler mimic. One signal family alone does not support decline_block. Hold pending customer step-up verification.\"}"
+ },
+ "task": "triage_memo"
+}

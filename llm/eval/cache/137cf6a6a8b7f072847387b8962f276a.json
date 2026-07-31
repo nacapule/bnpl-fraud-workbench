@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "a3abdd3695cf75c1a7bd8776e0ef7db2ce678d7edda54108253f9dd39db85697",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 40444,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 305024 is approved for 265.74 at 2026-05-11 08:17:07\",\"R09 fired: 2 prior item-not-received chargebacks on this account with healthy repayment\",\"avs_result is Y and cvv_result is M for order_id 305024\",\"account tenure_days is 1017 with n_orders_prior of 5\",\"account_events_90d show logins on device_id 37311 from 71.12.81.209, 71.12.81.191, and 71.12.81.140\",\"order_id 305024 uses device_id 37311 and ip_country CA\",\"last_orders show ip_country CA and device_id 37311 for orders 267667, 250032, 89864, 67340, and 29674\",\"linkage shows other_accounts_on_device 0, other_accounts_on_ship_address 1, and other_accounts_same_email_root 0\",\"repayment_history shows paid 14.0, installments_due 14, late 0.0, and failed_or_written_off 0.0\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 cites 2 prior item-not-received chargebacks. The current order has matched AVS and CVV, stable device use, and healthy repayment, so the packet does not establish a high-likelihood INR pattern.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic is plausible: the account has recurring CA IP-country activity and no credential changes are present in account_events_90d. The prior item-not-received chargebacks remain unresolved by the packet.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the evidence and disposition for the 2 prior item-not-received chargebacks.\",\"Confirm whether order_id 305024 is pending fulfillment or has been fulfilled.\",\"Perform step-up customer verification for order_id 305024.\"],\"memo_markdown\":\"R09 fired because the account has 2 prior item-not-received chargebacks, creating a moderate INR-abuse concern. Current-order authentication is favorable: AVS is Y, CVV is M, and device_id 37311 has recurring account history. CA IP-country activity also appears on prior orders, while account_events_90d show no credential changes. Repayment is healthy, with paid 14.0 of installments_due 14 and late 0.0. Linkage does not support a ring: other_accounts_on_device is 0 and other_accounts_same_email_root is 0. Hold pending step-up verification and review of the prior dispute evidence; the packet does not support decline_block or escalate.\"}"
+ },
+ "task": "triage_memo"
+}

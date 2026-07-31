@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "e178df02443421218acd1213490f2f85412a9e6dc89b498ccfc3d6ba6eb68642",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 30572,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 350885 was approved at 2026-03-10 23:07:13 for 493.31\",\"card BIN country GB vs IP country IN with AVS=N/CVV=M\",\"fired rule R03: geo + verification mismatch\",\"account tenure_days is 1 and n_orders_prior is 0\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"declines_on_card_24h is 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The approved electronics order has card BIN country GB versus IP country IN and AVS=N/CVV=M. This is corroborated only by the geography+verification signal family.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic is plausible because the IP is foreign and account_events_90d is empty, with no credential changes reported. A verification typo is also a known benign mimic for AVS/CVV mismatch.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"account_events_90d is empty and the packet provides no credential manipulation evidence.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"other_accounts_on_device, other_accounts_on_ship_address, and other_accounts_same_email_root are each 0.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Step-up customer verification to distinguish a traveler or verification typo from unauthorized card use.\",\"Confirm whether the customer can validate possession of the payment instrument and shipping address.\",\"Check whether fulfillment for order_id 350885 is imminent.\"],\"memo_markdown\":\"Order 350885 was approved for 493.31 in electronics. R03 fired because the card BIN country is GB, the IP country is IN, and verification returned AVS=N/CVV=M. The account has tenure_days of 1 and n_orders_prior of 0.\\n\\nStolen-card use is a medium-likelihood hypothesis, but the packet provides only one corroborating signal family: geography plus verification. There is no credential-manipulation evidence, no card declines in the preceding 24 hours, and no multi-account linkage. A benign traveler or verification-typo explanation remains plausible because account_events_90d is empty.\\n\\nRecommend hold_contact pending step-up verification. This is reversible and would resolve the material ambiguity; decline_block is not supported by two independent corroborating signal families. Priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

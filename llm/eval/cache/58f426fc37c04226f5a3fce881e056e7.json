@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "28ec6902f6027ab1f610dfd788e26fa290e1ac8fc62be2f5d32433f85cf0480d",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 33496,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: repeat INR disputes\",\"2 prior item-not-received chargebacks on this account with healthy repayment\",\"Order 39361 amount 124.61\",\"AVS result Y and CVV result M\",\"IP country US and BIN country US\",\"Device 31865 used on prior orders\",\"Other accounts on device 0\",\"Other accounts on ship address 1\",\"Other accounts with same email root 0\",\"Installments due 5, paid 5.0, late 0.0, failed or written off 0.0\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"The R09 rule identifies 2 prior item-not-received chargebacks, which directly supports possible INR abuse. Healthy repayment and no device or email-root sharing reduce confidence.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The transaction has AVS result Y, IP country US, and BIN country US, with declines on card 24h 0; the packet provides limited support for stolen-card use.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A benign returning-customer explanation is plausible because the account has tenure_days 625, 3 prior orders, healthy repayment, and no device sharing. No stated traveler, mover, gift-buyer, hardship, or new-phone mimic fully explains the repeat INR disputes.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 \u00a76.4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Retrieve the 2 prior item-not-received chargeback records, including delivery confirmation and customer dispute outcomes.\",\"Run step-up customer verification and compare the response with the ship-address and order-history records.\",\"Inspect the 1 other account on the ship address for shared household or coordinated-activity indicators.\"],\"memo_markdown\":\"R09 fired for repeat INR disputes: the packet states 2 prior item-not-received chargebacks with healthy repayment. This supports possible INR abuse, but corroboration is limited: the account has tenure_days 625, 3 prior orders, paid 5.0 installments, late 0.0, failed or written off 0.0, and no other accounts on device 31865 or same email root. Current order 39361 has amount 124.61, AVS result Y, CVV result M, IP country US, and BIN country US. The 1 other account on the ship address warrants review but does not establish a ring. Recommend hold_contact pending step-up verification and review of the prior INR evidence; decline_block is not supported because two independent signal families do not clearly corroborate fraud.\"}"
+ },
+ "task": "triage_memo"
+}

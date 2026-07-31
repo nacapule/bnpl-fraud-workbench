@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "b7ed9806ca31537942f91d2a518304ca865f764b4b8f6050cbedabed68c4bd98",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 47496,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert amount 892.15\",\"R06 fired: disposable_domain=True, shared_root_accounts=1\",\"R08 fired: ship-to address a_2899016 already used by 33 distinct accounts\",\"other_accounts_on_device is 2\",\"other_accounts_on_ship_address is 39\",\"email domain is mailinator.com\",\"merchant category is gaming\",\"AVS result is Y and CVV result is M\",\"account has 0.0 failed_or_written_off, 2 installments_due, 0.0 late, and 2.0 paid\",\"account_events_90d is empty\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The shared ship-to address is linked to 39 other accounts, and R08 reports prior use by 33 distinct accounts. Combined with a disposable email domain, this supports a multi-account synthetic-ring hypothesis.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The order has AVS result Y and CVV result M, the card and IP countries are US, and declines_on_card_24h is 0; the packet does not provide strong stolen-card evidence.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"account_events_90d is empty, and the packet shows no credential manipulation or unusual device change.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer or traveler mimic could explain a non-home ship-to address or foreign behavior, but the packet does not support those explanations and does not explain the repeated shared-address linkage or disposable email domain.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query the linked accounts using ship address a_2899016 to confirm whether the linkage reflects coordinated ordering.\",\"Review merchant-side fulfillment and customer relationships for suspected merchant complicity.\",\"Check whether the linked accounts have confirmed-fraud outcomes and associated exposure fields.\"],\"memo_markdown\":\"The order for 892.15 is approved and flagged by R06 and R08. The strongest signal is the shared ship-to address: it is linked to 39 other accounts and was already used by 33 distinct accounts. The mailinator.com domain adds identity-cost-reduction concern. Device linkage is weaker, with 2 other accounts, and there are no account events in the last 90 days. AVS is Y, CVV is M, both IP and BIN countries are US, and the repayment history shows 2.0 paid with 0.0 late and 0.0 failed_or_written_off. A benign gift-buyer or traveler explanation does not account for the repeated address linkage. Top hypothesis is synthetic_ring at high likelihood. Escalate for multi-account-ring review; human analyst should confirm linked-account outcomes and exposure before any final account or plan action.\"}"
+ },
+ "task": "triage_memo"
+}

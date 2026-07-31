@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "dde4a50066c3de3d1f4eeb1f196f2909d27d6198b4d72485a6c7d34ee12d0dfa",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 22153,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 351145 amount 383.06 approved at 2026-03-21 08:38:48\",\"card BIN country BR vs IP country US\",\"IP country US\",\"AVS result Y\",\"CVV result N\",\"Account tenure_days 2\",\"n_orders_prior 0\",\"other_accounts_on_device 0\",\"other_accounts_on_ship_address 0\",\"other_accounts_same_email_root 0\",\"fired rule R03 with score 35\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The BR card BIN versus US IP and CVV=N support possible unauthorized card use. Evidence is limited to the geo+verification family, with no linkage or repayment corroboration.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The account is new with tenure_days 2 and n_orders_prior 0, but the packet shows no credential manipulation or account history indicating takeover.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler or cross-border cardholder could explain the geography difference, and AVS=Y is consistent with a valid address. However, the packet does not establish the travel context and CVV=N remains unexplained.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Perform step-up customer verification of card possession and purchase context.\",\"Check whether the cardholder is traveling or authorized to use a BR-issued card from a US IP.\",\"Obtain issuer response or additional card verification for CVV=N.\"],\"memo_markdown\":\"Order 351145 is approved for 383.06 and triggered R03: card BIN country BR versus IP country US with AVS=Y/CVV=N. The leading concern is stolen_card at medium likelihood, but the packet provides only one corroborating signal family: geography+verification. There is no device, ship-address, or email-root linkage, and no repayment history because the account has tenure_days 2 and n_orders_prior 0. A benign traveler or cross-border cardholder explanation remains plausible, but the packet does not confirm it and does not explain CVV=N. Recommend hold_contact for reversible step-up verification. Priority P2 because no fulfillment-imminent or active-burst indicator is provided.\"}"
+ },
+ "task": "triage_memo"
+}

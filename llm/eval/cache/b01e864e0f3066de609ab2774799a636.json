@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "3e1576f6bdff4080e1dff4a0139d1a10e0b19fde0448a9d53ccec0c85b6edfec",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 26682,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: repeat INR disputes\",\"4 prior item-not-received chargebacks on this account with healthy repayment\",\"Current order 219490 amount 140.52 is approved\",\"AVS result Y and CVV result M\",\"IP country US and KYC country CA\",\"Card BIN country CA\",\"Other accounts on device: 0\",\"Other accounts on ship address: 0\",\"Other accounts sharing email root: 0\",\"Repayment history: 12 installments due, 12.0 paid, 0.0 late, 0.0 failed or written off\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"high\",\"reasoning\":\"R09 identifies 4 prior item-not-received chargebacks, which directly supports an INR-abuse hypothesis. Healthy repayment does not eliminate concern about dispute behavior.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic could explain the US IP with CA KYC and CA card BIN; there are no credential changes or linkage to other accounts. However, it does not explain the repeat INR disputes.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Verify fulfillment and delivery evidence for the 4 prior item-not-received chargebacks\",\"Run step-up customer verification focused on recent order ownership and receipt status\"],\"memo_markdown\":\"R09 fired for 4 prior item-not-received chargebacks with healthy repayment. This makes INR abuse the leading hypothesis, but the packet shows no account, device, address, or email-root linkage to other accounts. The current order has AVS Y and CVV M, and the CA card BIN matches the CA KYC country. The US IP may be consistent with a traveler mimic because no credential changes are recorded, but that does not explain the repeat INR disputes. Recommend hold_contact pending step-up verification and review of fulfillment evidence for the prior disputes. A single corroborating signal family is present, so decline_block is not supported under FP-1. Priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

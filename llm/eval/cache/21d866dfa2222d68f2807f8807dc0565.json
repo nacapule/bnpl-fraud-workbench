@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "c15d0ab969c56eced50c067fec23a8ee95991261830349d35c36da5b151bcd64",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 28764,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 352579 was approved at 2025-08-15 22:50:40\",\"amount 579.54 for electronics at merchant cedar-province-67\",\"card BIN country US versus IP country CA\",\"AVS result N and CVV result M\",\"R03 geo + verification mismatch fired with score 35\",\"account tenure_days 0 and n_orders_prior 0\",\"other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0\",\"account_events_90d is empty\",\"declines_on_card_24h 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card BIN, CA IP, and AVS result N are consistent with a possible card-use anomaly. However, the packet has only the geography+verification signal family and no device linkage, velocity, or vendor-score corroboration.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic can explain the CA IP without credential changes, and FP-1 \u00a76 identifies verification typos as a benign source of AVS/CVV mismatch. The new account has no prior history to confirm either explanation.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Step-up customer verification to confirm authorized card use and current location\",\"Confirm the billing-address details associated with card_id 52989\",\"Check whether the CA IP is consistent with the customer's verified travel or location information\"],\"memo_markdown\":\"P1 review: approved electronics order 352579 for 579.54 at cedar-province-67 fired R03: US card BIN versus CA IP with AVS=N and CVV=M. The account has tenure_days 0, n_orders_prior 0, and no prior repayment history. No linkage is present: other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0; declines_on_card_24h is 0.\\n\\nStolen-card use is plausible, but only one independent signal family corroborates it, so FP-1 does not support decline_block. A traveler plus verification-typo benign mimic remains plausible because account_events_90d is empty. Hold for step-up verification, which should resolve authorization and location.\"}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "81d8920a42705a7c972b8112ef6d1f7a5df29aedc05123dc46a490022a1ff77a",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 36867,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert 7264 is a review-band approved order for 64.09 at north-market-39 in apparel on 2026-03-29 18:23:05\",\"R09 fired: repeat INR disputes; rationale: 2 prior item-not-received chargebacks on this account with healthy repayment\",\"AVS result is Y and CVV result is M\",\"IP country is US, KYC country is US, and card BIN country is US\",\"account tenure is 750 days with 20 prior orders\",\"repayment history shows 53.0 paid installments, 2.0 late installments, and 0.0 failed_or_written_off\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"account_events_90d is empty\",\"vendor_scores is null\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 cites 2 prior item-not-received chargebacks. The current order does not itself contain an INR claim, and the packet shows healthy repayment.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A stable, long-tenured account with US-consistent IP, KYC, and card BIN plus healthy repayment supports a benign explanation, but the prior INR disputes remain unexplained by a stated FP-1 \u00a76 mimic.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm the disposition and supporting evidence for the 2 prior item-not-received chargebacks.\",\"Obtain merchant fulfillment and delivery-confirmation information for order 263850.\",\"Perform step-up customer verification to confirm the customer authorized order 263850.\"],\"memo_markdown\":\"R09 triggered because the account has 2 prior item-not-received chargebacks, creating a medium-likelihood INR-abuse concern. Current authorization indicators are favorable: AVS is Y, CVV is M, and IP country, KYC country, and card BIN country are US. The account has 750 days of tenure, 20 prior orders, healthy repayment, and no observed device, ship-address, or email-root linkage to other accounts. There are no account events in the last 90 days and no vendor scores.\\n\\nNo multi-account ring or aggregate confirmed-fraud exposure is present, so escalation is not supported. INR abuse is not high likelihood on the current packet, and corroboration is limited; decline_block is not supported. A benign conclusion is plausible but prior INR disputes are not fully explained by an FP-1 \u00a76 mimic. Hold pending authorization verification and review of prior-dispute evidence and merchant fulfillment data.\"}"
+ },
+ "task": "triage_memo"
+}

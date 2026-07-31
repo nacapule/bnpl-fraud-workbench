@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "f607c9fa8ff97572918243612df005d030fc99a3278b6656e4a13e3e182cad4a",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 42545,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"Order 113730 amount 97.66, status approved, at 2025-11-10 19:48:14\",\"Account has 3 prior orders and tenure_days 829\",\"Device_id 11571 and ship_address_id 11571 match the account\",\"other_accounts_on_device 0, other_accounts_on_ship_address 0, other_accounts_same_email_root 0\",\"repayment_history shows installments_due 9, paid 9.0, late 0.0, failed_or_written_off 0.0\",\"card declines_on_card_24h 0\",\"account_events_90d is empty\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The CA card BIN, US IP, AVS=N, and CVV=M create a geography and verification mismatch. However, there are no card declines, linkage to other accounts, or repayment issues.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The foreign IP could be consistent with account compromise, but account_events_90d is empty and the device and shipping address match the account.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler is a plausible benign mimic for the foreign IP, while verification typos are a possible mimic for AVS=N/CVV=M. The packet does not confirm travel or explain the verification results.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Step-up customer verification of current location, card ownership, and billing address\",\"Check whether the US IP corresponds to known customer travel or prior legitimate activity\"],\"memo_markdown\":\"Order 113730 triggered R03 because the card BIN country is CA while the IP country is US, with AVS=N and CVV=M. This supports a medium-likelihood stolen-card hypothesis, but evidence is limited to one signal family. Account takeover is low likelihood: account_events_90d is empty, device_id 11571 and ship_address_id 11571 match the account, and no other accounts share the device, shipping address, or email root. A traveler plus verification-typo explanation is also plausible, but unconfirmed. The account has tenure_days 829, 3 prior orders, card declines_on_card_24h 0, and clean repayment history with paid 9.0, late 0.0, and failed_or_written_off 0.0. Recommend hold_contact for reversible step-up verification; the packet does not support decline_block or escalation.\"}"
+ },
+ "task": "triage_memo"
+}

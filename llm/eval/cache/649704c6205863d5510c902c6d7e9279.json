@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "16f1cb2c8fefb412f0a11e582e38e6e9f023a5747b8631d6b04c6376007fadeb",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 35498,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"account tenure_days is 2\",\"alert amount is 484.38\",\"card BIN country is US while IP country is NG\",\"alert AVS result is N and CVV result is M\",\"R03 fired: geo + verification mismatch\",\"two approved electronics orders on device 5181685 within hours\",\"linkage counts are zero for other accounts on device, ship address, and email root\",\"no account events in the last 90 days\",\"card has declines_on_card_24h of 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"high\",\"reasoning\":\"The US card BIN, NG IP, AVS=N, and CVV=M indicate a payment and geography mismatch consistent with possible stolen-card use. The account is also only two days old.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"There are no account events indicating credential manipulation, and linkage counts are zero.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows no multi-account linkage; all linkage counts are zero.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler could explain the foreign IP because there are no credential changes, but the AVS mismatch and CVV mismatch remain unresolved.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 \u00a76.1\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Perform step-up verification of customer identity, card possession, and billing details.\",\"Ask whether the customer was traveling in NG when the orders were placed.\",\"Check whether the shipping address matches the verified billing address.\"],\"memo_markdown\":\"The order presents a high-likelihood stolen-card concern: a US card BIN was used from an NG IP with AVS=N and CVV=M, triggering R03. The account has only two days of tenure, and two approved electronics orders were placed on the same device within hours. However, there is no credential manipulation, no multi-account linkage, and no prior account-event history. A traveler is a plausible benign mimic because the packet shows a foreign IP without credential changes, but it does not explain the verification mismatch with confidence. Recommend reversible hold_contact pending step-up verification of customer identity, card possession, travel context, and billing details. Priority is P2 because the packet does not establish exposure above $500, an active burst rule, or a multi-account cluster.\"}"
+ },
+ "task": "triage_memo"
+}

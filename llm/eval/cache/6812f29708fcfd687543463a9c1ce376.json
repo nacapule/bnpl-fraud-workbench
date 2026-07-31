@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "93b60f10555bafdc875ecc371351a2fd2455be756162234ecaec1f59ed764ae9",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 28647,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R07 fired: 8 declined attempts on this card/device in the prior 24h, then this approval\",\"The approved order was $819.25 at 2026-04-24 00:43:56\",\"Card BIN country is DE; alert IP country is US\",\"The approved order had AVS result Y and CVV result M\",\"Account tenure_days is 3 with n_orders_prior 0\",\"Seven listed prior orders on device_id 5181387 were declined between 2026-04-23 06:53:04 and 2026-04-23 07:21:04\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"high\",\"reasoning\":\"R07 records 8 declined attempts on the same card/device before the $819.25 approval, consistent with card testing followed by a successful purchase. The DE BIN country and US IP country provide a second, geography-and-verification signal family.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"Verification typos are a known benign mimic for AVS/CVV mismatches, but the repeated declined attempts on the same card/device followed by approval are not fully explained by that mimic.\"}],\"policy_citations\":[\"R07\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 2\"],\"recommended_action\":\"decline_block\",\"priority\":\"P1\",\"evidence_gaps\":[\"Check issuer authorization or 3DS results for card_id 52004.\",\"Confirm whether order_id 350326 has been fulfilled or is pending fulfillment.\",\"Obtain customer verification of authorization for the $819.25 order.\"],\"memo_markdown\":\"**Recommendation: decline_block \u2014 P1.**\\n\\nThe $819.25 approved electronics order triggered R07 after 8 declined attempts on the same card/device in the prior 24h. Listed declined attempts on device_id 5181387 show repeated AVS and CVV failures before the approval. The card BIN country is DE while the alert IP country is US. This supports stolen_card as the top, high-likelihood hypothesis through independent velocity and geography-and-verification signal families.\\n\\nNo linkage threshold is present: all three linkage counts are 0, so escalation criteria are not met. Verification typos are a benign mimic, but do not fully explain the repeated attempt pattern followed by a successful $819.25 order. Freeze the plan and block the account pending review; verify issuer/3DS results, fulfillment status, and customer authorization.\"}"
+ },
+ "task": "triage_memo"
+}

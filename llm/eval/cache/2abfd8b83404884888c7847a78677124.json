@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "55e6a375a4f8cd6b06749ae4d34992d1109712269f2abea55484c6fe3a16cab3",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 22848,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 162762 was approved at 2025-12-16 16:05:00 for 92.47 at swift-gallery-96 in apparel\",\"R03 fired: card BIN country CA vs IP country US with AVS=Y/CVV=N\",\"device_id 36595 was used for the alert and all listed prior orders\",\"the account has 8 prior orders and tenure_days 158\",\"the account has 14.0 paid installments, 1.0 late installment, and 0.0 failed_or_written_off\",\"other_accounts_on_device, other_accounts_on_ship_address, and other_accounts_same_email_root are each 0\",\"the prior order at 2025-10-15 14:24:32 had AVS=N and CVV=M\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"The single R03 event is consistent with the FP-1 \u00a76 verification-typo mimic: AVS is Y and the CVV result is N. The order uses the established device_id 36595, with stable US IP-country history, no linkage, and positive repayment history.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"CVV=N and the CA BIN versus US IP create a verification/geography concern, but there is no corroboration from credential manipulation, device/linkage, velocity, repayment behavior, or vendor score.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"Action Selection 3\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the CVV=N result was a processor verification anomaly or customer entry error.\",\"Confirm fulfillment status for order_id 162762.\"],\"memo_markdown\":\"R03 fired on approved order_id 162762: CA BIN versus US IP, AVS=Y, CVV=N. The account shows established use of device_id 36595 across the listed prior orders, no device/address/email-root linkage, and repayment history of 14.0 paid, 1.0 late, and 0.0 failed_or_written_off. The packet does not show credential changes, card declines, vendor risk, or a multi-account cluster. The isolated CVV=N is most consistent with the FP-1 \u00a76 verification-typo benign mimic. Clear; human analyst retains decision ownership.\"}"
+ },
+ "task": "triage_memo"
+}

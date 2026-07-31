@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "5d553985246202925825c70a1cc0f03f0ec6ab4008de3ac6a2f1ee9fd0500cf4",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 21081,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 334138 was approved at 2026-06-09 22:48:36 for 87.31\",\"R03 fired: card BIN country GB vs IP country US with AVS=Y/CVV=N\",\"alert score was 35 in band review\",\"device_id 34244 was used for the alert and all listed prior orders\",\"account tenure_days is 924 with n_orders_prior of 12\",\"repayment_history shows installments_due 34, paid 34.0, late 0.0, and failed_or_written_off 0.0\",\"linkage shows other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0\",\"n_cvv_mismatch_prior is 1.0 and n_avs_mismatch_prior is 0.0\",\"card declines_on_card_24h is 0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A verification typo/mismatch is the most plausible benign mimic: AVS=Y with CVV=N is isolated against stable device use, 924 tenure_days, and 34.0 paid installments. The account has no listed linkage and no repayment distress.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The GB BIN country and US IP country with CVV=N support the fired R03 concern, but AVS=Y, no card declines in 24h, stable device_id 34244, and positive repayment history do not provide independent corroboration.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 action selection step 3\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether card_id 34244 has prior successful use on this account.\",\"Check whether the order has fulfilled or generated a cardholder dispute.\"],\"memo_markdown\":\"Order 334138 is an approved 87.31 apparel order flagged solely by R03: GB BIN country versus US IP country with AVS=Y/CVV=N. The account shows 924 tenure_days, device_id 34244 across the listed order history, no listed cross-account linkage, and 34.0 paid installments with 0.0 late and 0.0 failed_or_written_off. A prior CVV mismatch is recorded at 1.0. The packet supports a benign verification mismatch more strongly than stolen-card activity; the latter lacks a second independent signal family. Clear under FP-1 \u00a76 and action-selection step 3. \u09ae\u09be\u09a8\u09ac analyst retains final decision.\"}"
+ },
+ "task": "triage_memo"
+}

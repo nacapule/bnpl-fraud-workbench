@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "a9434d6d8a7dfa2d62389ecd9a52a9e0c93da96ec5e5225eebec8a26ece2b29e",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 27568,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"password_change at 2026-01-11 20:10:33 from device 5181272\",\"address_add at 2026-01-11 21:10:33 from device 5181272\",\"order 350042 for 535.06 at 2026-01-12 10:18:55 from device 5181272\",\"order 350042 avs_result N and cvv_result M\",\"account tenure_days 506\",\"other_accounts_on_device 0\",\"other_accounts_on_ship_address 0\",\"other_accounts_same_email_root 0\",\"repayment_history paid 3.0, late 0.0, failed_or_written_off 0.0\",\"card bin_country US and ip_country US\",\"fired rule R01 with score 45\"],\"hypotheses\":[{\"pattern\":\"account_takeover\",\"likelihood\":\"med\",\"reasoning\":\"A password change and address addition preceded an order from device 5181272 on a 506-day-old account. The new device and AVS mismatch support concern, but the packet shows no linked accounts and US card and IP countries.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A mover mimic is possible because an address was added without other accounts sharing the device or ship address. A new-phone mimic is also possible, but the packet does not show an organic device_add event.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The order has avs_result N, but cvv_result M, card declines_on_card_24h 0, and the card and IP countries both are US.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0.\"}],\"policy_citations\":[\"R01\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 \u00a76.2\",\"FP-1 \u00a76.5\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Confirm whether the customer authorized the password change and address addition.\",\"Verify the ship-to address against the customer's established profile.\",\"Perform step-up verification for order 350042.\"],\"memo_markdown\":\"Order 350042 for 535.06 was approved after a password change and address addition from device 5181272. R01 fired for credential change before order on a 506-day-old account, and the order returned AVS N with CVV M. These signals support possible account takeover, but linkage is absent: other accounts on the device, ship address, and email root are all 0. US card and IP countries, prior successful repayment, and no card declines weaken stolen-card and ring hypotheses. A mover or new-phone benign mimic remains plausible, though no organic device_add event is present. Recommend hold_contact for step-up verification and confirmation of the recent account changes. Priority P1 due to the 535.06 exposure.\"}"
+ },
+ "task": "triage_memo"
+}

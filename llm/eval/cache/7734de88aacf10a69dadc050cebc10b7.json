@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "93b60f10555bafdc875ecc371351a2fd2455be756162234ecaec1f59ed764ae9",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 48211,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"8 declined attempts on card 52004/device 5181387 in the prior 24h, then approval\",\n    \"approved order 350326 for 819.25 in electronics\",\n    \"card BIN country DE and IP country US\",\n    \"account tenure is 3 days with 0 prior orders\",\n    \"linkage shows 0 other accounts on device, 0 other accounts on ship address, and 0 other accounts sharing the email root\",\n    \"AVS result Y and CVV result M on the approved order\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"stolen_card\",\n      \"likelihood\": \"high\",\n      \"reasoning\": \"The card-testing sequence followed by an approval for 819.25 strongly supports attempted use of a compromised card. The velocity signal and DE-card/US-IP geography signal corroborate the hypothesis.\"\n    },\n    {\n      \"pattern\": \"account_takeover\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"The account is new with 0 prior orders, but the packet contains no credential manipulation or account-event evidence.\"\n    },\n    {\n      \"pattern\": \"synthetic_ring\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"The packet shows 0 linked accounts on the device, ship address, and email root.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"A traveler could explain the foreign card and US IP, but it does not explain the card-testing sequence or the new account with 0 prior orders.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R07\",\n    \"FP-1 \u00a71\",\n    \"FP-1 \u00a75\",\n    \"FP-1 \u00a76\"\n  ],\n  \"recommended_action\": \"decline_block\",\n  \"priority\": \"P1\",\n  \"evidence_gaps\": [\n    \"Verify cardholder authorization for card 52004\",\n    \"Check issuer or payment-provider fraud confirmation for card 52004\",\n    \"Review whether the ship address is associated with the legitimate cardholder\"\n  ],\n  \"memo_markdown\": \"Order 350326 is high risk for stolen-card activity. R07 fired because there were 8 declined attempts on card 52004/device 5181387 in the prior 24h, followed by approval of an 819.25 electronics order. The card BIN is DE while the IP country is US; the account is only 3 days old and has 0 prior orders. These provide independent velocity and geography signals. Synthetic-ring risk is not supported because linkage counts are 0 across device, ship address, and email root. A traveler mimic is possible, but it does not explain the card-testing sequence. Recommend decline_block under FP-1 because the top fraud hypothesis is high likelihood and corroborated by multiple signal families. Human analyst review remains required.\"\n}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "9a7cb6eba39117b6bf80add49ba32f25952ab1f97fb497638527fe929c93e565",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 37797,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R02 fired: 3 accounts have transacted on device d_5181741 as of this order\",\"R06 fired: shared_root_accounts=80\",\"R08 fired: ship-to address a_2899019 already used by 32 distinct accounts\",\"other_accounts_on_device=2\",\"other_accounts_on_ship_address=39\",\"other_accounts_same_email_root=79\",\"alert score=100\",\"order amount=30.48\",\"merchant category=gaming\",\"order status=approved\",\"AVS result=Y\",\"CVV result=M\",\"IP country=US and KYC country=US\",\"account n_orders_prior=0 and total_spent_prior=0.0\",\"account tenure_days=19\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The order is linked to multiple accounts through the device, ship-to address, and email root. These independent device/linkage signals support a multi-account ring hypothesis.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift buyer could explain a non-home ship-to address, but the packet does not explain the shared device and email-root linkage as a benign mimic.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query whether the linked accounts share confirmed-fraud outcomes or common payment instruments.\",\"Review merchant-side fulfillment and account-linkage history for evidence of merchant complicity.\"],\"memo_markdown\":\"Order 351876 is approved for 30.48 at swift-market-34 and received a score of 100. R02 reports 3 accounts transacting on device d_5181741; R06 reports shared_root_accounts=80; R08 reports ship-to address a_2899019 used by 32 distinct accounts. The US IP, KYC country, BIN country, AVS result Y, and CVV result M do not independently establish payment fraud, but they also do not explain the cross-account linkage. Synthetic ring is the leading hypothesis. Benign gift-buyer behavior is a weaker explanation because it does not account for the device and email-root links. Escalate for multi-account-ring review; a human analyst should assess linked-account outcomes and possible merchant complicity.\"}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "bfe5e1908dd9b446d0ae95509006f328db2f720a8ae255e7ba37a278006fbf94",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 32312,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"order_id 271530 was approved at 2026-04-06 16:38:45 for 295.11 in gaming\",\"account tenure_days is 368\",\"n_orders_prior is 20\",\"last_orders show device_id 35682 and ip_country US\",\"order_id 233268 had AVS=N and CVV=M at 2026-02-25 17:31:36\",\"repayment_history shows paid 58.0, installments_due 58, late 0.0, and failed_or_written_off 0.0\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 1, and other_accounts_same_email_root is 0\",\"declines_on_card_24h is 0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler mimic is supported by the established account history using device_id 35682 and ip_country US, with no device linkage. The AVS=N result also appears on order_id 233268, while repayment_history shows paid 58.0 and late 0.0.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The current CA BIN and US IP with AVS=N triggered R03, but the packet shows no card declines in 24h, no device linkage, and paid 58.0 of 58 installments_due.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 action selection step 3\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether ship_address_id 10770 has prior successful deliveries for user_id 35682.\",\"Review the AVS=N response detail for order_id 271530 and order_id 233268.\"],\"memo_markdown\":\"R03 fired because the CA BIN was used from a US IP with AVS=N/CVV=M on approved gaming order_id 271530 for 295.11. The account has tenure_days 368 and n_orders_prior 20. Historical orders show device_id 35682 and ip_country US; order_id 233268 also had AVS=N/CVV=M. Repayment history is strong: paid 58.0 of installments_due 58, with late 0.0 and failed_or_written_off 0.0. Linkage is limited: other_accounts_on_device 0 and other_accounts_same_email_root 0. This is most consistent with the FP-1 \u00a76 traveler/verification-noise mimic, rather than stolen_card. Clear under FP-1 action selection step 3; no second independent fraud-signal family supports decline_block.\"}"
+ },
+ "task": "triage_memo"
+}

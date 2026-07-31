@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "0fd0563c4e46e533ab74b469687573689236349189e7ae6ebb58a64e77ddf2a6",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 53411,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R07 fired for card testing: 6 declined attempts on this card/device in the prior 24h, then this approval\",\"approved order amount 894.64 at 2025-08-25 12:14:10\",\"IP country ID, BIN country GB, and KYC country US\",\"CVV result M and AVS result Y on the approved order\",\"account tenure_days 2 with n_orders_prior 0 and total_spent_prior 0.0\",\"device_id 5181518 on the approved order and declined orders\",\"linkage shows other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"high\",\"reasoning\":\"Card testing activity and the cross-border geography/identity mismatch support suspected stolen-card use. The approved electronics order follows 6 declined attempts on the same card/device in the prior 24h.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The account is new with tenure_days 2, but account_events_90d is empty and there is no credential manipulation signal.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"No multi-account linkage is present: other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"There is no repayment history because installments_due is 0.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler could explain foreign IP activity, but the card-testing rule and the GB card versus US KYC mismatch are not explained by the stated traveler mimic.\"}],\"policy_citations\":[\"R07\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 action selection 2\"],\"recommended_action\":\"decline_block\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query whether card_id 52135 appears on other accounts or orders\",\"Verify customer/card ownership and billing details through step-up contact\",\"Check fulfillment status for order_id 350748\"],\"memo_markdown\":\"High-likelihood stolen-card pattern. R07 records 6 declined attempts on card/device 52135/5181518 in the prior 24h, followed by an approved 894.64 electronics order. Independent corroboration comes from geography and verification: IP country ID, BIN country GB, KYC country US, with CVV result M. The account is new, with tenure_days 2, n_orders_prior 0, and total_spent_prior 0.0. Account takeover and synthetic-ring hypotheses are low: account_events_90d is empty and all reported linkage counts are 0. A traveler benign mimic does not explain card testing. Recommend decline_block pending human review; priority P1 because the order amount is above 500.\"}"
+ },
+ "task": "triage_memo"
+}

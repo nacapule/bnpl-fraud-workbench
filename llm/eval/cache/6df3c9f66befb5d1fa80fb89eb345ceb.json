@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "733416508570b220f2648fab4361ca4f376b15bc0af40257d063534ebd65b547",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 38351,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"R06 fired: shared_root_accounts=80\",\n    \"R08 fired: ship-to address a_2899015 already used by 22 distinct accounts\",\n    \"other_accounts_on_device: 4\",\n    \"other_accounts_on_ship_address: 39\",\n    \"other_accounts_same_email_root: 79\",\n    \"amount: 74.65\",\n    \"cvv_result: N\",\n    \"avs_result: Y\",\n    \"score: 60\",\n    \"status: approved\",\n    \"repayment_history paid: 1.0\",\n    \"repayment_history failed_or_written_off: 0.0\",\n    \"repayment_history late: 0.0\",\n    \"account_events_90d: []\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"synthetic_ring\",\n      \"likelihood\": \"high\",\n      \"reasoning\": \"The order is linked through a shared device, ship-to address, and email root, with R06 and R08 firing. The linkage pattern is consistent with a multi-account ring.\"\n    },\n    {\n      \"pattern\": \"stolen_card\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"The current CVV result is N, but the card and IP countries are US, declines_on_card_24h is 0, and repayment_history shows paid: 1.0.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"A verification typo could explain the CVV mismatch, but it does not explain the shared device, ship-to address, and email-root linkages.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R06\",\n    \"R08\",\n    \"FP-1 \u00a71\",\n    \"FP-1 \u00a76\",\n    \"FP-1 action ladder\"\n  ],\n  \"recommended_action\": \"escalate\",\n  \"priority\": \"P1\",\n  \"evidence_gaps\": [\n    \"Query whether the linked accounts share confirmed-fraud outcomes or common payment instruments.\",\n    \"Review merchant-side fulfillment and account-linkage history for suspected merchant complicity.\"\n  ],\n  \"memo_markdown\": \"### Analyst memo\\n\\nThe top hypothesis is **synthetic_ring** with high likelihood. R06 and R08 fired, and the packet shows linkage through the device, ship-to address, and email root. The account has `other_accounts_on_device: 4`, `other_accounts_on_ship_address: 39`, and `other_accounts_same_email_root: 79`. This is corroborated across identity/linkage and address/device signal families.\\n\\nStolen-card risk is low: `cvv_result: N`, but `bin_country: US`, `ip_country: US`, and `declines_on_card_24h: 0`. Repayment history shows `paid: 1.0`, `late: 0.0`, and `failed_or_written_off: 0.0`. A verification typo is a possible benign mimic, but it does not explain the multi-account linkage.\\n\\n**Recommendation:** escalate for suspected multi-account ring. Priority: P1.\"\n}"
+ },
+ "task": "triage_memo"
+}

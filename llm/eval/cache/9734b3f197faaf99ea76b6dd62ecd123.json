@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "899b5c2c6da4e80593adf34b1c9f7c7c791eac53a037ce0140eb3362dde9b761",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 37178,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired for repeat INR disputes: 2 prior item-not-received chargebacks on this account with healthy repayment\",\"Account has 43 prior orders and tenure_days of 939\",\"Repayment history shows 109 paid installments, 2 late, and 0 failed_or_written_off\",\"Current order amount is 73.82 and status is approved\",\"AVS result is Y and CVV result is M\",\"There are 0 other accounts on the device, 0 other accounts on the ship address, and 0 other accounts with the same email root\",\"IP country is US and BIN country is US\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies 2 prior item-not-received chargebacks, directly supporting possible INR abuse. Healthy repayment and the absence of account, device, address, or email-root linkage weaken the hypothesis.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A benign established-customer explanation remains plausible: the account has 43 prior orders, tenure_days of 939, 109 paid installments, and 0 failed_or_written_off, with no linked accounts.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 action selection \u00a74\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Verify delivery and receipt evidence for the 2 prior item-not-received chargebacks and the current order\",\"Check customer response to step-up verification regarding the item-not-received history\"],\"memo_markdown\":\"R09 fired because the account has 2 prior item-not-received chargebacks. This supports possible INR abuse, but the packet also shows an established account with 43 prior orders, tenure_days of 939, 109 paid installments, 2 late, and 0 failed_or_written_off. There are 0 linked accounts on the device, ship address, or email root; IP country and BIN country are both US; AVS is Y. No independent credential, device/linkage, geography, velocity, or vendor-score family corroborates fraud. Recommend hold_contact for reversible verification focused on delivery evidence and the prior INR claims. Priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

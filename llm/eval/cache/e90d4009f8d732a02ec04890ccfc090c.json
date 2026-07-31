@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "0ab7c842550ada29c8118e484ec4cf06fa85b3af5bf91fd2c63504fdd356a5ae",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 84439,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: repeat INR disputes\",\"R09 rationale: 2 prior item-not-received chargebacks on this account with healthy repayment\",\"alert amount 497.15\",\"alert AVS result N\",\"alert CVV result M\",\"account n_avs_mismatch_prior 0.0\",\"account n_cvv_mismatch_prior 0.0\",\"device_id 4414506 on the alert and last_orders\",\"other_accounts_on_device 0\",\"other_accounts_on_ship_address 0\",\"other_accounts_same_email_root 0\",\"repayment_history paid 6.0 installments and late 0.0\",\"alert status approved\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"The fired R09 rule cites 2 prior item-not-received chargebacks, making INR abuse plausible. However, the packet does not provide fulfillment evidence or corroborating signal families.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The alert has AVS result N, but CVV result M, card BIN country US, and declines_on_card_24h 0; the packet does not establish stolen-card activity.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The alert uses the same device_id 4414506 as the last_orders, with no credential manipulation or device-account linkage reported.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A benign explanation remains plausible because repayment shows paid 6.0 installments, late 0.0, and failed_or_written_off 0.0. The packet does not identify a specific traveler, mover, gift-buyer, hardship, typo, or new-phone mimic.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review delivery and fulfillment evidence for the 2 prior item-not-received chargebacks.\",\"Confirm whether the current customer can complete step-up verification.\",\"Check whether the current ship-to address has prior successful delivery history.\"],\"memo_markdown\":\"R09 fired for repeat INR disputes, citing 2 prior item-not-received chargebacks with healthy repayment. The current alert is for 497.15 with AVS N and CVV M. Device_id 4414506 is also present on the prior listed orders, while linkage reports 0 other accounts on the device, ship address, and email root. Repayment is strong: paid 6.0 installments, late 0.0, and failed_or_written_off 0.0.\\n\\nINR abuse is the leading fraud hypothesis at medium likelihood, but the packet lacks fulfillment evidence and a second corroborating signal family. A benign explanation also remains plausible; no listed \u00a76 mimic is confirmed. Use reversible hold_contact pending step-up verification and review of prior INR fulfillment evidence.\"}"
+ },
+ "task": "triage_memo"
+}

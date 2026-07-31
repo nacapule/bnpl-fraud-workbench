@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "6a81ddb9255502fbd01cb4e6aecb22c6588cd5f73a0cd7465e55b3d805b6646d",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 40574,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R07 fired: \\\"6 declined attempts on this card/device in the prior 24h, then this approval\\\".\",\"The alert is an approved $594.94 jewelry order at swift-tech-38 on 2025-12-18 13:13:44.\",\"Card 52021 has declines_on_card_24h of 6.\",\"Approved orders on device 5181404 include $169.94 gaming at 2025-12-18 02:55:01, $1083.84 electronics at 2025-12-18 09:06:08, and $594.94 jewelry at 2025-12-18 13:13:44.\",\"Declined attempts on device 5181404 include AVS result N and CVV result N at 2025-12-17 19:09:27 and 2025-12-17 19:13:27.\",\"The alert has AVS result Y and CVV result M.\",\"Account tenure_days is 2.\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0.\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"high\",\"reasoning\":\"The same card/device shows 6 declined attempts in the prior 24h followed by approved purchases across gaming, electronics, and jewelry. The sequence includes verification failures on declined attempts and rapid approved-order activity, corroborating a card-testing/stolen-card pattern across verification and velocity signals.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A new-phone mimic is the closest benign explanation, but account_events_90d is empty and the packet records 6 declined attempts on the same card/device before approvals. No traveler, mover, gift-buyer, or hardship-defaulter evidence is present in the packet.\"}],\"policy_citations\":[\"R07\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 action selection step 2\"],\"recommended_action\":\"decline_block\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query the issuer or payment processor for the decline reasons and fraud status for card_id 52021.\",\"Check merchant fulfillment status for order_id 350362 and whether the plan can still be frozen before shipment.\",\"Perform cardholder/customer ownership verification for the approved orders.\"],\"memo_markdown\":\"**Recommendation:** decline_block; **Priority:** P1.\\n\\nR07 identifies 6 declined attempts on the same card/device in the prior 24h before this approved $594.94 jewelry order. The device then has approved purchases in gaming, electronics, and jewelry, while earlier declined attempts include AVS N and CVV N. This supports stolen_card at high likelihood through both verification and velocity signals.\\n\\nThe current order passes AVS Y and CVV M, but that does not explain the preceding card-testing sequence. No multi-account linkage is present, so escalation criteria are not met. The closest benign mimic is a new phone, but account_events_90d is empty and does not show an organic device_add event. Freeze the plan and block the account pending review; confirm issuer decline reasons and fulfillment status.\"}"
+ },
+ "task": "triage_memo"
+}

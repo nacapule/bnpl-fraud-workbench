@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "85de92c01ee0b783201dce395e7804a12ce44a38a3576767da304d2514cbf844",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 35316,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert amount 364.97\",\"card BIN country CA vs IP country US\",\"AVS result N\",\"CVV result M\",\"merchant category gaming\",\"merchant name gold-province-27\",\"account tenure_days 229\",\"n_orders_prior 1\",\"total_spent_prior 64.72\",\"other_accounts_on_device 0\",\"other_accounts_on_ship_address 0\",\"other_accounts_same_email_root 0\",\"failed_or_written_off 0.0\",\"installments_due 3\",\"late 0.0\",\"paid 3.0\",\"declines_on_card_24h 0\",\"fired rule R03 with weight 35\",\"alert status approved\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler is plausible because the card BIN country is CA while the IP country is US, with no listed credential-manipulation event and no linked accounts. The AVS=N/CVV=M result can also match the FP-1 \u00a76 verification-typo benign mimic.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The foreign IP and AVS=N/CVV=M mismatch support possible stolen-card use. However, there are no card declines, repayment failures, or linkage signals in the packet.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The payment mismatch could occur during account takeover, but the packet lists no credential changes, no linked accounts, and no device linkage.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"There are zero other accounts on the device, ship address, and email root, so the packet does not support a ring.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check customer travel or location history around 2025-10-02 19:28:57.\",\"Confirm whether the AVS=N/CVV=M result was a transient issuer or billing-address formatting issue.\"],\"memo_markdown\":\"R03 fired for a 364.97 gaming order because the card BIN country is CA while the IP country is US, with AVS=N and CVV=M. The strongest explanation is a benign traveler combined with a verification typo: the packet shows no linked accounts, no card declines, no repayment failures, and no listed credential-manipulation event. Stolen-card risk remains possible because of the payment mismatch, but only one signal family corroborates it. Clear is recommended under FP-1 \u00a76 because the fired rule is explained by stated benign mimics and no stronger fraud pattern is supported. Priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

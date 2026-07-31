@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "485e1585c993164e07683770445d2dcaae8d2017a03baa9c9b2728eb6ce7c2c5",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 32811,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 338240 was approved at 2026-06-14 09:36:44 for 40.4\",\"R03 fired: card BIN country US vs IP country CA with AVS=N/CVV=M\",\"user_id 30708 has tenure_days 675 and n_orders_prior 21\",\"account_events_90d is empty\",\"last_orders show device_id 30708 and ip_country CA on all listed orders\",\"linkage shows other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0\",\"repayment_history shows installments_due 60, paid 57.0, late 3.0, and failed_or_written_off 0.0\",\"card declines_on_card_24h is 0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"Traveler mimic is most consistent with repeated IP country CA on the listed prior orders, stable device_id 30708, and no account_events_90d. The AVS=N/CVV=M result is also consistent with the documented verification-typo benign mimic given prior mismatch history.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The current US BIN versus CA IP and AVS=N/CVV=M support a verification concern, but there is no credential manipulation, linkage, card-decline velocity, or vendor score corroboration.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 3\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the current shipping address is unchanged from prior approved orders.\",\"Confirm whether the current CA IP is consistent with the account's prior IP usage.\"],\"memo_markdown\":\"**Recommendation: clear (P2).**\\n\\nOrder 338240 was approved for 40.4 after R03 fired for a US card BIN, CA IP, AVS=N, and CVV=M. The account has tenure_days 675, n_orders_prior 21, no account_events_90d, and no linked accounts on device, shipping address, or email root. The listed prior orders consistently use device_id 30708 and ip_country CA. Repayment history shows paid 57.0 of installments_due 60, with failed_or_written_off 0.0.\\n\\nThe most plausible explanation is the FP-1 \u00a76 traveler mimic, with a stable CA location and no credential changes. The verification mismatch is not independently corroborated by velocity, linkage, repayment loss, or vendor score. Under FP-1 action selection step 3, clear rather than hold where the benign explanation accounts for the fired rule.\"}"
+ },
+ "task": "triage_memo"
+}

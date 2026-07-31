@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "3370db8423a0bf23372bede7a211cef92d983d89b2581429402e6dfe1d7989f6",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 33613,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"order amount 705.0 in electronics\",\n    \"account tenure_days 1\",\n    \"n_orders_prior 0\",\n    \"total_spent_prior 0.0\",\n    \"card BIN country US versus IP country ID\",\n    \"AVS result Y and CVV result N\",\n    \"order approved at 2026-03-04 04:18:47\",\n    \"linkage shows 0 other accounts on device, 0 other accounts on ship address, and 0 other accounts sharing the email root\",\n    \"fired rule R03 geo + verification mismatch with score 35\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"stolen_card\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"The US card BIN, Indonesia IP, and CVV=N support possible unauthorized card use. However, AVS=Y and the packet provides only one corroborating signal family.\"\n    },\n    {\n      \"pattern\": \"account_takeover\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"The account is new, but account_events_90d is empty and there are no credential-manipulation or linkage signals.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"A traveler mimic could explain the foreign IP, but the packet does not establish travel or explain CVV=N; step-up verification could distinguish this from stolen-card use.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R03\",\n    \"FP-1 \u00a71\",\n    \"FP-1 \u00a76\",\n    \"FP-1 action selection 4\"\n  ],\n  \"recommended_action\": \"hold_contact\",\n  \"priority\": \"P1\",\n  \"evidence_gaps\": [\n    \"Obtain customer step-up verification confirming recent travel or purchase authorization.\",\n    \"Check whether the cardholder location matches the Indonesia IP at 2026-03-04 04:18:47.\",\n    \"Verify the CVV result with the payment processor.\"\n  ],\n  \"memo_markdown\": \"## Analyst memo\\n\\nOrder 350374 for 705.0 in electronics was approved at 2026-03-04 04:18:47. R03 fired because the card BIN country is US while the IP country is ID, with AVS=Y and CVV=N. The account has tenure_days 1, n_orders_prior 0, and total_spent_prior 0.0.\\n\\nStolen-card activity is a medium-likelihood hypothesis. A traveler benign mimic is also plausible, but the packet does not document travel and does not explain CVV=N. Account takeover is low likelihood because account_events_90d is empty and linkage is 0 across device, ship address, and email root.\\n\\nOnly the geography-plus-verification family is present, so decline_block is not supported. Clear is not supported because the fired rule is not fully explained by a documented benign mimic. Recommend hold_contact for reversible step-up verification. Priority P1 reflects exposure above 500.\"\n}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "71b960f116ce47f0c7fb1095b506f47c106625f0b63828a943d8db84a99e64bb",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 24581,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: geo + verification mismatch, weight 35\",\"card BIN country BR vs IP country US\",\"AVS result N\",\"CVV result M\",\"amount 504.27\",\"merchant category jewelry\",\"account tenure_days 1\",\"device_id 5181590\",\"other_accounts_on_device 0\",\"other_accounts_on_ship_address 0\",\"other_accounts_same_email_root 0\",\"status approved\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The BR card BIN conflicts with the US IP country, and the order has AVS=N and CVV=M. These geography and verification signals support possible unauthorized card use, but no additional independent fraud family is present.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler or verification typo could explain the geographic and verification mismatch. However, the packet does not show credential changes, prior mismatch history, or other facts confirming a benign mimic.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Obtain step-up customer verification for the cardholder and order details.\",\"Check whether the cardholder is traveling or authorized the jewelry purchase.\",\"Review card ownership or issuer confirmation for card_id 52207.\"],\"memo_markdown\":\"The order is approved for 504.27 in jewelry and fired R03 for a BR card BIN versus US IP country with AVS=N and CVV=M. The account has tenure_days 1 and no other linked accounts on the device, ship address, or email root. Stolen_card is a medium-likelihood hypothesis; a traveler or verification typo is also medium likelihood. The packet does not establish a second independent fraud signal family, confirmed-fraud exposure, or ring linkage. Recommend hold_contact for reversible step-up verification, with P1 priority because the amount is above $500.\"}"
+ },
+ "task": "triage_memo"
+}

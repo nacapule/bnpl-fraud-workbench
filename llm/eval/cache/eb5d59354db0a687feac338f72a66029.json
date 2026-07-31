@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "26fcbdb3ada84723696602892674d4d53939f74344630f7c5f47bbd8a7cfe25c",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 81227,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"R03 fired for geo + verification mismatch\",\n    \"card BIN country GB vs IP country CA\",\n    \"AVS result Y and CVV result N\",\n    \"order 351230 amount 215.72 in jewelry\",\n    \"account signup_ts 2026-04-27 00:37:29\",\n    \"account tenure_days 0\",\n    \"last_orders contains orders 351230 and 351231 on device 5181669\",\n    \"orders 351230 and 351231 have timestamps 2026-04-27 20:00:19 and 2026-04-27 19:04:26\",\n    \"other_accounts_on_device 0\",\n    \"other_accounts_on_ship_address 0\",\n    \"other_accounts_same_email_root 0\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"stolen_card\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"The GB card BIN, CA IP, and CVV=N support possible unauthorized card use. AVS=Y and the absence of linked accounts weaken this hypothesis.\"\n    },\n    {\n      \"pattern\": \"synthetic_ring\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"Two orders use the same device, but linkage counts are 0 for other accounts on device, ship address, and email root.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"A traveler could explain foreign IP and card geography, while a verification typo could explain CVV=N; the packet shows no credential changes and AVS=Y.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R03\",\n    \"FP-1 \u00a71\",\n    \"FP-1 \u00a75\",\n    \"FP-1 \u00a76\"\n  ],\n  \"recommended_action\": \"hold_contact\",\n  \"priority\": \"P2\",\n  \"evidence_gaps\": [\n    \"Perform step-up customer verification of card possession and purchase intent.\",\n    \"Check whether the customer is traveling or whether the GB card is authorized for the account.\",\n    \"Query merchant and shipping history for prior association with the customer.\"\n  ],\n  \"memo_markdown\": \"The order triggered R03 because the card BIN country is GB while the IP country is CA, with AVS=Y and CVV=N. The account is newly signed up with tenure_days 0, and the last_orders data shows orders 351230 and 351231 on device 5181669. No other accounts are linked to the device, ship address, or email root.\\n\\nStolen_card is a medium-likelihood hypothesis, but the same geography and verification signals could reflect a traveler and a verification typo. Synthetic_ring is low likelihood because linkage counts are 0. Repayment and vendor evidence are unavailable.\\n\\nRecommend hold_contact for reversible step-up verification. Verification of card possession, purchase intent, and travel or card-authorization context should distinguish the fraud hypothesis from the benign mimic.\"\n}"
+ },
+ "task": "triage_memo"
+}

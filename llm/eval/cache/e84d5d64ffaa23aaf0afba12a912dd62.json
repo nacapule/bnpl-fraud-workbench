@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "f5c9d43e6b2395c62f065269821e5bf4b37136ca6ce774fedb614a0904a7602b",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 187596,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert amount 876.62\",\"R06 fired: disposable_domain=True, shared_root_accounts=1\",\"R08 fired: ship-to address a_2899016 already used by 37 distinct accounts\",\"other_accounts_on_device=2\",\"other_accounts_on_ship_address=39\",\"AVS result N\",\"CVV result M\",\"email domain mailinator.com\",\"repayment history: installments_due=9, paid=9.0, late=0.0, failed_or_written_off=0.0\",\"alert status approved\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The disposable email domain and ship-to address linkage are consistent with coordinated multi-account activity. The address was already used by 37 distinct accounts, and 39 other accounts are linked to the ship address.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The order has AVS result N and CVV result M, but the packet does not show card declines or a foreign card/IP mismatch.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"No account events are present, and the packet provides no credential manipulation or geography anomaly.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"Repayment history shows paid=9.0, late=0.0, and failed_or_written_off=0.0.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift buyer or mover could explain a non-home shipping address, but neither mimic explains the address linkage to 37 distinct accounts and the disposable email domain.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query the linked accounts using ship address a_2899016 to confirm whether the linkage represents coordinated orders.\",\"Check fulfillment status for order 351842 and whether the merchant has additional orders linked to the same address.\"],\"memo_markdown\":\"Order 351842 is a high-likelihood synthetic-ring case. R06 identifies a disposable mailinator.com domain and shared-root activity; R08 identifies a ship-to address already used by 37 distinct accounts. The linkage packet lists 39 other accounts on the ship address, meeting FP-1\u2019s escalation threshold for multi-account linkage. Stolen-card risk is possible because AVS is N and CVV is M, but there are no card declines and the card and IP countries are both US. Account takeover and never-pay are weak hypotheses: no account events are present, and repayment history shows paid=9.0 with late=0.0 and failed_or_written_off=0.0. Recommend escalate for ring review; priority P1 because the order amount is 876.62.\"}"
+ },
+ "task": "triage_memo"
+}

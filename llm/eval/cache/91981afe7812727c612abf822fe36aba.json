@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "9973e8c7150ae1f5108e6fa419b6fe24b6f48d58da171dbe2465ca6db6e2f5ff",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 21121,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country US vs IP country CA with AVS=N/CVV=M\",\"Order 352887 was approved at 2025-10-12 08:35:14 for 705.11\",\"Merchant category is electronics and merchant name is flash-elec-70\",\"Account 41313 has n_orders_prior of 0 and tenure_days of 8\",\"Account events_90d is empty\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"declines_on_card_24h is 0\",\"Vendor scores are null\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The approved electronics order has a US card BIN, CA IP country, AVS=N, and CVV=M. This is corroborated only by the geography+verification signal family.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler is a known benign mimic for a foreign IP where there are no credential changes; account_events_90d is empty. The packet does not establish whether the CA IP reflects travel or unauthorized card use.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"The linkage fields show 0 other accounts on the device, ship address, and email root, so the packet does not show multi-account linkage.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 2\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Step-up customer verification to distinguish travel from unauthorized card use\",\"Confirm the customer's current location and relationship to the CA IP\",\"Obtain cardholder verification or issuer confirmation for card_id 53297\"],\"memo_markdown\":\"R03 fired on approved order 352887: US card BIN versus CA IP, with AVS=N and CVV=M. The order is for 705.11 in electronics at flash-elec-70. Account 41313 has tenure_days of 8, n_orders_prior of 0, and no account_events_90d.\\n\\nStolen-card activity is a medium-likelihood concern, but the packet provides only one corroborating signal family: geography+verification. There is no linkage evidence: device, ship address, and email root each show 0 other accounts. A traveler remains a medium-likelihood benign mimic because the IP is foreign and no credential changes are recorded.\\n\\nRecommend hold_contact for step-up verification. This is P1 because exposure is 705.11. Do not decline_block on the present packet; customer or cardholder verification would resolve the key ambiguity.\"}"
+ },
+ "task": "triage_memo"
+}

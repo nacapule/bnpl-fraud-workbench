@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "878c73ab592d4b139f89f8112f552d1abf55d4efcc9aaca62b0d6ed9dfb7ab32",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 26697,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"signup_ts: 2026-05-09 04:55:47\",\"tenure_days: 4\",\"n_orders_prior: 0\",\"amount: 87.83\",\"score: 90\",\"band: decline\",\"status: approved\",\"avs_result: Y\",\"cvv_result: M\",\"R06: email identity cost-reduction: disposable_domain=False, shared_root_accounts=95\",\"R08: ship-to address a_2899502 already used by 6 distinct accounts\",\"R10: promo redeemed inside a device/address cluster with 6 linked redemptions\",\"other_accounts_on_device: 5\",\"other_accounts_on_ship_address: 47\",\"other_accounts_same_email_root: 94\",\"ip_country: US\",\"bin_country: US\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"Device, ship-to address, and email-root linkage each meet the FP-1 multi-account-ring threshold. The account is newly signed up with no prior orders and is linked to a promo-redemption cluster.\"},{\"pattern\":\"promo_abuse\",\"likelihood\":\"high\",\"reasoning\":\"R10 states that a promo was redeemed inside a device/address cluster with 6 linked redemptions. R06 and R08 independently corroborate broad email-root and ship-to linkage.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows US IP, US BIN country, and successful AVS/CVV results, but no stated benign mimic explains the multi-account device, address, email-root, and promo linkage.\"}],\"policy_citations\":[\"R06\",\"R08\",\"R10\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check linked-account order statuses and confirmed-fraud outcomes.\",\"Check whether the linked accounts share payment instruments or credential events.\",\"Check merchant fulfillment and shipment status for order_id 352784.\"],\"memo_markdown\":\"Order 352784 was approved despite a score of 90 and decline band. The account has tenure_days 4 and n_orders_prior 0. Ring indicators are present across independent linkage roots: other_accounts_on_device 5, other_accounts_on_ship_address 47, and other_accounts_same_email_root 94. R08 reports the ship-to address was used by 6 distinct accounts; R10 reports 6 linked promo redemptions. This supports synthetic_ring and promo_abuse at high likelihood. US IP/BIN and AVS Y/CVV M do not explain the multi-account linkage. Escalate under FP-1 action selection step 1 for multi-account-ring evidence; human review should determine order and account disposition.\"}"
+ },
+ "task": "triage_memo"
+}

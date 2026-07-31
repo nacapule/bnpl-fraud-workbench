@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "8776dd1eacf6e107275101956f2305014be46f577d1def577e880aa7498606d9",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 234631,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"R09 fired for repeat INR disputes\",\n    \"2 prior item-not-received chargebacks on this account with healthy repayment\",\n    \"alert amount 86.37\",\n    \"current order status approved\",\n    \"current AVS result Y\",\n    \"current CVV result M\",\n    \"account KYC country CA and card BIN country CA\",\n    \"current IP country US\",\n    \"other accounts on device 0\",\n    \"other accounts on ship address 0\",\n    \"other accounts same email root 0\",\n    \"repayment history shows failed_or_written_off 0.0, installments_due 6, late 0.0, and paid 6.0\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"inr_abuse\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"The account has 2 prior item-not-received chargebacks, matching the fired R09 repeat INR disputes rule. Healthy repayment and no device, address, or email-root linkage weaken the hypothesis.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"A traveler mimic could explain the US IP country against CA KYC and card BIN countries, while current AVS result Y, healthy repayment, and zero linkage support a benign explanation. The packet does not confirm travel.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R09\",\n    \"FP-1 \u00a71\",\n    \"FP-1 \u00a76\"\n  ],\n  \"recommended_action\": \"hold_contact\",\n  \"priority\": \"P2\",\n  \"evidence_gaps\": [\n    \"Verify whether the customer was traveling when the current order was placed\",\n    \"Review fulfillment and delivery evidence for the 2 prior item-not-received chargebacks\",\n    \"Confirm whether any credential changes occurred before the current order\"\n  ],\n  \"memo_markdown\": \"R09 fired for repeat INR disputes because the account has 2 prior item-not-received chargebacks with healthy repayment. The current order is approved for 86.37, with AVS result Y and CVV result M. KYC and card BIN countries are both CA, while the current IP country is US. No other accounts share the device, ship address, or email root. Repayment history shows failed_or_written_off 0.0, late 0.0, and paid 6.0 against installments_due 6.\\\\n\\\\nINR abuse is medium likelihood due to the dispute history, but the absence of linkage and healthy repayment reduce confidence. A traveler mimic is also medium likelihood, but travel is unconfirmed. Recommend hold_contact for reversible customer verification; step-up verification and prior INR fulfillment evidence should resolve the ambiguity.\"\n}"
+ },
+ "task": "triage_memo"
+}

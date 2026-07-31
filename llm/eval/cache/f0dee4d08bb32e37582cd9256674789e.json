@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "c8749cc3c1b2bae3c16589dd103e779bcfcdc2e5e3961cc0a4f967d25de1fb63",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 51491,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R02 multi-account device: 3 accounts have transacted on device d_5181734 as of this order\",\"R06 identity cost reduction: shared_root_accounts=80 and disposable_domain=False\",\"R08 shared drop address: ship-to address a_2899018 already used by 29 distinct accounts\",\"Linkage shows other_accounts_on_device=2\",\"Linkage shows other_accounts_on_ship_address=39\",\"Linkage shows other_accounts_same_email_root=79\",\"AVS result N and CVV result M on order 351912\",\"Order amount 34.89, status approved, at 2025-11-05 23:43:16\",\"Account has n_orders_prior=0, total_spent_prior=0.0, and tenure_days=14\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"Shared device, ship-to address, and email root link this account to multiple accounts. The linkage pattern is more consistent with a multi-account synthetic ring than with an isolated payment or account issue.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"AVS result N and CVV result M are consistent with payment credential mismatch, but the packet provides stronger device, address, and email-root linkage evidence.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler, mover, gift buyer, hardship defaulter, verification typo, or new-phone mimic does not explain the combined multi-account device, address, and email-root linkage.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Query the linked accounts on device d_5181734, address a_2899018, and the shared email root for confirmed-fraud outcomes and common fulfillment or payment indicators.\",\"Review merchant activity for suspected merchant complicity or coordinated ordering.\",\"Check whether the AVS and CVV mismatches are explained by a verified customer interaction.\"],\"memo_markdown\":\"Order 351912 is a high-likelihood synthetic-ring candidate. R02 reports 3 accounts transacting on device d_5181734; linkage also shows other_accounts_on_ship_address=39 and other_accounts_same_email_root=79. R06 reports shared_root_accounts=80, and R08 reports the ship-to address was already used by 29 distinct accounts. AVS result N and CVV result M add payment-verification concern, while the account has no prior orders or repayment history. Benign mimics such as travelers, movers, gift buyers, hardship defaulters, verification typos, and new phones do not explain the combined linkage pattern. Escalate for ring review under FP-1 action selection step 1; a human analyst owns the final decision.\"}"
+ },
+ "task": "triage_memo"
+}

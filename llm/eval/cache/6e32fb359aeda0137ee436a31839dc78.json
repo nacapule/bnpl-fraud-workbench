@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "0804c320e6f470d4adcd99f2c5787891abfa0af760140c25fe5330a2a2c3e8d0",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 31819,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"alert amount 211.21\",\n    \"alert score 35\",\n    \"geo + verification mismatch: card BIN country US vs IP country CA with AVS=N/CVV=M\",\n    \"card BIN country US\",\n    \"IP country CA\",\n    \"AVS result N\",\n    \"CVV result M\",\n    \"account tenure_days 4\",\n    \"n_orders_prior 0\",\n    \"total_spent_prior 0.0\",\n    \"other_accounts_on_device 0\",\n    \"other_accounts_on_ship_address 0\",\n    \"other_accounts_same_email_root 0\",\n    \"alert status approved\",\n    \"merchant category gaming\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"stolen_card\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"The US card BIN, CA IP, and AVS=N/CVV=M support possible unauthorized card use. Evidence is limited to the geography+verification family, with no linkage or repayment evidence.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"A traveler could explain the foreign IP because there are no account events indicating credential changes. The AVS/CVV mismatch could also reflect a verification typo, but the packet does not establish that the mismatch is within the stated benign noise rate.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R03\",\n    \"FP-1 \u00a71\",\n    \"FP-1 \u00a75\",\n    \"FP-1 \u00a76\"\n  ],\n  \"recommended_action\": \"hold_contact\",\n  \"priority\": \"P2\",\n  \"evidence_gaps\": [\n    \"Run step-up customer verification to confirm cardholder possession and billing details.\",\n    \"Check whether the customer is traveling and whether the shipping address is consistent with the customer.\",\n    \"Review device and credential history for activity not present in account_events_90d.\"\n  ],\n  \"memo_markdown\": \"Alert 7398 concerns approved order 352275 for 211.21 in gaming. R03 fired because the card BIN country is US while the IP country is CA, with AVS=N and CVV=M. The account has tenure_days 4, n_orders_prior 0, and total_spent_prior 0.0. No other accounts share the device, ship address, or email root.\\n\\nStolen_card is a medium-likelihood hypothesis based on the geography+verification family. A benign traveler explanation is also medium likelihood because no credential changes are present; verification typo remains possible but is not established within the stated noise rate. The packet does not support decline_block because at least two independent fraud signal families do not corroborate the pattern. Step-up verification should distinguish card misuse from a traveler or verification typo. Priority is P2.\"\n}"
+ },
+ "task": "triage_memo"
+}

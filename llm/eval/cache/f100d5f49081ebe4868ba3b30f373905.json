@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "08a1ca3c6b98bec2e34ab908a389534bf6d52db166d808715d1781530543105c",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 26593,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 259657 was approved at 2026-03-25 13:03:55 for 27.72\",\"R03 fired: card BIN country US vs IP country CA with AVS=Y/CVV=N\",\"R09 fired: 2 prior item-not-received chargebacks on this account with healthy repayment\",\"account has n_orders_prior 2 and tenure_days 202\",\"repayment_history shows installments_due 6, paid 6.0, late 0.0, and failed_or_written_off 0.0\",\"other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0\",\"account_events_90d shows logins from device_id 21505 and IPs 49.141.37.26, 49.141.37.169, and 49.141.37.108\",\"last_orders show approved orders with ip_country CA on 2025-12-16 07:27:01 and 2025-10-20 22:27:34\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"high\",\"reasoning\":\"R09 identifies 2 prior item-not-received chargebacks on this account with healthy repayment. The current approved beauty order also has the R03 geography and verification mismatch signal.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic is plausible because the account has repeated CA IP-country orders and 90-day logins from device_id 21505, with no credential-change events provided. This does not explain the 2 prior item-not-received chargebacks.\"}],\"policy_citations\":[\"R03\",\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76.1\"],\"recommended_action\":\"decline_block\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the evidence and disposition details for the 2 prior item-not-received chargebacks.\",\"Confirm whether the current order has fulfillment or shipment activity.\",\"Check whether the current CA IP is consistent with the account's historical IP geography.\"],\"memo_markdown\":\"Approved order 259657 for 27.72 triggered R03 and R09. The leading hypothesis is INR abuse: R09 records 2 prior item-not-received chargebacks despite healthy repayment, while the current transaction has a US BIN, CA IP, AVS=Y, and CVV=N. These provide repayment-behavior and geography-plus-verification corroboration. A traveler explanation remains plausible because prior approved orders and 90-day logins use device_id 21505 with CA IP activity, but it does not explain the prior INR history. No device, ship-address, or email-root linkage is present. Recommend decline_block pending review; confirm prior dispute evidence and current fulfillment status.\"}"
+ },
+ "task": "triage_memo"
+}

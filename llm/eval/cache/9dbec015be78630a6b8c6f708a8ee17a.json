@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "6bcd737df51abcc0902ab8ce631621126e24fd5c9d083c5d7301a3d6e0092464",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 28405,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"R09 fired: repeat INR disputes\",\n    \"R09 rationale: 2 prior item-not-received chargebacks on this account with healthy repayment\",\n    \"alert amount 168.81\",\n    \"alert status approved\",\n    \"AVS result Y and CVV result M\",\n    \"account tenure_days 627\",\n    \"account n_orders_prior 2\",\n    \"account total_spent_prior 138.35\",\n    \"linkage other_accounts_on_device 0\",\n    \"linkage other_accounts_on_ship_address 2\",\n    \"linkage other_accounts_same_email_root 0\",\n    \"repayment failed_or_written_off 0.0\",\n    \"repayment installments_due 6\",\n    \"repayment late 3.0\",\n    \"repayment paid 3.0\",\n    \"card declines_on_card_24h 0\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"inr_abuse\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"R09 identifies 2 prior item-not-received chargebacks, supporting possible INR abuse. The packet provides repayment behavior corroboration but no additional independent fraud family.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"A verification typo is plausible because AVS is Y while CVV is M, and FP-1 \u00a76 recognizes verification mismatches as a benign mimic. Stable US card, IP country, device, and ship address signals also do not establish account takeover or a ring.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R09\",\n    \"FP-1 \u00a71\",\n    \"FP-1 \u00a75\",\n    \"FP-1 \u00a76\"\n  ],\n  \"recommended_action\": \"hold_contact\",\n  \"priority\": \"P2\",\n  \"evidence_gaps\": [\n    \"Run step-up customer verification focused on possession of the payment card and confirmation of the order.\",\n    \"Check the 2 prior item-not-received disputes for delivery evidence and confirmed-fraud outcomes.\",\n    \"Review the 2 other accounts on ship_address_id 9599 for confirmed fraud linkage.\"\n  ],\n  \"memo_markdown\": \"R09 fired for repeat INR disputes, citing 2 prior item-not-received chargebacks with healthy repayment. The current alert is 168.81 and approved; AVS is Y and CVV is M. The account has tenure_days 627, n_orders_prior 2, total_spent_prior 138.35, failed_or_written_off 0.0, and card declines_on_card_24h 0. Device and email-root linkage are 0, while other_accounts_on_ship_address is 2. INR abuse is a medium-likelihood hypothesis, but the packet does not provide a second independent fraud family or confirmed-fraud outcome. A verification typo remains a medium-likelihood benign mimic under FP-1 \u00a76. Recommend hold_contact for reversible step-up verification and review of the prior disputes.\"\n}"
+ },
+ "task": "triage_memo"
+}

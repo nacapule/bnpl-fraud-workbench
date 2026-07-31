@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "05d2e41be536fa26de6cc42400a4addb1ca9bb61ec3f19952187f9b7d9bc29b7",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 26370,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 350537 was approved at 2025-09-24 14:46:36 for 277.94 in jewelry at swift-tech-38\",\"R03 fired: card BIN country US vs IP country FR with AVS=N/CVV=M\",\"account tenure_days is 2 and n_orders_prior is 0\",\"card network is visa and declines_on_card_24h is 0\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"account_events_90d is empty\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card BIN versus FR IP and AVS=N are geography-plus-verification signals associated with potential unauthorized card use. The packet provides no corroborating device/linkage, velocity, repayment, or vendor-score signal.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler is a known benign mimic for a foreign IP where there are no credential changes; account_events_90d is empty. Verification typos are also a known benign mimic for AVS/CVV mismatch, but the packet cannot resolve the mismatch without customer verification.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Request step-up customer verification for order_id 350537.\",\"Check whether the customer can verify possession of the payment card associated with card_id 52062.\",\"Confirm whether the FR IP at 77.90.248.136 reflects customer travel.\"],\"memo_markdown\":\"Order 350537 was approved at 2025-09-24 14:46:36 for 277.94 in jewelry. R03 fired because the card BIN country is US, the IP country is FR, and AVS=N/CVV=M. The account has tenure_days of 2 and n_orders_prior of 0. No account events are recorded, and linkage shows 0 other accounts on the device, ship address, and email root.\\n\\nStolen-card activity is plausible from the geography and AVS signal, but only one corroborating signal family is present. A benign traveler explanation remains plausible because there are no credential changes; a verification typo is also a stated benign mimic. Hold pending step-up verification rather than decline/block.\"}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "35c00cb15df341818de89b86b1966920a19e6aa0ceb9529de34e94283a4be881",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 27336,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert score 100 with band \\\"decline\\\"\",\"5 accounts have transacted on device d_5181699 as of this order\",\"email identity cost-reduction: disposable_domain=False, shared_root_accounts=80\",\"ship-to address a_2899015 already used by 28 distinct accounts\",\"other_accounts_on_device: 4\",\"other_accounts_on_ship_address: 39\",\"other_accounts_same_email_root: 79\",\"order 351431 was approved for 34.94 at lux-row-11 on 2025-08-21 16:39:51\",\"AVS result Y and CVV result M\",\"account tenure_days: 19 and n_orders_prior: 0\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The account is linked to other accounts through device, ship-to address, and email root. The linkage counts meet FP-1's multi-account-ring escalation condition.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer mimic could explain a shared ship-to address, but the packet also shows shared device and email-root linkage; the account has no prior orders.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the linked accounts' order outcomes and fraud dispositions for device d_5181699, ship-to address a_2899015, and the shared email root.\",\"Check whether order 351431 has been fulfilled or remains cancellable.\",\"Review identity, payment, and timing overlap across accounts linked to device d_5181699 and ship-to address a_2899015.\"],\"memo_markdown\":\"Escalate for suspected synthetic ring. Order 351431 was approved for 34.94 at lux-row-11 on 2025-08-21 16:39:51, with AVS Y and CVV M. R02 reports 5 accounts transacting on device d_5181699; linkage lists other_accounts_on_device: 4. R08 reports ship-to address a_2899015 used by 28 distinct accounts; linkage lists other_accounts_on_ship_address: 39. R06 reports shared_root_accounts=80; linkage lists other_accounts_same_email_root: 79. These independent linkage roots satisfy FP-1 action selection step 1 for multi-account-ring escalation. A gift-buyer explanation could account for a shared address, but does not explain the concurrent device and email-root linkage. Account tenure_days is 19 with n_orders_prior: 0. Verify linked-account outcomes and fulfillment status before the human analyst's final action.\"}"
+ },
+ "task": "triage_memo"
+}

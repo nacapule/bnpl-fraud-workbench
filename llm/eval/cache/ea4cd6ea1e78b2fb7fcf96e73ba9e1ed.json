@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "0d346f3b2b96a49352db7444f2b7a1a5146a4e499e8b3a66c3f0d9eed1b9ff5e",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 34202,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: geo + verification mismatch; card BIN country US vs IP country CA with AVS=Y/CVV=N\",\"order_id 130061 was approved at 2025-11-23 22:59:01 for 16.56 at swift-market-56 in beauty\",\"The alert has AVS result Y and CVV result N\",\"The account has 8 prior orders and tenure_days 690\",\"The prior orders shown use IP country CA and device_id 17113\",\"The prior orders shown have AVS result Y and CVV result M\",\"account_events_90d is empty\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 1, and other_accounts_same_email_root is 0\",\"declines_on_card_24h is 0\",\"repayment history shows installments_due 24, paid 24.0, late 0.0, and failed_or_written_off 0.0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"Traveler mimic is most consistent: IP country CA is present across the prior orders shown, device_id remains 17113, and account_events_90d is empty. The current CVV result N is isolated against AVS result Y and prior CVV result M.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The CVV result N and US BIN country versus CA IP country support the fired mismatch rule, but there is no credential manipulation, device linkage, velocity, or repayment-risk corroboration in the packet.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 action selection step 3\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the CVV result N is a one-time processor or entry exception for card_id 17113.\",\"Confirm fulfillment status for order_id 130061.\"],\"memo_markdown\":\"R03 fired because the card BIN country is US while the IP country is CA, with AVS=Y and CVV=N. The approved beauty order is 16.56. Benign traveler behavior is the leading explanation: the prior orders shown also use IP country CA and device_id 17113, while account_events_90d is empty. The current CVV=N is isolated; the prior orders shown have AVS=Y and CVV=M. No linkage or repayment-risk corroboration is present: other_accounts_on_device is 0, other_accounts_same_email_root is 0, declines_on_card_24h is 0, and repayment history shows paid 24.0 with late 0.0 and failed_or_written_off 0.0. Clear under FP-1 action selection step 3; the fired rule is explained by the traveler mimic and isolated verification exception.\"}"
+ },
+ "task": "triage_memo"
+}

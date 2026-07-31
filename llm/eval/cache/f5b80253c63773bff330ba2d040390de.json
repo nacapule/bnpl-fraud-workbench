@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "67903bd8612d7212070cf2c8024f7dd7e17d17c465ace944895986e988d3addf",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 51984,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R06 fired: disposable_domain=True, shared_root_accounts=1\",\"R08 fired: ship-to address a_2899016 already used by 7 distinct accounts\",\"other_accounts_on_ship_address=39\",\"other_accounts_on_device=2\",\"email_domain=mailinator.com\",\"amount=65.07\",\"status=approved\",\"avs_result=Y\",\"cvv_result=M\",\"ip_country=US and bin_country=US\",\"n_orders_prior=0\",\"account_events_90d=[]\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The disposable email domain and shared ship-to address used by 7 distinct accounts are consistent with coordinated multi-account activity. Linkage shows 39 other accounts on the ship address and 2 other accounts on the device.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows avs_result=Y, cvv_result=M, declines_on_card_24h=0, and matching US IP and BIN countries.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"No account_events_90d are present, and the packet does not show credential manipulation.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift buyer could explain a non-home ship-to address, but it does not explain the disposable email domain and extensive address linkage.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Query the linked accounts on ship address a_2899016 for confirmed-fraud outcomes and shared payment instruments.\",\"Check whether merchant nova-tech-24 is associated with the linked accounts or other suspicious orders.\"],\"memo_markdown\":\"The order is approved for 65.07 and triggered R06 and R08. The packet shows a disposable mailinator.com email domain, ship-to address a_2899016 used by 7 distinct accounts, 39 other accounts on that address, and 2 other accounts on the device. This is high-likelihood synthetic_ring activity and meets FP-1\u2019s multi-account-ring escalation criterion. Stolen_card and account_takeover are low likelihood: AVS is Y, CVV is M, card declines_on_card_24h is 0, IP and BIN countries are both US, and account_events_90d is empty. A gift-buyer benign mimic is possible but does not explain the full linkage pattern. Recommend escalate for ring review; human analyst decision required.\"}"
+ },
+ "task": "triage_memo"
+}

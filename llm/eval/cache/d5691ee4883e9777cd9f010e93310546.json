@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "4d610acb654d6c6cfe73c6fe701567ffc2ed7f7f8024ca53cc3079fee84c050b",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 27437,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 351857 was approved at 2025-11-28 00:20:36 for 43.69 at urban-supply-27\",\"R02: 3 accounts have transacted on device d_5181733 as of this order\",\"R06: disposable_domain=False, shared_root_accounts=80\",\"R08: ship-to address a_2899019 already used by 35 distinct accounts\",\"other_accounts_on_ship_address is 39\",\"other_accounts_same_email_root is 79\",\"AVS result was Y and CVV result was M\",\"repayment_history shows installments_due 4, paid 4.0, late 0.0, and failed_or_written_off 0.0\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The shared email root and shared ship-to address have linkage counts above the FP-1 escalation threshold. The device also has multi-account transaction activity.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer or mover explanation does not account for the shared email-root and shared-address linkage. Stable repayment history is favorable but does not explain those linkages.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check the linked accounts using email root julianjackson and ship-to address a_2899019 for order outcomes and fraud dispositions.\",\"Check fulfillment status for order_id 351857.\",\"Review identity and payment-instrument overlap across accounts linked to device d_5181733.\"],\"memo_markdown\":\"Escalate for suspected synthetic-ring activity. The case has multi-account linkage on device d_5181733, ship-to address a_2899019, and the julianjackson email root; the shared-address and email-root linkage counts meet FP-1\u2019s multi-account-ring escalation criterion. R02, R06, and R08 fired. AVS Y and CVV M are favorable payment-verification signals, and repayment history shows paid 4.0 with late 0.0 and failed_or_written_off 0.0, but these do not explain the address and email-root linkage. Confirm linked-account outcomes and current fulfillment status before final human disposition.\"}"
+ },
+ "task": "triage_memo"
+}

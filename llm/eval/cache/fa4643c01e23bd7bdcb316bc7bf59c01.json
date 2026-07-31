@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "e9aa74f36992d87d3177b4f56600ff337dbb4e081703cd9c2242c570ab352be8",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 22838,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: geo + verification mismatch, weight 35\",\"card BIN country US vs IP country CA\",\"AVS result Y and CVV result N\",\"order amount 104.36\",\"account tenure_days 8 and n_orders_prior 0\",\"other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0\",\"declines_on_card_24h 0\",\"account_events_90d empty\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card BIN, Canadian IP, and CVV=N create a geography and verification concern. However, AVS=Y, declines_on_card_24h=0, and no linkage or repayment evidence weaken this hypothesis.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"There are no account events or credential changes, and linkage counts are 0 across device, ship address, and email root.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic could explain a foreign IP with no credential changes; AVS=Y and the absence of account linkage support this possibility, but the CVV mismatch remains unresolved.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Use step-up customer verification to confirm the cardholder and whether the customer was traveling in Canada at order time.\",\"Check whether the CVV mismatch reflects a verification typo or issuer-side response detail.\"],\"memo_markdown\":\"Order 352475 is a standard review case with amount 104.36 and score 35 after R03 fired for a US card BIN versus Canadian IP with AVS=Y/CVV=N. Stolen_card is a medium-likelihood hypothesis, but there is no linkage to other accounts, no prior repayment evidence, no account-event history, and declines_on_card_24h is 0. A traveler is the leading benign mimic because the packet shows a foreign IP and no credential changes; AVS=Y also supports that possibility. The packet cannot resolve the CVV mismatch or travel context. Recommend hold_contact for reversible step-up verification. Human analyst retains the decision.\"}"
+ },
+ "task": "triage_memo"
+}

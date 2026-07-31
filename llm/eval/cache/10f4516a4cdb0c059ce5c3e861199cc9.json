@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "92550b13ce83151407a3132a2e95263e1518fc68a18f76626a0941448ec805c4",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 23483,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 351708 was approved at 2025-09-11 21:47:09 for 70.9\",\"score is 100 and band is decline\",\"R02: 3 accounts have transacted on device d_5181719 as of this order\",\"R06: email identity cost-reduction: disposable_domain=True, shared_root_accounts=1\",\"R08: ship-to address a_2899017 already used by 36 distinct accounts\",\"other_accounts_on_device is 2\",\"other_accounts_on_ship_address is 39\",\"email is graysongomez6765@mailinator.com and email_domain is mailinator.com\",\"avs_result is N and cvv_result is M\",\"tenure_days is 5 and n_orders_prior is 0\",\"ip_country is US, bin_country is US, and kyc_country is US\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The device and ship-to address are linked to multiple accounts, including 3 accounts transacting on device d_5181719 and 36 distinct accounts using ship-to address a_2899017. The disposable email and AVS result N further support an identity-cost-reduction and linkage-based ring hypothesis.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer explanation can involve shipping away from home, but the packet provides no stable history and the ship-to address is already used by 36 distinct accounts. The new-account context does not explain the multi-account device linkage and disposable email together.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 Action Selection 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the 3 accounts that transacted on device d_5181719 for shared payment, shipping, or credential attributes.\",\"Review the 36 distinct accounts using ship-to address a_2899017 for confirmed-fraud outcomes and order status.\",\"Check whether order_id 351708 has entered fulfillment and whether merchant atlas-row-90 has related linked orders.\"],\"memo_markdown\":\"Order 351708 was approved for 70.9 despite score 100 and decline band. The packet shows multi-account linkage on device d_5181719, where 3 accounts have transacted, and extensive reuse of ship-to address a_2899017 across 36 distinct accounts. R06 also identifies a disposable mailinator.com email. AVS result is N; CVV result is M.\\n\\nSynthetic-ring activity is the leading hypothesis. The linkage threshold for escalation is met on both device and address evidence. A benign gift-buyer explanation is weak because there is no prior order history and it does not explain the combined device, address, and disposable-email signals.\\n\\nEscalate for linked-account review. Confirm outcomes and shared attributes across the linked device and address populations, and check fulfillment status.\"}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "3aa6939507f26fc4424c2d1221a5d40cbc5504ef89fccde272c28a026ff95120",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 31189,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 350939 amount 758.76 approved at 2025-08-15 16:48:28\",\"Card BIN country US vs IP country ES\",\"AVS result N and CVV result M\",\"Two approved electronics orders on device 5181574 from IP country ES\",\"Prior order 350937 amount 376.98 at 2025-08-15 15:40:51 with AVS Y and CVV M\",\"Account tenure_days 3\",\"other_accounts_on_device 0, other_accounts_on_ship_address 0, other_accounts_same_email_root 0\",\"declines_on_card_24h 0\",\"fired rule R03 with score 35\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card BIN, ES IP country, AVS=N, and CVV=M support a possible stolen-card pattern. However, only the geography+verification signal family is present, and the same device and IP country were used for a prior approved order.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic could explain the foreign IP with a US card, and the prior order had AVS=Y. The packet does not show credential changes or account/device/address/email linkage, but the current AVS=N and CVV=M remain unresolved.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 \u00a76.1\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Step-up customer verification of the cardholder and current shipping address\",\"Check whether the customer is traveling or otherwise expected to use an ES IP country\",\"Review cardholder and shipping-address match details for order 350939\"],\"memo_markdown\":\"Order 350939 is approved for 758.76 and triggered R03 for a US card BIN versus ES IP country with AVS=N/CVV=M. A possible stolen-card pattern is medium likelihood, but corroboration is limited to the geography+verification family. The account has tenure_days 3 and a prior approved electronics order on the same device and ES IP country, with AVS=Y/CVV=M. No other accounts share the device, ship address, or email root; card declines_on_card_24h is 0. A traveler benign mimic remains plausible, though current verification results are unresolved. Recommend hold_contact for reversible step-up verification. Priority P1 due to amount 758.76 and approved exposure.\"}"
+ },
+ "task": "triage_memo"
+}

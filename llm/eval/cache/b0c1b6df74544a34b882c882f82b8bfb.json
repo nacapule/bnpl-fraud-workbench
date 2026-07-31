@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "4c3d4d3ec45984df71be5a6539363aaed6c87eb05b633b76670fc651a0b17627",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 26971,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 324024 was approved at 2026-05-30 16:12:45 for 1006.62 in electronics\",\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"account has 30 prior orders, tenure_days 313, and total_spent_prior 5633.97\",\"n_avs_mismatch_prior is 0.0 and n_cvv_mismatch_prior is 0.0\",\"account_events_90d is empty\",\"device_id 39423 is used on the alert and last_orders\",\"last_orders show IP country US with AVS=Y/CVV=M\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 1, and other_accounts_same_email_root is 0\",\"repayment_history shows installments_due 86, paid 84.0, late 2.0, and failed_or_written_off 0.0\",\"declines_on_card_24h is 0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"Traveler is the most plausible benign mimic: the account has CA KYC and card BIN country CA, while the alert and prior orders use IP country US, with no account_events_90d. The isolated AVS=N result is consistent with FP-1 \u00a76 verification-typo noise, while CVV=M, device continuity, established history, and repayment history do not corroborate fraud.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The current order has AVS=N and is for 1006.62, but there is no credential manipulation, device linkage, velocity, prior verification mismatch, card decline, or vendor-score corroboration in the packet.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\"],\"recommended_action\":\"clear\",\"priority\":\"P1\",\"evidence_gaps\":[\"Confirm whether the current AVS=N reflects an issuer/address-entry error or an address change.\",\"Confirm fulfillment status for order_id 324024 before closure.\"],\"memo_markdown\":\"**Recommendation: clear (P1).**\\n\\nR03 fired because the CA card BIN was used from a US IP with AVS=N/CVV=M on approved order 324024 for 1006.62. The US IP is not new in the provided history: prior orders also show IP country US, AVS=Y, and CVV=M. Device_id 39423 is continuous, account_events_90d is empty, and linkage shows 0 other accounts on device and email root. The account has 30 prior orders, 313 tenure_days, and repayment history of 84.0 paid, 2.0 late, and 0.0 failed_or_written_off.\\n\\nThe packet supports the FP-1 \u00a76 traveler mimic, with the isolated AVS=N fitting stated verification-typo noise. No second independent fraud signal family corroborates stolen-card activity. Confirm the AVS source and fulfillment status as documentation checks; neither is required to maintain a hold on the present evidence.\"}"
+ },
+ "task": "triage_memo"
+}

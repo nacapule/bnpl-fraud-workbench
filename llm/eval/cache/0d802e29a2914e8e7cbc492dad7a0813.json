@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "38a3afafe443d1fae9d3c08eaf75e7a3e069500e195416d70a7f35bf9a0e3bd2",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 36220,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country US vs IP country CA with AVS=Y/CVV=N\",\"Order 38547 amount 321.16, status approved, at 2025-08-16 17:20:04\",\"Merchant category jewelry; merchant swift-trading-12\",\"Device 114591 was added at 2025-07-24 00:00:00\",\"Other accounts on device: 0; other accounts on ship address: 0; other accounts with same email root: 0\",\"Prior AVS mismatches: 1.0; prior CVV mismatches: 1.0\",\"Repayment history: installments_due 1, paid 1.0, late 0.0, failed_or_written_off 0.0\",\"Card declines in 24h: 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card used from a CA IP with CVV=N triggered the geo and verification mismatch rule. Jewelry purchasing and the verification signal support review, but no card declines or repayment problems are present.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The foreign IP and newly added device could be consistent with takeover, but the packet lists no credential-manipulation event and shows no linkage to other accounts.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler is a plausible mimic because the IP country is CA while the card BIN and KYC country are US. The device_add event and zero linkage also support a new-phone explanation; the CVV mismatch remains unresolved.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Ask for step-up customer verification of the order and cardholder possession.\",\"Check whether the customer was traveling in CA at 2025-08-16 17:20:04.\",\"Verify whether device 114591 is an organic replacement phone for this customer.\"],\"memo_markdown\":\"Order 38547 is approved for 321.16 in jewelry and triggered R03 because a US card BIN was used from a CA IP with AVS=Y and CVV=N. The newly added device 114591 is not linked to other accounts, addresses, or email roots, and repayment history shows paid 1.0 with late 0.0 and failed_or_written_off 0.0.\\\\n\\\\nStolen card is a medium-likelihood hypothesis; account takeover is low. A traveler or new-phone explanation is also medium likelihood and is supported by the foreign IP, device_add event, and zero linkage. Because the packet cannot distinguish these explanations and step-up verification would be decisive, recommend hold_contact. No ring, merchant-complicity, or confirmed-fraud exposure basis for escalation is present.\"}"
+ },
+ "task": "triage_memo"
+}

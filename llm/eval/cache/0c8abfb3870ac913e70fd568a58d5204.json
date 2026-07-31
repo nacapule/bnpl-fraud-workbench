@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "cf9043db7d55f3a1cba82ca8d64adcecaf8db79f4b4acd5b4bd00dc570b1dc4c",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 30880,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"account user_id 41214 has tenure_days 4 and n_orders_prior 0\",\"order_id 352788 amount 104.43 was approved at 2026-05-16 22:54:32\",\"alert score 90 and band decline\",\"R06: shared_root_accounts=95\",\"R08: ship-to address a_2899502 already used by 14 distinct accounts\",\"R10: promo redeemed inside a device/address cluster with 14 linked redemptions\",\"device_id 5182254 has other_accounts_on_device 6\",\"ship_address_id 2899502 has other_accounts_on_ship_address 47\",\"email root has other_accounts_same_email_root 94\",\"AVS result Y and CVV result M\",\"IP country US, BIN country US, and KYC country US\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The account is new and linked to multiple other accounts through device, ship-to address, and email root. Shared-address and promo-cluster rules independently support coordinated multi-account activity.\"},{\"pattern\":\"promo_abuse\",\"likelihood\":\"high\",\"reasoning\":\"R10 identifies promo redemption inside a device/address cluster with 14 linked redemptions. The linkage across multiple accounts supports organized promotional exploitation.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"AVS result Y, CVV result M, and declines_on_card_24h 0 do not provide strong card-misuse support.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift buyer could explain a non-home ship-to address, but does not adequately explain the device, email-root, and promo-cluster linkages.\"}],\"policy_citations\":[\"R06\",\"R08\",\"R10\",\"FP-1 \u00a71\",\"FP-1 action ladder step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query the linked accounts for confirmed-fraud outcomes and order statuses.\",\"Check whether the 14 linked redemptions share payment instruments or merchant fulfillment details.\",\"Review account and device linkage timestamps for coordinated activity.\"],\"memo_markdown\":\"Order 352788 was approved for 104.43 from a new account with tenure_days 4 and n_orders_prior 0. The alert score is 90 and fired R06, R08, and R10. Linkage is substantial: other_accounts_on_device 6, other_accounts_on_ship_address 47, and other_accounts_same_email_root 94. R08 cites 14 distinct accounts using the ship-to address, while R10 cites 14 linked promo redemptions in the device/address cluster. AVS result Y and CVV result M provide no strong stolen-card signal. The leading hypotheses are synthetic_ring and promo_abuse. A gift-buyer benign mimic is insufficient to explain the multi-account and promo linkages. Escalate under the multi-account ring criterion; human review should confirm whether linked accounts show coordinated fraud or merchant involvement.\"}"
+ },
+ "task": "triage_memo"
+}

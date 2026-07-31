@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "7e119733f56db7dfaf67dd0d8b7279a0679e1a707ec76813de2f4b5669f73be0",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 32337,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 350490 was approved at 2026-05-05 03:43:23 for 109.61\",\"card BIN country BR vs IP country DE with AVS=N/CVV=M\",\"7 declined attempts on this card/device in the prior 24h, then this approval\",\"device_id 5181428 was used on the approved order and the listed declined orders\",\"account signup_ts is 2026-05-03 17:27:01 and tenure_days is 2\",\"n_orders_prior is 0\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"high\",\"reasoning\":\"The approved gaming order has a BR card BIN, DE IP, AVS=N, and CVV=M. Card/device activity shows 7 declined attempts in the prior 24h followed by this approval, corroborating the verification/geography and velocity signal families.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler could explain a foreign IP, but FP-1 \u00a76 describes travelers as having no credential changes; the packet instead includes verification failures and card-testing activity. The stated ~3% benign AVS/CVV mismatch mimic does not explain the 7 declined attempts on this card/device.\"}],\"policy_citations\":[\"R03\",\"R07\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"decline_block\",\"priority\":\"P0\",\"evidence_gaps\":[\"Check whether card_id 52045 has confirmed fraud or chargeback history.\",\"Check merchant fulfillment status for order_id 350490.\",\"Check whether the cardholder can complete step-up verification for the approved order.\"],\"memo_markdown\":\"**Recommendation:** decline_block; **Priority:** P0.\\n\\nOrder 350490 was approved at 2026-05-05 03:43:23 for 109.61. R03 fired: card BIN country BR versus IP country DE with AVS=N/CVV=M. R07 fired: 7 declined attempts on this card/device in the prior 24h, then this approval. The account has tenure_days 2 and n_orders_prior 0.\\n\\nStolen_card is high likelihood: geography-plus-verification and velocity independently corroborate the pattern. No linkage threshold for escalation is present: other_accounts_on_device, other_accounts_on_ship_address, and other_accounts_same_email_root are each 0. A traveler explanation does not account for the verification failures and card-testing activity.\\n\\nFreeze the plan and block the account pending review; confirm card fraud history and fulfillment status.\"}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "a9d3df554147e3ef7a8920be5ffa425693ccd8b1fe21ef29eb05990adf02fbbc",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 24383,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 352278 amount 171.22 in shoes was approved at 2025-09-30 23:29:30\",\"Card BIN country US vs IP country CA\",\"AVS result Y and CVV result N\",\"Alert rule R03 fired with score 35\",\"Account tenure is 4 days with 0 prior orders and total spent prior 0.0\",\"No other accounts on device, ship address, or same email root\",\"No account events in the prior 90d\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card used from a CA IP with CVV=N triggered R03 and is consistent with possible unauthorized card use. However, AVS=Y and there are no linkage or velocity signals.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The account is newly created, but the packet contains no credential manipulation or account-event evidence supporting takeover.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic could explain a foreign IP with no credential changes. The packet shows no account events and no prior linkage, but CVV=N remains unexplained.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 \u00a72\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm customer location and card possession through step-up verification\",\"Check whether the customer was traveling from the US to Canada at 2025-09-30 23:29:30\",\"Review issuer or payment-provider reason associated with CVV=N\"],\"memo_markdown\":\"R03 fired because the card BIN country is US while the IP country is CA, with AVS=Y and CVV=N. The approved order is 171.22, and the account has tenure of 4 days with 0 prior orders and total spent prior 0.0. These signals support a medium stolen-card concern, but there is no device, address, email-root, velocity, credential, or repayment linkage. A traveler is a plausible benign mimic because the packet shows a foreign IP and no account events, although CVV=N remains unresolved. Recommend hold_contact for step-up verification; this is reversible and should distinguish travel from unauthorized card use.\"}"
+ },
+ "task": "triage_memo"
+}

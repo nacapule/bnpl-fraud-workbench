@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "c8749cc3c1b2bae3c16589dd103e779bcfcdc2e5e3961cc0a4f967d25de1fb63",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 28050,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"amount_over_category_median: 0.33\",\"n_orders_prior: 0\",\"tenure_days: 14\",\"avs_result: N\",\"cvv_result: M\",\"score: 100\",\"3 accounts have transacted on device d_5181734 as of this order\",\"email identity cost-reduction: disposable_domain=False, shared_root_accounts=80\",\"ship-to address a_2899018 already used by 29 distinct accounts\",\"other_accounts_on_device: 2\",\"other_accounts_on_ship_address: 39\",\"other_accounts_same_email_root: 79\",\"status: approved\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The account is linked through device, ship-to address, and email root. The linkage counts meet FP-1's multi-account ring escalation criterion.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer or mover explanation does not account for shared device, shared ship-to address, and shared email root linkage together.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The order has avs_result: N, but cvv_result: M and the packet provides no card-decline or vendor-score evidence.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the linked accounts on device d_5181734 for confirmed fraud outcomes.\",\"Review the linked accounts using ship-to address a_2899018 for confirmed fraud outcomes.\",\"Review the accounts sharing the email root for shared identity, payment, and repayment patterns.\",\"Confirm whether fulfillment for order_id 351912 is imminent or has started.\"],\"memo_markdown\":\"Order_id 351912 is approved for 34.89 at north-market-39. The alert fired R02, R06, and R08, with score: 100. The packet reports 3 accounts transacted on device d_5181734, shared_root_accounts=80, and ship-to address a_2899018 used by 29 distinct accounts. Linkage fields also show other_accounts_on_device: 2, other_accounts_on_ship_address: 39, and other_accounts_same_email_root: 79. AVS is N while CVV is M. This is most consistent with synthetic_ring and meets FP-1 action-selection step 1 for escalation based on multi-account linkage. Escalate for linked-account outcome review; the human analyst retains the decision.\"}"
+ },
+ "task": "triage_memo"
+}

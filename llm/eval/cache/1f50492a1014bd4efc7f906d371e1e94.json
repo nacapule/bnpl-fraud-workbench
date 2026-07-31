@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "8aaba6659c92c35bc5116fc7e7e071ab63bb32429a441b7cf0c172de646f7ba8",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 20633,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert score: 100\",\"R02: 3 accounts have transacted on device d_5181690 as of this order\",\"R06: disposable_domain=False, shared_root_accounts=80\",\"R08: ship-to address a_2899014 already used by 31 distinct accounts\",\"linkage: other_accounts_on_device=4\",\"linkage: other_accounts_on_ship_address=39\",\"linkage: other_accounts_same_email_root=79\",\"account tenure_days: 10\",\"n_orders_prior: 0\",\"order amount: 68.8\",\"AVS result: Y\",\"CVV result: M\",\"IP country: US\",\"card BIN country: US\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The account is linked to other accounts through device, ship-to address, and email root. The packet reports shared_root_accounts=80 and a ship-to address used by 31 distinct accounts.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A mover or gift buyer could explain a non-home ship-to address, but neither mimic explains the simultaneous device, address, and email-root linkage. No traveler indicators are present because IP country and KYC country are both US.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check whether linked accounts on device d_5181690, ship-to address a_2899014, and the gmail.com email root have confirmed-fraud outcomes.\",\"Check whether iron-market-76 is linked to the other accounts using ship-to address a_2899014.\",\"Check fulfillment status for order_id 351379.\"],\"memo_markdown\":\"Synthetic-ring indicators are strong. This approved home-category order for 68.8 is from a 10-day-tenure account with no prior orders. R02 reports 3 accounts transacted on device d_5181690; R08 reports ship-to address a_2899014 used by 31 distinct accounts; and R06 reports shared_root_accounts=80. Linkage fields also report other_accounts_on_device=4, other_accounts_on_ship_address=39, and other_accounts_same_email_root=79.\\n\\nAVS is Y, CVV is M, and both IP country and BIN country are US, but these verification and geography results do not explain the three independent linkage types. A mover or gift-buyer explanation could account for a shared delivery address alone, not the concurrent device and email-root linkage.\\n\\nEscalate under FP-1 action selection step 1 because linkage counts meet the multi-account-ring threshold. Confirm linked-account outcomes, merchant linkage, and fulfillment status for final containment scope.\"}"
+ },
+ "task": "triage_memo"
+}

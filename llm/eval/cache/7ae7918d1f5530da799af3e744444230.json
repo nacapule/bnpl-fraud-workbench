@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "0a5603bd9c5bc553746aa39b60305b9a51855f2989074dcd5fbba9cfbea2682a",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 31433,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert amount 496.14\",\"cvv_result N and avs_result Y\",\"email_domain mailinator.com\",\"ship-to address a_2899017 already used by 16 distinct accounts\",\"other_accounts_on_ship_address 39\",\"other_accounts_on_device 2\",\"other_accounts_same_email_root 0\",\"repayment history: installments_due 6, paid 6.0, late 0.0, failed_or_written_off 0.0\",\"account_events_90d is empty\",\"alert status approved\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The shared drop address is linked to 16 distinct accounts, and linkage reports other_accounts_on_ship_address 39. The disposable mailinator.com domain and cvv_result N add corroborating identity and verification risk.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer explanation could account for a ship-to address that is not home, but the packet reports broad address reuse across distinct accounts. The prior repayment history shows paid 6.0 with late 0.0, which is favorable but does not explain the linkage.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the 39 other accounts linked to ship_address_id 2899017 for confirmed fraud outcomes and order timing.\",\"Check whether the 16 distinct accounts using ship-to address a_2899017 share payment instruments, devices, or merchant patterns.\",\"Obtain merchant fulfillment status for order_id 351752 before shipment.\"],\"memo_markdown\":\"Escalate for suspected synthetic-ring activity. The approved electronics order is amount 496.14 with avs_result Y and cvv_result N. R06 fired for email_domain mailinator.com. R08 fired because ship-to address a_2899017 was already used by 16 distinct accounts; linkage further reports other_accounts_on_ship_address 39. This meets FP-1 action-selection step 1\u2019s multi-account linkage threshold on an address root. Prior repayment is favorable: installments_due 6, paid 6.0, late 0.0, and failed_or_written_off 0.0. A gift-buyer mimic is possible, but it does not explain the address reuse. Confirm linked-account outcomes and fulfillment status for analyst disposition.\"}"
+ },
+ "task": "triage_memo"
+}

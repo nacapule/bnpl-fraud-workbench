@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "cfea6fafca5a34001d6609c0df7d9465f6b8b3c7150741b6282482411fad582b",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 37203,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: geo + verification mismatch\",\"card BIN country US vs IP country CA with AVS=N/CVV=M\",\"alert amount 109.1\",\"alert status approved\",\"IP country CA on orders 71974, 54212, 39435, 35786, 18449, and 3701\",\"device_id 32209 on orders 71974, 54212, 39435, 35786, 18449, and 3701\",\"n_avs_mismatch_prior 0.0\",\"n_cvv_mismatch_prior 0.0\",\"other_accounts_on_device 0\",\"other_accounts_on_ship_address 0\",\"other_accounts_same_email_root 0\",\"failed_or_written_off 0.0\",\"installments_due 12\",\"late 1.0\",\"paid 11.0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card BIN combined with a CA IP and AVS=N/CVV=M supports possible card misuse. However, the account has no prior AVS or CVV mismatches and no card declines in 24h.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The geography and verification mismatch could occur during account takeover, but the packet shows device_id 32209 and no linked accounts or credential-change event.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic is plausible because the account used a CA IP across multiple approved orders while retaining device_id 32209. The packet does not confirm travel or explain the AVS mismatch.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 \u00a76.1\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Run step-up customer verification focused on current location and card ownership.\",\"Check credential-change history and device continuity around the alert.\",\"Confirm whether the shipping address matches the customer\u2019s established address.\"],\"memo_markdown\":\"The alert fired R03 for a US card BIN used from a CA IP with AVS=N and CVV=M. The same device_id 32209 appears across the listed approved orders, with no other accounts linked by device, shipping address, or email root. Prior AVS and CVV mismatches are 0.0, failed_or_written_off is 0.0, and repayment history shows 11.0 paid, 1.0 late, and 12 installments due. Stolen_card is a medium-likelihood hypothesis; account_takeover is low. A traveler benign mimic is also medium likelihood because CA activity repeats on the same device, but travel and the AVS mismatch are unconfirmed. Recommend hold_contact for reversible step-up verification; one signal family alone does not support decline_block.\"}"
+ },
+ "task": "triage_memo"
+}

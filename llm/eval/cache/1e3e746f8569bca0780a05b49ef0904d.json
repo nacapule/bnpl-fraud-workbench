@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "36bcbb9a732863e13d910c2d967b4c8f0799652bc10c3a541aa8ae5f0000a9bd",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 41508,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert rule R09: repeat INR disputes\",\"2 prior item-not-received chargebacks on this account with healthy repayment\",\"order amount 684.06\",\"alert status approved\",\"AVS result Y\",\"CVV result M\",\"IP country US\",\"KYC country US\",\"card BIN country US\",\"other accounts on device 0\",\"other accounts on ship address 1\",\"other accounts same email root 0\",\"installments due 4\",\"paid 4.0\",\"late 0.0\",\"failed or written off 0.0\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies 2 prior item-not-received chargebacks. The current order is in electronics, but the packet does not provide fulfillment or delivery evidence.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"US IP, US KYC country, US card BIN country, AVS result Y, CVV result M, and no other accounts on device do not support account takeover.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows other accounts on device 0 and other accounts same email root 0, with no multi-account linkage meeting the escalation threshold.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"Healthy repayment supports a benign explanation, but the packet does not identify a specific traveler, mover, gift-buyer, hardship, verification-typo, or new-phone mimic that explains the prior INR disputes.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Check fulfillment, carrier, delivery, and prior item-not-received evidence for the 2 prior disputes.\",\"Request step-up customer verification and confirm receipt intent for order 329780.\"],\"memo_markdown\":\"R09 fired for repeat INR disputes: the account has 2 prior item-not-received chargebacks with healthy repayment. Current order 329780 is 684.06 and approved. AVS result Y, CVV result M, US IP, US KYC country, and US card BIN country provide no independent credential, geography, or verification concern. Linkage is limited: other accounts on device 0 and other accounts same email root 0; other accounts on ship address is 1. Repayment is healthy: installments due 4, paid 4.0, late 0.0, failed or written off 0.0. INR abuse remains plausible, but the packet lacks fulfillment evidence and does not establish a benign mimic. Recommend reversible hold_contact pending step-up verification and review of the 2 prior INR disputes. Priority P1 because the order amount is 684.06.\"}"
+ },
+ "task": "triage_memo"
+}

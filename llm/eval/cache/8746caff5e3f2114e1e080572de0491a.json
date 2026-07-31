@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "15db1282a4541a1bf5c48e5635608b4af8736247680ad377e83fe6b6902ae7d3",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 27843,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"score 90 with band \\\"decline\\\"\",\"order_id 352751 was approved at 2026-05-18 11:36:39 for 68.19\",\"account tenure_days is 0 and n_orders_prior is 0\",\"R06: shared_root_accounts=95 for email identity cost-reduction\",\"R08: ship-to address a_2899503 already used by 19 distinct accounts\",\"R10: promo redeemed inside a device/address cluster with 19 linked redemptions\",\"linkage shows other_accounts_on_device=5\",\"linkage shows other_accounts_on_ship_address=46\",\"linkage shows other_accounts_same_email_root=94\",\"AVS result is Y and CVV result is M\",\"IP country, BIN country, and KYC country are US\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The account has extensive linkage on device, ship address, and email root, and the fired rules identify a shared drop address and promo-redemption cluster. This meets the FP-1 multi-account-ring escalation criterion.\"},{\"pattern\":\"promo_abuse\",\"likelihood\":\"high\",\"reasoning\":\"R10 states that a promo was redeemed inside a device/address cluster with 19 linked redemptions. The linked ship address and email root corroborate clustered activity.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer or mover explanation is not supported by stable history, and new-phone mimic evidence is absent. The packet contains no stated benign mimic that explains the device, address, email-root, and promo linkage.\"}],\"policy_citations\":[\"R06\",\"R08\",\"R10\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review linked accounts' order outcomes and confirmed-fraud status for device_id 5182262, ship_address_id 2899503, and the email root.\",\"Review the 19 linked promo redemptions for shared account attributes and order outcomes.\",\"Check whether fulfillment for order_id 352751 is imminent or has begun.\"],\"memo_markdown\":\"Approved order_id 352751 for 68.19 is a new-account transaction with tenure_days 0 and n_orders_prior 0. The packet shows linkage of other_accounts_on_device=5, other_accounts_on_ship_address=46, and other_accounts_same_email_root=94. R08 identifies ship-to address a_2899503 as already used by 19 distinct accounts; R10 identifies 19 linked promo redemptions. AVS is Y and CVV is M, with US IP, BIN, and KYC country.\\n\\nSynthetic_ring and promo_abuse are high-likelihood hypotheses. The multi-account linkage satisfies FP-1 action selection step 1 for escalation. A benign mimic is not supported by stable-history, organic-device-add, or other packet evidence. Escalate for human-led linked-account review; priority P2 because no fulfillment timing or exposure-growth information is provided.\"}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "d523fe822b271fa106d8c13f1c22b35afbe02a6956c3a0b007ece29294522a4c",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 35507,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"New account signup at 2026-05-08 04:45:57 with tenure_days 0\",\"n_orders_prior 0 and total_spent_prior 0.0\",\"Order amount 353.46 in gaming from merchant peak-gallery-60\",\"card BIN country FR vs IP country US\",\"AVS result N and CVV result M\",\"fired rule R03 with score 35\",\"Linkage counts are 0 for other accounts on device, ship address, and same email root\",\"No account_events_90d recorded\",\"Order status approved at 2026-05-08 10:51:06\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The card BIN country FR conflicts with IP country US, and AVS=N/CVV=M corroborate a payment-verification anomaly. However, there are no prior declines on the card and no linkage evidence.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic could explain foreign card geography versus a US IP, but AVS=N/CVV=M and the new account provide unresolved uncertainty. No account events are recorded.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The account is new and has no recorded prior activity or credential-change events; there is no direct takeover evidence.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"Linkage counts are 0 across device, ship address, and same email root, so the packet provides no multi-account ring evidence.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"There is no repayment history because installments_due is 0.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Run step-up customer verification focused on cardholder identity and billing details.\",\"Check whether the customer is traveling and whether the cardholder location supports the FR card BIN.\"],\"memo_markdown\":\"R03 fired for geo plus verification mismatch: the card BIN country is FR while the IP country is US, with AVS=N and CVV=M. The order is 353.46 for gaming and was approved at 2026-05-08 10:51:06. The account is newly signed up at 2026-05-08 04:45:57, with tenure_days 0, n_orders_prior 0, and total_spent_prior 0.0. No account events or linkage to other accounts are recorded. Stolen_card is a medium-likelihood hypothesis, while traveler benign mimic is also plausible. Because only one signal family is present and the packet cannot distinguish fraud from the benign mimic, place the order on reversible hold_contact pending step-up verification.\"}"
+ },
+ "task": "triage_memo"
+}

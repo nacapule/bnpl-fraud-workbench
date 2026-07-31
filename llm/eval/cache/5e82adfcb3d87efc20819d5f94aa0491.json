@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "6f367c4d4ff89175bcddce53876af668d3d194c60e9132532921b6f22407fb27",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 56849,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"R03 fired for geo + verification mismatch\",\n    \"card BIN country US vs IP country CA with AVS=N/CVV=M\",\n    \"alert amount 127.54\",\n    \"alert order_id 34353 approved at 2025-08-11 17:36:54\",\n    \"device_id changed from 28601 on prior orders to 47171 on order 34353\",\n    \"account tenure_days 551\",\n    \"n_orders_prior 2\",\n    \"linkage counts are 0 for other accounts on device, ship address, and same email root\",\n    \"repayment history shows failed_or_written_off 0.0, late 0.0, and paid 3.0\",\n    \"card declines_on_card_24h 0\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"stolen_card\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"The US card BIN used from a CA IP with AVS=N is consistent with possible unauthorized card use. CVV=M, no recent card declines, and clean repayment history weaken this hypothesis.\"\n    },\n    {\n      \"pattern\": \"account_takeover\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"The order used device_id 47171 instead of prior device_id 28601, but the packet shows no credential manipulation or account linkage.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"A traveler could explain the foreign IP, while a verification typo could explain AVS=N/CVV=M. The new device leaves residual uncertainty.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R03\",\n    \"FP-1 \u00a71\",\n    \"FP-1 \u00a76\",\n    \"FP-1 action ladder 4\"\n  ],\n  \"recommended_action\": \"hold_contact\",\n  \"priority\": \"P2\",\n  \"evidence_gaps\": [\n    \"Confirm whether the customer was traveling from the US to Canada at 2025-08-11 17:36:54.\",\n    \"Verify whether device_id 47171 is recognized by the customer.\",\n    \"Run step-up verification for order_id 34353 and the ship address.\"\n  ],\n  \"memo_markdown\": \"Order 34353 is a review alert for 127.54 with R03: US card BIN versus CA IP, AVS=N, and CVV=M. The main fraud concern is possible stolen-card use; account takeover is less supported because no credential changes or account linkage are present. The benign alternative is a traveler combined with a verification typo, but the new device_id 47171 is not explained by the packet. Clean repayment history, no card declines_on_card_24h, tenure_days 551, and zero linkage counts reduce immediate fraud confidence. Recommend hold_contact for reversible step-up verification. Priority P2.\"\n}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "6f1ae8dbcdb9565197b74ec37674d938745ee3f448c13308e4c231e0d4a423e0",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 28000,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"password_change at 2025-09-26 22:14:13 from device_id 5181331 and IP 77.21.5.68\",\"address_add at 2025-09-26 23:14:13 from device_id 5181331 and IP 77.21.5.68\",\"approved order_id 350188 for 375.09 at 2025-09-27 01:29:41 from device_id 5181331 and IP_country ID\",\"R01 fired: credential/contact change 3.3h before order on 631d-old account, order from new device d_5181331\",\"account tenure_days is 632 and n_orders_prior is 2\",\"AVS result is Y and CVV result is M\",\"KYC country is US and card BIN country is US\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"repayment_history shows paid 4.0, installments_due 4, late 0.0, and failed_or_written_off 0.0\"],\"hypotheses\":[{\"pattern\":\"account_takeover\",\"likelihood\":\"high\",\"reasoning\":\"A password change and address add from new device_id 5181331 and IP 77.21.5.68 preceded the approved order from that device and IP_country ID. Credential manipulation, a new device, and ID activity against US KYC and US card BIN corroborate the hypothesis.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler or new-phone mimic could explain ID activity or a new device, but FP-1 \u00a76 specifies travelers have no credential changes and new phones are organic device_add with nothing else. The password_change and address_add materially weaken those mimics.\"}],\"policy_citations\":[\"R01\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 2\"],\"recommended_action\":\"decline_block\",\"priority\":\"P2\",\"evidence_gaps\":[\"Step-up verify that the customer authorized the password_change, address_add, and order_id 350188.\",\"Check fulfillment status for order_id 350188.\",\"Check whether device_id 5181331 or IP 77.21.5.68 has prior account history beyond the packet linkage fields.\"],\"memo_markdown\":\"R01 fired on a 632-day account after a password_change and address_add from device_id 5181331 and IP 77.21.5.68. The approved electronics order for 375.09 was placed from the same new device and IP_country ID, while KYC country and card BIN country are US. AVS Y and CVV M support card verification but do not resolve account-control risk. No multi-account linkage is present, and repayment history shows paid 4.0 of 4 installments with late 0.0 and failed_or_written_off 0.0. Recommend decline_block pending human review: account_takeover is the top high-likelihood hypothesis, corroborated by credential manipulation, device change, and geography. Traveler/new-phone mimics are weakened because credential and address changes occurred.\"}"
+ },
+ "task": "triage_memo"
+}

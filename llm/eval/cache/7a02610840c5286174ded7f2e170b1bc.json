@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "406de7c7d5e217c3dd02a3e7c66317d1fbfff9085eb479c30aaadff699f372aa",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 34164,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: geo + verification mismatch, weight 35\",\"Card BIN country CA vs IP country US\",\"AVS result N and CVV result M\",\"Current order amount 62.62\",\"Account tenure_days 645\",\"Account n_orders_prior 1\",\"Account total_spent_prior 29.5\",\"Other accounts on device 0\",\"Other accounts on ship address 0\",\"Other accounts same email root 0\",\"No credential changes are present in account_events_90d\",\"Card declines_on_card_24h 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The CA card BIN, US IP, and AVS=N triggered R03. However, CVV=M, card declines_on_card_24h 0, no linkage, and no credential changes weaken this hypothesis.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows no credential manipulation, new device, or linked accounts; the observed login and order use device_id 16949.\"},{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler mimic explains the foreign IP with no credential changes, while FP-1 \u00a76 verification typos can explain an AVS mismatch. Stable device and address linkage further support a benign explanation.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check whether the customer was traveling at 2025-08-31 08:26:39.\",\"Confirm the billing address details associated with AVS=N for order 50782.\"],\"memo_markdown\":\"R03 fired for CA card BIN versus US IP with AVS=N and CVV=M. This is a geo-plus-verification signal, but no credential changes, linked accounts, device sharing, ship-address sharing, or same-email-root sharing are present. The card has declines_on_card_24h 0, and the account has tenure_days 645 with n_orders_prior 1 and total_spent_prior 29.5. The strongest explanation is benign: a traveler can produce a foreign IP without credential changes, and FP-1 \u00a76 recognizes verification typos as a benign mimic. Stolen_card and account_takeover remain low likelihood. Recommended action: clear; priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "b7ed9806ca31537942f91d2a518304ca865f764b4b8f6050cbedabed68c4bd98",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 21387,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 351824 was approved at 2025-10-19 22:34:23 for 892.15 in gaming\",\"ship-to address a_2899016 already used by 33 distinct accounts\",\"other_accounts_on_ship_address is 39\",\"email_domain is mailinator.com\",\"other_accounts_on_device is 2\",\"amount_over_category_median is 4.0\",\"AVS result is Y and CVV result is M\",\"repayment_history shows installments_due 2, paid 2.0, late 0.0, and failed_or_written_off 0.0\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The shared ship-to address is linked to 33 distinct accounts and other_accounts_on_ship_address is 39, meeting the FP-1 multi-account linkage threshold. The disposable email domain and amount_over_category_median of 4.0 further support a coordinated-order concern.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer mimic could explain a ship-to address different from home, but the packet shows the address already used by 33 distinct accounts and does not provide stable-history evidence sufficient to explain that linkage.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The order has AVS result Y and CVV result M, card declines_on_card_24h is 0, and the packet contains no credential manipulation events.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 action selection step 1\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Check whether linked accounts at ship_address_id 2899016 have confirmed-fraud outcomes.\",\"Check fulfillment status for order_id 351824.\",\"Review the 2 other accounts on device_id 5181712 for common payment instruments, email roots, or confirmed-fraud outcomes.\"],\"memo_markdown\":\"Escalate for suspected synthetic ring. Order 351824 was approved for 892.15 at 2025-10-19 22:34:23. R08 states ship-to address a_2899016 was already used by 33 distinct accounts; linkage reports other_accounts_on_ship_address of 39, satisfying the FP-1 action-selection threshold for multi-account linkage. R06 also fired because email_domain is mailinator.com. The amount_over_category_median is 4.0. AVS result Y, CVV result M, and repayment history of installments_due 2 with paid 2.0 do not independently support stolen-card or never-pay hypotheses. A gift-buyer explanation is possible in principle but does not explain the documented high shared-address linkage. Human review should assess linked-account outcomes and fulfillment status.\"}"
+ },
+ "task": "triage_memo"
+}

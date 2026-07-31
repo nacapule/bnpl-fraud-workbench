@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "0d346f3b2b96a49352db7444f2b7a1a5146a4e499e8b3a66c3f0d9eed1b9ff5e",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 28697,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Alert amount 16.56\",\"R03 fired: card BIN country US vs IP country CA with AVS=Y/CVV=N\",\"Alert status approved\",\"Account tenure_days 690\",\"Account n_orders_prior 8\",\"Account total_spent_prior 1336.59\",\"Account events_90d empty\",\"Device_id 17113 on alert and last orders\",\"Other accounts on device 0\",\"Other accounts on ship address 1\",\"Other accounts same email root 0\",\"Repayment paid 24.0, late 0.0, failed_or_written_off 0.0\",\"Card declines_on_card_24h 0\",\"Prior AVS mismatches 0.0 and prior CVV mismatches 0.0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler mimic explains the foreign IP with no account events or credential changes, while a verification typo can explain the isolated CVV=N with AVS=Y. Stable device use, approved history, no late or failed payments, and no device/email-root linkage support benign activity.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The geo and CVV mismatch are consistent with possible stolen-card activity, but AVS=Y, no card declines, stable prior orders, and no repayment issues weaken this hypothesis.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows no credential manipulation, account events, device sharing, or email-root linkage.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"There is no multi-account device or email-root linkage; ship-address linkage is only 1.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"Repayment history shows paid 24.0, late 0.0, and failed_or_written_off 0.0.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check whether the customer was traveling or using a Canadian network at the alert timestamp.\",\"Confirm whether the CVV mismatch was a verification typo with the cardholder or processor.\"],\"memo_markdown\":\"R03 triggered on a US card BIN versus Canadian IP with AVS=Y/CVV=N. The strongest explanation is benign travel plus an isolated verification typo: there are no account events, no credential changes, no device or email-root sharing, and the alert uses the established device. The account has tenure_days 690, n_orders_prior 8, total_spent_prior 1336.59, and repayment history of paid 24.0, late 0.0, and failed_or_written_off 0.0. The order is approved for 16.56, and card declines_on_card_24h is 0. The packet does not support a ring, account takeover, or never-pay pattern. Clear the alert; optionally verify travel or the CVV typo if operationally inexpensive.\"}"
+ },
+ "task": "triage_memo"
+}

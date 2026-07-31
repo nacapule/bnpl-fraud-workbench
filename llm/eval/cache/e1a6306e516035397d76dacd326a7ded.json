@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "964ae7137e3589690661c4201d581d69c0d89db723140bd06a86a99f03e88dcf",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 25921,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09: repeat INR disputes \u2014 \\\"3 prior item-not-received chargebacks on this account with healthy repayment\\\"\",\"alert amount: 40.42\",\"alert status: approved\",\"avs_result: Y\",\"cvv_result: M\",\"ip_country: US\",\"card bin_country: RU\",\"n_orders_prior: 13\",\"tenure_days: 329\",\"repayment_history: paid: 39.0; installments_due: 39; late: 0.0; failed_or_written_off: 0.0\",\"other_accounts_on_device: 0; other_accounts_on_ship_address: 1; other_accounts_same_email_root: 0\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 reports 3 prior item-not-received chargebacks on this account. The packet provides no multi-account linkage or current verification failure to independently corroborate this pattern.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A benign account-history explanation remains plausible: the account has tenure_days: 329, n_orders_prior: 13, and repayment_history shows paid: 39.0 with late: 0.0 and failed_or_written_off: 0.0. The packet does not establish whether the prior item-not-received chargebacks were abusive or valid.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 action selection step 2\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the supporting evidence and disposition for the 3 prior item-not-received chargebacks.\",\"Conduct step-up customer verification to confirm ownership and intent for order_id: 276907.\",\"Check fulfillment and delivery evidence for order_id: 276907.\"],\"memo_markdown\":\"**Recommendation: hold_contact (P2).**\\n\\nOrder_id: 276907 is an approved beauty order for 40.42 with AVS Y, CVV M, and US IP country. R09 fired because the account has 3 prior item-not-received chargebacks with healthy repayment.\\n\\nINR abuse is a medium-likelihood hypothesis, but the packet supplies only the dispute-history signal family. Linkage is limited to other_accounts_on_ship_address: 1, with other_accounts_on_device: 0 and other_accounts_same_email_root: 0; this does not meet the escalation linkage threshold. The account also has tenure_days: 329, n_orders_prior: 13, and paid: 39.0 of installments_due: 39, with late: 0.0 and failed_or_written_off: 0.0.\\n\\nA customer step-up and review of prior dispute evidence would most directly distinguish abusive INR behavior from valid non-receipt claims.\"}"
+ },
+ "task": "triage_memo"
+}

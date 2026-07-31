@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "7853d17b7ad2e84793322b7192d4e16571511b3717f091418ae65e3561d4ab02",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 47065,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"Order 199869 amount 230.27, status approved, at 2026-01-21 14:41:33\",\"Card network amex; declines_on_card_24h 0\",\"account_events_90d is empty\",\"other_accounts_on_device 0; other_accounts_on_ship_address 0; other_accounts_same_email_root 0\",\"repayment_history: installments_due 21, paid 21.0, late 0.0, failed_or_written_off 0.0\",\"Account tenure_days 149, n_orders_prior 7, total_spent_prior 1960.17\",\"Prior order 135676 had AVS=N/CVV=M; prior order 103149 had AVS=Y/CVV=N\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler is the most plausible explanation for the foreign IP because the packet shows no account events or credential changes and the account has consistent US IP history. The current AVS=N/CVV=M can also fit the stated verification-typo benign mimic.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The current geography and verification mismatch are consistent with stolen-card risk, but there are no card declines on card 24h, prior approved orders, and repayment_history shows paid 21.0 with late 0.0.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"There are no account_events_90d, and device_id 33530 and ship_address_id 33530 are consistent with the account.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"The linkage packet shows other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"Repayment_history shows installments_due 21, paid 21.0, late 0.0, and failed_or_written_off 0.0.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check whether the customer was traveling from Canada or using a US network at 2026-01-21 14:41:33.\",\"Confirm whether the AVS=N/CVV=M result was a verification typo or expected billing-address variation.\"],\"memo_markdown\":\"R03 fired for card BIN country CA versus IP country US with AVS=N/CVV=M on approved order 199869 for 230.27. The strongest explanation is a benign traveler plus a verification typo: account_events_90d is empty, linkage counts are all 0, and prior orders show recurring US IP use. Fraud indicators are not corroborated by credential, device/linkage, velocity, or repayment behavior. Repayment_history shows installments_due 21 and paid 21.0, with late 0.0 and failed_or_written_off 0.0. Recommend clear under FP-1 \u00a76; no hold is warranted unless travel context or verification review introduces contradictory evidence.\"}"
+ },
+ "task": "triage_memo"
+}

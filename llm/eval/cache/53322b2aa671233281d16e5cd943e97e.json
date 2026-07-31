@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "75b075be3464f9025b32c525c2c1e83c8d65ef636d30d16747a7e0e7110337b1",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 36402,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: geo + verification mismatch, weight 35\",\"Order amount 210.05 in jewelry category\",\"Card BIN country CA vs IP country US\",\"AVS result Y and CVV result N\",\"Account tenure_days 608\",\"n_orders_prior 3\",\"n_avs_mismatch_prior 0.0 and n_cvv_mismatch_prior 0.0\",\"Account_events_90d is empty\",\"other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0\",\"repayment_history: installments_due 8, paid 8.0, late 0.0, failed_or_written_off 0.0\",\"declines_on_card_24h 0\",\"Alert status approved\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler mimic is plausible because the card BIN country is CA while the IP country is US, with no account events in 90d and no linked accounts. The AVS=Y/CVV=N result is also consistent with a verification typo, especially given n_avs_mismatch_prior 0.0 and n_cvv_mismatch_prior 0.0.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"CVV result N is a supporting signal, but AVS result Y, declines_on_card_24h 0, prior paid installments, and no linkage reduce support for stolen-card use.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows no account events in 90d, no linked accounts, and prior approved orders from the US IP country, with no credential-manipulation signal provided.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check whether the customer was traveling in the US at 2025-12-04 08:11:51.\",\"Confirm whether the CVV mismatch was a verification typo or issuer-side response for order 144709.\"],\"memo_markdown\":\"**Assessment:** The order triggered R03 for card BIN country CA versus IP country US with AVS=Y/CVV=N. The strongest explanation is benign: a traveler pattern, with verification typo also plausible.\\n\\nThe account has tenure_days 608, n_orders_prior 3, no account events in 90d, no linked accounts, declines_on_card_24h 0, and repayment history showing installments_due 8, paid 8.0, late 0.0, and failed_or_written_off 0.0. These facts do not support account takeover, a ring, or never-pay behavior. AVS=Y and prior mismatch fields of 0.0 weaken the stolen-card hypothesis.\\n\\n**Recommendation:** clear as benign under FP-1 \u00a76. The fired rule is explained by a documented benign mimic, and the packet does not justify customer friction or blocking.\"}"
+ },
+ "task": "triage_memo"
+}

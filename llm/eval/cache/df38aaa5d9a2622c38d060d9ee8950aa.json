@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "9ac42dc2ab4b708f8a0934e479edc80b37f2f19c3e71ed8447e62ea2cf5bed5f",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 43866,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"Order 59435 amount 42.65, status approved, at 2025-09-10 10:13:16\",\"Prior order 13634 used IP country US with AVS=N/CVV=M\",\"Device 4384 and ship address 4384 match the account\",\"Other accounts on device: 0; other accounts on ship address: 0; other accounts with same email root: 0\",\"Account events 90d: empty\",\"Card declines on card 24h: 0\",\"Repayment history: installments_due 3, paid 3.0, late 0.0, failed_or_written_off 0.0\",\"Account tenure_days: 742; n_orders_prior: 1\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The CA card BIN versus US IP and AVS=N/CVV=M support possible card misuse. However, the same IP country and AVS/CVV results occurred on prior order 13634, with no linkage or repayment concerns.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"There are no account events in the last 90 days, and the device and ship address match the account. No credential manipulation signal is present.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"No other accounts are linked on the device, ship address, or email root, so the packet does not support a ring.\"},{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler mimic is plausible because the IP country is US while the KYC country and card BIN country are CA, with no credential changes or account linkage. The repeated AVS=N/CVV=M pattern may also fit the stated verification-typo benign mimic.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 action selection 3\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check whether the customer was traveling or otherwise expected to use a US IP at 2025-09-10 10:13:16.\",\"Check IP reputation and whether the payment instrument was previously associated with this account.\"],\"memo_markdown\":\"R03 flagged a CA card BIN against a US IP with AVS=N/CVV=M. The same US IP country and AVS/CVV results appeared on prior order 13634, while the device and ship address match the account and no other linked accounts are present. Account events in the last 90 days are empty, card declines on card 24h are 0, and repayment shows installments_due 3, paid 3.0, late 0.0, and failed_or_written_off 0.0. The leading explanation is benign travel, with verification typos also plausible. Stolen-card and account-takeover hypotheses are low likelihood. Recommend clear, subject to human analyst review.\"}"
+ },
+ "task": "triage_memo"
+}

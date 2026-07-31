@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "e178df02443421218acd1213490f2f85412a9e6dc89b498ccfc3d6ba6eb68642",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 44622,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"order_id 350885 amount 493.31 approved at 2026-03-10 23:07:13\",\n    \"card BIN country GB vs IP country IN\",\n    \"AVS result N and CVV result M\",\n    \"device_id 5181556\",\n    \"account signup_ts 2026-03-09 21:57:25\",\n    \"account tenure_days 1\",\n    \"n_orders_prior 0\",\n    \"other_accounts_on_device 0\",\n    \"other_accounts_on_ship_address 0\",\n    \"other_accounts_same_email_root 0\",\n    \"fired rule R03 geo + verification mismatch with score 35\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"stolen_card\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"The GB card, IN IP, AVS=N, and CVV=M support possible unauthorized card use. No additional corroborating signal family is present.\"\n    },\n    {\n      \"pattern\": \"account_takeover\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"The account is new with tenure_days 1, but account_events_90d is empty and there are no linked accounts on the device, ship address, or email root.\"\n    },\n    {\n      \"pattern\": \"synthetic_ring\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"No linkage is present: other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"A traveler or verification typo could explain the foreign IP and AVS/CVV mismatch, but the packet does not establish that explanation.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R03\",\n    \"FP-1 \u00a71\",\n    \"FP-1 \u00a76\"\n  ],\n  \"recommended_action\": \"hold_contact\",\n  \"priority\": \"P2\",\n  \"evidence_gaps\": [\n    \"Confirm customer possession and authorization of the Visa card ending represented by card_id 52173\",\n    \"Request step-up verification of the customer and billing details\",\n    \"Check whether the customer was traveling in IN at 2026-03-10 23:07:13\"\n  ],\n  \"memo_markdown\": \"Alert 6764 concerns approved order 350885 for 493.31 in electronics. R03 fired for a GB card BIN versus an IN IP, with AVS=N and CVV=M. The account was created at 2026-03-09 21:57:25, has tenure_days 1, and n_orders_prior 0. Stolen-card risk is medium, but only the geography-plus-verification signal family corroborates it. Account takeover and synthetic ring are low likelihood because account_events_90d is empty and all reported linkage counts are 0. A benign traveler or verification-typo explanation remains plausible but is not established. Recommend hold_contact for step-up verification; clear or decline_block should follow the result. Priority P2.\"\n}"
+ },
+ "task": "triage_memo"
+}

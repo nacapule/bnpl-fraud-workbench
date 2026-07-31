@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "96f019f914694559c00bce083e6f379912261cc01aa1cbd2e0d875f961a96861",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 41261,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"R09 fired for repeat INR disputes: 5 prior item-not-received chargebacks with healthy repayment\",\n    \"Alert amount is 641.58 for electronics order 297877\",\n    \"Alert IP country is CA while KYC country and card BIN country are US\",\n    \"Alert AVS result is Y and CVV result is M\",\n    \"The last orders show IP country CA and device_id 6606\",\n    \"Repayment history shows 49 installments due, 49 paid, 0 late, and 0 failed_or_written_off\",\n    \"Linkage shows 0 other accounts on device, 1 other account on ship address, and 0 other accounts on same email root\",\n    \"Account has 19 prior orders and total_spent_prior of 5440.41\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"inr_abuse\",\n      \"likelihood\": \"high\",\n      \"reasoning\": \"R09 directly identifies 5 prior item-not-received chargebacks despite healthy repayment. The repeated dispute history is stronger evidence for INR abuse than for other listed fraud patterns.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"A traveler mimic could explain the CA IP with US KYC and card countries, while the same device is used across the supplied orders and no credential-change event appears in account_events_90d. However, the prior INR chargebacks remain unexplained.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R09\",\n    \"FP-1 \u00a71\",\n    \"FP-1 \u00a75\",\n    \"FP-1 \u00a76\"\n  ],\n  \"recommended_action\": \"hold_contact\",\n  \"priority\": \"P1\",\n  \"evidence_gaps\": [\n    \"Verify the delivery and tracking outcome for order 297877 and whether the prior 5 item-not-received chargebacks were substantiated\",\n    \"Use step-up customer verification to confirm the current customer and explain the CA activity\"\n  ],\n  \"memo_markdown\": \"Order 297877 is approved for 641.58 in electronics and triggered R09 because the account has 5 prior item-not-received chargebacks. Repayment is otherwise healthy: 49 installments due, 49 paid, 0 late, and 0 failed_or_written_off. The strongest hypothesis is INR abuse, but the packet does not establish two independent corroborating signal families for decline_block. A benign traveler explanation remains plausible because the account has US KYC and a US card BIN but repeated CA activity, with the same device_id 6606 and no credential-change event shown. Linkage is limited: 0 other accounts on device, 1 other account on ship address, and 0 other accounts on same email root. Recommend reversible hold_contact pending delivery validation and step-up verification. Priority P1 because the alert amount is 641.58.\"\n}"
+ },
+ "task": "triage_memo"
+}

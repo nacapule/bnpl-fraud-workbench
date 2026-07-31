@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "b05fd9dcc9207cbcd92f6544181501e96461db291ba9c3c137bb2d85aa0564a0",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 33846,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: geo + verification mismatch\",\"card BIN country US vs IP country ES\",\"AVS result N and CVV result M on order 351233\",\"Three approved electronics orders on device 5181670 with IP country ES\",\"Orders 351233, 351234, and 351235 occurred on 2026-04-25 and 2026-04-24\",\"Account tenure_days is 1\",\"No other accounts on device, ship address, or email root\",\"No account events in the last 90 days\",\"Card declines_on_card_24h is 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card BIN paired with an ES IP and AVS=N/CVV=M supports possible unauthorized card use. Repeated electronics orders on the same device add concern, but only one signal family is established.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler could explain the foreign IP because there are no credential changes or account events. Verification typos are also a listed benign mimic, though the repeated CVV mismatch and one AVS mismatch remain unresolved.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"There are no account events or credential-manipulation signals in the packet.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"Linkage counts are zero for other accounts on the device, ship address, and email root.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Run step-up customer verification for travel location and cardholder recognition of the approved orders.\",\"Verify the card billing address and customer response to the AVS/CVV results.\",\"Check fulfillment status before deciding whether the approved orders require additional containment.\"],\"memo_markdown\":\"## Fraud Review Memo\\n\\nOrder 351233 triggered R03 because the card BIN country is US while the IP country is ES, with AVS=N and CVV=M. The account also has three approved electronics orders on device 5181670 with IP country ES. These facts support possible stolen-card activity, but no credential changes, account events, or cross-account linkage are present.\\n\\nThe leading benign mimic is a traveler, with verification typos also possible under FP-1 \u00a76. The packet cannot distinguish travel from unauthorized use, and only one independent fraud-signal family is established; decline_block is therefore not supported. A step-up verification should resolve whether the customer recognizes the activity and was traveling in ES.\\n\\nRecommended action: hold_contact. Priority: P1 because the account shows repeated approved electronics activity and prior spending above the stated threshold.\"}"
+ },
+ "task": "triage_memo"
+}

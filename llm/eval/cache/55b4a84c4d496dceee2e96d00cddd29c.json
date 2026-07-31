@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "964ae7137e3589690661c4201d581d69c0d89db723140bd06a86a99f03e88dcf",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 37321,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired for repeat INR disputes: 3 prior item-not-received chargebacks with healthy repayment\",\"Current order amount is 40.42 and status is approved\",\"AVS result is Y and CVV result is M\",\"Card BIN country is RU while IP country is US\",\"Account has 13 prior orders and tenure_days is 329\",\"Repayment history shows 39 installments due, 39.0 paid, 0.0 late, and 0.0 failed_or_written_off\",\"other_accounts_on_device is 0 and other_accounts_same_email_root is 0\",\"other_accounts_on_ship_address is 1\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"high\",\"reasoning\":\"The repeat INR-dispute rule identifies 3 prior item-not-received chargebacks. Healthy repayment does not eliminate the possibility of item-not-received abuse.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The card BIN country is RU and IP country is US, but AVS is Y, CVV is M, declines_on_card_24h is 0, and the account has established successful order history.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows no credential manipulation, other_accounts_on_device is 0, and the account has established tenure and repayment.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A gift buyer could explain other_accounts_on_ship_address being 1, while established tenure, 13 prior orders, AVS Y, CVV M, and healthy repayment support a legitimate account. The 3 prior INR chargebacks remain unexplained.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Verify the 3 prior item-not-received chargebacks and delivery or customer-contact outcomes.\",\"Confirm whether ship_address_id 367238 is an authorized gift-recipient address shared with another account.\",\"Perform step-up customer verification for the current order.\"],\"memo_markdown\":\"R09 fired because the account has 3 prior item-not-received chargebacks despite healthy repayment. This supports INR abuse as the leading hypothesis. A stolen-card concern is weaker: the card BIN country is RU versus US IP country, but AVS is Y, CVV is M, declines_on_card_24h is 0, and the account has 13 prior orders with 39.0 paid installments and 0.0 late. Account-takeover evidence is also weak: other_accounts_on_device is 0 and other_accounts_same_email_root is 0. A benign gift buyer explanation is plausible because other_accounts_on_ship_address is 1, but it does not explain the prior INR chargebacks. Recommend reversible hold_contact pending chargeback and address verification plus step-up customer verification. Priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

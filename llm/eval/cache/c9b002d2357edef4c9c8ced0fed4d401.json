@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "243c01014f64fe9adbc41a7735f61cff7d8335f7553869d3a9acaba9a25dc0af",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 27381,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09: 2 prior item-not-received chargebacks on this account with healthy repayment\",\"alert amount: 62.85\",\"AVS result: Y\",\"CVV result: M\",\"account tenure_days: 533\",\"repayment history: paid 6.0 of installments_due 6; late 0.0; failed_or_written_off 0.0\",\"other_accounts_on_device: 0\",\"other_accounts_on_ship_address: 1\",\"other_accounts_same_email_root: 0\",\"account login from IP 51.253.252.76 at 2025-10-01 15:16:33\",\"alert IP 51.253.252.211; ip_country: US; kyc_country: CA\",\"order 123020 for 333.95 was approved at 2025-11-19 04:36:39\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 records 2 prior item-not-received chargebacks. The current approved apparel order is 62.85, but the packet does not establish whether the prior disputes were abusive or valid.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic is plausible: the account has a US login in the prior 90 days and the alert is from the US, with no packet evidence of credential changes. Healthy repayment, AVS Y, and CVV M also weigh against payment-instrument misuse.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows no credential manipulation, no other accounts on the alert device, and successful AVS and CVV results.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection: hold_contact\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the 2 prior item-not-received chargebacks for delivery evidence, dispute outcomes, and merchant history.\",\"Request step-up verification to confirm the current order and US activity.\",\"Check whether device_id 19783 was added through an organic device_add event.\"],\"memo_markdown\":\"R09 fired because the account has 2 prior item-not-received chargebacks despite healthy repayment. The current approved apparel order is 62.85 with AVS Y and CVV M. Repayment is paid 6.0, late 0.0, and failed_or_written_off 0.0. No other accounts are linked to the alert device; ship-address linkage is 1 account.\\n\\nINR abuse remains plausible, but the packet cannot distinguish abusive disputes from a benign traveler pattern: both the prior login and current order show US activity while KYC country is CA, with no credential-change evidence. Hold for customer verification, then review the prior dispute files before a final disposition.\"}"
+ },
+ "task": "triage_memo"
+}

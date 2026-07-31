@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "9b288b3888507ab663e70c3ea35789762bd29cc79d8e51d6bb3a54839a7dd1a0",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 32907,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R08 fired: ship-to address a_21810 already used by 3 distinct accounts\",\"Order 165684 amount 531.71 in electronics\",\"Order 165684 approved at 2025-12-18 14:59:15\",\"AVS result Y and CVV result M\",\"Other accounts on device: 0\",\"Other accounts on ship address: 2\",\"Other accounts with same email root: 0\",\"Account has 6 prior orders and total spent prior 404.15\",\"Repayment history: 9 installments due, 9.0 paid, 0.0 late, 0.0 failed or written off\",\"Account tenure is 703 days\",\"IP country US, BIN country US, and KYC country US\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"The shared ship-to address is consistent with possible multi-account coordination, but there are 0 other accounts on the device and 0 other accounts with the same email root. No repayment or geography signal corroborates a ring.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The order has AVS result Y and CVV result M, with 0 declines on card 24h; the packet provides no independent stolen-card indicator.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"Repayment history shows 9.0 paid, 0.0 late, and 0.0 failed or written off.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A gift buyer could explain a ship-to address shared across accounts, while the account has 703 days of tenure, 6 prior orders, no prior AVS or CVV mismatches, and consistent US geography. The packet does not confirm that the address is not the customer's home.\"}],\"policy_citations\":[\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Verify whether address a_21810 is a gift or shared household destination.\",\"Review the other accounts using address a_21810 for coordinated behavior or common payment and contact details.\"],\"memo_markdown\":\"R08 is the sole fired rule: address a_21810 was used by 3 distinct accounts. This supports a low-likelihood synthetic-ring hypothesis, but device and email-root linkage are absent, and the packet provides no merchant-complicity evidence. Stolen-card and never-pay hypotheses are low: AVS is Y, CVV is M, card declines on card 24h are 0, and repayment shows 9.0 paid with 0.0 late and 0.0 failed or written off. The account also has 703 days of tenure and 6 prior orders with no prior AVS or CVV mismatches. A gift-buyer benign mimic is plausible but unconfirmed because the packet does not establish whether the shared destination is outside the customer's household. Recommend reversible hold_contact pending address-purpose and linkage review. Priority P1 because the order amount is 531.71.\"}"
+ },
+ "task": "triage_memo"
+}

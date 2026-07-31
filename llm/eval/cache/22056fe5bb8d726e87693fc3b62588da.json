@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "de29601a6fb6ee7a77ff481b36cd3611565267917b88bec78246eed0afe4f8c2",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 53207,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"R03 fired for geo + verification mismatch with weight 35\",\n    \"card BIN country US vs IP country CN\",\n    \"IP country CN at 2025-11-21 05:14:01\",\n    \"AVS result N and CVV result M\",\n    \"order amount 128.51 and status approved\",\n    \"prior orders had IP country US with AVS result Y\",\n    \"account has tenure_days 783 and total_spent_prior 1676.61\",\n    \"repayment history shows installments_due 21, paid 21.0, late 0.0, and failed_or_written_off 0.0\",\n    \"linkage shows other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0\",\n    \"account_events_90d show address_add at 2025-09-22 17:35:14 and login at 2025-09-11 21:23:57\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"stolen_card\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"The US card used from a CN IP with AVS=N and CVV=M supports possible unauthorized card use. However, there are no card declines in 24h, no linkage to other accounts, and the account has a fully paid repayment history.\"\n    },\n    {\n      \"pattern\": \"account_takeover\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"The foreign IP is anomalous, but the packet shows no credential manipulation, device sharing, or account linkage.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"A traveler mimic could explain the foreign IP because there are no credential changes or linkage signals. The AVS=N and CVV=M remain insufficiently explained by travel alone.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R03\",\n    \"FP-1 \u00a71\",\n    \"FP-1 \u00a75\",\n    \"FP-1 \u00a76\"\n  ],\n  \"recommended_action\": \"hold_contact\",\n  \"priority\": \"P2\",\n  \"evidence_gaps\": [\n    \"Use step-up verification to confirm whether the customer was traveling from CN at 2025-11-21 05:14:01.\",\n    \"Verify the customer\u2019s relationship to ship_address_id 1971740.\",\n    \"Confirm the AVS and CVV details with the customer or payment verification flow.\"\n  ],\n  \"memo_markdown\": \"R03 flagged order 125907 for a US card used from a CN IP with AVS=N and CVV=M. This supports possible stolen-card use, but the evidence is limited to the geography-plus-verification family. The account has tenure_days 783, total_spent_prior 1676.61, no late or failed payments, and no linkage to other accounts by device, ship address, or email root. Prior orders used US IPs with AVS=Y, making the current event anomalous. A traveler is a plausible benign mimic because the packet shows no credential manipulation or account linkage, but travel does not fully explain the verification results. Hold pending reversible step-up verification of travel/location, shipping address, and payment details.\"\n}"
+ },
+ "task": "triage_memo"
+}

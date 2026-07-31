@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "4c3d4d3ec45984df71be5a6539363aaed6c87eb05b633b76670fc651a0b17627",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 48326,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert amount 1006.62\",\"card BIN country CA vs IP country US\",\"AVS result N\",\"CVV result M\",\"fired rule R03: geo + verification mismatch\",\"account tenure_days 313\",\"n_orders_prior 30\",\"total_spent_prior 5633.97\",\"account_events_90d is empty\",\"other_accounts_on_device 0\",\"other_accounts_same_email_root 0\",\"other_accounts_on_ship_address 1\",\"failed_or_written_off 0.0\",\"late 2.0\",\"paid 84.0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The CA card BIN versus US IP, AVS=N, and CVV=M triggered R03 on a 1006.62 electronics order. However, the account has tenure_days 313, n_orders_prior 30, and no account_events_90d.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The geography and verification mismatch could be consistent with account takeover, but account_events_90d is empty and there are no other accounts on device or same email root.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler is a plausible benign mimic because the packet shows a foreign IP with no credential changes; a verification typo is also possible for the AVS/CVV mismatch. The packet does not establish travel or explain the repeated CVV=M results.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Confirm customer location or travel context for the US IP at 2026-05-30 16:12:45.\",\"Perform step-up verification for the 1006.62 order.\",\"Check whether the ship address associated with ship_address_id 39423 is the customer\u2019s established address.\"],\"memo_markdown\":\"R03 fired on approved order 324024 for 1006.62 in electronics: card BIN country CA versus IP country US, with AVS=N and CVV=M. Stolen_card is the leading fraud hypothesis at medium likelihood, but corroboration is limited to the geography+verification family. Account takeover is low likelihood because account_events_90d is empty, other_accounts_on_device is 0, and other_accounts_same_email_root is 0. A benign traveler explanation remains plausible because the packet shows a foreign IP with no credential changes; verification typo is another possible mimic. The account has tenure_days 313, n_orders_prior 30, total_spent_prior 5633.97, failed_or_written_off 0.0, late 2.0, and paid 84.0. Recommend hold_contact for step-up verification. Priority P1 due to the 1006.62 exposure.\"}"
+ },
+ "task": "triage_memo"
+}

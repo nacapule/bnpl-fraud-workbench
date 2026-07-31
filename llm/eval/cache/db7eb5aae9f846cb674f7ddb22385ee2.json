@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "1a37ed1e714e110227051d19acd1c45afa3ad5246318988803c767c483edc74f",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 28114,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: \\\"2 prior item-not-received chargebacks on this account with healthy repayment\\\"\",\"alert amount: 38.97\",\"alert AVS result: Y\",\"alert CVV result: M\",\"order status: approved\",\"account tenure_days: 460\",\"n_orders_prior: 3\",\"repayment history: paid 4.0 of installments_due 4, late 0.0, failed_or_written_off 0.0\",\"other_accounts_on_device: 0\",\"other_accounts_on_ship_address: 0\",\"other_accounts_same_email_root: 0\",\"alert IP country: US\",\"card BIN country: US\",\"declines_on_card_24h: 0\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies 2 prior item-not-received chargebacks. The packet does not provide prior dispute outcomes, delivery evidence, or details of the claimed non-receipt.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"The account has tenure_days 460, n_orders_prior 3, healthy repayment, matched AVS/CVV, and no observed multi-account linkage. These facts support an established customer explanation, but do not resolve the prior INR disputes.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the 2 prior item-not-received chargeback outcomes and delivery evidence.\",\"Obtain step-up customer verification confirming intent for order_id 37565.\",\"Check merchant fulfillment and shipment status for order_id 37565.\"],\"memo_markdown\":\"R09 fired because the account has 2 prior item-not-received chargebacks with healthy repayment. Current order 37565 is approved for 38.97, with AVS Y, CVV M, US IP country, US BIN country, and 0 declines_on_card_24h. The account has tenure_days 460, n_orders_prior 3, paid 4.0 of installments_due 4, late 0.0, and failed_or_written_off 0.0. Linkage shows 0 other accounts on device, ship address, and email root.\\n\\nINR abuse remains plausible from the prior disputes, but corroboration is limited to the repayment/dispute signal family; there is no multi-account linkage, credential-manipulation evidence, verification failure, or velocity evidence in the packet. The benign explanation is also plausible given the established, healthy repayment profile, but the dispute details are absent. Hold pending step-up verification and review of prior dispute and delivery records.\"}"
+ },
+ "task": "triage_memo"
+}

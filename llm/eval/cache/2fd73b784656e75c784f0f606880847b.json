@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "06564642ad4b650197280f96c7f208da851dde6ad238d9c36e637917eb9edbcc",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 33574,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R01 fired for credential change before order, weight 45\",\"password_change at 2026-01-10 15:24:56 from device 5181180\",\"address_add at 2026-01-10 16:24:56 from device 5181180\",\"order 349812 at 2026-01-10 19:45:19 for 376.81 from device 5181180\",\"order IP country is VN while KYC country and card BIN country are US\",\"AVS result Y and CVV result M\",\"account tenure is 661 days with 28 prior orders and total spent prior of 3432.82\",\"other accounts on device, ship address, and same email root are all 0\",\"repayment history shows 74.0 paid, 1.0 late, and 0.0 failed or written off\"],\"hypotheses\":[{\"pattern\":\"account_takeover\",\"likelihood\":\"med\",\"reasoning\":\"The password change and address addition preceded an order from a new device, and the order IP country is VN while the account and card countries are US. However, AVS result Y, CVV result M, zero linkage counts, and established repayment history weaken the hypothesis.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The card BIN country is US, AVS result is Y, CVV result is M, and declines_on_card_24h is 0, with no packet evidence of broader card misuse.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler is a plausible benign mimic for the foreign IP, and a new phone is a possible mimic for the new device. The credential change before the order is not fully explained by those mimics.\"}],\"policy_citations\":[\"R01\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the customer recognizes the password change and address addition.\",\"Step up verification for the customer, shipping address, and order 349812.\",\"Check whether device 5181180 is an organic new phone or an emulator/shared device.\"],\"memo_markdown\":\"Order 349812 is a review alert for 376.81 from gaming merchant peak-depot-66. R01 fired because a password change and address addition occurred before the order, which was placed from new device 5181180 and an IP in VN. The account is established, with 661 days of tenure, 28 prior orders, 3432.82 total spent prior, and repayment history of 74.0 paid, 1.0 late, and 0.0 failed or written off. AVS result Y, CVV result M, and zero linkage counts reduce support for account takeover or a ring. A traveler or new-phone benign explanation remains plausible, but does not fully explain the credential change. Recommend hold_contact pending step-up verification; this is reversible and should resolve the fraud-versus-benign uncertainty.\"}"
+ },
+ "task": "triage_memo"
+}

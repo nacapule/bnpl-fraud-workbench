@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "28ec6902f6027ab1f610dfd788e26fa290e1ac8fc62be2f5d32433f85cf0480d",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 28648,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: \\\"2 prior item-not-received chargebacks on this account with healthy repayment\\\"\",\"alert amount 124.61; status approved; score 45; band review\",\"AVS result Y and CVV result M\",\"account tenure_days 625; n_orders_prior 3; total_spent_prior 449.98\",\"repayment history: installments_due 5, paid 5.0, late 0.0, failed_or_written_off 0.0\",\"other_accounts_on_device 0, other_accounts_on_ship_address 1, other_accounts_same_email_root 0\",\"current device_id 31865 and card_id 31865\",\"IP country US and BIN country US\",\"declines_on_card_24h 0\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies 2 prior item-not-received chargebacks on this account. The packet provides no current delivery or dispute evidence, and no corroborating fraud-signal family beyond the repeat-INR rule.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"The account has tenure_days 625, n_orders_prior 3, healthy repayment, AVS result Y, CVV result M, and no device or email-root linkage. The packet does not establish a specific FP-1 \u00a76 benign mimic for the prior INR disputes.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the 2 prior item-not-received chargebacks for carrier delivery evidence and dispute outcomes.\",\"Obtain customer confirmation for order_id 39361 and verify the intended delivery recipient/address.\",\"Check fulfillment and shipment status for order_id 39361.\"],\"memo_markdown\":\"R09 fired because the account has 2 prior item-not-received chargebacks with healthy repayment. Current order 39361 is approved for 124.61 and has AVS Y, CVV M, US IP country, US BIN country, device_id 31865, and card_id 31865. Account signals are otherwise stable: tenure_days 625, n_orders_prior 3, paid 5.0 of installments_due 5, late 0.0, and failed_or_written_off 0.0. Linkage is limited to other_accounts_on_ship_address 1; other_accounts_on_device and other_accounts_same_email_root are 0. INR abuse is plausible but lacks a second corroborating signal family. Hold pending customer verification and review of prior dispute delivery evidence.\"}"
+ },
+ "task": "triage_memo"
+}

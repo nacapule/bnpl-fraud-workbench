@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "05d2e41be536fa26de6cc42400a4addb1ca9bb61ec3f19952187f9b7d9bc29b7",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 27301,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 350537 amount 277.94 approved at 2025-09-24 14:46:36\",\"IP country FR and card BIN country US\",\"AVS result N and CVV result M\",\"device_id 5181445\",\"merchant category jewelry and merchant_name swift-tech-38\",\"tenure_days 2\",\"n_orders_prior 0\",\"other_accounts_on_device 0\",\"other_accounts_on_ship_address 0\",\"other_accounts_same_email_root 0\",\"fired rule R03 with score 35\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card BIN conflicts with the FR IP country, alongside AVS=N and CVV=M. These are geography and verification signals consistent with unauthorized card use, but no additional independent signal family corroborates it.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The account is new with tenure_days 2, but account_events_90d is empty and there is no observed credential manipulation or linkage to other accounts.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler is a plausible mimic because of the foreign IP and there are no recorded credential changes. However, AVS=N and CVV=M are not fully explained by the packet's benign-mimic evidence.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm customer possession of the card and shipping details through step-up verification.\",\"Check whether the customer was traveling from FR at 2025-09-24 14:46:36.\",\"Query card or payment-instrument history for prior successful use by this account or device_id 5181445.\"],\"memo_markdown\":\"Order 350537 for 277.94 is approved and triggered R03: the card BIN country is US while the IP country is FR, with AVS=N and CVV=M. The account is new (tenure_days 2; n_orders_prior 0), and no other accounts share the device, ship address, or email root.\\\\n\\\\nStolen_card is a medium-likelihood hypothesis; the geography and verification mismatch supports it, but only one signal family is present. Account takeover is low likelihood because account_events_90d is empty and no credential manipulation or cross-account linkage is observed. A traveler is a medium-likelihood benign mimic, but the packet does not fully explain the AVS/CVV results.\\\\n\\\\nRecommend hold_contact for step-up verification. Priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

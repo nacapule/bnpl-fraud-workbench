@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "b317b7fdaa07cbdd311dd1f44e1b257c80a4b85bcb5c114c1606d2e11677841a",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 34420,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: geo + verification mismatch\",\"card BIN country US vs IP country CA with AVS=Y/CVV=N\",\"CVV result N\",\"IP country CA\",\"account tenure_days 2\",\"order amount 271.94\",\"prior approved electronics order amount 738.01 at 2026-03-17 03:56:59\",\"current approved electronics order at 2026-03-17 12:46:00\",\"device_id 5181570 on both recent orders\",\"other_accounts_on_device 0\",\"other_accounts_on_ship_address 0\",\"other_accounts_same_email_root 0\",\"declines_on_card_24h 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card BIN with CA IP and CVV=N triggered R03, and recent approved electronics orders occurred within hours. There is no cross-account device, address, or email-root linkage.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler is a known benign mimic for a foreign IP when there are no credential changes; account_events_90d is empty. However, CVV=N and the prior CVV=M leave the verification outcome unresolved.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Confirm whether the cardholder can complete step-up verification for card_id 52187.\",\"Check whether the CA IP 43.198.14.50 is consistent with the customer's recent authenticated session history.\",\"Confirm fulfillment status for order_id 350931 and order_id 350930.\"],\"memo_markdown\":\"R03 fired on approved electronics order_id 350931: US card BIN, CA IP, AVS=Y, and CVV=N. The account has tenure_days 2, with recent approved electronics orders on device_id 5181570 within hours. Linkage is negative across device, ship address, and email root, and declines_on_card_24h is 0.\\n\\nStolen-card activity remains plausible from the geo and verification signals, but corroboration is limited to that signal family. A traveler is also plausible because account_events_90d is empty, though CVV=N and prior CVV=M are unresolved. Hold for step-up verification before fulfillment; a successful check would support clearing, while failure would materially strengthen the fraud hypothesis.\"}"
+ },
+ "task": "triage_memo"
+}

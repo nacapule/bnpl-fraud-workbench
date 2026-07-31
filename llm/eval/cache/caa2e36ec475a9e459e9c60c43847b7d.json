@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "e6978ff893dc5deb56c31ee4dffd0dd8ce8e0dd7c612cfd03a233b98cbe30e53",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 26966,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 352660 was approved at 2026-01-31 16:00:54 for 76.62\",\"R02: 6 accounts have transacted on device d_5182236 as of this order\",\"R06: disposable_domain=False, shared_root_accounts=95\",\"R08: ship-to address a_2899501 already used by 24 distinct accounts\",\"R10: promo redeemed inside a device/address cluster with 24 linked redemptions\",\"linkage shows other_accounts_on_device=6, other_accounts_on_ship_address=46, and other_accounts_same_email_root=94\",\"account has n_orders_prior=0, tenure_days=0, and signup_ts=2026-01-31 00:39:02\",\"AVS result was Y, CVV result was M, IP country was US, and BIN country was US\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The device, ship-to address, and email root each link this new account to multiple other accounts. The promo-farming cluster further corroborates a multi-account pattern.\"},{\"pattern\":\"promo_abuse\",\"likelihood\":\"high\",\"reasoning\":\"R10 states that a promo was redeemed within a device/address cluster with 24 linked redemptions. The shared device and address support coordinated account use.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer or mover explanation does not explain the simultaneous multi-account device, shared-address, email-root, and promo-cluster signals.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"R10\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check whether linked accounts on device d_5182236, ship-to address a_2899501, or the email root have confirmed-fraud outcomes.\",\"Review the linked promo redemptions for common payment instruments, fulfillment destinations, and order timing.\",\"Verify whether the approved order has entered fulfillment and whether the merchant has related flagged orders. \"],\"memo_markdown\":\"**Recommendation: escalate (P2).**\\n\\nOrder 352660 was approved for 76.62. The account has no prior orders and tenure_days=0. Three independent linkage roots indicate a multi-account cluster: 6 accounts transacted on device d_5182236, the ship-to address was used by 24 distinct accounts, and shared_root_accounts=95. R10 also identifies 24 linked promo redemptions within the device/address cluster.\\n\\nAVS=Y, CVV=M, IP country=US, and BIN country=US do not explain the linkage and promo signals. Escalate under FP-1 action selection step 1 for suspected multi-account ring activity; a human analyst should determine the final account and order disposition.\"}"
+ },
+ "task": "triage_memo"
+}

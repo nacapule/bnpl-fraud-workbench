@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "0c9cef15e7cb56d1cc6433a72d61b52706625b42af00c72d1b8d9d25f35f5a0c",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 37366,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 349975 amount 972.11 in jewelry from merchant iron-depot-40\",\"password_change at 2025-09-05 07:14:29 from device 5181241\",\"email_change at 2025-09-05 07:22:29 from device 5181241\",\"address_add at 2025-09-05 08:14:29 from device 5181241\",\"Order at 2025-09-05 08:51:14 from new device 5181241\",\"AVS result Y and CVV result M\",\"Account tenure_days 322\",\"Other accounts on device 0, ship address 0, and same email root 0\",\"Repayment history: installments_due 2, paid 2.0, late 0.0, failed_or_written_off 0.0\"],\"hypotheses\":[{\"pattern\":\"account_takeover\",\"likelihood\":\"high\",\"reasoning\":\"Password, email, and address changes occurred before a high-value order from a new device on a 322d-old account. Credential manipulation and device change independently support account takeover.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"CVV result M is a signal, but AVS result Y, US card and IP countries, and declines_on_card_24h 0 do not strongly support stolen-card use.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A new phone or verification typo could explain the new device and CVV mismatch, but the coordinated password, email, and address changes before the order are not explained by those mimics.\"}],\"policy_citations\":[\"R01\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"decline_block\",\"priority\":\"P1\",\"evidence_gaps\":[\"Check whether the customer initiated the password_change, email_change, and address_add events.\",\"Verify the new shipping address and device ownership with step-up customer contact.\",\"Review fulfillment status for order 349975.\"],\"memo_markdown\":\"Order 349975 is a 972.11 jewelry purchase from iron-depot-40 on a 322d-old account. Password, email, and address changes occurred shortly before the order, which was placed from new device 5181241. This creates a high-likelihood account-takeover hypothesis supported by credential manipulation and device-change signal families. No linkage to other accounts, shipping addresses, or email roots is present, so the packet does not establish a multi-account ring. Stolen-card likelihood is low: AVS returned Y, card and IP countries are US, and declines_on_card_24h is 0; however, CVV returned M. A new-phone or verification-typo benign mimic remains possible but does not explain the coordinated credential and address changes. Recommend decline_block pending human review, with priority P1 due to the order amount exceeding 500.\"}"
+ },
+ "task": "triage_memo"
+}

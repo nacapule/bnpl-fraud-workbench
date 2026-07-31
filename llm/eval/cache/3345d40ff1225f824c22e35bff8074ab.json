@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "f607c9fa8ff97572918243612df005d030fc99a3278b6656e4a13e3e182cad4a",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 26415,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert_id 3164 is an approved order_id 113730 for 97.66 at 2025-11-10 19:48:14\",\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"account kyc_country is CA; alert ip_country is US\",\"current order uses device_id 11571; prior approved orders also used device_id 11571\",\"prior approved orders on 2025-08-07 09:22:02, 2025-08-02 16:46:17, and 2025-07-07 19:16:31 had ip_country US\",\"n_avs_mismatch_prior is 0.0 and n_cvv_mismatch_prior is 0.0\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"repayment_history shows installments_due 9, paid 9.0, late 0.0, and failed_or_written_off 0.0\",\"account_events_90d is []\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"The US IP is consistent with prior approved orders and the device_id is unchanged; this fits a traveler-style geography mismatch without credential changes. The isolated AVS=N can fit the verification-typo benign mimic, while CVV=M and repayment history are positive.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"R03 provides a geography and verification signal, but there is no device or account linkage, no recent account events, and the current device and US IP pattern match prior approved orders.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 \u00a76.1\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the AVS=N result reflects an address-entry error or an issuer decline for order_id 113730.\",\"Confirm whether ship_address_id 11571 matches the address used on prior approved orders.\"],\"memo_markdown\":\"Order 113730 for 97.66 fired R03 because the CA BIN was used from a US IP with AVS=N/CVV=M. The account\u2019s prior approved orders also used device_id 11571 and US IPs, and account_events_90d is empty. Linkage is 0 across device, ship address, and email root. Repayment history shows 9 installments due, 9.0 paid, 0.0 late, and 0.0 failed or written off.\\n\\nThe strongest explanation is benign: an established US IP pattern with no credential changes, plus an isolated AVS mismatch consistent with the verification-typo mimic. Stolen-card activity remains low likelihood because the alert has no independent corroborating signal family. Clear under FP-1; optionally confirm the AVS response and address consistency for documentation.\"}"
+ },
+ "task": "triage_memo"
+}

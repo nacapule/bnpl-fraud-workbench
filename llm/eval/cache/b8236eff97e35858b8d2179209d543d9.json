@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "2cf1b5d71434e65662406f068d5bff290b105abf3542766bf4ea7128f563c752",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 37853,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"email_domain: mailinator.com\",\"R06 rationale: disposable_domain=True, shared_root_accounts=1\",\"R08 rationale: ship-to address a_2899016 already used by 32 distinct accounts\",\"linkage.other_accounts_on_ship_address: 39\",\"linkage.other_accounts_on_device: 2\",\"alert amount: 312.63\",\"alert status: approved\",\"alert merchant_category: gaming\",\"alert avs_result: Y\",\"alert cvv_result: M\",\"repayment_history: installments_due=6, paid=6.0, late=0.0, failed_or_written_off=0.0\",\"account tenure_days: 57\",\"account n_orders_prior: 2\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The disposable mailinator.com identity and ship-to address linked to 39 other accounts support a multi-account linkage pattern. R08 also records that address a_2899016 was already used by 32 distinct accounts.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer explanation is possible for a non-home ship-to, and the account has paid=6.0 with late=0.0. However, the packet documents the shared address across 39 other accounts and a disposable email domain.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The order has avs_result Y and cvv_result M, while declines_on_card_24h is 0. The packet provides no card misuse or credential-change evidence.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check confirmed-fraud outcomes and order activity for the 39 other accounts on ship address a_2899016.\",\"Check whether the 2 other accounts on device 5181726 also use ship address a_2899016 or disposable email domains.\",\"Check merchant order and fulfillment details for urban-haus-62 to assess possible merchant complicity.\"],\"memo_markdown\":\"Approved gaming order 351771 for 312.63 is linked to a high-concentration ship-to address: R08 states address a_2899016 was used by 32 distinct accounts, and linkage records 39 other accounts on that address. The account also uses mailinator.com; R06 records disposable_domain=True. This supports synthetic_ring as the leading hypothesis and meets the FP-1 action-selection step 1 threshold for evidence of a multi-account ring.\\n\\nCounterevidence: AVS is Y, CVV is M, and repayment history shows paid=6.0, late=0.0, and failed_or_written_off=0.0. A gift-buyer mimic remains possible, but does not explain the documented address concentration and disposable identity.\\n\\nRecommend escalation for ring review. Priority P2 because the packet shows an approved order but does not state fulfillment imminence, active burst, or exposure above 500.\"}"
+ },
+ "task": "triage_memo"
+}

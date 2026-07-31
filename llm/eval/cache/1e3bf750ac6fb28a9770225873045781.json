@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "08a1ca3c6b98bec2e34ab908a389534bf6d52db166d808715d1781530543105c",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 46693,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country US vs IP country CA with AVS=Y/CVV=N\",\"R09 fired: 2 prior item-not-received chargebacks on this account with healthy repayment\",\"Current order amount is 27.72\",\"Current order status is approved\",\"Current order timestamp is 2026-03-25 13:03:55\",\"Current device_id is 21505\",\"Current ship_address_id is 21505\",\"Other accounts on device: 0\",\"Other accounts on ship address: 0\",\"Other accounts with same email root: 0\",\"Installments due: 6\",\"Installments paid: 6.0\",\"Failed or written off repayment amount: 0.0\",\"Late repayment amount: 0.0\",\"Vendor scores: null\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 reports 2 prior item-not-received chargebacks, which is direct evidence consistent with item-not-received abuse. Healthy repayment and the absence of device, address, or email-root linkage reduce confidence.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The US card BIN, CA IP country, and CVV=N create a geography-plus-verification concern, but AVS=Y and declines_on_card_24h=0 provide limited support.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic is plausible because the account has CA IP country activity and no linked accounts on the device, ship address, or email root. The packet does not explain the 2 prior item-not-received chargebacks as benign.\"}],\"policy_citations\":[\"R03\",\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check whether the 2 prior item-not-received chargebacks were merchant-confirmed delivery failures or customer-fraud disputes.\",\"Check account credential-change history around the current order.\",\"Request step-up customer verification of the purchase and delivery details.\"],\"memo_markdown\":\"The alert fired R03 for a US card BIN versus CA IP country with AVS=Y/CVV=N and R09 for 2 prior item-not-received chargebacks. The account shows healthy repayment: 6 installments due, 6.0 paid, with 0.0 failed or written off and 0.0 late. No linkage is present across device, ship address, or email root, and vendor scores are null.\\n\\nINR abuse is the leading fraud hypothesis but remains medium likelihood because repayment behavior is healthy and there is no observed multi-account linkage. A traveler benign mimic is also plausible, but the packet does not explain the prior INR chargebacks. Hold for reversible customer verification; step-up verification and prior-dispute validation should determine the outcome.\"}"
+ },
+ "task": "triage_memo"
+}

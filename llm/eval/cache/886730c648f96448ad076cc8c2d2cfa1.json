@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "c42e7c71e8bcae1ecc124a2ae119c28bdf3171d343afedaa1224ee37b79989a8",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 25325,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 352717 was approved at 2026-05-23 08:00:27 for 134.35.\",\"R02: 5 accounts have transacted on device d_5182258 as of this order.\",\"R06: email identity cost-reduction: disposable_domain=False, shared_root_accounts=95.\",\"R08: ship-to address a_2899503 already used by 33 distinct accounts.\",\"R10: promo redeemed inside a device/address cluster with 33 linked redemptions.\",\"The account has tenure_days 3 and n_orders_prior 0.\",\"AVS result was Y and CVV result was M.\",\"IP country, BIN country, and KYC country are US.\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The device, shipping address, and email root each link this new account to multiple other accounts, with shared-root accounts at 95 and shared ship-to use by 33 distinct accounts. The promo-farming cluster signal corroborates coordinated multi-account activity.\"},{\"pattern\":\"promo_abuse\",\"likelihood\":\"high\",\"reasoning\":\"R10 states that a promo was redeemed inside a device/address cluster with 33 linked redemptions. R02, R06, and R08 provide independent linkage evidence for coordinated account use.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer or new-phone mimic does not explain the multi-account device, shared email root, shared drop address, and linked promo-redemption signals together. US IP, BIN, KYC, AVS Y, and CVV M are not exculpatory of the linkage pattern.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"R10\",\"FP-1 \u00a71\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Review the linked accounts on device d_5182258, ship-to address a_2899503, and the henry72 Gmail root for confirmed fraud outcomes.\",\"Check whether the 33 linked promo redemptions share merchant bright-gallery-89 or payment instruments.\",\"Verify fulfillment status for approved order 352717 before shipment.\"],\"memo_markdown\":\"**Recommendation: escalate (P1).**\\n\\nOrder 352717 is an approved 134.35 health purchase on a 3-day-old account with no prior orders. The strongest hypothesis is a synthetic ring with promo abuse: device d_5182258 has transacted across 5 accounts; the email root has 95 shared-root accounts; ship-to address a_2899503 has been used by 33 distinct accounts; and R10 identifies 33 linked promo redemptions. These are multi-account linkages across device, address, and email-root dimensions.\\n\\nAVS Y, CVV M, and US IP/BIN/KYC alignment do not resolve the coordinated-linkage evidence. The packet meets FP-1 action-selection step 1 for escalation based on evidence of a multi-account ring. Human review should inspect linked-account outcomes and fulfillment status before determining downstream account or order controls.\"}"
+ },
+ "task": "triage_memo"
+}

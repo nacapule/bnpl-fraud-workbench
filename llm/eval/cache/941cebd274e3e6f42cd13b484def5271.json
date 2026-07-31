@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "0a5603bd9c5bc553746aa39b60305b9a51855f2989074dcd5fbba9cfbea2682a",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 38796,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert score 60 and status approved\",\"amount 496.14\",\"email domain mailinator.com\",\"ship-to address 2899017 already used by 16 distinct accounts\",\"other_accounts_on_ship_address 39\",\"other_accounts_on_device 2\",\"other_accounts_same_email_root 0\",\"cvv_result N and avs_result Y\",\"repayment_history paid 6.0, late 0.0, failed_or_written_off 0.0\",\"account tenure_days 32\",\"ip_country US, kyc_country US, and bin_country US\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The disposable email domain and ship-to address linkage to 39 other accounts support coordinated multi-account activity. The shared drop address is the strongest independent linkage signal.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The current transaction has cvv_result N, but avs_result is Y, declines_on_card_24h is 0, and prior transactions had cvv_result M.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"Repayment history shows paid 6.0, late 0.0, and failed_or_written_off 0.0.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer mimic could explain a non-home ship-to address, but it does not explain the disposable email domain and extensive address linkage.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Query the 39 other accounts linked to ship_address_id 2899017 for shared devices, payment instruments, email roots, merchants, and confirmed-fraud outcomes.\",\"Check fulfillment state and whether order_id 351752 can still be paused.\"],\"memo_markdown\":\"Order 351752 is approved for 496.14 in electronics. The strongest concern is a multi-account linkage cluster: ship address 2899017 is linked to 39 other accounts, and the alert states it was already used by 16 distinct accounts. R06 also identifies mailinator.com as a disposable email domain. These signals support synthetic_ring at high likelihood and meet FP-1\u2019s escalation condition for multi-account linkage of at least 3 accounts. Stolen_card and never_pay are lower likelihood: AVS is Y, card declines in 24h are 0, and repayment history shows paid 6.0 with late 0.0 and failed_or_written_off 0.0. A benign gift-buyer explanation is possible but does not account for the disposable domain and address cluster. Recommend escalation for ring review; human analyst retains the decision.\"}"
+ },
+ "task": "triage_memo"
+}

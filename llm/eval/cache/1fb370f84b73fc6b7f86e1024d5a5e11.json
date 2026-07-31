@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "81bd276023d216df8b8fd11f2ff0d71f0ffcbfd24da8e6eeb6c27b7e96e4e5cb",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 31968,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"order_id 124053 was approved at 2025-11-19 19:57:47 for 165.41\",\"device_id 17352 was used for the alert and prior orders\",\"account tenure_days is 804\",\"n_orders_prior is 12\",\"repayment_history shows installments_due 25, paid 25.0, late 0.0, and failed_or_written_off 0.0\",\"n_avs_mismatch_prior is 3.0 and n_cvv_mismatch_prior is 0.0\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"account_events_90d contains address_add at 2025-11-08 23:17:50 and login events; no credential-change event is listed\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler mimic is supported by the recurring US IP country activity, CA BIN country, use of device_id 17352, and no listed credential-change event. The AVS=N is consistent with the account's n_avs_mismatch_prior of 3.0, while CVV=M.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"R03 identifies a CA BIN country versus US IP country with AVS=N/CVV=M, but there is no device linkage, ship-address linkage, email-root linkage, card decline, or credential-manipulation signal in the packet.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether ship_address_id 580098 matches a previously used address.\",\"Confirm whether the card billing address changed before order_id 124053.\"],\"memo_markdown\":\"Clear. R03 fired on the CA BIN country versus US IP country and AVS=N/CVV=M for approved order_id 124053. The account shows tenure_days 804, n_orders_prior 12, installments_due 25, paid 25.0, late 0.0, and failed_or_written_off 0.0. The alert used device_id 17352, which also appears on prior orders and account events. Linkage fields show 0 other accounts on device, ship address, and email root. The packet lists no credential-change event. The strongest explanation is the FP-1 \u00a76 traveler mimic, with AVS=N also aligned to n_avs_mismatch_prior of 3.0. No multi-account ring or corroborating independent fraud signal family is present.\"}"
+ },
+ "task": "triage_memo"
+}

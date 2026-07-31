@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "2c838a5df282582c8224d85a98775e81d529a0d5bf274eb7797a72915fc5508e",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 231414,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Alert 9344 for order 345154, amount 105.31, status approved\",\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"Card BIN country CA; IP country US; AVS result N; CVV result M\",\"Account has 43 prior orders and tenure_days 779\",\"Account repayment history: failed_or_written_off 0.0, installments_due 114, late 4.0, paid 110.0\",\"Linkage counts: other_accounts_on_device 0, other_accounts_on_ship_address 0, other_accounts_same_email_root 0\",\"Account events show login activity and no credential-change event\",\"Card has declines_on_card_24h 0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler mimic is plausible because the account has established tenure, 43 prior orders, no credential-change event, and repeated IP country US activity despite kyc_country CA. The isolated AVS mismatch is also consistent with a verification typo within the stated benign-mimic noise rate.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The current order has card BIN country CA versus IP country US with AVS=N/CVV=M, which supports possible stolen-card use. However, there are no card declines_on_card_24h and no linkage to other accounts.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The geography and verification mismatch could occur after account takeover, but the packet shows no credential-change event, no device linkage, and established account activity.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"Repayment history shows failed_or_written_off 0.0 and paid 110.0 of installments_due 114, without evidence of a never-pay pattern.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Verify customer travel or location context for the IP country US activity\",\"Confirm whether the cardholder billing address explains AVS=N and whether step-up verification succeeds\",\"Check whether ship_address_id 21361 matches the established customer address\"],\"memo_markdown\":\"Order 345154 triggered R03 for card BIN country CA versus IP country US with AVS=N/CVV=M. Stolen-card activity is possible, but the packet provides only a geography-plus-verification signal family. The account has established tenure, 43 prior orders, no credential-change event, no linked accounts, and repayment history with failed_or_written_off 0.0 and paid 110.0 of installments_due 114. A traveler mimic is therefore the leading benign explanation; the AVS mismatch may also reflect the stated verification-typo mimic. Because the packet cannot distinguish these explanations from stolen-card use, hold_contact is recommended pending step-up verification. Priority is P2.\"}"
+ },
+ "task": "triage_memo"
+}

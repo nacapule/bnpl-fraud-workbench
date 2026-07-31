@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "970d03d564632a78fb83b5c772817663ff382877404279b5394570228db80698",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 25465,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: repeat INR disputes; rationale: 3 prior item-not-received chargebacks on this account with healthy repayment\",\"Order 317676 was approved for 224.84 at 2026-05-24 08:10:14 in electronics\",\"Order 317676 had AVS result Y and CVV result M\",\"The order used device_id 13343 and a US IP\",\"The card BIN country is RU\",\"Account tenure is 371 days with 16 prior orders and total_spent_prior of 2837.07\",\"Repayment history shows 44 installments due, 44.0 paid, 0.0 late, and 0.0 failed_or_written_off\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 1, and other_accounts_same_email_root is 0\",\"Prior order 283145 had AVS result N and CVV result M\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies 3 prior item-not-received chargebacks, making repeated INR behavior the principal concern. However, the current order has AVS Y and CVV M, and the packet does not establish whether the prior disputes were abusive.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"The account has 371 days of tenure, 16 prior orders, and 44.0 paid installments with 0.0 late and 0.0 failed_or_written_off. These facts support an established customer, but they do not explain the 3 prior item-not-received chargebacks.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The card BIN country is RU while the order IP country is US, but AVS Y, CVV M, device_id 13343 continuity, and 0 declines_on_card_24h do not corroborate a current stolen-card pattern.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the outcomes and supporting evidence for the 3 prior item-not-received chargebacks.\",\"Obtain customer confirmation of receipt intent and current shipping details before fulfillment.\",\"Check carrier delivery and dispute records for prior orders tied to the account.\"],\"memo_markdown\":\"R09 fired because the account has 3 prior item-not-received chargebacks with healthy repayment. The current approved electronics order is 224.84, with AVS Y and CVV M, from device_id 13343 and a US IP. The account has 371 days of tenure, 16 prior orders, and repayment history of 44.0 paid installments with 0.0 late and 0.0 failed_or_written_off. Linkage does not indicate a multi-account ring: other_accounts_on_device is 0 and other_accounts_same_email_root is 0; other_accounts_on_ship_address is 1. INR abuse is plausible but not established; the payment and account-history facts also support a benign explanation. Hold pending receipt/shipping verification and review of the 3 prior disputes. No basis in the packet for escalation or decline/block.\"}"
+ },
+ "task": "triage_memo"
+}

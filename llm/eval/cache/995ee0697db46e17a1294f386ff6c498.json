@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "878c73ab592d4b139f89f8112f552d1abf55d4efcc9aaca62b0d6ed9dfb7ab32",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 350515,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 352784 for 87.83 approved at 2026-05-13 08:01:32\",\"Alert score 90 with band decline\",\"R06: shared_root_accounts=95\",\"R08: ship-to address a_2899502 already used by 6 distinct accounts\",\"R10: promo redeemed inside a device/address cluster with 6 linked redemptions\",\"5 other accounts on device 5182265\",\"47 other accounts on ship address 2899502\",\"94 other accounts share the email root\",\"Account tenure is 4 days with 0 prior orders and 0.0 total spent prior\",\"AVS result Y and CVV result M\",\"IP country US, KYC country US, and card BIN country US\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The account is linked to other accounts through the device, ship-to address, and email root, with a promo-farming cluster and shared drop address. The linkage counts meet FP-1's multi-account ring escalation threshold.\"},{\"pattern\":\"promo_abuse\",\"likelihood\":\"high\",\"reasoning\":\"R10 identifies promo redemption inside a device/address cluster with 6 linked redemptions. The shared address and email-root linkages provide corroborating signal families.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler, mover, gift buyer, new phone, or verification-typo explanation does not explain the multi-account device, address, email-root, and promo linkages.\"}],\"policy_citations\":[\"R06\",\"R08\",\"R10\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 \u00a77\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query linked accounts for confirmed-fraud outcomes and aggregate exposure across related orders.\",\"Check whether the merchant blue-province-43 appears across the linked accounts and orders.\",\"Review the 6 linked promo redemptions for common fulfillment, payment, or identity attributes.\"],\"memo_markdown\":\"**Assessment:** High-likelihood synthetic-ring activity, with promo abuse also high likelihood. The new account has 0 prior orders and is linked to 5 other accounts on device 5182265, 47 other accounts on ship address 2899502, and 94 other accounts sharing the email root. Rules R06, R08, and R10 independently identify email-root sharing, a shared drop address, and a promo-farming cluster with 6 linked redemptions. US geography and AVS result Y do not explain the linkage pattern. Benign mimics are low likelihood because travelers, movers, gift buyers, new phones, and verification typos do not account for the multi-account linkage and promo signals. **Action:** Escalate for ring review under FP-1. Confirm linked-account fraud outcomes, aggregate exposure, and merchant overlap.\"}"
+ },
+ "task": "triage_memo"
+}

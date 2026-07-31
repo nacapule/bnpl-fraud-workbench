@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "ae257f08cc32d376e261291a769e83c7fefa7bda9a9017ac600120d6574c958f",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 23780,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: \\\"3 prior item-not-received chargebacks on this account with healthy repayment\\\"\",\"Order 107857 was approved at 2025-11-04 10:18:01 for 503.47 at true-market-84 in home.\",\"Order 107857 returned AVS result Y and CVV result M.\",\"Account tenure_days is 548 with n_orders_prior of 3 and total_spent_prior of 518.02.\",\"The account has 9.0 paid installments, 0.0 late installments, and 0.0 failed_or_written_off.\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0.\",\"The alert device_id is 26335, matching the device_id on the listed prior orders.\",\"The alert IP country is US; kyc_country is CA and card bin_country is CA.\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies 3 prior item-not-received chargebacks on this account. The current approved order is 503.47, but the packet does not provide fulfillment, dispute-resolution, or merchant evidence to establish intent.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"The account has 548 tenure_days, 9.0 paid installments, 0.0 late installments, and 0.0 failed_or_written_off. Stable device_id 26335 and zero linkage counts weigh against a multi-account pattern, though they do not resolve the prior INR disputes.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Review the 3 prior item-not-received chargebacks for merchant fulfillment and dispute-resolution outcomes.\",\"Obtain shipment, delivery, and customer-contact evidence for order 107857.\",\"Perform step-up verification with the customer to confirm the order and delivery details.\"],\"memo_markdown\":\"R09 fired because the account has 3 prior item-not-received chargebacks with healthy repayment. Order 107857 is an approved 503.47 home purchase at true-market-84; AVS is Y and CVV is M. The account has 548 tenure_days, 9.0 paid installments, 0.0 late installments, and 0.0 failed_or_written_off. Device_id 26335 is consistent with the listed prior orders, and all linkage counts are 0.\\n\\nINR abuse remains plausible, but the packet lacks fulfillment and prior-dispute outcomes. Stable device use and repayment support a benign possibility, without explaining the INR history. Hold for customer step-up verification and retrieve prior chargeback and delivery records. Priority P1 because the approved exposure is 503.47.\"}"
+ },
+ "task": "triage_memo"
+}

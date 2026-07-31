@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "91318196f9e426d375e3e089f755ca0be53d291710fd52e890394214a571bd49",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 24593,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"password_change at 2026-03-30 08:48:34 from device_id 5181181 and IP 77.124.22.173\",\"address_add at 2026-03-30 09:48:34 from device_id 5181181 and IP 77.124.22.173\",\"order_id 349814 was approved at 2026-03-30 15:45:39 for 253.54 from device_id 5181181 and IP country FR\",\"R01 fired: credential/contact change 7.0h before order on 454d-old account, order from new device d_5181181\",\"kyc_country is US and card bin_country is US\",\"prior orders used device_id 15690 and IP country US\",\"AVS result is Y and CVV result is M\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"repayment_history shows paid 9.0, installments_due 9, late 0.0, and failed_or_written_off 0.0\"],\"hypotheses\":[{\"pattern\":\"account_takeover\",\"likelihood\":\"high\",\"reasoning\":\"A password change and address add occurred from new device_id 5181181 before the approved order from that device. The order originated from FR while the account KYC country, card BIN country, and prior-order IP country are US.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler could explain the FR IP, but FP-1 \u00a76 identifies travelers as having foreign IP without credential changes; this packet contains both password_change and address_add. A new-phone mimic is also weakened by the accompanying credential and address changes.\"}],\"policy_citations\":[\"R01\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 \u00a76.1\"],\"recommended_action\":\"decline_block\",\"priority\":\"P2\",\"evidence_gaps\":[\"Step-up verification with the customer to confirm the password_change, address_add, and order_id 349814\",\"Review the newly added address associated with ship_address_id 2898507\",\"Check whether device_id 5181181 has additional fraud or account-history signals beyond the linkage fields provided\"],\"memo_markdown\":\"R01 fired on approved order_id 349814: password_change and address_add occurred before the order from new device_id 5181181. The order used an FR IP, whereas KYC country, card BIN country, and prior-order IP country are US. AVS was Y and CVV was M, but those payment-verification results do not explain the credential and address changes.\\n\\nAccount takeover is the top hypothesis at high likelihood, supported by credential manipulation and a new device/geographic shift. The traveler benign mimic is not persuasive because FP-1 \u00a76 describes travelers as foreign IP without credential changes. No multi-account linkage is present, so escalation criteria are not met.\\n\\nRecommend decline_block pending review. Customer step-up verification should confirm the password change, address addition, and order.\"}"
+ },
+ "task": "triage_memo"
+}

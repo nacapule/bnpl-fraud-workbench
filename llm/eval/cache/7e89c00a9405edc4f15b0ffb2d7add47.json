@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "91318196f9e426d375e3e089f755ca0be53d291710fd52e890394214a571bd49",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 39711,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R01 fired: credential change before order\",\"password_change at 2026-03-30 08:48:34 from device 5181181 and IP 77.124.22.173\",\"address_add at 2026-03-30 09:48:34 from device 5181181 and IP 77.124.22.173\",\"Order 349814 at 2026-03-30 15:45:39 used device 5181181 and IP country FR\",\"Account tenure is 454 days\",\"AVS result Y and CVV result M\",\"Other accounts on device: 0\",\"Other accounts on ship address: 0\",\"Other accounts with same email root: 0\",\"Repayment history: 9.0 paid, 0.0 late, 0.0 failed or written off\"],\"hypotheses\":[{\"pattern\":\"account_takeover\",\"likelihood\":\"high\",\"reasoning\":\"A password_change and address_add occurred before order 349814, followed by an order from a new device and IP country FR. These credential and device/geography signals are consistent with account takeover.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The order used a US card BIN with AVS result Y; the packet provides no prior card declines or other stolen-card indicators.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows 0 other accounts on the device, 0 on the ship address, and 0 with the same email root.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"Repayment history shows 9.0 paid, 0.0 late, and 0.0 failed or written off.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler could explain the foreign IP country FR, but the password_change and address_add before the order are not explained by the stated traveler mimic.\"}],\"policy_citations\":[\"R01\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the customer authorized the password_change and address_add at 2026-03-30 08:48:34 and 2026-03-30 09:48:34.\",\"Verify whether the customer was traveling in IP country FR at 2026-03-30 15:45:39.\",\"Check whether device 5181181 is an organic new phone previously associated with the customer.\"],\"memo_markdown\":\"Order 349814 is approved for 253.54 on a 454-day-old account. R01 fired because a password_change occurred 7.0h before the order, followed by an address_add, with the order placed from new device 5181181 and IP country FR. This supports account_takeover, but benign travel or a new phone remains possible. Linkage is absent: 0 other accounts on the device, ship address, and email root. Payment verification is favorable with AVS Y, and repayment history shows 9.0 paid with 0.0 late and 0.0 failed or written off. Recommend hold_contact for reversible customer verification; step-up confirmation of the credential/address changes and travel or device context should resolve the ambiguity.\"}"
+ },
+ "task": "triage_memo"
+}

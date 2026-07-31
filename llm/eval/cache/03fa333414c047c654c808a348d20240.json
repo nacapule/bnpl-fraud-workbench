@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "aa09c92d4e1d5ce644b42e2291f4ea7efb4a052b54b7414cbd83ae23faacca7b",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 46835,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R01: password_change at 2026-02-18 08:30:05 from device 5181293 and IP 77.172.185.132\",\"address_add at 2026-02-18 09:30:05 from device 5181293 and IP 77.172.185.132\",\"Order 350098 for 424.72 at 2026-02-18 10:02:18 from new device 5181293\",\"IP country NG; KYC country US; card BIN country US\",\"AVS result Y and CVV result M\",\"Account has 9 prior orders and tenure_days 307\",\"Linkage counts are 0 for other accounts on device, ship address, and same email root\",\"Repayment history shows paid 23.0, late 0.0, and failed_or_written_off 0.0\"],\"hypotheses\":[{\"pattern\":\"account_takeover\",\"likelihood\":\"high\",\"reasoning\":\"A password change and address addition occurred 1.5h before the order on a 306d-old account, followed by an order from a new device and an NG IP. The credential-manipulation and geography+verification signals corroborate account takeover.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The order used a US card from an NG IP with CVV result M, but AVS result Y and card declines_on_card_24h is 0.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler mimic could explain a foreign IP, but the packet also shows a password change and address addition before the order; no benign mimic fully explains all fired signals.\"}],\"policy_citations\":[\"R01\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"decline_block\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm with the customer whether the password change and address addition were authorized.\",\"Review device and login history for ownership of device 5181293 and IP 77.172.185.132.\",\"Verify shipping-address details and fulfillment status for order 350098.\"],\"memo_markdown\":\"Order 350098 is approved for 424.72 on a 306d-old account with 9 prior orders. R01 fired because a password change and address addition occurred 1.5h before the order, which came from new device 5181293 and an NG IP. The account is US-based, the card BIN country is US, AVS is Y, and CVV is M.\\n\\nAccount takeover is the leading hypothesis at high likelihood. Credential manipulation plus geography+verification corroborate the pattern. Stolen card is a secondary hypothesis at medium likelihood. A benign traveler explanation is low likelihood because the packet includes credential and address changes, not only a foreign IP. Linkage counts are 0 across device, shipping address, and email root, so escalation criteria are not met. Repayment history shows paid 23.0, late 0.0, and failed_or_written_off 0.0.\\n\\nRecommend decline_block pending human review and customer confirmation.\"}"
+ },
+ "task": "triage_memo"
+}

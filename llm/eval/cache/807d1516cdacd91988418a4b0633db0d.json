@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "1a38bf8171f6f4b0b81e0704604b9c3c375201dd2c53b17263a73007b7c4ac39",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 40982,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"Order 50054 amount 59.01, status approved, timestamp 2025-08-30 10:56:38\",\"Card BIN country CA; IP country US\",\"AVS result N; CVV result M\",\"Account events in the prior 90 days: []\",\"Other accounts on device: 0; other accounts on ship address: 0; other accounts same email root: 0\",\"Prior orders: 1\",\"Repayment history: failed_or_written_off 0.0, late 0.0, paid 2.0\",\"Last order order_id 21609 had AVS_result Y, CVV_result M, device_id 25332, and IP_country US\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler mimic explains the foreign IP with no credential changes; account events in the prior 90 days are empty. The AVS mismatch may also be a verification typo, while CVV matches and there is no device, address, or email-root linkage.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The CA card BIN and US IP with AVS=N triggered R03, but CVV=M, declines_on_card_24h is 0, and the prior order used the same device and IP country with AVS=Y.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"There are no account events in the prior 90 days, no credential-change evidence, and no linked accounts on the device, ship address, or email root.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the customer was traveling from Canada to the US at 2025-08-30 10:56:38.\",\"Verify billing-address details behind AVS=N for order 50054.\"],\"memo_markdown\":\"R03 fired on order 50054 because the card BIN country is CA while the IP country is US, with AVS=N and CVV=M. Benign is the leading hypothesis: this is consistent with a traveler mimic, with no account events in the prior 90 days, no linked accounts, and the prior order using the same device and US IP country. The AVS mismatch may also reflect a verification typo; CVV matches, and the prior order had AVS=Y. Stolen-card and account-takeover hypotheses are low likelihood because there are no card declines, credential-change events, or linkage signals. Repayment history shows failed_or_written_off 0.0, late 0.0, and paid 2.0. Recommend clear; priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

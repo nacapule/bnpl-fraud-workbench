@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "8e725f85e1da7c4cc5784ca9f5384c64f10a2198c7d04bfff84e22f3b1f2688d",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 82221,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: geo + verification mismatch, weight 35\",\"Order 352384 approved for 92.97 at 2025-10-19 11:34:38\",\"Card BIN country US vs IP country CA\",\"AVS result N and CVV result M\",\"Account tenure_days 3 with n_orders_prior 0 and total_spent_prior 0.0\",\"account_events_90d empty\",\"other_accounts_on_device 0, other_accounts_on_ship_address 0, other_accounts_same_email_root 0\",\"declines_on_card_24h 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card BIN, CA IP, and AVS=N/CVV=M support possible unauthorized card use. Evidence is limited to geography and verification signals.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic is plausible because the IP country differs from the card BIN country and account_events_90d is empty. A verification typo is also a stated benign mimic for AVS/CVV mismatch.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 \u00a76.1\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Step-up customer verification of cardholder and purchase\",\"Check whether the customer was traveling from CA at 2025-10-19 11:34:38\",\"Review issuer or cardholder confirmation for order 352384\"],\"memo_markdown\":\"Order 352384 is approved for 92.97 and triggered R03 for geo plus verification mismatch: card BIN country US versus IP country CA, with AVS=N and CVV=M. The account has tenure_days 3, n_orders_prior 0, and total_spent_prior 0.0. No account events or linkage to other accounts are present, and declines_on_card_24h is 0.\\n\\nStolen_card is a medium-likelihood hypothesis based on geography and AVS/CVV results, but only one signal family corroborates it. A benign traveler explanation is also medium likelihood; FP-1 \u00a76 additionally identifies verification typos as a benign AVS/CVV mismatch mimic. Recommend hold_contact for reversible step-up verification, since customer verification could distinguish unauthorized use from travel or a verification typo.\"}"
+ },
+ "task": "triage_memo"
+}

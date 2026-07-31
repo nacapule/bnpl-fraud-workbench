@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "4fcb977a2dc8aa2164f0063c2603fee0831ea66656305319a9f2ff6a30d8990e",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 32642,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 350092 amount 706.38 approved at 2026-01-22 16:42:14\",\"R01 fired for credential/contact change 5.8h before order on 617d-old account, order from new device d_5181291\",\"password_change at 2026-01-22 10:54:49 from device 5181291\",\"address_add at 2026-01-22 11:54:49 from device 5181291\",\"AVS result Y and CVV result M\",\"IP country US, KYC country US, and card BIN country US\",\"other accounts on device 0, other accounts on ship address 0, and other accounts same email root 0\",\"repayment history shows failed_or_written_off 0.0, late 0.0, and paid 8.0\"],\"hypotheses\":[{\"pattern\":\"account_takeover\",\"likelihood\":\"med\",\"reasoning\":\"The password_change and address_add occurred 5.8h before a 706.38 order from new device d_5181291, matching R01. However, there is no cross-account linkage and AVS, geography, and repayment signals are favorable.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The card has 0 declines_on_card_24h, AVS result Y, and CVV result M, with IP, KYC, and BIN countries all US.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A new-phone mimic could explain the new device and organic device_add activity, while the account has 617d-old tenure, 4 prior orders, no prior AVS or CVV mismatches, and 8.0 paid installments. The password_change and address_add still require customer confirmation.\"}],\"policy_citations\":[\"R01\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Step-up verification asking whether the customer authorized the 2026-01-22 password_change and address_add from device 5181291\",\"Confirm whether the customer recognizes order 350092 and ship address 2898617\"],\"memo_markdown\":\"Order 350092 for 706.38 was approved after a password_change and address_add from device 5181291, with R01 citing a credential/contact change 5.8h before the order on a 617d-old account. This supports a medium account-takeover hypothesis. Stolen-card risk is low: AVS was Y, CVV was M, card declines_on_card_24h was 0, and IP, KYC, and BIN countries were US. A benign new-phone mimic remains plausible because there are no linked accounts, prior AVS/CVV mismatches are 0.0, and repayment history shows 8.0 paid installments with 0.0 late. Hold for step-up verification of the password, address, and order; the result should distinguish takeover from an authorized device change.\"}"
+ },
+ "task": "triage_memo"
+}

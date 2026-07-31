@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "0e2edf9fca84632b60ced01f37f1f1063b1dd419b5d40f743d470f988b0e4807",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 25907,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country US vs IP country CA with AVS=N/CVV=M\",\"order_id 149396 was approved at 2025-12-07 12:55:44 for 78.0\",\"device_id 10113 was used for recent approved orders from IP country CA\",\"user_id 10113 has tenure_days 765 and n_orders_prior 29\",\"repayment_history shows installments_due 68, paid 66.0, late 2.0, and failed_or_written_off 0.0\",\"linkage shows other_accounts_on_device 0, other_accounts_on_ship_address 1, and other_accounts_same_email_root 0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"Traveler mimic is most plausible: CA IP-country activity is consistent across the recent approved-order history on device_id 10113, with no credential-change events in the packet. The current AVS=N can be consistent with the FP-1 \u00a76 verification-typo benign noise rate.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The US BIN and CA IP with AVS=N create a verification concern, but the packet shows stable device_id 10113 and CA activity across recent approved orders, with no card declines in the past day.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet contains no credential manipulation and no device-linkage evidence; account activity is associated with device_id 10113.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 \u00a76.1\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the current CA IP is consistent with the account's established travel/location history.\",\"Verify the current AVS=N response with the card issuer or payment processor.\"],\"memo_markdown\":\"R03 fired on order_id 149396 because the card BIN country is US while the IP country is CA and AVS=N/CVV=M. The account has tenure_days 765, n_orders_prior 29, and repayment history of paid 66.0 with failed_or_written_off 0.0. Recent approved orders consistently use device_id 10113 and IP country CA. There is no credential-manipulation evidence in the packet, and linkage is limited to other_accounts_on_ship_address 1. The stable CA activity supports the FP-1 \u00a76 traveler mimic; the isolated AVS=N may fit the stated verification-typo noise rate. Clear as benign; no two independent fraud signal families corroborate a high-likelihood fraud pattern.\"}"
+ },
+ "task": "triage_memo"
+}

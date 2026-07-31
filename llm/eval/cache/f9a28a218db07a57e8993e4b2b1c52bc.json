@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "240802bc317a8b0ec213ff532c353c3a5286ecf56ed009e1d6e2bb2b2aba59bc",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 32364,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired for repeat INR disputes\",\"2 prior item-not-received chargebacks on this account with healthy repayment\",\"account tenure_days is 167\",\"n_orders_prior is 2\",\"total_spent_prior is 1286.95\",\"current order amount is 115.33\",\"current AVS result is Y\",\"current CVV result is M\",\"current IP country is US\",\"card BIN country is US\",\"declines_on_card_24h is 0\",\"other_accounts_on_device is 0\",\"other_accounts_on_ship_address is 0\",\"other_accounts_same_email_root is 0\",\"failed_or_written_off is 0.0\",\"installments_due is 6\",\"late is 0.0\",\"paid is 6.0\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies 2 prior item-not-received chargebacks, which is direct evidence consistent with item-not-received abuse. However, the account has healthy repayment and no device, address, or email-root linkage to other accounts.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"Healthy repayment, US-aligned account and card geography, AVS result Y, and no cross-account linkage support a benign explanation. The packet does not provide a specific \u00a76 mimic that fully explains the 2 prior item-not-received chargebacks.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check the evidence and outcomes for the 2 prior item-not-received chargebacks, including delivery confirmation and customer communications.\",\"Check whether the current order has a ship-to address or merchant history associated with prior item-not-received disputes.\"],\"memo_markdown\":\"R09 fired because the account has 2 prior item-not-received chargebacks with healthy repayment. This supports a medium-likelihood INR-abuse hypothesis, but the packet lacks delivery and dispute-outcome detail needed to distinguish abuse from a benign explanation. Countervailing signals include US IP and card geography, AVS result Y, no card declines on the preceding 24h field, healthy repayment, and zero linkage to other accounts on the device, ship address, or email root. No multi-account ring, merchant complicity, or aggregate confirmed-fraud exposure is established. Recommend hold_contact for reversible verification focused on the prior INR disputes and current fulfillment evidence.\"}"
+ },
+ "task": "triage_memo"
+}

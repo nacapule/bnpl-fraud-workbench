@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "1aab26a2995c627aedf1cadb07e2023f5aa96ac809c7423468a575ad5359d2b4",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 29851,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 351717 was approved at 2025-08-28 11:23:43 for 52.88\",\"R06 fired: disposable_domain=True, shared_root_accounts=1\",\"R08 fired: ship-to address a_2899017 already used by 27 distinct accounts\",\"other_accounts_on_device is 2\",\"other_accounts_on_ship_address is 39\",\"email_domain is mailinator.com\",\"avs_result is Y and cvv_result is M\",\"ip_country is US, kyc_country is US, and bin_country is US\",\"account_events_90d is []\",\"n_orders_prior is 1 and tenure_days is 11\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The shared ship-address linkage is 39 other accounts, meeting FP-1's multi-account linkage threshold. R06 also identifies a disposable email domain, and device linkage shows 2 other accounts.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer mimic could explain shipping away from a home address, but the packet provides no stable-history evidence and the ship-to address is linked to 39 other accounts.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"AVS is Y, CVV is M, bin_country is US, and declines_on_card_24h is 0; the packet does not show verification failure or card-decline behavior.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the 39 other accounts on ship_address_id 2899017 for confirmed-fraud outcomes and common ownership indicators.\",\"Check whether device_id 5181723 and email root mailinator.com connect to the accounts using ship_address_id 2899017.\",\"Confirm fulfillment status and whether merchant_name nova-gallery-27 has related suspicious orders.\"],\"memo_markdown\":\"Approved electronics order 351717 for 52.88 triggered R06 and R08. The account uses mailinator.com; R06 states disposable_domain=True and shared_root_accounts=1. R08 states ship-to address a_2899017 was already used by 27 distinct accounts. Linkage reports 39 other accounts on the ship address and 2 other accounts on the device.\\n\\nSynthetic_ring is the leading hypothesis. The ship-address linkage meets the FP-1 action-selection threshold for multi-account ring evidence, requiring escalation. AVS is Y, CVV is M, and US IP, KYC, and BIN countries do not independently support stolen_card. A gift-buyer explanation is possible in principle, but the packet lacks stable-history evidence and does not explain the ship-address linkage.\\n\\nRecommend escalation for linked-account review; a human analyst retains the final decision.\"}"
+ },
+ "task": "triage_memo"
+}

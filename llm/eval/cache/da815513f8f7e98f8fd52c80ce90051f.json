@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "9ac42dc2ab4b708f8a0934e479edc80b37f2f19c3e71ed8447e62ea2cf5bed5f",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 24626,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: geo + verification mismatch \u2014 card BIN country CA vs IP country US with AVS=N/CVV=M\",\"alert amount: 42.65\",\"alert status: approved\",\"account tenure_days: 742\",\"n_orders_prior: 1\",\"n_avs_mismatch_prior: 0.0\",\"n_cvv_mismatch_prior: 0.0\",\"prior approved order 13634 had AVS=Y/CVV=M, device_id 4384, and IP country US\",\"account_events_90d: []\",\"other_accounts_on_device: 0\",\"other_accounts_on_ship_address: 0\",\"other_accounts_same_email_root: 0\",\"declines_on_card_24h: 0\",\"repayment history: installments_due 3, paid 3.0, late 0.0, failed_or_written_off 0.0\",\"vendor_scores: null\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"The sole fired rule is consistent with the stated benign verification-typo mimic for AVS mismatch, while CVV matched. The account has no credential events, no linkage, no card declines, and prior approved activity from IP country US on the same device.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The CA BIN versus US IP and AVS=N are adverse, but they are the only fraud signal family. There is no device or account linkage, credential manipulation, card-decline velocity, or adverse repayment history in the packet.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 action selection 2\",\"FP-1 action selection 3\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the current ship address matches the account\u2019s established address.\",\"Check issuer AVS detail or retry result to distinguish an address-entry typo from a substantive mismatch.\"],\"memo_markdown\":\"**Recommendation: clear (P2).**\\n\\nR03 fired because the card BIN country is CA, the IP country is US, and AVS=N/CVV=M. This is a single geography-plus-verification signal family. CVV matched, and the policy identifies verification typos as a benign AVS/CVV-mismatch mimic.\\n\\nThe packet shows no account events in 90 days, no linked accounts by device, ship address, or email root, no card declines in 24 hours, and prior approved activity from IP country US using device 4384. Repayment history shows 3 installments due, 3.0 paid, 0.0 late, and 0.0 failed or written off.\\n\\nThe evidence does not support a high-likelihood fraud pattern with two independent corroborating signal families. Close as benign; optionally confirm address continuity if operationally inexpensive.\"}"
+ },
+ "task": "triage_memo"
+}

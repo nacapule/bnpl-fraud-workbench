@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "368b6d6c8004488d755165ceda75501e036064f2c631a8c1df04ba026390d59d",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 21979,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 14651 was approved at 2025-07-18 19:30:58 for 79.77\",\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"alert score is 35 and band is review\",\"account has n_orders_prior 0 and tenure_days 112\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"declines_on_card_24h is 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The CA card BIN versus US IP and AVS=N/CVV=M support a geography-and-verification concern. No credential manipulation, linkage, velocity, repayment, or vendor-score evidence is present.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler could explain the US IP without credential changes, and FP-1 \u00a76 identifies verification typos as a benign AVS/CVV-mismatch mimic. The packet does not establish either explanation.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Step-up customer verification to distinguish a traveler or verification typo from unauthorized card use\",\"Confirm whether the customer recognizes order_id 14651 and the shipping destination\",\"Obtain issuer or payment-authentication detail for AVS=N/CVV=M\"],\"memo_markdown\":\"Order 14651 is an approved 79.77 toys purchase flagged by R03: CA card BIN versus US IP with AVS=N/CVV=M. The account has n_orders_prior 0, but the packet shows no linkage, card declines, credential events, repayment history, or vendor scores. Stolen-card activity is plausible from the geography-and-verification signal, while a traveler plus verification typo remains a stated benign mimic. One signal family alone does not support decline_block, and there is no escalation trigger. Hold pending step-up verification and customer confirmation.\"}"
+ },
+ "task": "triage_memo"
+}

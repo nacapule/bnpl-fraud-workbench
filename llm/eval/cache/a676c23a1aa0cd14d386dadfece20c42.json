@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "c2e8d11872c89c557854e7c2985d918d0dc35f81bc3b89bbebe7f5c5699163ef",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 42562,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: geo + verification mismatch, weight 35\",\"Order amount 76.34\",\"AVS result Y and CVV result N\",\"Card BIN country US and IP country CA\",\"Account tenure_days 2 and n_orders_prior 0\",\"No other accounts on device, ship address, or same email root\",\"Order status approved\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card used from a CA IP with CVV=N supports possible unauthorized card use. The packet provides only one signal family and no prior card declines.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The account is new, but account_events_90d is empty and there are no credential manipulation signals.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"No linkage to other accounts is present on the device, ship address, or same email root.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"There is no repayment history or prior order history supporting this pattern.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler is plausible because the IP country differs from the card BIN country and no credential changes are present. A verification typo is also plausible because AVS is Y while CVV is N.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Perform step-up customer verification and confirm cardholder possession.\",\"Check whether the customer is traveling or whether the CA IP is expected.\",\"Review issuer or payment-provider authentication results for the order.\"],\"memo_markdown\":\"Order 352178 was approved for 76.34 and fired R03 for a US card BIN used from a CA IP with AVS=Y and CVV=N. The strongest fraud hypothesis is stolen_card at medium likelihood, but the packet contains only geography+verification evidence. Account takeover and synthetic-ring explanations are weak: account_events_90d is empty, and linkage counts are zero across device, ship address, and email root. A traveler or verification typo remains plausible. Recommend hold_contact for reversible step-up verification. Priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

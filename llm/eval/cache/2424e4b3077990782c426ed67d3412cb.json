@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "9861b601d15abb5735e2dd0d9fb16bf08c294c50f7c72f222e9d51a6f90295fc",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 24777,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R07: 8 declined attempts on this card/device in the prior 24h, then this approval\",\"alert amount 503.88\",\"alert status approved\",\"avs_result Y\",\"cvv_result M\",\"card declines_on_card_24h 8\",\"last_orders include approved order_id 350457 for 514.59 at 2025-11-18 01:51:43 with avs_result N and cvv_result M\",\"last_orders show declined attempts from 2025-11-17 18:41:47 through 2025-11-17 19:09:47 on device_id 5181419\",\"ip_country US\",\"bin_country US\",\"other_accounts_on_device 0\",\"other_accounts_on_ship_address 0\",\"other_accounts_same_email_root 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"high\",\"reasoning\":\"R07 identifies 8 declined attempts on the card/device in the prior 24h before an approval. The declined attempts include AVS and CVV mismatches, while the approved orders are electronics purchases for 514.59 and 503.88.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A verification typo is a known benign mimic, but the packet shows repeated declined attempts on device_id 5181419 and R07 card-testing rationale; the packet provides no benign explanation for that sequence.\"}],\"policy_citations\":[\"R07\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"decline_block\",\"priority\":\"P1\",\"evidence_gaps\":[\"Check issuer authorization and fraud feedback for card_id 52036.\",\"Confirm fulfillment status for order_id 350456 and order_id 350457.\",\"Review payment-attempt details for the 8 declined attempts, including card and verification outcomes.\"],\"memo_markdown\":\"**Recommendation:** decline_block \u2014 human analyst decision required.\\n\\nR07 reports 8 declined attempts on this card/device in the prior 24h followed by the approved 503.88 electronics order. The same device_id 5181419 also has an approved 514.59 electronics order at 2025-11-18 01:51:43; the preceding declined attempts include AVS and CVV mismatches. This supports a high-likelihood stolen_card pattern through velocity and geography+verification signal families.\\n\\nNo ring linkage is present: other_accounts_on_device, other_accounts_on_ship_address, and other_accounts_same_email_root are each 0, so escalation criteria are not evidenced. US IP and US BIN are not exculpatory against the observed card-testing sequence. A verification typo is considered but does not explain the repeated declined attempts. Priority P1 because the approved alert amount is 503.88.\"}"
+ },
+ "task": "triage_memo"
+}

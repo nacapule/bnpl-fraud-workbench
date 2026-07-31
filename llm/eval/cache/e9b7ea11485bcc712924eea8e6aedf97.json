@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "fd09f09739d34712bbb404224eb67c68f296a65aa06ef217e48de1793ca2b1cd",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 40934,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R02: 3 accounts have transacted on device d_5181703 as of this order\",\"R06: shared_root_accounts=80\",\"R08: ship-to address a_2899015 already used by 22 distinct accounts\",\"other_accounts_on_device=4\",\"other_accounts_on_ship_address=39\",\"other_accounts_same_email_root=79\",\"order 351441 amount 64.77 was approved at 2025-08-13 22:55:48\",\"order 351442 amount 77.64 was approved at 2025-08-11 17:51:13\",\"AVS result Y and CVV result M\",\"account tenure_days=-14\",\"account n_orders_prior=1\",\"account total_spent_prior=77.64\",\"account_events_90d=[]\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"Multi-account linkage is present across device, ship-to address, and email root, with R02, R06, and R08 fired. The linkage evidence meets FP-1's multi-account ring escalation condition.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"AVS result Y, CVV result M, and declines_on_card_24h=0 do not independently support stolen-card use.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet contains no account events and does not report credential manipulation.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler, mover, gift buyer, hardship defaulter, verification typo, or new-phone mimic does not explain the combined device, address, and email-root linkage.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query whether the linked accounts share confirmed-fraud outcomes or common payment instruments.\",\"Review merchant-side fulfillment and account-linkage history for suspected merchant complicity.\",\"Check whether the shared device, address, or email root has additional linked orders beyond those in the packet.\"],\"memo_markdown\":\"High-likelihood synthetic-ring concern. R02 reports 3 accounts transacting on device d_5181703; linkage reports 4 other accounts on the device, 39 other accounts on the ship address, and 79 other accounts on the same email root. R06 reports shared_root_accounts=80, and R08 reports the ship-to address was already used by 22 distinct accounts. These are independent device/linkage and identity/address signal families, with no benign mimic explaining the combined pattern. AVS is Y, CVV is M, and the card has 0 declines_on_card_24h, so stolen-card risk is low. The packet does not establish account takeover, never-pay, or merchant complicity. Escalate under the multi-account ring criterion; human review should determine whether to freeze or decline the approved order.\"}"
+ },
+ "task": "triage_memo"
+}

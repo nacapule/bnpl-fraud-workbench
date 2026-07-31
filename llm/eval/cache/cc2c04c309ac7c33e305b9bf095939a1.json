@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "9973e8c7150ae1f5108e6fa419b6fe24b6f48d58da171dbe2465ca6db6e2f5ff",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 31538,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 352887 amount 705.11 in electronics at merchant flash-elec-70\",\"IP country CA versus card BIN country US\",\"AVS result N and CVV result M\",\"Alert rule R03 fired with score 35\",\"Account tenure_days is 8 and n_orders_prior is 0\",\"No account_events_90d are recorded\",\"Linkage counts are 0 for other accounts on device, ship address, and email root\",\"Order status is approved\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The card BIN country US conflicts with IP country CA, alongside AVS=N and CVV=M. These geography and verification signals are consistent with possible unauthorized card use, but no second independent fraud family corroborates it.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The account is new and has no recorded account events, credential changes, or linked accounts. The packet does not provide evidence of account takeover.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"Linkage counts are 0 across device, ship address, and email root, so the packet does not support a multi-account ring.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler is a plausible benign mimic for a foreign IP when credential changes are absent, but the AVS and CVV mismatches are not otherwise explained by the packet.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 \u00a76.1\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Run step-up customer verification for the cardholder and order details.\",\"Check whether the customer was traveling from CA at 2025-10-12 08:35:14.\",\"Query issuer or payment-provider verification details for AVS=N and CVV=M.\"],\"memo_markdown\":\"Order 352887 is a P1 review because the amount is 705.11. R03 fired on a US card BIN used from a CA IP with AVS=N and CVV=M. The leading fraud hypothesis is stolen_card at medium likelihood, but only the geography+verification family is present; FP-1 therefore does not support decline_block. A traveler is a plausible benign mimic because no credential changes are recorded, while the packet provides no prior-order or mismatch history to resolve the ambiguity. Linkage counts are 0 across device, ship address, and email root, so there is no ring evidence. Recommend hold_contact for reversible step-up verification, with escalation or decline_block only if verification or additional checks add corroborating evidence.\"}"
+ },
+ "task": "triage_memo"
+}

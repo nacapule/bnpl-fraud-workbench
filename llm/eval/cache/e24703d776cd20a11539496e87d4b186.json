@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "1b76ef8660b45e663eca54c859ba93f1285fd52fba61039c87030fbea7804559",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 25920,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 352982 was approved at 2025-11-27 03:42:11 for 794.2 in jewelry at flash-jewe-71.\",\"R03 fired: card BIN country US vs IP country CA with AVS=N/CVV=N.\",\"The account has tenure_days 1 and n_orders_prior 0.\",\"The account has no account_events_90d.\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0.\",\"declines_on_card_24h is 0.\",\"The alert score is 35 and band is review.\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card BIN versus CA IP and AVS=N/CVV=N support a card-verification concern. The packet provides only the geography+verification signal family and no linkage, velocity, or vendor-score corroboration.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic fits the CA IP with no credential changes, and FP-1 \u00a76 identifies AVS/CVV mismatch as verification-typo noise. The packet does not establish whether the mismatch reflects a typo or unauthorized card use.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Step-up verification with the customer to distinguish unauthorized card use from a traveler or verification typo.\",\"Confirm whether the cardholder can validate the shipping address and order 352982.\"],\"memo_markdown\":\"Order 352982 was approved for 794.2 in jewelry. R03 fired because the card BIN country is US, the IP country is CA, and AVS=N/CVV=N. The account has tenure_days 1, n_orders_prior 0, no account_events_90d, and no observed device, shipping-address, or email-root linkage to other accounts. There were 0 declines_on_card_24h.\\n\\nStolen-card activity is plausible, but only one independent signal family is present. A benign traveler with a verification typo remains plausible under FP-1 \u00a76. Recommend hold_contact and step-up verification; the packet does not meet the corroboration required for decline_block or the linkage threshold for escalate.\"}"
+ },
+ "task": "triage_memo"
+}

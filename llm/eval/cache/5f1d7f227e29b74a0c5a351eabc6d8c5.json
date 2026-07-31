@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "394e77b3bec8731ba405e4cca6a0ea390e085cfa1fb8bccd7f9a1093462d9f59",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 34388,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"R07 card testing: 4 declined attempts on this card/device in the prior 24h, then this approval\",\n    \"cvv_result is N on approved order 350835\",\n    \"avs_result is Y on approved order 350835\",\n    \"device_id 5181543 appears on approved orders 350835 and 350834 and declined orders 350832, 350831, 350830, and 350829\",\n    \"account tenure_days is 1\",\n    \"n_orders_prior is 1\",\n    \"total_spent_prior is 639.04\",\n    \"linkage shows other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"stolen_card\",\n      \"likelihood\": \"high\",\n      \"reasoning\": \"The R07 card-testing pattern, 4 declined attempts in the prior 24h, followed by an approval with cvv_result N, strongly supports unauthorized card use.\"\n    },\n    {\n      \"pattern\": \"account_takeover\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"The packet does not show credential manipulation, account events, or linkage to other accounts.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"A verification typo is a possible benign mimic for cvv_result N, but it does not explain the card-testing sequence; prior CVV mismatches are 0.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R07\",\n    \"FP-1 \u00a75\",\n    \"FP-1 \u00a76\"\n  ],\n  \"recommended_action\": \"decline_block\",\n  \"priority\": \"P1\",\n  \"evidence_gaps\": [\n    \"Query card authorization history beyond the prior 24h for additional declined attempts or confirmed fraud\",\n    \"Check whether order 350834 or order 350835 has fulfillment or chargeback confirmation\",\n    \"Obtain customer verification of card ownership and the approved order\"\n  ],\n  \"memo_markdown\": \"The approved gaming order 350835 is associated with R07 card testing: 4 declined attempts on the same card/device in the prior 24h, followed by approval. The approval has cvv_result N despite avs_result Y. The account has tenure_days of 1, n_orders_prior of 1, and total_spent_prior of 639.04. The sequence and verification result make stolen_card the high-likelihood hypothesis. Account takeover is low likelihood because no credential manipulation or account events are present. A benign verification typo is also low likelihood because it does not explain the card-testing sequence, and prior CVV mismatches are 0. Linkage does not support a multi-account ring: all three linkage counts are 0. Recommend decline_block under FP-1 \u00a75, supported by velocity and geography+verification signal families. Priority is P1 due to exposure above the FP-1 threshold.\"\n}"
+ },
+ "task": "triage_memo"
+}

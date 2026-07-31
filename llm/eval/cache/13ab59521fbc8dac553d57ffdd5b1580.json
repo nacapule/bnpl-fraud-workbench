@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "dcf0fe2f62fd7dd5554920652d983494b6b177077ace11bc97cbdfee4be395e5",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 37055,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert order 85837 for 602.9 in electronics at nova-tech-24\",\"R09 fired for 3 prior item-not-received chargebacks on this account with healthy repayment\",\"CVV result M and AVS result Y on order 85837\",\"account has 13 installments due, 12 paid, and 1 late\",\"account tenure is 715 days with 8 prior orders\",\"other accounts on device, ship address, and same email root are 0\",\"order 85837 status is approved\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"high\",\"reasoning\":\"R09 identifies 3 prior item-not-received chargebacks, and the alert is for an electronics order. This is direct evidence of repeated INR disputes, though healthy repayment limits evidence for never_pay.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"The account has 715 days of tenure, 8 prior orders, healthy repayment, and no linked accounts. The CVV mismatch with AVS result Y could be a verification typo, but the packet does not establish that the INR disputes were legitimate.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"The account has 12 paid installments, 1 late installment, and 0.0 failed_or_written_off.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Review delivery scans, carrier proof, and prior case outcomes for the 3 item-not-received chargebacks\",\"Run step-up customer verification and confirm receipt of order 85837\",\"Check whether the CVV mismatch was a verification typo or an unauthorized card event\"],\"memo_markdown\":\"Order 85837 is a P1 review because the approved amount is 602.9. R09 fired for 3 prior item-not-received chargebacks, making inr_abuse the leading hypothesis. The account also shows healthy repayment: 13 installments due, 12 paid, and 1 late; failed_or_written_off is 0.0. This weakens never_pay and leaves a benign explanation plausible, especially given 715 days of tenure, 8 prior orders, and zero linked accounts across device, ship address, and email root. AVS is Y while CVV is M, which may reflect a verification typo but is not explained by the packet. Because only the repeat-INR signal family is established and the packet does not show ring linkage, merchant complicity, or confirmed-fraud exposure >= 2,000, decline_block or escalate is not supported. Hold for step-up verification and delivery/chargeback review; clear if the prior INR disputes and current customer verification are substantiated.\"}"
+ },
+ "task": "triage_memo"
+}

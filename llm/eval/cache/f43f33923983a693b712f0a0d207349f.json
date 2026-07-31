@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "aacf7d31b66c65663f32fa62845adf2b22ec5bddd8551e3a22a2c5032d67251d",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 48698,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert score=90 and band=decline\",\"shared_root_accounts=95\",\"ship-to address a_2899501 already used by 10 distinct accounts\",\"promo redeemed inside a device/address cluster with 10 linked redemptions\",\"other_accounts_on_device=6\",\"other_accounts_on_ship_address=46\",\"other_accounts_same_email_root=94\",\"amount=137.22\",\"status=approved\",\"avs_result=Y\",\"cvv_result=M\",\"account tenure_days=0 and n_orders_prior=0\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The device, ship address, and email root link to multiple other accounts, and the alert identifies a promo-farming cluster. These are independent linkage and velocity/promo signals consistent with a multi-account ring.\"},{\"pattern\":\"promo_abuse\",\"likelihood\":\"high\",\"reasoning\":\"The alert fired R10 for promo farming inside a device/address cluster with 10 linked redemptions.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The card is US-issued and the order has avs_result=Y and cvv_result=M, with no card declines in the prior 24h.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler, mover, gift buyer, verification typo, or new-phone mimic does not explain the extensive shared device, address, and email-root linkage.\"}],\"policy_citations\":[\"R06\",\"R08\",\"R10\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query linked accounts and orders to confirm whether the device, ship address, and email root represent one coordinated ring.\",\"Check confirmed-fraud exposure across linked orders.\",\"Review merchant-level patterns for suspected merchant complicity.\"],\"memo_markdown\":\"The approved order for 137.22 has alert score=90 and fired R06, R08, and R10. The strongest hypothesis is a synthetic ring with promo abuse: other_accounts_on_device=6, other_accounts_on_ship_address=46, and other_accounts_same_email_root=94; the ship-to address was already used by 10 distinct accounts, and the promo cluster has 10 linked redemptions. These linkage signals span device, address, and email-root families. Stolen-card likelihood is low because avs_result=Y, cvv_result=M, the card BIN country is US, and declines_on_card_24h=0. The account has tenure_days=0 and n_orders_prior=0, so repayment behavior is not yet informative. Escalate for ring review and assess linked confirmed-fraud exposure and merchant involvement. Priority is P1 because this is a growing linkage cluster, although the packet does not establish fulfillment imminence.\"}"
+ },
+ "task": "triage_memo"
+}

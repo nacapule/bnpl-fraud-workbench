@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "379fde8c4db52421b973320aca1497a4a90bd6cc5217cdde67da45a87d2121fd",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 56990,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired for repeat INR disputes: 2 prior item-not-received chargebacks on this account with healthy repayment\",\"Alert amount is 78.44 and status is approved\",\"Alert AVS result is Y and CVV result is M\",\"Account has 21 prior orders and tenure_days is 729\",\"Account repayment history shows failed_or_written_off 0.0, installments_due 58, late 27.0, and paid 31.0\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"Alert IP country is US and card BIN country is US\",\"declines_on_card_24h is 0\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"high\",\"reasoning\":\"R09 identifies 2 prior item-not-received chargebacks despite healthy repayment. This is direct evidence supporting an item-not-received abuse pattern, though the packet does not establish fulfillment outcomes.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer mimic could explain item-not-received disputes, but the packet does not provide ship-to status or delivery evidence. The absence of account linkage, US geography, and successful AVS reduce\u2014but do not eliminate\u2014concern.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check carrier delivery, receipt, and dispute-resolution records for the prior item-not-received chargebacks.\",\"Confirm whether the current order was delivered to the account holder or a gift recipient.\",\"Review customer verification response regarding the prior item-not-received claims.\"],\"memo_markdown\":\"R09 flagged the approved order for repeat item-not-received disputes: the rationale states 2 prior item-not-received chargebacks with healthy repayment. INR abuse is the leading hypothesis. Supporting context includes 21 prior orders, tenure_days of 729, failed_or_written_off of 0.0, AVS Y, CVV M, US IP/card geography, and no linked accounts on the device, ship address, or email root. These signals do not establish a ring, stolen card, or account takeover. A gift-buyer benign mimic remains possible, but delivery and dispute records are missing. Recommend hold_contact pending targeted verification and fulfillment checks. Priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

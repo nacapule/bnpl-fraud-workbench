@@ -2,10 +2,10 @@
 
 Run: python -m queue_sim.simulate
 
-Mechanics: alerts arrive at their order timestamps; two analysts with offset
-shifts (Sun–Thu and Tue–Sat, mirroring the ops schedules this workbench is
-modeled on) pull the next alert per the dispatch policy whenever free during
-shift hours; service time is lognormal and seeded. An order "ships"
+Mechanics: alerts arrive at their order timestamps; two analysts on offset
+5-day shifts (covering all seven days, as fraud queues require) pull the next
+alert per the dispatch policy whenever free during shift hours; service time
+is lognormal and seeded. An order "ships"
 ``fulfillment_lag_hours`` after checkout — resolving a truly fraudulent alert
 before that blocks the remaining loss; after it, the loss stands. Labels are
 read HERE only as measurement (which resolutions blocked real fraud), never to
@@ -221,7 +221,7 @@ def main() -> None:
     lines = [
         "# Alert queue / SLA simulation (holdout months 10–12)\n",
         f"Operating point: review ≥ {op['review_band']} → {len(alerts)} alerts "
-        f"({len(alerts) / 91:.1f}/day). Two analysts (Sun–Thu 08:00 CT, Tue–Sat 09:00 CT, "
+        f"({len(alerts) / 91:.1f}/day). Two analysts on offset 5-day shifts, "
         f"6.5 productive h), lognormal service (mean "
         f"{cfg['queue']['service_time_mean_min']} min), orders ship "
         f"{cfg['queue']['fulfillment_lag_hours']}h after checkout; SLA target "
@@ -244,8 +244,8 @@ def main() -> None:
         "Reading: the 12-hour fulfillment race means weekend/coverage gaps, not average "
         "throughput, decide how much fraud ships. Score-priority beats FIFO by resolving "
         "high-score (fraud-dense) alerts inside the ship window even when the backlog "
-        "spans a coverage hole; the Sun–Thu + Tue–Sat pairing leaves Friday night–Sunday "
-        "morning single-covered, visible as the weekly backlog sawtooth.",
+        "spans a coverage hole; the offset-shift pairing leaves parts of the week "
+        "single-covered, visible as the weekly backlog sawtooth.",
     ]
     (REPO / "reports" / "queue.md").write_text("\n".join(lines) + "\n")
 

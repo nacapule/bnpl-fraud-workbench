@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "f46afab1989bb5542fc1cb9ff4224f94fffab93314394d7e7334e73dd1ebb982",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 61041,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired for geo + verification mismatch: card BIN country US vs IP country CA with AVS=N/CVV=M\",\"Order 135027 amount 44.87 was approved at 2025-11-27 12:47:27\",\"Device 47633 was used on orders 135027, 92167, 54569, and 42468\",\"Account has 17 prior orders and tenure_days 389\",\"Repayment history shows failed_or_written_off 0.0, late 0.0, and paid 42.0\",\"linkage shows other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0\",\"Card declines_on_card_24h is 0\",\"Account event logins used device_id 30607\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The current order has a US card BIN, CA IP country, AVS=N, and CVV=M, which supports a payment or geography anomaly. However, the packet provides no confirmed fraud outcome and shows no card declines_on_card_24h.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The alert uses device 47633, while account event logins used device 30607. There is no credential manipulation or account linkage evidence in the packet.\"},{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler mimic is plausible because the account has repeated CA IP-country activity, a US KYC country and card BIN, no linked accounts, clean repayment history, and prior use of device 47633. The packet does not show credential changes.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 action selection 2\",\"FP-1 action selection 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the customer was traveling in CA at 2025-11-27 12:47:27\",\"Run step-up verification and confirm cardholder possession\",\"Check whether device 47633 is recognized by the customer\"],\"memo_markdown\":\"Order 135027 is approved for 44.87 and triggered R03: the card BIN country is US while the IP country is CA, with AVS=N and CVV=M. Stolen_card is a medium hypothesis, but the packet contains only one corroborating signal family and no confirmed fraud outcome. Account takeover is low likelihood: no credential manipulation or account linkage is shown, and device 47633 appears on prior approved orders. The strongest benign explanation is a traveler mimic, supported by repeated CA IP-country activity, established tenure, prior device reuse, zero linked accounts, zero late repayments, and 42.0 paid installments. The packet cannot distinguish travel from fraud without customer verification. Recommend reversible hold_contact with step-up verification; priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

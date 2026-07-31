@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "168902e2498bafe4169bec47acb6e82ad7f98540e76b39a8196381a8fce083d4",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 29104,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Alert score is 100 and band is decline\",\"Order 351790 for 735.68 in electronics was approved at 2025-10-21 08:49:06\",\"3 accounts have transacted on device d_5181715 as of this order\",\"Ship-to address a_2899017 already used by 40 distinct accounts\",\"Email domain is mailinator.com and disposable_domain=True\",\"Shared_root_accounts=1\",\"Account tenure is 43 days with 2 prior orders\",\"AVS result is Y and CVV result is M\",\"Repayment history shows 5 installments due, 5.0 paid, 0.0 late, and 0 failed_or_written_off\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The device linkage and shared drop address show broad multi-account reuse, while the disposable email domain and high-value electronics order support coordinated identity cost reduction. This is the strongest explanation for the clustered linkage signals.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The order amount is elevated and CVV result is M, but AVS result is Y, declines_on_card_24h is 0, and the packet provides stronger device and address linkage evidence than card-compromise evidence.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift buyer could explain a ship-to address that is not home, but it does not explain the device being used by 3 accounts or the address being used by 40 distinct accounts; stable history is also limited to 2 prior orders.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query whether the 3 accounts on device d_5181715 share additional identifiers or have confirmed fraud outcomes\",\"Review fulfillment and payment outcomes for the 40 distinct accounts using ship-to address a_2899017\",\"Verify whether the ship-to address is a legitimate shared residence or commercial receiving location\"],\"memo_markdown\":\"High-likelihood synthetic-ring indicators warrant escalation. The order is 735.68 for electronics, with alert score 100 and decline band. Device d_5181715 has transacted for 3 accounts, and ship-to address a_2899017 has been used by 40 distinct accounts. The mailinator.com address and disposable_domain=True add identity-cost-reduction concern. AVS is Y and CVV is M; card declines_on_card_24h is 0. Repayment history is clean, with 5 installments due and 5.0 paid, so never-pay is not supported. A gift-buyer explanation is possible but does not account for the device and address clustering. Escalate for suspected multi-account linkage and prioritize review before fulfillment.\"}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "9300e6325ff3432e87aec99a13596d0479b586704b10456105fbbba192c4fefb",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 34180,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: \\\"3 prior item-not-received chargebacks on this account with healthy repayment\\\"\",\"Order 134171 was approved at 2025-11-26 19:36:35 for 174.8 at swift-province-53 in apparel.\",\"AVS result was Y and CVV result was M for order 134171.\",\"The order used device_id 36396, IP 52.24.9.53, and a US IP country.\",\"The account has 801 tenure_days, 6 n_orders_prior, and 1774.16 total_spent_prior.\",\"Linkage shows 0 other_accounts_on_device, 1 other_accounts_on_ship_address, and 0 other_accounts_same_email_root.\",\"Repayment history shows 14 installments_due, 9.0 late, 5.0 paid, and 0.0 failed_or_written_off.\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies 3 prior item-not-received chargebacks on this account. The current order is approved and the packet does not provide delivery, dispute-case, or merchant-fulfillment evidence to distinguish recurring INR abuse from legitimate disputes.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"The account has 801 tenure_days, prior orders, consistent device_id 36396 usage, US IP country, AVS Y, and CVV M. No packet fact establishes a specific \u00a76 benign mimic or explains the prior item-not-received chargebacks.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the 3 prior item-not-received chargeback case records, including carrier delivery evidence and customer dispute narratives.\",\"Obtain fulfillment and shipment status for order 134171 from swift-province-53.\",\"Perform step-up customer verification tied to the disputed-order history and current purchase.\"],\"memo_markdown\":\"R09 triggered because the account has 3 prior item-not-received chargebacks with healthy repayment. The current approved apparel order is 174.8 at swift-province-53, with AVS Y, CVV M, US IP country, and device_id 36396. The account has 801 tenure_days and 6 prior orders; linkage is limited to 1 other account on the ship address, with 0 on device and 0 on email root.\\n\\nINR abuse is a medium-likelihood hypothesis, but the packet lacks prior dispute and delivery evidence. The established account/device activity and successful verification support a benign alternative, though no stated \u00a76 mimic fully explains R09. Hold for targeted verification and review of prior dispute and delivery records. P2: current exposure is 174.8 and no active burst is shown.\"}"
+ },
+ "task": "triage_memo"
+}

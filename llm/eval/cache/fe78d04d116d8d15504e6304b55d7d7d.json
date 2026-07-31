@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "b3828372714c57da09dd547c3331c15a1fe67ea82127e77d83c5395d06e9be04",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 34154,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert 6664 for order_id 241818 is approved at 2026-03-06 16:27:38 for 127.91\",\"R03 fired: card BIN country CA vs IP country US with AVS=Y/CVV=N\",\"R09 fired: 2 prior item-not-received chargebacks on this account with healthy repayment\",\"CVV result is N and AVS result is Y\",\"account tenure_days is 649 with n_orders_prior of 2\",\"repayment history shows paid 6.0, installments_due 6, late 0.0, and failed_or_written_off 0.0\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 1, and other_accounts_same_email_root is 0\",\"prior approved orders used device_id 26922 and IP country US on 2025-11-23 00:38:16 and 2025-09-08 19:42:26\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies 2 prior item-not-received chargebacks with healthy repayment, which is consistent with an INR-abuse pattern. The packet does not show device, email-root, or velocity linkage corroboration.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A verification typo is a known benign mimic for CVV mismatch, and prior approved orders also used IP country US on the same device. This does not explain the 2 prior item-not-received chargebacks.\"}],\"policy_citations\":[\"R03\",\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the 2 prior item-not-received chargebacks for delivery evidence, dispute outcomes, and whether they involved the same merchant or ship_address_id 26922\",\"Conduct step-up customer verification to resolve whether the current CVV=N is a verification typo or unauthorized card use\",\"Check the one other account on ship_address_id 26922 for fraud outcomes and account relationship\"],\"memo_markdown\":\"Order 241818 is approved for 127.91. R03 fired because the card BIN country is CA while IP country is US, with AVS=Y/CVV=N. R09 fired for 2 prior item-not-received chargebacks with healthy repayment.\\n\\nThe INR-abuse hypothesis is medium likelihood based on the prior dispute pattern, but corroborating linkage is limited: other_accounts_on_device is 0 and other_accounts_same_email_root is 0. The geo signal is less decisive because prior approved orders used IP country US on device_id 26922. CVV=N may reflect the known verification-typo mimic, but it does not explain the prior INR disputes.\\n\\nRecommend hold_contact pending step-up verification and review of the prior disputes. This is a P2 case: no active burst, ring threshold, merchant-complicity evidence, or aggregate confirmed-fraud exposure is present in the packet.\"}"
+ },
+ "task": "triage_memo"
+}

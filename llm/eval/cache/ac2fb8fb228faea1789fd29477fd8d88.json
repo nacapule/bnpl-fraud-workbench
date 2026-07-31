@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "f993288159719c03dcbaa6fd2739ba6940f54f426d6421fce0fad492d42d6437",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 32312,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"alert amount 81.33, score 35, band review, status approved at 2026-03-05 13:59:07\",\"account kyc_country CA and email_domain icloud.com\",\"account tenure_days 126 with n_orders_prior 3 and total_spent_prior 811.25\",\"n_avs_mismatch_prior 1.0 and n_cvv_mismatch_prior 0.0\",\"last orders used device_id 12477 and ip_country US\",\"linkage shows other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0\",\"card declines_on_card_24h 0\",\"repayment_history shows installments_due 3, paid 3.0, late 0.0, and failed_or_written_off 0.0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"Traveler is the most plausible benign mimic: the account has kyc_country CA while the IP country is US, with no account events in 90 days and no linkage to other accounts. The customer also has 126 days of tenure, 3 prior orders, and paid 3.0 of 3 installments due with 0.0 late and 0.0 failed_or_written_off.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"R03 shows CA BIN versus US IP with AVS=N/CVV=M, but this is the only fired rule and CVV=M. There are 0 card declines in 24h, no linkage, and no repayment deterioration.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"There are no account events in 90 days and no evidence of credential manipulation. Activity uses device_id 12477 across the listed orders, and linkage counts are all 0.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 \u00a76.1\",\"FP-1 action selection step 3\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the US IP location is consistent with prior account access or known travel.\",\"Confirm whether the AVS=N result is a repeated verification typo or an address change.\"],\"memo_markdown\":\"R03 fired because the card BIN country is CA while the IP country is US, with AVS=N and CVV=M. The approved order is 81.33 at bright-trading-88.\\n\\nThe strongest explanation is benign traveler activity: KYC country is CA, IP country is US, and there are no account events in 90 days. The account has 126 days of tenure, 3 prior orders, and repayment history of 3.0 paid from 3 installments due, with 0.0 late and 0.0 failed_or_written_off. There are no linked accounts on device, ship address, or email root, and 0 card declines in 24h.\\n\\nStolen-card concern is low because R03 is the sole signal family, CVV=M, and there is no velocity, linkage, credential-change, or repayment corroboration. Clear under FP-1 \u00a76 and action-selection step 3. Optional confirmation: compare the US IP with prior access/travel history and check whether AVS=N reflects a repeated typo or address change.\"}"
+ },
+ "task": "triage_memo"
+}

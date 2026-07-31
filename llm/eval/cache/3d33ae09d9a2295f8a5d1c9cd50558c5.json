@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "4fcb977a2dc8aa2164f0063c2603fee0831ea66656305319a9f2ff6a30d8990e",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 30760,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"password_change at 2026-01-22 10:54:49 from device_id 5181291 and IP 61.183.110.116\",\"address_add at 2026-01-22 11:54:49 from device_id 5181291 and IP 61.183.110.116\",\"Order 350092 was approved at 2026-01-22 16:42:14 for 706.38 from new device_id 5181291\",\"R01 fired: credential/contact change 5.8h before order on 617d-old account, order from new device d_5181291\",\"Order 350092 has avs_result Y and cvv_result M\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"repayment_history shows paid 8.0, installments_due 8, late 0.0, and failed_or_written_off 0.0\",\"The account has n_orders_prior 4, tenure_days 618, and total_spent_prior 1357.77\"],\"hypotheses\":[{\"pattern\":\"account_takeover\",\"likelihood\":\"high\",\"reasoning\":\"A password_change and address_add from device_id 5181291 preceded the approved order from that new device. R01 directly identifies a credential/contact change 5.8h before the order on a 617d-old account.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A new-phone mimic is possible, but the packet records password_change and address_add rather than an organic device_add alone. Positive AVS/CVV results and repayment_history of paid 8.0 support legitimate payment behavior but do not explain the credential and address changes.\"}],\"policy_citations\":[\"R01\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"decline_block\",\"priority\":\"P1\",\"evidence_gaps\":[\"Confirm whether the password_change was completed through a trusted recovery or step-up authentication flow.\",\"Verify ownership and prior use of ship_address_id 2898617.\",\"Review whether device_id 5181291 has a trusted-device or prior account-session history for user_id 36153.\"],\"memo_markdown\":\"P1 \u2014 recommend decline_block pending human review. Order 350092 for 706.38 was approved from new device_id 5181291 after password_change at 2026-01-22 10:54:49 and address_add at 2026-01-22 11:54:49 from the same device and IP. R01 states the credential/contact change occurred 5.8h before the order on a 617d-old account.\\n\\nAccount takeover is the leading hypothesis, supported by credential manipulation and a new-device signal. AVS Y and CVV M, plus paid 8.0 of 8 installments due with late 0.0, reduce payment-instrument and repayment concerns but do not resolve the account-change sequence. No multi-account linkage is present: all linkage counts are 0, so escalation criteria are not met.\\n\\nConfirm recovery authentication, ship-address ownership, and whether device_id 5181291 is trusted before the final human decision.\"}"
+ },
+ "task": "triage_memo"
+}

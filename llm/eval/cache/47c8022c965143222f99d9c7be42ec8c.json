@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "0368b216455746cbe7b68ae28c6ca38f62d25e8dbedf16931ffe567900738462",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 38509,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert amount 539.98\",\"R09 fired: 3 prior item-not-received chargebacks on this account with healthy repayment\",\"alert score 45\",\"AVS result Y\",\"CVV result M\",\"IP country US\",\"BIN country US\",\"declines on card 24h 0\",\"other accounts on device 0\",\"other accounts on ship address 0\",\"other accounts same email root 0\",\"installments due 8\",\"paid 8.0\",\"late 0.0\",\"failed or written off 0.0\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"The account has 3 prior item-not-received chargebacks, which directly supports possible INR abuse. Healthy repayment weakens but does not eliminate this hypothesis.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A benign explanation remains plausible because AVS result Y, CVV result M, US IP and BIN countries, no linked accounts, and healthy repayment provide no corroborating evidence from other signal families.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection 2\",\"FP-1 action selection 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Verify the 3 prior item-not-received chargebacks and their merchant fulfillment and delivery outcomes.\",\"Request step-up customer verification tied to the current order.\"],\"memo_markdown\":\"Alert 8149 concerns approved order 297116 for 539.98 in electronics. R09 fired for 3 prior item-not-received chargebacks with healthy repayment. INR abuse is a medium-likelihood hypothesis, but the packet does not provide corroboration from a second independent signal family. Benign remains medium likelihood: AVS result Y, CVV result M, US IP and BIN countries, no linked accounts, and repayment history showing 8 installments due and 8.0 paid. No credential manipulation, device linkage, geography mismatch, or card-decline evidence is present. Recommend hold_contact pending step-up verification and review of the 3 prior INR disputes. Priority P1 because the alert amount is 539.98.\"}"
+ },
+ "task": "triage_memo"
+}

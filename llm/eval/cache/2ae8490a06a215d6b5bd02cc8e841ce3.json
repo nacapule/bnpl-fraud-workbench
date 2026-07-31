@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "f993288159719c03dcbaa6fd2739ba6940f54f426d6421fce0fad492d42d6437",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 39722,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: geo + verification mismatch\",\"card BIN country CA vs IP country US\",\"AVS result N and CVV result M\",\"account_events_90d is empty\",\"other_accounts_on_device 0\",\"other_accounts_on_ship_address 0\",\"other_accounts_same_email_root 0\",\"n_orders_prior 3\",\"tenure_days 126\",\"paid 3.0 installments\",\"failed_or_written_off 0.0\",\"late 0.0\",\"declines_on_card_24h 0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler mimic explains the CA card BIN and US IP with no credential changes in account_events_90d. A verification typo is also consistent with the AVS/CVV mismatch, while the account has no linkage to other accounts and repayment_history shows paid 3.0 installments.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The geo and verification mismatch is consistent with stolen-card activity, but there are no linked accounts, no credential-change events, no card declines, and repayment history shows no failed or written-off installments.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The US IP differs from the CA card BIN, but account_events_90d is empty and linkage counts are 0, providing no credential-manipulation or account-linkage evidence.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check whether the customer was traveling in the US at 2026-03-05 13:59:07.\",\"Confirm the billing address or obtain a step-up verification result for order 240715.\"],\"memo_markdown\":\"Order 240715 triggered R03 for a CA card BIN used from a US IP with AVS=N and CVV=M. The strongest explanation is benign: a traveler mimic accounts for the foreign IP without credential changes, and a verification typo accounts for the AVS/CVV mismatch. Supporting context includes an empty account_events_90d, zero other accounts on the device, ship address, and email root, plus clean repayment history with paid 3.0 installments, late 0.0, and failed_or_written_off 0.0. Stolen-card and account-takeover hypotheses remain low likelihood because no independent linkage, credential, velocity, or repayment signals are present. Recommend clear under FP-1 \u00a76; optionally verify travel or billing details for documentation.\"}"
+ },
+ "task": "triage_memo"
+}

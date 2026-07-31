@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "52d6e3285be8b31300d5c0806878e9bcf50154c902f13e503d3cec00fffdad20",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 26557,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R02: 6 accounts have transacted on device d_5182242 as of this order\",\"R06: shared_root_accounts=95\",\"R08: ship-to address a_2899501 already used by 31 distinct accounts\",\"R10: promo redeemed inside a device/address cluster with 31 linked redemptions\",\"Account tenure is 1 day with n_orders_prior=0 and total_spent_prior=0.0\",\"Order 352636 amount is 77.46 and status is approved\",\"AVS result is Y and CVV result is M\",\"Other accounts on device: 5; other accounts on ship address: 46; other accounts with same email root: 94\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The multi-account device, shared ship-to address, shared email root, and promo-farming cluster independently indicate coordinated multi-account activity.\"},{\"pattern\":\"promo_abuse\",\"likelihood\":\"high\",\"reasoning\":\"R10 identifies promo redemption inside a device/address cluster with 31 linked redemptions.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"AVS result Y, CVV result M, and declines_on_card_24h=0 do not support this pattern.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler, mover, gift buyer, hardship defaulter, verification typo, or new phone does not explain the multi-account device, address, email-root, and promo-cluster signals in the packet.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"R10\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 \u00a71 escalation criterion\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query confirmed-fraud outcomes and aggregate confirmed-fraud exposure across the linked accounts and orders\",\"Review whether the merchant swift-supply-45 is implicated in the linked activity\"],\"memo_markdown\":\"Order 352636 is approved for 77.46 from a 1-day-old account with no prior orders or spend. The order fired R02, R06, R08, and R10: 6 accounts have transacted on device d_5182242; the ship-to address was already used by 31 distinct accounts; the email root has 95 shared accounts; and the promo was redeemed inside a device/address cluster with 31 linked redemptions. Linkage fields show 5 other accounts on the device, 46 other accounts on the ship address, and 94 other accounts with the same email root. AVS is Y, CVV is M, and the card has 0 declines_on_card_24h, which weakens a stolen-card hypothesis but does not explain the coordinated linkage. Synthetic ring is the leading hypothesis, with promo abuse also highly plausible. Escalate for ring review and investigate confirmed-fraud exposure and merchant involvement.\"}"
+ },
+ "task": "triage_memo"
+}

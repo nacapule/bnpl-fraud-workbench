@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "48f10fafd4b58ec93a1727c0b56c18ec8882591017c46b9d6ee82d6269329161",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 27857,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R02: 4 accounts have transacted on device d_5181701 as of this order\",\"R06: shared_root_accounts=80\",\"R08: ship-to address a_2899015 already used by 32 distinct accounts\",\"other_accounts_on_device=4\",\"other_accounts_on_ship_address=39\",\"other_accounts_same_email_root=79\",\"alert score=100\",\"order status=approved\",\"amount=84.12\",\"AVS result=Y and CVV result=M\",\"IP country=US, BIN country=US, and KYC country=US\",\"failed_or_written_off=0.0, late=0.0, and paid=1.0\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"Multiple independent linkage signals connect the order to other accounts through the device, ship-to address, and email root. The linkage counts meet the policy threshold for a multi-account ring.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"CVV result is M, but AVS result is Y, declines_on_card_24h is 0, and the packet provides no confirmed card-fraud evidence.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows no account events in the last 90 days and no credential manipulation signal.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer mimic could explain a ship-to address that is not the customer\u2019s home, but it does not explain the device and email-root linkage.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query whether the linked accounts have confirmed fraud outcomes or shared payment instruments.\",\"Verify whether the ship-to address is a legitimate shared residential or commercial destination.\",\"Review merchant-level activity for suspected merchant complicity.\"],\"memo_markdown\":\"Order 351405 is approved for 84.12 and triggered R02, R06, and R08. The strongest hypothesis is a synthetic ring: 4 accounts transacted on device d_5181701, the ship-to address was already used by 32 distinct accounts, and the email identity has shared_root_accounts=80. These are independent device/linkage and identity/address signals. A benign gift-buyer explanation is possible but does not account for the combined linkage evidence. There is no credential-change history, and repayment history shows failed_or_written_off=0.0, late=0.0, and paid=1.0. Under FP-1, the linkage count meets the multi-account-ring escalation criterion. Recommended action: escalate for cross-account and merchant-level review; the human analyst owns the final decision.\"}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "936b3ce68e78107428aac4c23fe35522872c9037354fb0f712bbdf29069d1df4",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 21758,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: \\\"3 prior item-not-received chargebacks on this account with healthy repayment\\\"\",\"Order 187458 is approved for 247.11 at prime-goods-20 in electronics.\",\"The order has AVS result Y and CVV result M.\",\"The account has tenure_days 833 and n_orders_prior 3.\",\"Repayment history shows installments_due 9, paid 9.0, late 0.0, and failed_or_written_off 0.0.\",\"The order uses device_id 13243; linkage shows other_accounts_on_device 0, other_accounts_on_ship_address 1, and other_accounts_same_email_root 0.\",\"The order IP country is US and the card BIN country is US.\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies 3 prior item-not-received chargebacks on this account. The packet does not show multi-account linkage, credential manipulation, verification failure, or adverse repayment behavior to independently corroborate a high-likelihood INR pattern.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"The account has tenure_days 833, AVS result Y, CVV result M, and paid 9.0 of installments_due 9. Healthy repayment is explicitly noted in the R09 rationale, but the packet does not establish a specific FP-1 \u00a76 benign mimic for the prior disputes.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the underlying evidence and resolution outcomes for the 3 prior item-not-received chargebacks.\",\"Confirm delivery, carrier, and merchant fulfillment evidence for order_id 187458.\",\"Perform step-up customer verification tied to order_id 187458.\"],\"memo_markdown\":\"Order 187458 was approved for 247.11 at prime-goods-20. R09 fired for \\\"3 prior item-not-received chargebacks on this account with healthy repayment.\\\" INR abuse is a medium-likelihood hypothesis, but the packet has only this signal family: AVS is Y, CVV is M, repayment shows paid 9.0 of installments_due 9, and linkage does not show a multi-account ring. The account\u2019s tenure_days is 833. Hold pending targeted verification and review of prior dispute outcomes and fulfillment evidence; a decline/block threshold is not met on the supplied evidence.\"}"
+ },
+ "task": "triage_memo"
+}

@@ -36,7 +36,7 @@ graph LR
 | simulator | 353,276 orders / 41,410 users / 12 months; fraud base rate 0.94% of approved orders; generation 78s, deterministic (seed 416) |
 | rules @ tuned bands (30/90) | 24.9 alerts/day · precision 8.9% · recall 59.8% · $37,847 fraud caught · 0 false auto-declines · net +$32,550 under the cost model |
 | ML (HistGradientBoosting) | PR-AUC 0.94 vs logistic 0.72 · precision@capacity 9.5% · recall-by-pattern table incl. the honest failures (INR abuse 24%, never-pay: see CASE-04) |
-| queue sim | 2 analysts (Sun–Thu / Tue–Sat) · SLA(≤4 business h) 99.6% · score-priority blocks $27,496 of fraud pre-fulfillment vs $25,884 FIFO |
+| queue sim | 2 analysts, offset 7-day-coverage shifts · SLA(≤4 business h) 99.6% · score-priority blocks $27,496 of fraud pre-fulfillment vs $25,884 FIFO |
 | Claude triage (claude-sonnet-5, memo_v1) | ⟨LLM-EVAL⟩ |
 | Claude triage (claude-haiku-4-5, memo_v1) | ⟨LLM-EVAL⟩ |
 

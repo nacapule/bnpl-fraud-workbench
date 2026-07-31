@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "11b853510f8340edb5b2159e7bfd2679ba918f05d6d8777e8b2bcae9227310c7",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 39105,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Disposable email domain mailinator.com; shared_root_accounts=1\",\"Ship-to address a_2899016 already used by 8 distinct accounts\",\"3 other accounts on device 5181704\",\"39 other accounts on ship address 2899016\",\"Order amount 85.55 with alert score 60\",\"Account has 0 prior orders and total_spent_prior 0.0\",\"AVS result Y and CVV result M\",\"IP country US, KYC country US, and card BIN country US\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The disposable email domain, shared drop address, and linkage to 3 other accounts on the device and 39 other accounts on the ship address support coordinated multi-account activity. This is stronger than a single-account anomaly and meets the packet's ring-linkage escalation condition.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"There are no account events, credential changes, prior-order history, or geography discrepancies indicating takeover.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"AVS result Y, CVV result M, US IP, US KYC country, and US card BIN country do not support a stolen-card hypothesis.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift buyer or mover could explain a non-home shipping address, but neither mimic explains the disposable email domain and extensive device and address linkage.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 action selection 1\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Query the linked accounts on device 5181704 and ship address 2899016 for confirmed-fraud outcomes and common payment or identity attributes.\",\"Check merchant-side fulfillment and customer relationships for suspected merchant complicity.\",\"Review whether the linked accounts share the same email root, payment instrument, or other identity fields.\"],\"memo_markdown\":\"Order 351736 is approved for 85.55 and was flagged by R06 and R08. The account uses mailinator.com, has 0 prior orders, and ships to address a_2899016, already used by 8 distinct accounts. Linkage shows 3 other accounts on device 5181704 and 39 other accounts on the ship address. AVS result Y, CVV result M, and US alignment across IP, KYC, and card BIN reduce support for stolen-card or takeover explanations. The leading hypothesis is synthetic_ring, with benign gift-buyer or mover explanations unlikely to account for the combined disposable-email, device, and address linkage. Escalate for ring review; human analyst should validate linked-account outcomes and investigate possible merchant involvement.\"}"
+ },
+ "task": "triage_memo"
+}

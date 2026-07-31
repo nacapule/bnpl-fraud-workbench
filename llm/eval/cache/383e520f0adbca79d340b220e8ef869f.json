@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "f46afab1989bb5542fc1cb9ff4224f94fffab93314394d7e7334e73dd1ebb982",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 32292,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 135027 was approved at 2025-11-27 12:47:27 for 44.87\",\"R03 fired: card BIN country US vs IP country CA with AVS=N/CVV=M\",\"device_id 47633 was used on approved orders 135027, 92167, 54569, and 42468\",\"account user_id 30607 has n_orders_prior 17 and tenure_days 389\",\"repayment_history shows installments_due 42, paid 42.0, late 0.0, and failed_or_written_off 0.0\",\"linkage shows other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0\",\"account_events_90d contains login events on device_id 30607\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"Traveler is the most plausible benign mimic: the CA IP country appears across prior approved orders, while the provided account events list login activity only. The AVS=N result is consistent with the FP-1 \u00a76 verification-typo mimic, and repayment history shows paid 42.0 with late 0.0.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The US BIN versus CA IP and AVS=N support R03, but CVV=M, repeated use of device_id 47633, no card declines in 24h, and strong repayment history do not corroborate a high-likelihood stolen-card pattern.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 action selection step 3\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm the customer\u2019s location or travel status at 2025-11-27 12:47:27.\",\"Confirm whether device_id 47633 was organically enrolled and whether any credential changes occurred before the order.\"],\"memo_markdown\":\"R03 fired on approved order 135027 for 44.87: US BIN, CA IP, AVS=N, and CVV=M. The account has tenure_days 389, n_orders_prior 17, and repayment history of paid 42.0 with late 0.0 and failed_or_written_off 0.0. CA IP activity and device_id 47633 also appear on prior approved orders. Linkage is zero across device, ship address, and email root. \\n\\nBenign traveler activity plus a verification typo is more plausible than stolen-card use. Clear under FP-1 action selection step 3; obtain travel/location confirmation only if operationally needed.\"}"
+ },
+ "task": "triage_memo"
+}

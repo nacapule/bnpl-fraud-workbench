@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "de29601a6fb6ee7a77ff481b36cd3611565267917b88bec78246eed0afe4f8c2",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 28210,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 125907 was approved at 2025-11-21 05:14:01 for 128.51\",\"R03 fired: card BIN country US vs IP country CN with AVS=N/CVV=M\",\"card bin_country is US and network is amex\",\"account tenure_days is 783 with n_orders_prior of 8\",\"repayment_history shows paid of 21.0, installments_due of 21, late of 0.0, and failed_or_written_off of 0.0\",\"last_orders show device_id 33065 and ip_country US for order_id 108663, 90529, 80084, 76317, 76051, 56944, 22614, and 2227\",\"linkage shows other_accounts_on_device of 0, other_accounts_on_ship_address of 0, and other_accounts_same_email_root of 0\",\"n_avs_mismatch_prior is 0.0 and n_cvv_mismatch_prior is 0.0\"],\"hypotheses\":[{\"pattern\":\"account_takeover\",\"likelihood\":\"med\",\"reasoning\":\"The approved order has a US BIN card used from a CN IP with AVS=N, whereas listed prior orders used US IPs and AVS=Y. This is geography-plus-verification evidence, but the packet shows no linkage and a long paid repayment history.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler is a stated benign mimic for a foreign IP where there are no credential changes. The established account, 21.0 paid installments, and prior US activity support benign continuity, while the new AVS=N result remains unexplained.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 action selection \u00a74\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Step-up verification to confirm the customer authorized order_id 125907 while using IP country CN\",\"Check whether the account holder was traveling at 2025-11-21 05:14:01\",\"Verify the billing address associated with the AVS=N result for order_id 125907\"],\"memo_markdown\":\"Order 125907 was approved for 128.51 at 2025-11-21 05:14:01. R03 fired because the US BIN card was used from IP country CN with AVS=N/CVV=M. Listed prior orders show US IPs and AVS=Y, while the account has tenure_days of 783, n_orders_prior of 8, and repayment history of 21.0 paid against 21 installments due.\\n\\nAccount takeover and benign travel are both plausible. The packet provides one corroborating signal family\u2014geography plus verification\u2014so FP-1 does not support decline_block. Linkage counts are 0, so escalation criteria are not met. Hold pending customer verification is the reversible action most likely to resolve the ambiguity.\"}"
+ },
+ "task": "triage_memo"
+}

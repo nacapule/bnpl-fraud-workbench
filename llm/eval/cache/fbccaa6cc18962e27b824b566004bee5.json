@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "1596a5eb4a182b7b0363c23c8c80442f2ee09d6f9aa93441599c4c7bd7716f88",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 40631,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R06 fired: shared_root_accounts=80\",\"R08 fired: ship-to address a_2899018 already used by 27 distinct accounts\",\"other_accounts_on_device=2\",\"other_accounts_on_ship_address=39\",\"other_accounts_same_email_root=79\",\"alert score=60\",\"alert status=approved\",\"amount=87.65\",\"avs_result=Y\",\"cvv_result=M\",\"account tenure_days=17\",\"n_orders_prior=1\",\"paid=1.0\",\"late=0.0\",\"failed_or_written_off=0.0\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"Shared linkage is substantial: the ship-to address has 39 other accounts and the email root has 79 other accounts. R06 and R08 independently support coordinated identity or drop-address reuse.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer explanation could account for a shared ship-to address, but the packet does not establish a gift purchase and does not explain the email-root linkage.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"No credential changes or account events are present, and AVS and CVV results are positive.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The card is US-issued, AVS is Y, CVV is M, and declines_on_card_24h is 0.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check whether the 39 other accounts on ship address a_2899018 have confirmed-fraud outcomes.\",\"Check whether the 79 other accounts on the same email root have confirmed-fraud outcomes.\",\"Check for merchant overlap among linked accounts for bright-goods-52.\"],\"memo_markdown\":\"**Assessment:** Synthetic-ring risk is high. R06 reports shared_root_accounts=80, while R08 reports that ship-to address a_2899018 was already used by 27 distinct accounts. Linkage data also shows 39 other accounts on the ship address and 79 other accounts on the same email root; device linkage is 2 other accounts.\\\\n\\\\nThe benign gift-buyer mimic is possible but unsupported because the packet does not establish a gift purchase and does not explain the email-root linkage. Account-takeover and stolen-card hypotheses are low: no account events are present, AVS is Y, CVV is M, and declines_on_card_24h is 0.\\\\n\\\\n**Recommendation:** Escalate for suspected multi-account linkage. Human review should query linked-account fraud outcomes and merchant overlap before determining account-level action.\"}"
+ },
+ "task": "triage_memo"
+}

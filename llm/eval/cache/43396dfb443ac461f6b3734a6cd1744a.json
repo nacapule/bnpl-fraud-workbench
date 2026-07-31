@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "379fde8c4db52421b973320aca1497a4a90bd6cc5217cdde67da45a87d2121fd",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 30773,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: \\\"2 prior item-not-received chargebacks on this account with healthy repayment\\\"\",\"Order 261098 is approved for 78.44 at gold-collective-34 in beauty on 2026-03-26 20:02:54.\",\"AVS result is Y and CVV result is M.\",\"Account tenure is 729 days with 21 prior orders and total_spent_prior of 2123.45.\",\"Linkage shows 0 other accounts on device, 0 other accounts on ship address, and 0 other accounts with the same email root.\",\"Repayment history shows 58 installments due, 31.0 paid, 27.0 late, and 0.0 failed or written off.\",\"The current order uses device_id 9550; prior approved orders used device_id 9550 and device_id 339151.\",\"The current IP country is US; KYC country and card BIN country are US.\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies 2 prior item-not-received chargebacks with healthy repayment, which directly supports the INR-abuse pattern. The packet does not provide dispute outcomes, delivery evidence, or current fulfillment details to establish high likelihood.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"The account has 729 days of tenure, 21 prior orders, healthy card verification on the current order, and no linkage to other accounts. The packet does not identify a specific FP-1 \u00a76 benign mimic that explains the prior INR disputes.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection \u00a74\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the 2 prior item-not-received chargebacks for delivery confirmation, dispute disposition, and customer communications.\",\"Confirm whether order 261098 has shipped or is awaiting fulfillment, and obtain shipment destination and carrier details.\",\"Conduct step-up customer verification regarding the current purchase and the prior item-not-received disputes.\"],\"memo_markdown\":\"R09 triggered because the account has 2 prior item-not-received chargebacks with healthy repayment. The current approved beauty order is 78.44, with AVS Y and CVV M. The account has 729 days of tenure, 21 prior orders, and no device, ship-address, or email-root linkage to other accounts. Current IP country, KYC country, and card BIN country are US.\\n\\nINR abuse is a medium-likelihood concern based on the repeat-dispute signal, but the packet lacks prior dispute outcomes and delivery evidence. Benign account history is also plausible, though no stated FP-1 \u00a76 mimic fully explains the prior INR disputes. Hold pending step-up verification and review of prior-dispute and fulfillment records; a human analyst retains the decision.\"}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "240802bc317a8b0ec213ff532c353c3a5286ecf56ed009e1d6e2bb2b2aba59bc",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 22798,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: \\\"2 prior item-not-received chargebacks on this account with healthy repayment\\\"\",\"The alert amount is 115.33.\",\"avs_result is \\\"Y\\\" and cvv_result is \\\"M\\\".\",\"The order status is \\\"approved\\\".\",\"repayment_history shows installments_due 6, paid 6.0, late 0.0, and failed_or_written_off 0.0.\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0.\",\"The alert IP country is \\\"US\\\" and card bin_country is \\\"US\\\".\",\"The account has n_orders_prior 2 and tenure_days 167.\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies 2 prior item-not-received chargebacks on this account. The current approved order does not itself include delivery, dispute, or linkage evidence establishing repeat INR abuse.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"Healthy repayment is consistent with the stated hardship-defaulter benign mimic, but the packet does not provide evidence that explains the 2 prior item-not-received chargebacks as benign.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the outcomes and supporting evidence for the 2 prior item-not-received chargebacks.\",\"Obtain step-up customer verification for order_id 265691.\",\"Check fulfillment and delivery status for order_id 265691.\"],\"memo_markdown\":\"R09 fired because the account has 2 prior item-not-received chargebacks with healthy repayment. Current order_id 265691 is approved for 115.33, with AVS Y, CVV M, US IP, and US BIN country. Repayment history shows 6 installments due, 6.0 paid, 0.0 late, and 0.0 failed_or_written_off. No cross-account linkage is reported on device, ship address, or email root. INR abuse is a medium-likelihood concern, but the packet lacks current delivery/dispute evidence and does not establish a high-likelihood fraud pattern with corroboration from 2 independent signal families. Hold for customer verification while reviewing prior dispute evidence and current fulfillment status.\"}"
+ },
+ "task": "triage_memo"
+}

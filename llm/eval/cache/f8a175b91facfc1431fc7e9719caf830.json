@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "4d610acb654d6c6cfe73c6fe701567ffc2ed7f7f8024ca53cc3079fee84c050b",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 39241,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R02: 3 accounts have transacted on device d_5181733 as of this order\",\"R06: shared_root_accounts=80\",\"R08: ship-to address a_2899019 already used by 35 distinct accounts\",\"other_accounts_on_device=2\",\"other_accounts_on_ship_address=39\",\"other_accounts_same_email_root=79\",\"alert score=100 and band=decline\",\"Order 351857 amount=43.69, status=approved\",\"AVS result=Y and CVV result=M\",\"ip_country=US, bin_country=US, and kyc_country=US\",\"repayment history: installments_due=4, paid=4.0, late=0.0, failed_or_written_off=0.0\",\"account_events_90d=[]\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The order has multi-account device, shared email-root, and shared ship-to linkages. R02 reports 3 accounts on the device, while R06 and R08 report 80 shared-root accounts and 35 distinct accounts using the address.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"AVS result Y, CVV result M, declines_on_card_24h=0, and US card/account geography provide no strong stolen-card signal.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"account_events_90d=[] and the packet shows no credential manipulation or geography mismatch.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler, mover, gift buyer, hardship defaulter, verification typo, or new-phone mimic does not explain the multi-account device, email-root, and ship-to linkages.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query whether the linked accounts on device d_5181733, address a_2899019, and the email root share confirmed fraud outcomes.\",\"Check whether urban-supply-27 has related orders, refunds, or fulfillment patterns connecting the linked accounts.\"],\"memo_markdown\":\"High-likelihood synthetic-ring indicators are present. R02 reports 3 accounts transacting on device d_5181733; R06 reports shared_root_accounts=80; and R08 reports the ship-to address used by 35 distinct accounts. The linkage spans device, identity root, and address families, so this is not adequately explained by a single benign mimic. US IP, card BIN, and KYC country align; AVS is Y, CVV is M, declines_on_card_24h=0, and repayment shows paid=4.0 with late=0.0 and failed_or_written_off=0.0. These facts reduce support for stolen_card and account_takeover but do not resolve the multi-account cluster. Escalate under the multi-account ring criterion; human review should confirm whether linked accounts have confirmed-fraud outcomes and whether the merchant has related suspicious activity.\"}"
+ },
+ "task": "triage_memo"
+}

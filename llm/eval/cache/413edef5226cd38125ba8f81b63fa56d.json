@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "094a747269546900dd6bbdb03cd8754d78e236887604f20f078f87b9b29ab353",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 186968,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert score is 35 and fired rule R03\",\"card BIN country is CA and IP country is US\",\"AVS result is Y and CVV result is N\",\"other accounts on ship address is 3\",\"account has 14 prior orders and tenure is 503 days\",\"account repayment history shows 41 installments due, 39 paid, 2 late, and 0 failed_or_written_off\",\"alert status is approved\",\"account_events_90d is empty\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"Three other accounts are linked to the same ship address, meeting FP-1's linkage threshold for multi-account ring evidence. The current order is approved and has a geo plus verification mismatch.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The current CVV result is N, but AVS is Y, card declines_on_card_24h is 0, and prior orders show CVV result M.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"account_events_90d is empty, with no credential manipulation or device-change event in the packet.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic could explain the US IP against the CA KYC country and CA card BIN, and the account has 14 prior orders with 39 paid installments. The ship-address linkage to 3 other accounts remains unexplained.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query the identities, order outcomes, and fraud labels for the 3 other accounts sharing ship address 31847.\",\"Verify whether the ship address is a known household, forwarding address, or merchant-linked address.\",\"Check fulfillment and delivery status for order 191269.\"],\"memo_markdown\":\"Order 191269 is approved for 174.76 and fired R03: card BIN country CA versus IP country US, with AVS=Y and CVV=N. The strongest signal is linkage: 3 other accounts share the ship address, which meets FP-1\u2019s multi-account ring escalation threshold. Synthetic ring is therefore the leading hypothesis, although the account has 14 prior orders, tenure of 503 days, 39 paid installments, 2 late, and 0 failed_or_written_off. A traveler benign mimic remains plausible because the IP/card geography differs and account_events_90d is empty, but it does not explain the shared-address linkage. Escalate for ring review and validate whether the address represents a legitimate household or forwarding arrangement.\"}"
+ },
+ "task": "triage_memo"
+}

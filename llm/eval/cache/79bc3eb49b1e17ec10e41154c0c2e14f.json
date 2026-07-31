@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "d523fe822b271fa106d8c13f1c22b35afbe02a6956c3a0b007ece29294522a4c",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 22730,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"signup_ts: 2026-05-08 04:45:57\",\"tenure_days: 0\",\"n_orders_prior: 0\",\"order_id: 351022\",\"amount: 353.46\",\"merchant_category: gaming\",\"merchant_name: peak-gallery-60\",\"status: approved\",\"ts: 2026-05-08 10:51:06\",\"card BIN country: FR\",\"ip_country: US\",\"avs_result: N\",\"cvv_result: M\",\"fired rule R03: geo + verification mismatch\",\"other_accounts_on_device: 0\",\"other_accounts_on_ship_address: 0\",\"other_accounts_same_email_root: 0\",\"declines_on_card_24h: 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The approved gaming order has card BIN country FR versus ip_country US with avs_result N and cvv_result M, firing R03. The account has tenure_days 0 and n_orders_prior 0, but the packet provides no corroborating linkage, velocity, repayment, or vendor-score evidence.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"FP-1 \u00a76 identifies verification typos as a benign mimic for AVS/CVV mismatch. The packet shows no other accounts on the device, ship address, or same email root, and declines_on_card_24h is 0.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Step-up customer verification to resolve the AVS=N/CVV=M mismatch.\",\"Check whether the cardholder confirms order_id 351022.\",\"Check the shipping-address details against the account and payment instrument.\"],\"memo_markdown\":\"Approved order_id 351022 for 353.46 at peak-gallery-60 is flagged by R03: card BIN country FR versus ip_country US with AVS=N/CVV=M. The account is new, with tenure_days 0 and n_orders_prior 0. No multi-account linkage is present: other_accounts_on_device, other_accounts_on_ship_address, and other_accounts_same_email_root are each 0; declines_on_card_24h is 0.\\n\\nStolen_card is a medium-likelihood hypothesis based on geography and verification evidence. A benign verification typo remains plausible under FP-1 \u00a76, and the packet lacks a second corroborating fraud signal family. Hold pending step-up verification; a human analyst should decide after confirmation. Priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

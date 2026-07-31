@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "6f367c4d4ff89175bcddce53876af668d3d194c60e9132532921b6f22407fb27",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 38857,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: \\\"card BIN country US vs IP country CA with AVS=N/CVV=M\\\"\",\"order_id 34353 was approved at 2025-08-11 17:36:54 for 127.54\",\"avs_result was \\\"N\\\" and cvv_result was \\\"M\\\"\",\"last_orders show approved orders from IP country CA at 2025-07-17 06:05:21 and 2025-07-07 11:26:45\",\"account tenure_days is 551\",\"n_avs_mismatch_prior is 0.0 and n_cvv_mismatch_prior is 0.0\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"repayment_history shows paid 3.0, late 0.0, and failed_or_written_off 0.0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler mimic is most consistent with the repeated CA IP-country history and the absence of linkage. The AVS=N result can be a verification typo, while CVV=M and repayment history shows paid 3.0.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"R03 provides a US BIN, CA IP, and AVS=N signal, but CVV=M, there are no card declines in 24h, and the packet shows no multi-account linkage.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The current device_id is 47171 rather than device_id 28601, but the packet provides no credential-manipulation events or linkage evidence.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 action selection step 3\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether device_id 47171 is an authorized new device for user_id 28601.\",\"Obtain issuer or customer confirmation of the billing-address details underlying avs_result \\\"N\\\".\"],\"memo_markdown\":\"**Recommendation: clear (P2).**\\n\\nOrder 34353 was approved for 127.54 with R03: US card BIN, CA IP, AVS=N, and CVV=M. CA IP-country activity also appears on approved orders at 2025-07-17 06:05:21 and 2025-07-07 11:26:45, supporting the benign traveler mimic. The account has tenure_days of 551, repayment history of paid 3.0 with late 0.0 and failed_or_written_off 0.0, and no linkage on device, shipping address, or email root.\\n\\nThe single AVS mismatch is explainable as a verification typo; there is no second independent fraud-signal family to support decline_block. Confirm the new device and AVS details only if subsequent activity changes the case.\"}"
+ },
+ "task": "triage_memo"
+}

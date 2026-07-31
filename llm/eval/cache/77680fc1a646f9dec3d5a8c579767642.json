@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "8efd9600cff0f8fe071b5d5768b1a3666c3dce133dcfeb2b02361786e99e48f3",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 26459,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country CN vs IP country US with AVS=Y/CVV=N\",\"Order amount 96.92; status approved\",\"Alert score 35; band review\",\"Card network mc; declines_on_card_24h 0\",\"Account tenure_days 527; n_orders_prior 1; total_spent_prior 88.59\",\"Repayment history: installments_due 3, paid 3.0, late 0.0, failed_or_written_off 0.0\",\"Linkage counts: other_accounts_on_device 0, other_accounts_on_ship_address 0, other_accounts_same_email_root 0\",\"Alert device_id 7618 and ship_address_id 7618\",\"Account event: login from device_id 7618 at 2025-11-05 17:21:52\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The CN card BIN versus US IP and CVV=N support possible unauthorized card use. However, AVS=Y, declines_on_card_24h=0, and successful repayment weaken this hypothesis.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The verification mismatch could accompany account takeover, but the packet shows no credential manipulation, no new device linkage, and no additional accounts linked to the device, address, or email root.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A verification typo is a plausible benign mimic because AVS=Y with CVV=N can reflect verification error, while the account has tenure_days 527, prior repayment activity, and no linkage counts. The foreign card BIN remains unexplained.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection \u00a72\",\"FP-1 action selection \u00a74\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm cardholder identity and billing details through step-up verification.\",\"Check whether the cardholder is traveling or whether the card BIN country CN is expected for this customer.\",\"Review payment-instrument history for ownership or credential changes not included in the packet.\"],\"memo_markdown\":\"R03 fired on order 111592 because the card BIN country is CN while the IP country is US, with AVS=Y and CVV=N. This supports a medium stolen-card hypothesis, but AVS=Y, declines_on_card_24h=0, and repayment history of installments_due 3 and paid 3.0 provide countervailing evidence. Account takeover is low likelihood: no credential manipulation or multi-account linkage is shown. A verification typo is a medium-likelihood benign mimic, but it does not fully explain the geographic mismatch. Because only the geography+verification signal family is present and step-up verification could distinguish the hypotheses, recommend hold_contact. Priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

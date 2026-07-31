@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "81d8920a42705a7c972b8112ef6d1f7a5df29aedc05123dc46a490022a1ff77a",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 41916,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired for repeat INR disputes: 2 prior item-not-received chargebacks with healthy repayment\",\"Current order amount is 64.09 and status is approved\",\"AVS result is Y and CVV result is M\",\"IP country is US, card BIN country is US, and KYC country is US\",\"Account has 20 prior orders and tenure_days is 750\",\"Repayment history shows 55 installments_due, 53.0 paid, 2.0 late, and 0.0 failed_or_written_off\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"account_events_90d is empty\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies 2 prior item-not-received chargebacks, directly supporting an item-not-received abuse hypothesis. Healthy repayment and the absence of linkage reduce confidence but do not resolve whether the prior disputes were legitimate.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A benign prior-dispute explanation remains plausible because the account has 20 prior orders, tenure_days of 750, healthy repayment, US-aligned payment and network geography, and no linked accounts. The packet does not identify a specific traveler, mover, gift-buyer, hardship, typo, or new-phone mimic.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review delivery and tracking evidence for the 2 prior item-not-received chargebacks\",\"Use step-up customer verification focused on the prior item-not-received disputes\"],\"memo_markdown\":\"R09 fired because the account has 2 prior item-not-received chargebacks with healthy repayment. The current order is 64.09, approved, with AVS Y and CVV M. The account has 20 prior orders and tenure_days of 750; repayment shows 55 installments_due, 53.0 paid, 2.0 late, and 0.0 failed_or_written_off. No credential changes, account events, or cross-account linkage are present, and US geography is consistent across KYC, IP, and card BIN. INR abuse is plausible, but the packet does not establish high likelihood or corroboration from two independent signal families. A benign explanation also remains plausible. Hold for reversible customer verification and review of the 2 prior dispute records.\"}"
+ },
+ "task": "triage_memo"
+}

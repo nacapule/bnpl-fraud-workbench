@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "ae257f08cc32d376e261291a769e83c7fefa7bda9a9017ac600120d6574c958f",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 35849,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: repeat INR disputes, with 3 prior item-not-received chargebacks and healthy repayment\",\"Alert amount is 503.47; status approved\",\"IP country is US; KYC country is CA; card BIN country is CA\",\"AVS result is Y and CVV result is M\",\"Repayment history shows installments_due 9, paid 9.0, late 0.0, and failed_or_written_off 0.0\",\"Linkage shows other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0\",\"Account tenure is 548 days with n_orders_prior 3 and total_spent_prior 518.02\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"high\",\"reasoning\":\"R09 specifically identifies repeat INR disputes: 3 prior item-not-received chargebacks. Healthy repayment does not eliminate the possibility of intentional INR abuse.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler is a plausible benign mimic because the IP country is US while the KYC country and card BIN country are CA, with no credential changes or account linkage observed. However, the repeat INR dispute history is not fully explained by travel alone.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The card BIN country matches the KYC country, AVS is Y, declines_on_card_24h is 0, and there is no linkage to other accounts.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Confirm the evidence and outcomes for the 3 prior item-not-received chargebacks, including delivery and carrier records.\",\"Run step-up customer verification focused on possession of the account and order receipt.\"],\"memo_markdown\":\"R09 triggered for repeat INR disputes, citing 3 prior item-not-received chargebacks with healthy repayment. This makes INR abuse the leading hypothesis. The account also shows an amount of 503.47, a US IP against CA KYC and card BIN countries, and CVV result M; however, AVS is Y, repayment is strong, and linkage counts are all 0. A traveler is a plausible benign mimic, and no credential manipulation or multi-account linkage is present. Because the packet does not establish a second independent fraud family sufficient for decline_block, pause for step-up verification and validate the prior INR claims. Recommended action: hold_contact. Priority: P1.\"}"
+ },
+ "task": "triage_memo"
+}

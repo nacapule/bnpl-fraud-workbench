@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "e9ce60b2a5f31b0b592a5f97d323d2e24d7e1d6b36c08f104f9ddaa6e70151c8",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 44295,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert amount 577.49\",\"alert score 35\",\"R03 fired: card BIN country US vs IP country GB with AVS=N/CVV=M\",\"alert status approved\",\"IP country GB\",\"card BIN country US\",\"AVS result N\",\"CVV result M\",\"merchant category jewelry\",\"device_id 5181511\",\"recent orders use device_id 5181511 and IP country GB\",\"account tenure_days 2\",\"other accounts on device 0\",\"other accounts on ship address 0\",\"other accounts same email root 0\",\"declines_on_card_24h 0\",\"account_events_90d empty\",\"repayment_history installments_due 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card BIN paired with a GB IP and AVS=N/CVV=M supports possible unauthorized card use. However, no card declines, account linkage, or repayment evidence corroborates this independently.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The foreign IP is concerning, but account_events_90d is empty and there is no credential manipulation or account linkage in the packet.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler is a plausible benign mimic because the packet shows a foreign IP without credential changes or linked accounts. The AVS mismatch remains unexplained by the available facts.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Confirm whether the customer is traveling from GB and whether the shipping address is expected.\",\"Run step-up customer verification and confirm card possession.\",\"Check whether the recent approved orders were authorized by the customer.\"],\"memo_markdown\":\"The order is approved for 577.49 in jewelry and triggered R03 for a US card BIN versus GB IP with AVS=N/CVV=M. Recent approved orders also use device_id 5181511 and IP country GB. The account has tenure_days 2, but there are no linked accounts, no credential-change events, no card declines, and no repayment evidence.\\\\n\\\\nStolen_card is a medium-likelihood hypothesis based on the geography and verification mismatch, but only one signal family corroborates it. Account takeover is low likelihood because no credential manipulation or linkage is present. A traveler is a medium-likelihood benign mimic, though the AVS mismatch is unresolved.\\\\n\\\\nRecommended action: hold_contact for reversible step-up verification. Priority: P1 due to the amount and recent order activity.\"}"
+ },
+ "task": "triage_memo"
+}

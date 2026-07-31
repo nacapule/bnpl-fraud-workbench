@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "b186092196f57ac1bca9f11b597aef556f4623894b7b17d974873b093e27f33e",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 160414,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R02: 5 accounts have transacted on device d_5181691 as of this order\",\"R06: shared_root_accounts=80\",\"R08: ship-to address a_2899015 already used by 35 distinct accounts\",\"other_accounts_on_device=4\",\"other_accounts_on_ship_address=39\",\"other_accounts_same_email_root=79\",\"alert score=100\",\"order status=approved\",\"amount=39.12\",\"repayment_history paid=2.0 and late=0.0\",\"avs_result=Y\",\"cvv_result=M\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"Multi-account linkage is present across device, ship-to address, and email root, with R02, R06, and R08 fired. The linkage counts meet the FP-1 escalation criterion.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet contains no account events and no credential manipulation signal; the account has prior AVS mismatches of 0.0 and CVV mismatches of 0.0.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The card BIN country and IP country are both US, declines_on_card_24h is 0, and avs_result is Y.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"The repayment history shows paid=2.0, late=0.0, and failed_or_written_off=0.0.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler, mover, or gift buyer could explain an unusual location or ship-to address, but the packet does not explain the multi-account device, address, and email-root linkage.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query the linked accounts behind device d_5181691, address a_2899015, and the email root to confirm whether the linkage reflects coordinated activity.\",\"Review fulfillment and merchant-side order details for suspected merchant complicity.\"],\"memo_markdown\":\"Synthetic-ring indicators are high likelihood. R02 reports 5 accounts transacting on device d_5181691; R06 reports shared_root_accounts=80; and R08 reports the ship-to address already used by 35 distinct accounts. Linkage fields also show other_accounts_on_device=4, other_accounts_on_ship_address=39, and other_accounts_same_email_root=79. These are independent device/linkage and identity/address signal families, and the linkage meets FP-1\u2019s escalation threshold. Payment and repayment evidence is less concerning: AVS is Y, CVV is M, declines_on_card_24h is 0, and paid=2.0 with late=0.0. Escalate for linked-account review and possible merchant-complicity assessment; do not treat the benign traveler, mover, or gift-buyer explanations as sufficient on this packet.\"}"
+ },
+ "task": "triage_memo"
+}

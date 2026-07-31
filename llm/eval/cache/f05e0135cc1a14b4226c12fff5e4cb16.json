@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "7853d17b7ad2e84793322b7192d4e16571511b3717f091418ae65e3561d4ab02",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 26839,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"order_id 199869 was approved at 2026-01-21 14:41:33 for 230.27\",\"account tenure_days is 149\",\"account has n_orders_prior of 7\",\"repayment_history shows paid 21.0, late 0.0, and failed_or_written_off 0.0\",\"account_events_90d is empty\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\",\"prior approved order_id 135676 had AVS=N, CVV=M, and ip_country US\",\"last_orders show ip_country US on each listed order\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"The traveler mimic fits: the account has Canadian KYC and card BIN data but a repeated US IP history, with no account events in 90 days. The verification mismatch is also consistent with the stated benign typo mimic, while repayment history is fully paid and linkage counts are 0.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The current AVS=N/CVV=M result and CA-to-US geography discrepancy support this possibility, but there is no credential manipulation, card declines in 24h, adverse repayment behavior, or multi-account linkage.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 action selection \u00a73\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the shipping address for order_id 199869 matches a prior successful delivery address.\",\"Confirm whether the IP 82.184.248.44 has prior benign account usage or adverse network history.\"],\"memo_markdown\":\"R03 fired because the CA card BIN was used from a US IP with AVS=N/CVV=M on approved order_id 199869. The strongest explanation is benign: US IP usage appears throughout the listed order history, account_events_90d is empty, linkage counts are 0, and repayment history shows paid 21.0 with late 0.0 and failed_or_written_off 0.0. A prior approved order also had AVS=N/CVV=M from the US. This supports the FP-1 \u00a76 traveler and verification-typo mimics. Clear the alert under action-selection step 3; a hold is not warranted because the fired rule is explained by the documented benign history. Priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

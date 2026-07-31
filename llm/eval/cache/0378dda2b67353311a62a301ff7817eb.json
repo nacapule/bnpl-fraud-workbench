@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "86e3b52fd9464bde1098d184966845033bdf2bcbcb8062ea40d7c4380984278c",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 35879,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 352976 for 689.04 at jewelry merchant flash-jewe-71\",\"Order approved at 2025-11-20 16:05:31\",\"IP country CA versus card BIN country US\",\"AVS result Y and CVV result N\",\"Rule R03 fired: geo + verification mismatch\",\"Account has 0 prior orders and total_spent_prior 0.0\",\"Account tenure is 12 days\",\"Other accounts on device: 0; other accounts on ship address: 0; other accounts sharing email root: 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card BIN, CA IP, and CVV=N indicate possible unauthorized card use, especially for a jewelry order. However, the packet provides only one corroborating signal family.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The account is recently opened, but the packet shows no credential manipulation or linkage to other accounts.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler is a plausible benign mimic because the IP country differs from the card BIN country and there are no credential changes or linked accounts. The CVV mismatch could also reflect a verification typo, but the packet does not establish that explanation.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Perform step-up customer verification and confirm cardholder possession.\",\"Check whether the customer is traveling or can explain the CA IP and CVV mismatch.\",\"Query fulfillment status and any additional orders for this account.\"],\"memo_markdown\":\"Order 352976 is a 689.04 jewelry purchase approved from a CA IP using a US-BIN card. AVS returned Y, CVV returned N, and R03 fired for geo plus verification mismatch. The account has 0 prior orders, tenure of 12 days, and no linked accounts on the device, ship address, or email root.\\n\\nStolen_card is the leading fraud hypothesis at medium likelihood, but evidence is limited to the geography-plus-verification family. Account takeover is low likelihood because no credential manipulation or linkage is present. A traveler is a plausible benign mimic; a verification typo is also possible.\\n\\nRecommend hold_contact for reversible step-up verification. Priority P1 due to the 689.04 exposure. Clear is not supported because the packet does not explain every fired signal through a benign mimic.\"}"
+ },
+ "task": "triage_memo"
+}

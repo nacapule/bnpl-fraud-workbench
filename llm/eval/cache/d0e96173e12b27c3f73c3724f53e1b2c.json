@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "632765a326ef2ba58b4705eac72394c9ddada5d611eb309b342ad4c8baff0e11",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 208825,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired for card BIN country US vs IP country CA with AVS=Y/CVV=N\",\"Order 95942 amount 122.25 was approved at 2025-10-21 21:40:44\",\"Account has 10 prior orders and total_spent_prior 757.79\",\"Account events in the last 90 days are empty\",\"Device 10102 is shared with 0 other accounts\",\"Ship address 10102 is shared with 0 other accounts\",\"Email root is shared with 0 other accounts\",\"Prior AVS mismatches: 0.0; prior CVV mismatches: 0.0\",\"Repayment history: 20 installments due, 19.0 paid, 1.0 late, 0.0 failed_or_written_off\",\"The last orders use device_id 10102 and IP country CA\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"The foreign IP is consistent with the traveler mimic: account events are empty, the device, ship address, and email root have no other-account linkages, and prior AVS/CVV mismatch counts are 0.0. The current CVV mismatch may also fit the verification-typo mimic described in FP-1 \u00a76.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"R03 indicates a US card BIN with a CA IP and CVV=N, but AVS=Y, prior orders were approved, and card declines_on_card_24h is 0.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"There are no account events in the last 90 days, and the device, ship address, and email root have no other-account linkages.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"Linkage counts are 0 for other accounts on the device, ship address, and email root.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"Repayment history shows 19.0 paid, 1.0 late, and 0.0 failed_or_written_off.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 3\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the customer was traveling in CA at 2025-10-21 21:40:44.\",\"Confirm whether the CVV mismatch was a verification typo or issuer-side response.\"],\"memo_markdown\":\"R03 fired because the card BIN country is US while the IP country is CA, with AVS=Y and CVV=N. The benign traveler explanation is strong: account events in the last 90 days are empty, device/address/email-root linkage counts are 0, prior AVS and CVV mismatch counts are 0.0, and prior orders were approved. The isolated CVV mismatch may fit FP-1\u2019s verification-typo mimic. Stolen-card and account-takeover hypotheses remain low likelihood; synthetic-ring and never-pay indicators are also unsupported. Recommend clear under FP-1 action-selection step 3, with optional documentation-only checks for travel context and the CVV response.\"}"
+ },
+ "task": "triage_memo"
+}

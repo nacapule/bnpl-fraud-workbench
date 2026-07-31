@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "43d242b40e5a2aa24c0303d553547aa2eeaf20fd80dca5053112044de392409d",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 27372,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Alert amount is 923.79\",\"Alert score is 100\",\"R02: 5 accounts have transacted on device d_5181702 as of this order\",\"R06: shared_root_accounts=80\",\"R08: ship-to address a_2899014 already used by 36 distinct accounts\",\"other_accounts_on_device is 4\",\"other_accounts_on_ship_address is 39\",\"other_accounts_same_email_root is 79\",\"AVS result is Y and CVV result is M\",\"Order status is approved\",\"Merchant is north-gallery-23 in electronics\",\"Repayment history shows failed_or_written_off=0.0, late=0.0, and paid=6.0\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"Device, ship-to address, and email-root linkage all connect this account to multiple other accounts. The alert also shows shared identity and drop-address signals, supporting coordinated multi-account activity.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The order amount is 923.79 and CVV result is M, but AVS result is Y and declines_on_card_24h is 0, so card misuse is possible but not established.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler, mover, gift buyer, hardship defaulter, verification typo, or new-phone mimic does not explain the simultaneous multi-account device, shared-address, and shared-email-root linkages.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 action ladder\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query the linked accounts on device d_5181702, ship-to address a_2899014, and the shared email root for confirmed fraud outcomes.\",\"Check whether merchant north-gallery-23 has other linked orders or fulfillment patterns indicating merchant complicity.\",\"Verify fulfillment status and whether the approved order has shipped.\"],\"memo_markdown\":\"High-likelihood synthetic-ring concern. R02 links 5 accounts to device d_5181702; R08 links ship-to address a_2899014 to 36 distinct accounts; R06 reports shared_root_accounts=80. Linkage is present across device, address, and email-root families, which exceeds the escalation threshold in FP-1. The order amount is 923.79, status approved, and score 100, creating live exposure. Stolen-card risk is possible because CVV result is M, but AVS result is Y and declines_on_card_24h is 0. Benign mimics do not explain the combined linkage signals. Escalate for ring review and assess merchant involvement; the human analyst owns the final decision.\"}"
+ },
+ "task": "triage_memo"
+}

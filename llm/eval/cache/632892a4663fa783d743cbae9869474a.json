@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "fa5f2b64b461d0c0f3e814084a037d53b01e34310060af3e684cfa7702750944",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 37288,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Alert score is 100 and band is decline\",\"Order 352094 for 655.38 in jewelry was approved at 2025-12-18 14:09:44\",\"3 accounts have transacted on device d_5181733 as of this order\",\"Ship-to address a_2899019 already used by 17 distinct accounts\",\"Email identity cost-reduction: disposable_domain=False, shared_root_accounts=80\",\"CVV result is N and AVS result is Y\",\"The account has 2 prior orders and total_spent_prior is 98.08\",\"The repayment history shows 5 installments due, 5.0 paid, 0.0 late, and 0.0 failed_or_written_off\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"Device, ship-to address, and email-root linkage independently connect this account to multiple accounts. The jewelry order is also materially larger than the account's prior spending history.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The current transaction has a CVV result of N despite an AVS result of Y. However, there are no card declines in the last 24 hours and no prior repayment failures.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet contains no account events in 90 days and no credential manipulation signals.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift buyer could explain a non-home ship-to address, but the multi-account device, address, and email-root linkages are not explained by that mimic.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Check whether the linked device, ship-to address, or email-root accounts have confirmed fraud outcomes.\",\"Review the 17 distinct accounts using ship-to address a_2899019 for common fulfillment or identity details.\",\"Check for merchant-level linkage or confirmed merchant complicity involving bright-threads-46.\"],\"memo_markdown\":\"**Assessment:** High likelihood of a synthetic ring. R02, R06, and R08 identify linkage across the device, ship-to address, and email root: 3 accounts transacted on the device, the address was used by 17 distinct accounts, and the email root has 80 shared accounts. The current 655.38 jewelry order is approved with CVV N and AVS Y, while the account has only 2 prior orders and total_spent_prior of 98.08. Repayment history is clean, but that does not explain the cross-account linkage. A gift-buyer benign mimic is possible but low likelihood because it does not account for the device and email-root linkages. Escalate for suspected multi-account ring under FP-1 action selection step 1; human review should confirm linked-account fraud outcomes and assess any merchant involvement.\"}"
+ },
+ "task": "triage_memo"
+}

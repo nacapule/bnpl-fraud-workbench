@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "86e3b52fd9464bde1098d184966845033bdf2bcbcb8062ea40d7c4380984278c",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 20227,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 352976 for 689.04 was approved at 2025-11-20 16:05:31.\",\"The order is jewelry at merchant flash-jewe-71.\",\"Card BIN country is US; IP country is CA.\",\"AVS result is Y and CVV result is N.\",\"R03 fired: geo + verification mismatch, with score 35.\",\"Account 41402 has tenure_days 12 and n_orders_prior 0.\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0.\",\"declines_on_card_24h is 0.\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card BIN used from a CA IP with AVS=Y and CVV=N supports a geography-plus-verification concern. The packet provides only this signal family and no linkage, velocity, or vendor-score corroboration.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler is a plausible benign mimic because the IP country is CA while KYC country and card BIN country are US, and account_events_90d is empty. The CVV=N result remains unresolved; FP-1 notes verification typos can be benign.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Step-up customer verification for order 352976.\",\"Confirm the CVV=N result with the payment processor.\",\"Check whether the CA IP is consistent with a customer travel location.\"],\"memo_markdown\":\"Order 352976 is an approved 689.04 jewelry purchase at flash-jewe-71. R03 fired because the card BIN country is US, the IP country is CA, AVS=Y, and CVV=N. Account 41402 has tenure_days 12 and n_orders_prior 0. No cross-account linkage is reported on device, ship address, or email root, and declines_on_card_24h is 0.\\n\\nStolen-card activity is a medium-likelihood concern, but the packet contains only one corroborating signal family. A traveler plus a verification typo remains a plausible benign explanation under FP-1 \u00a76. Hold pending targeted verification rather than decline/block; the result should resolve the ambiguity. Prioritize P1 because the order amount is 689.04.\"}"
+ },
+ "task": "triage_memo"
+}

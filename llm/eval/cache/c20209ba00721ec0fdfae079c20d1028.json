@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "c15d0ab969c56eced50c067fec23a8ee95991261830349d35c36da5b151bcd64",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 340757,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"order 352579 amount 579.54 in electronics\",\n    \"card BIN country US versus IP country CA\",\n    \"AVS result N and CVV result M\",\n    \"fired rule R03 geo + verification mismatch with score 35\",\n    \"account tenure_days 0 with n_orders_prior 0 and total_spent_prior 0.0\",\n    \"device_id 5182200, other_accounts_on_device 0\",\n    \"other_accounts_on_ship_address 0 and other_accounts_same_email_root 0\",\n    \"order status approved at 2025-08-15 22:50:40\",\n    \"declines_on_card_24h 0\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"stolen_card\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"The US card BIN, Canadian IP, AVS=N, and CVV=M are consistent with potential card misuse. However, only the geography+verification signal family fired.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"A traveler mimic could explain the foreign IP without credential changes, but the packet provides no travel confirmation and the AVS/CVV mismatch remains unexplained.\"\n    },\n    {\n      \"pattern\": \"account_takeover\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"The account has no account_events_90d, and there are no other accounts linked by device, ship address, or email root.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R03\",\n    \"FP-1 \u00a71\",\n    \"FP-1 \u00a75\",\n    \"FP-1 \u00a76\"\n  ],\n  \"recommended_action\": \"hold_contact\",\n  \"priority\": \"P1\",\n  \"evidence_gaps\": [\n    \"Confirm whether the customer was traveling in Canada at 2025-08-15 22:50:40\",\n    \"Step up verification of card ownership and billing address\",\n    \"Check whether ship_address_id 2899464 is associated with the customer\"\n  ],\n  \"memo_markdown\": \"Order 352579 for 579.54 in electronics triggered R03: the card BIN country is US while the IP country is CA, with AVS=N and CVV=M. The account has tenure_days 0, n_orders_prior 0, and total_spent_prior 0.0. No account events are present, and linkage counts are 0 across device, ship address, and email root.\\n\\nStolen_card is a medium-likelihood hypothesis; the geography+verification mismatch supports it, but only one signal family is present. A traveler is also a medium-likelihood benign mimic, although the packet does not confirm travel or explain the AVS/CVV results. Account takeover is low likelihood because there are no credential events or linkage signals.\\n\\nRecommend hold_contact for reversible step-up verification of card ownership, billing address, and travel context. Priority P1 reflects the amount 579.54.\"\n}"
+ },
+ "task": "triage_memo"
+}

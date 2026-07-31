@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "90d0c1cac18faf0d8806544bc6bef4956c8ecb8733da38d129508a4376c4a5e1",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 43818,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R06 fired: disposable_domain=False, shared_root_accounts=80\",\"R08 fired: ship-to address a_2899019 already used by 14 distinct accounts\",\"other_accounts_on_device=2\",\"other_accounts_on_ship_address=39\",\"other_accounts_same_email_root=79\",\"amount=88.29\",\"merchant_category=jewelry\",\"merchant_name=swift-trading-12\",\"avs_result=N\",\"cvv_result=N\",\"status=approved\",\"n_orders_prior=0\",\"total_spent_prior=0.0\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The shared ship-to address and email root connect this account to many other accounts, and R06 and R08 both fired. This is consistent with coordinated multi-account activity.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer mimic could explain a non-home ship-to address, but the packet does not establish gift-buying, stable history, or another \u00a76 explanation for the linkage signals.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query linked accounts on device 5181747, ship address 2899019, and the email root to confirm whether the linkage represents a coordinated ring.\",\"Check confirmed-fraud outcomes and aggregate exposure across the linked orders.\",\"Review merchant swift-trading-12 for related orders and possible merchant complicity.\"],\"memo_markdown\":\"**Assessment:** Synthetic-ring activity is the leading hypothesis at high likelihood. R06 fired because `shared_root_accounts=80`; R08 fired because ship-to address `a_2899019` was already used by `14` distinct accounts. Linkage shows `2` other accounts on the device, `39` other accounts on the ship address, and `79` other accounts on the same email root. The benign gift-buyer mimic is possible but unsupported by the packet.\\n\\n**Action:** Escalate for suspected multi-account ring. The alert is currently approved for `88.29` in jewelry, with AVS and CVV results both `N`; however, the available evidence supports linkage-based escalation rather than a standalone decline decision. Prioritize linked-account, confirmed-fraud, aggregate-exposure, and merchant-complicity checks.\"}"
+ },
+ "task": "triage_memo"
+}

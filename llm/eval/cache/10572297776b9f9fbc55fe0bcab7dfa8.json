@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "fd09f09739d34712bbb404224eb67c68f296a65aa06ef217e48de1793ca2b1cd",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 34607,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R02 fired: \\\"3 accounts have transacted on device d_5181703 as of this order\\\".\",\"R06 fired: \\\"disposable_domain=False, shared_root_accounts=80\\\" for email davidlee+79@gmail.com.\",\"R08 fired: \\\"ship-to address a_2899015 already used by 22 distinct accounts\\\".\",\"linkage.other_accounts_on_device is 4.\",\"linkage.other_accounts_on_ship_address is 39.\",\"linkage.other_accounts_same_email_root is 79.\",\"Order 351441 was approved at 2025-08-13 22:55:48 for 64.77 at swift-market-56.\",\"Alert score is 100 and band is \\\"decline\\\".\",\"AVS result is \\\"Y\\\" and CVV result is \\\"M\\\".\",\"ip_country is \\\"US\\\", bin_country is \\\"US\\\", and kyc_country is \\\"US\\\".\",\"account_events_90d is [].\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The device, ship-to address, and email root each show multi-account linkage, with linkage counts of 4, 39, and 79 respectively. R02, R06, and R08 independently identify the same connected-account concern.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler mimic is not supported because ip_country, bin_country, and kyc_country are all US, and account_events_90d is []. The mover mimic is weak because the packet shows device and email-root sharing in addition to ship-to address linkage.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 action selection step 1\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the linked accounts on device d_5181703 for common payment instruments, fulfillment outcomes, and fraud dispositions.\",\"Review the linked accounts on ship-to address a_2899015 for recipient names, delivery history, and chargeback outcomes.\",\"Review the 79 other accounts sharing the email root for creation timing and confirmed-fraud outcomes.\"],\"memo_markdown\":\"Order 351441 was approved for 64.77 despite a score of 100 and decline band. The principal hypothesis is synthetic_ring: R02 reports 3 accounts transacting on device d_5181703; R08 reports 22 distinct accounts at ship-to address a_2899015; and R06 reports shared_root_accounts=80. Packet linkage fields also show 4 other accounts on the device, 39 on the ship address, and 79 on the same email root.\\n\\nAVS is Y and CVV is M, but these verification results do not resolve the multi-account linkage. A benign traveler explanation is not supported by US IP, US BIN, US KYC, and no account events in 90 days. Escalate under FP-1 action selection step 1 for suspected multi-account ring evidence. Human review should validate linked-account outcomes before any account-level enforcement.\"}"
+ },
+ "task": "triage_memo"
+}

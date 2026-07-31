@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "11b853510f8340edb5b2159e7bfd2679ba918f05d6d8777e8b2bcae9227310c7",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 23135,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"email_domain: \\\"mailinator.com\\\"\",\"R06 rationale: \\\"email identity cost-reduction: disposable_domain=True, shared_root_accounts=1\\\"\",\"R08 rationale: \\\"ship-to address a_2899016 already used by 8 distinct accounts\\\"\",\"other_accounts_on_device: 3\",\"other_accounts_on_ship_address: 39\",\"other_accounts_same_email_root: 0\",\"amount: 85.55\",\"avs_result: \\\"Y\\\"\",\"cvv_result: \\\"M\\\"\",\"ip_country: \\\"US\\\"\",\"bin_country: \\\"US\\\"\",\"n_orders_prior: 0\",\"status: \\\"approved\\\"\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The ship-to address is linked to 39 other accounts and the device is linked to 3 other accounts. R06 also identifies a disposable email domain, while R08 identifies the shared drop address.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer explanation could account for shipping away from a home address, but the packet provides no stable account history and shows extensive address and device linkage.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Review the linked accounts on device_id 5181704 for common order behavior and fraud outcomes.\",\"Review the linked accounts on ship_address_id 2899016 for confirmed-fraud outcomes.\",\"Check whether merchant_name \\\"lux-haus-95\\\" has related suspicious orders or merchant-complicity indicators.\"],\"memo_markdown\":\"Escalate for ring review. The approved shoes order is for 85.55 with AVS result Y and CVV result M, from a US IP using a US Visa BIN. R06 fired because the email domain is mailinator.com. R08 fired because ship-to address a_2899016 was already used by 8 distinct accounts. Linkage shows 3 other accounts on the device and 39 other accounts on the ship address. This meets FP-1 action-selection step 1 linkage criteria for suspected multi-account ring activity. A gift-buyer mimic is not well supported because there is no stable prior order history and the packet shows substantial device and address linkage. Human review should validate linked-account outcomes and merchant relationships.\"}"
+ },
+ "task": "triage_memo"
+}

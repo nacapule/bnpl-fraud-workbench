@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "b517f7eafd445683d9be999670bac5f9c8ff56c62807e093fa105adb3fe945ff",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 30069,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: \\\"2 prior item-not-received chargebacks on this account with healthy repayment\\\"\",\"alert amount: 112.2\",\"AVS result: Y\",\"CVV result: M\",\"IP country: US\",\"card BIN country: US\",\"other_accounts_on_device: 0\",\"other_accounts_on_ship_address: 1\",\"other_accounts_same_email_root: 0\",\"repayment history: installments_due: 5, paid: 5.0, late: 0.0, failed_or_written_off: 0.0\",\"account_events_90d: []\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 fired for \\\"2 prior item-not-received chargebacks on this account with healthy repayment.\\\" The current order has AVS Y and CVV M, with no device linkage, so the packet provides repayment-behavior evidence but lacks corroboration from a second signal family.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows healthy repayment and no account events in 90 days, but it does not provide a stated FP-1 \u00a76 benign mimic that explains 2 prior item-not-received chargebacks.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 action selection step 2\",\"FP-1 action selection step 4\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review documentation and outcomes for the 2 prior item-not-received chargebacks.\",\"Obtain merchant fulfillment and delivery evidence for order_id 334878.\",\"Perform step-up customer verification for order_id 334878.\"],\"memo_markdown\":\"R09 fired because the account has 2 prior item-not-received chargebacks with healthy repayment. The current approved accessories order is 112.2, with AVS Y, CVV M, US IP country, and US card BIN country. Repayment history shows 5 installments_due, 5.0 paid, 0.0 late, and 0.0 failed_or_written_off. Linkage shows 0 other accounts on device, 1 on ship address, and 0 on the same email root.\\n\\nINR abuse is a medium-likelihood hypothesis based on the repeat-dispute signal, but only repayment behavior corroborates it. The packet lacks linkage, credential-manipulation, verification, velocity, or vendor-score corroboration needed for decline_block. No stated FP-1 \u00a76 benign mimic explains the prior INR disputes. Hold pending step-up verification and review of prior dispute and current delivery evidence.\"}"
+ },
+ "task": "triage_memo"
+}

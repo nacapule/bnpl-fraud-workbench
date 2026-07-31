@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "1dac2aafe0472ea30bf83408d11d3e4acd81470c50db3fd2ff38b75d72a2fa9f",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 29304,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R02: 4 accounts have transacted on device d_5181697 as of this order\",\"R06: shared_root_accounts=80\",\"R08: ship-to address a_2899015 already used by 36 distinct accounts\",\"other_accounts_on_device=4\",\"other_accounts_on_ship_address=39\",\"other_accounts_same_email_root=79\",\"cvv_result=N and avs_result=Y on order 351395\",\"account tenure_days=17\",\"repayment_history paid=1.0, late=0.0, failed_or_written_off=0.0\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"Multiple independent linkage signals connect this account to other accounts through device, ship-to address, and email root. The linkage counts meet FP-1's multi-account ring escalation condition.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The order has cvv_result=N, but avs_result=Y, declines_on_card_24h=0, and the card and IP countries are both US.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"repayment_history shows paid=1.0, late=0.0, and failed_or_written_off=0.0.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A verification typo could explain cvv_result=N, but it does not explain the device, ship-to address, and email-root linkage.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Query the linked accounts on device d_5181697, ship-to address a_2899015, and the email root to confirm whether they share coordinated order behavior.\",\"Review merchant-level linkage and fulfillment history for suspected merchant complicity.\"],\"memo_markdown\":\"Order 351395 is a high-likelihood synthetic-ring candidate. R02 identifies 4 accounts transacting on device d_5181697; R06 reports shared_root_accounts=80; and R08 reports ship-to address a_2899015 used by 36 distinct accounts. Linkage fields also show other_accounts_on_device=4, other_accounts_on_ship_address=39, and other_accounts_same_email_root=79. These are independent device/linkage signals and satisfy FP-1's escalation condition for a multi-account ring. Stolen-card likelihood is low: cvv_result=N but avs_result=Y, declines_on_card_24h=0, and both card and IP countries are US. Never-pay likelihood is low because paid=1.0, late=0.0, and failed_or_written_off=0.0. A verification typo is a possible benign mimic but does not explain the linkage. Recommend escalate for human review.\"}"
+ },
+ "task": "triage_memo"
+}

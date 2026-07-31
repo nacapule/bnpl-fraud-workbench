@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "81bd276023d216df8b8fd11f2ff0d71f0ffcbfd24da8e6eeb6c27b7e96e4e5cb",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 31893,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 124053 amount 165.41, approved at 2025-11-19 19:57:47\",\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"Account tenure_days 804 with n_orders_prior 12\",\"Account total_spent_prior 2105.59\",\"Account repayment history: failed_or_written_off 0.0, late 0.0, paid 25.0, installments_due 25\",\"Linkage counts: other_accounts_on_device 0, other_accounts_on_ship_address 0, other_accounts_same_email_root 0\",\"Account event address_add at 2025-11-08 23:17:50\",\"Card declines_on_card_24h 0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"Traveler mimic is plausible because the card BIN country is CA while the IP country is US, with no credential changes or account linkage shown. Long tenure, approved prior orders, and repayment history with late 0.0 support benign behavior.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The current AVS=N/CVV=M mismatch is concerning, but there are no card declines_on_card_24h and the account has established tenure and repayment history.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows no password or email change, no other accounts linked to the device or ship address, and no credential-manipulation rule.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"No device, ship-address, or email-root linkage to other accounts is present.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"Repayment history shows failed_or_written_off 0.0 and late 0.0.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the customer was traveling from CA to the US at 2025-11-19 19:57:47 and whether ship_address_id 580098 is customer-controlled.\"],\"memo_markdown\":\"Order 124053 was approved for 165.41 and triggered R03 because the card BIN country is CA while the IP country is US, with AVS=N and CVV=M. The strongest explanation is the traveler benign mimic: the packet shows no credential changes, no linkage to other accounts, established tenure, and repayment history with late 0.0 and paid 25.0 of installments_due 25. The account also has prior AVS mismatches, while card declines_on_card_24h is 0. No independent device, linkage, velocity, repayment, or vendor-score family corroborates fraud. Recommend clear under FP-1 \u00a76, with optional confirmation of travel status and ship-address ownership.\"}"
+ },
+ "task": "triage_memo"
+}

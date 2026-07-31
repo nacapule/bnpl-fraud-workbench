@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "ab8edc7a24f38b96f2ad1610c25d5c193450a5bb260b13e36f76ee681666e76c",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 53336,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country US vs IP country CA with AVS=N/CVV=N\",\"R07 fired: 4 declined attempts on this card/device in the prior 24h, then this approval\",\"Alert order 350949 amount 668.38 status approved at 2025-12-09 12:07:04\",\"Order 350948 amount 883.55 status approved at 2025-12-09 04:32:32\",\"Device 5181577 used on the approved orders and declined attempts\",\"Account tenure_days is 2 and n_orders_prior is 1\",\"Linkage counts are 0 for other accounts on device, ship address, and same email root\",\"repayment_history fields failed_or_written_off, late, and paid are null\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"high\",\"reasoning\":\"Card testing followed by approval, combined with card BIN country US versus IP country CA and AVS=N/CVV=N, supports unauthorized card use. Velocity and geography+verification are independent corroborating signal families.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"med\",\"reasoning\":\"The foreign IP and payment verification mismatches could accompany account takeover, but account_events_90d is empty and no credential manipulation is present.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler mimic could explain the foreign IP, but it does not adequately explain the card-testing sequence and repeated AVS/CVV failures within the packet.\"}],\"policy_citations\":[\"R03\",\"R07\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"decline_block\",\"priority\":\"P0\",\"evidence_gaps\":[\"Check whether the customer confirms the approved orders and card ownership through step-up verification.\",\"Query fulfillment status and shipment destination for orders 350949 and 350948.\",\"Check payment-network or issuer fraud feedback for card_id 52194.\"],\"memo_markdown\":\"**Assessment:** High-likelihood stolen-card pattern. R07 records 4 declined attempts on card/device 52194/5181577 in the prior 24h, followed by an approval. R03 also fired because the card BIN country is US while the IP country is CA, with AVS=N and CVV=N. Approved electronics orders 350949 and 350948 occurred at 2025-12-09 12:07:04 and 2025-12-09 04:32:32; the same device was used for the declined attempts.\\n\\nA traveler explanation is possible for the foreign IP, but it does not explain the card-testing sequence and repeated verification failures. There is no linkage to other accounts, no credential-change event, and no repayment history available. The two independent corroborating families\u2014velocity and geography+verification\u2014support decline_block under FP-1.\"}"
+ },
+ "task": "triage_memo"
+}

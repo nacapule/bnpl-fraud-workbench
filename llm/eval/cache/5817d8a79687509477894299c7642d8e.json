@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "12e3d1ec206ad0a8556d38c3d4460f9df8285cf8503fac796d7a3c02c2356bd2",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 44959,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: geo + verification mismatch\",\"alert amount 768.86\",\"card BIN country CA vs IP country US\",\"AVS result N\",\"CVV result N\",\"alert status approved\",\"merchant category electronics\",\"account tenure_days 301\",\"n_orders_prior 2\",\"total_spent_prior 1034.7\",\"other_accounts_on_device 0\",\"other_accounts_on_ship_address 0\",\"other_accounts_same_email_root 0\",\"failed_or_written_off 0.0\",\"installments_due 3\",\"paid 3.0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The CA card used from a US IP produced AVS=N and CVV=N on an electronics order. This is one geography-plus-verification signal family, without corroboration from linkage, velocity, repayment behavior, or vendor score.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows a login event but no credential manipulation, device linkage, or account-sharing evidence. Linkage counts are 0 for device, ship address, and email root.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"Repayment history shows failed_or_written_off 0.0, late 0.0, and paid 3.0.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic is plausible because the card and IP countries differ, and no credential-change event appears in the packet. Verification typos are also a stated benign mimic, though AVS=N and CVV=N remain unresolved.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection 2\",\"FP-1 action selection 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Confirm whether the customer was traveling in the US at 2025-08-02 16:38:06.\",\"Run step-up customer verification and confirm billing address and card possession.\",\"Check issuer or processor reason details for AVS=N and CVV=N.\"],\"memo_markdown\":\"Order 26934 is a 768.86 electronics purchase approved after R03 fired for CA card BIN versus US IP with AVS=N and CVV=N. The strongest fraud hypothesis is stolen_card at medium likelihood, but only the geography-plus-verification family is present. Account-takeover and ring indicators are weak: other-account linkage counts are 0, and no credential manipulation is shown. Never-pay risk is low given failed_or_written_off 0.0, late 0.0, and paid 3.0. A traveler or verification-typo benign mimic remains plausible, but the packet does not resolve the mismatch. Recommend reversible hold_contact pending step-up verification; classify P1 because the alert amount is 768.86.\"}"
+ },
+ "task": "triage_memo"
+}

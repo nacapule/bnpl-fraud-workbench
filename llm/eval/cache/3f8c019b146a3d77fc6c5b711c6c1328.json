@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "760c0fe9a7f4c8d7350848261c23ba44a1f7e98de76681533301c26836e7c20a",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 24804,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"amount 104.43\",\"avs_result N\",\"cvv_result M\",\"card BIN country US vs IP country CA\",\"device_id 5181808\",\"other_accounts_on_device 0\",\"other_accounts_on_ship_address 0\",\"other_accounts_same_email_root 0\",\"n_orders_prior 0\",\"tenure_days 5\",\"status approved\",\"fired rule R03\",\"score 35\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The card BIN country is US while the IP country is CA, with AVS=N and CVV=M. These geography and verification signals are consistent with possible unauthorized card use.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"No credential manipulation or account events are present, and the account has no prior orders.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"No linkage is present: other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler could explain a foreign IP without credential changes, and a verification typo could explain AVS=N/CVV=M; the packet does not establish either explanation.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Perform step-up customer verification to confirm possession of the card and legitimacy of the order.\",\"Check whether the customer was traveling when the order was placed.\",\"Query prior AVS/CVV outcomes for this card or customer.\"],\"memo_markdown\":\"Order 352187 for 104.43 triggered R03 because the card BIN country is US while the IP country is CA, with AVS=N and CVV=M. This supports a medium stolen_card hypothesis, but there is no credential manipulation, no account event history, and no account linkage. A traveler or verification typo remains plausible. Because the packet cannot distinguish fraud from a benign mimic and step-up verification would be decisive, recommend hold_contact. Priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "8b2ea88e786d1c1d76740793bc472c41e451ad960008ab625fa9f8e770ad278c",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 33699,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R08 fired: ship-to address a_23860 already used by 3 distinct accounts\",\"other_accounts_on_ship_address is 2\",\"Current order amount is 81.23\",\"Current device_id is 1848327\",\"Four prior orders used device_id 1848327\",\"All listed orders have avs_result Y and cvv_result M\",\"Account has 17 prior orders and tenure_days 992\",\"repayment_history shows installments_due 44, paid 44.0, late 0.0, failed_or_written_off 0.0\",\"One prior order amount is 510.62\",\"Current order status is approved\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"med\",\"reasoning\":\"The shared ship-to address triggered R08 and is associated with 3 distinct accounts, which is consistent with possible coordinated activity. However, linkage reports other_accounts_on_device as 0 and other_accounts_same_email_root as 0, with no confirmed-fraud exposure in the packet.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The card has bin_country US, declines_on_card_24h 0, avs_result Y, and cvv_result M. The packet provides no credential or payment-behavior evidence specific to stolen-card use.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A gift-buyer explanation is possible because the ship-to address is shared, and the account has established tenure, 17 prior orders, consistent AVS/CVV results, and repayment history showing 44 paid and 0.0 late. The packet does not establish whether the address is a gift recipient's address.\"}],\"policy_citations\":[\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Verify whether the customer owns or is authorized to use ship-to address a_23860\",\"Retrieve the identities and order outcomes of the 2 other accounts linked to the ship address\",\"Check whether the current device_id 1848327 is newly associated with this account or has prior verified use\"],\"memo_markdown\":\"R08 flagged the order because ship-to address a_23860 was already used by 3 distinct accounts; linkage separately reports 2 other accounts on the ship address, with 0 other accounts on the device and 0 sharing the email root. This supports a possible synthetic-ring hypothesis, but only the device/linkage family corroborates it.\\n\\nThe benign alternative is a gift-buyer scenario. The account has 17 prior orders, tenure_days 992, consistent AVS/CVV results, and repayment history showing 44 paid, 0.0 late, and 0.0 failed_or_written_off. The packet does not confirm that the address belongs to a gift recipient.\\n\\nRecommend hold_contact for reversible verification of address authorization and the linked-account relationship. Priority P1 because a prior order amount is 510.62.\"}"
+ },
+ "task": "triage_memo"
+}

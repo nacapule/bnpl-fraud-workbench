@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "0dd85a320e951a8081d1db0afd25bfc81f0c0733a177ab82f1d615954e9af232",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 27364,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country CA vs IP country US with AVS=Y/CVV=N\",\"Alert order 105875 amount 68.26, status approved, at 2025-11-01 23:57:27\",\"Card BIN country CA and IP country US\",\"AVS result Y and CVV result N\",\"Device_id 16858 used for the alert and prior orders\",\"Other accounts on device 0; other accounts on ship address 1; other accounts same email root 0\",\"Account has n_orders_prior 5 and tenure_days 209\",\"Repayment history: failed_or_written_off 0.0, late 0.0, paid 14.0, installments_due 14\",\"Card declines_on_card_24h 0\",\"Account n_cvv_mismatch_prior 1.0 and n_avs_mismatch_prior 0.0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The CA card BIN, US IP, and CVV=N triggered R03. However, AVS=Y, declines_on_card_24h is 0, and the account shows established tenure and repayment behavior.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows no credential manipulation, device sharing, or email-root linkage; the alert uses device_id 16858.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"Linkage is limited: other accounts on device 0, other accounts on ship address 1, and other accounts same email root 0.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"Repayment history shows failed_or_written_off 0.0, late 0.0, and paid 14.0 of installments_due 14.\"},{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler is the most plausible benign mimic: foreign IP with no credential changes, stable device use, AVS=Y, and an established account with consistent repayment.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check whether the customer was traveling from CA to the US at 2025-11-01 23:57:27.\"],\"memo_markdown\":\"R03 flagged order 105875 for a CA card BIN used from a US IP with AVS=Y/CVV=N. Stolen-card risk is low: AVS passed, declines_on_card_24h is 0, the account has tenure_days 209, and repayment shows paid 14.0 with late 0.0 and failed_or_written_off 0.0. Account-takeover and synthetic-ring indicators are weak: the alert uses the established device_id 16858, other accounts on device is 0, and same email-root linkage is 0. The strongest explanation is a traveler benign mimic, which FP-1 \u00a76 identifies as foreign IP without credential changes. Recommend clear; verify travel only if operationally useful.\"}"
+ },
+ "task": "triage_memo"
+}

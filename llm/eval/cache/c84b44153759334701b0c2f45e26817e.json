@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "dc2186942f0a81aa91546a3afae732bec3d6bf139c9e23125fe5efcd985a590c",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 331244,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R01 fired: credential/contact change 11.9h before order on 348d-old account, order from new device d_5181336\",\"password_change at 2026-02-15 12:57:05 from device 5181336 and IP 77.205.112.211\",\"address_add at 2026-02-15 13:57:05 from device 5181336 and IP 77.205.112.211\",\"Order 350199 amount 826.21 from IP country RU; KYC country US\",\"Order 350199 AVS result Y and CVV result M\",\"other_accounts_on_device: 0\",\"other_accounts_on_ship_address: 0\",\"other_accounts_same_email_root: 0\",\"repayment_history: failed_or_written_off 0.0, installments_due 9, late 0.0, paid 9.0\"],\"hypotheses\":[{\"pattern\":\"account_takeover\",\"likelihood\":\"high\",\"reasoning\":\"A password change and address add preceded an order from a new device and RU IP on a US account. The sequence is consistent with account takeover, though no cross-account linkage is present.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The card BIN country is US, AVS result is Y, CVV result is M, and declines_on_card_24h is 0; the packet does not provide strong stolen-card evidence.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows no linkage to other accounts on the device, ship address, or email root.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler or new-phone explanation could account for foreign IP or a new device, but the password change and address add are not fully explained by the listed benign mimics.\"}],\"policy_citations\":[\"R01\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Confirm whether the customer authorized the password change and address add.\",\"Verify customer possession of the account and payment instrument through step-up verification.\",\"Check whether the new device and ship address are recognized by the customer.\"],\"memo_markdown\":\"Order 350199 is a P1 review because the amount is 826.21 and the account shows a credential/contact change 11.9h before purchase from new device 5181336 and RU IP 77.205.112.211. A password change and address add occurred on 2026-02-15 from that device and IP. Account takeover is the leading hypothesis. However, AVS is Y, CVV is M, repayment history shows 9 paid and 0 late, and linkage counts are 0 across device, ship address, and email root. A traveler or new-phone benign mimic remains possible but does not fully explain the credential and address events. Recommend reversible hold_contact pending step-up verification; the verification result should distinguish authorized account activity from takeover.\",\"}"
+ },
+ "task": "triage_memo"
+}

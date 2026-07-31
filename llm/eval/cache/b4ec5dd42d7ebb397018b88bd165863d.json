@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "1596a5eb4a182b7b0363c23c8c80442f2ee09d6f9aa93441599c4c7bd7716f88",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 26266,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 351883 was approved at 2025-11-03 14:26:40 for 87.65.\",\"R06 fired: \\\"email identity cost-reduction: disposable_domain=False, shared_root_accounts=80\\\".\",\"R08 fired: \\\"ship-to address a_2899018 already used by 27 distinct accounts\\\".\",\"linkage.other_accounts_on_ship_address is 39.\",\"linkage.other_accounts_same_email_root is 79.\",\"linkage.other_accounts_on_device is 2.\",\"AVS result is Y and CVV result is M.\",\"The account has 1 prior order and tenure_days is 17.\",\"Repayment history shows paid 1.0, late 0.0, and failed_or_written_off 0.0.\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The shared email root and ship-to address each link to multiple accounts above the FP-1 escalation threshold. R06 and R08 also identify identity-cost reduction and a shared drop address.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer or mover explanation could account for a non-home ship-to address, but the packet does not establish either mimic and does not explain the extensive email-root linkage.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the linked accounts on email root julianjackson and ship-to address a_2899018 for shared order activity, fraud outcomes, and fulfillment status.\",\"Check whether linked accounts share payment instruments, devices, or credential-change events.\",\"Confirm whether merchant bright-goods-52 has related linked-order or fraud activity.\"],\"memo_markdown\":\"Order 351883 was approved for 87.65. AVS is Y and CVV is M. R06 fired for shared_root_accounts=80, and R08 fired because ship-to address a_2899018 was already used by 27 distinct accounts. Linkage also reports 39 other accounts on the ship address and 79 other accounts on the same email root; device linkage is 2 other accounts.\\n\\nSynthetic_ring is the leading hypothesis. The email-root and ship-address linkage meet FP-1 action selection step 1 criteria for escalation based on multi-account linkage. Prior repayment shows paid 1.0, late 0.0, and failed_or_written_off 0.0, but this does not resolve the linkage concern. A gift-buyer or mover explanation is possible but is not established in the packet and does not explain the email-root linkage.\\n\\nRecommend escalate for linked-account review. Priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

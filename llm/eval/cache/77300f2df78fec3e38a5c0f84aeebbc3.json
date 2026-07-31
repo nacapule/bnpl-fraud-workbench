@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "95875603a6f57d2c6f53b0f214767aed89a588149a7daff20999aa0f951d420f",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 36517,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country US vs IP country CA with AVS=N/CVV=M\",\"Order 144468 was approved at 2025-12-03 23:59:38 for 100.79\",\"The account has tenure_days of 658 and n_orders_prior of 6\",\"account_events_90d is empty\",\"All listed last_orders use device_id 19909 and ip_country CA\",\"The prior listed orders have AVS=Y and CVV=M\",\"linkage shows other_accounts_on_device 0, other_accounts_on_ship_address 2, and other_accounts_same_email_root 0\",\"repayment_history shows installments_due 12, paid 12.0, late 0.0, and failed_or_written_off 0.0\",\"declines_on_card_24h is 0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"Traveler is the most plausible benign mimic: CA IP activity is consistent across the listed order history, device_id 19909 is stable, and account_events_90d is empty. The AVS=N result can be consistent with the stated verification-typo benign noise rate, while CVV=M and repayment history are favorable.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The current US BIN/CA IP and AVS=N signal supports a verification concern, but there is no credential manipulation, device linkage, velocity rule, adverse repayment behavior, or vendor score corroboration.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"account_events_90d is empty and the listed orders retain device_id 19909 with ip_country CA; the packet does not show credential manipulation or a new device.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 \u00a76 traveler\",\"FP-1 \u00a76 verification typos\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the AVS=N response reflects an issuer/address-entry mismatch for order 144468.\",\"Check fulfillment status for order 144468 before any irreversible action.\"],\"memo_markdown\":\"R03 fired on order 144468: US BIN versus CA IP with AVS=N/CVV=M. The account shows stable CA IP activity and device_id 19909 across the listed orders, with no account events in the last 90 days. Repayment history shows 12.0 paid, 0.0 late, and 0.0 failed_or_written_off. Linkage does not show other accounts on the device or email root. The record most closely fits the FP-1 \u00a76 traveler mimic, with the AVS result potentially consistent with the stated verification-typo noise. Clear as benign; a verification check can document the isolated AVS discrepancy.\"}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "266bac24554709e3e4927bac2c861d688bfe3a1500fbb8cb9726a2e2c3b5f392",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 46035,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country US vs IP country CA with AVS=N/CVV=M\",\"Current order amount 892.92 in electronics\",\"Account tenure_days 732\",\"repayment_history shows installments_due 16, paid 16.0, late 0.0, failed_or_written_off 0.0\",\"account_events_90d is empty\",\"other_accounts_on_device 0\",\"other_accounts_same_email_root 0\",\"n_avs_mismatch_prior 0.0\",\"n_cvv_mismatch_prior 0.0\",\"declines_on_card_24h 0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler is plausible because the IP country is CA while the card BIN country is US, with no account events or device/email-root sharing. The prior repayment and verification history is clean; the current AVS=N may also fit the stated verification-typo benign mimic.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The US card BIN and CA IP with AVS=N are consistent with possible stolen-card use, but CVV=M, repeated prior approvals from the same device and IP country, and clean repayment history weaken this hypothesis.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"There are no recorded account events, and the packet shows no credential manipulation or device sharing.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"Linkage counts do not support a ring: other_accounts_on_device is 0 and other_accounts_same_email_root is 0.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"Repayment history shows paid 16.0, late 0.0, and failed_or_written_off 0.0.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"clear\",\"priority\":\"P1\",\"evidence_gaps\":[\"Confirm whether the customer was traveling in CA at 2026-03-09 19:23:55.\",\"Verify the billing address behind the current AVS=N result.\"],\"memo_markdown\":\"R03 fired on a US card BIN versus CA IP with AVS=N/CVV=M for a 892.92 electronics order. The strongest explanation is benign travel, with the AVS result potentially representing the stated verification-typo mimic. The account has tenure_days 732, an empty account_events_90d record, no device or email-root sharing, and repayment history of paid 16.0, late 0.0, and failed_or_written_off 0.0. Prior AVS and CVV mismatch counts are both 0.0, so the current AVS result merits documentation but does not independently establish fraud. With only the geography+verification signal family present, decline_block is not supported. Recommend clear, with targeted travel and billing-address checks if operationally available.\"}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "936b3ce68e78107428aac4c23fe35522872c9037354fb0f712bbdf29069d1df4",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 44765,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert R09 repeat INR disputes; rationale: 3 prior item-not-received chargebacks on this account with healthy repayment\",\"alert amount 247.11\",\"alert status approved\",\"alert score 45\",\"AVS result Y\",\"CVV result M\",\"IP country US\",\"card BIN country US\",\"other accounts on device 0\",\"other accounts same email root 0\",\"other accounts on ship address 1\",\"installments due 9\",\"paid 9.0\",\"late 0.0\",\"failed or written off 0.0\",\"tenure days 833\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies repeat item-not-received chargebacks, which is direct evidence consistent with INR abuse. Healthy repayment and no device or email-root linkage reduce confidence that the current order is fraudulent.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The card BIN country and IP country are both US, AVS is Y, CVV is M, and declines on card 24h is 0.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"There are 0 other accounts on the device and 0 other accounts on the same email root; the packet does not show multi-account linkage.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A benign established-account explanation is plausible because tenure is 833 days, paid is 9.0, late is 0.0, and failed or written off is 0.0. The repeat INR disputes remain unexplained by the packet's listed benign mimics.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 \u00a76.4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check the evidence and disposition for the 3 prior item-not-received chargebacks.\",\"Verify delivery, tracking, and customer confirmation for order 187458.\",\"Check whether the other account on ship address 1 is related to the customer.\"],\"memo_markdown\":\"R09 fired for 3 prior item-not-received chargebacks despite healthy repayment. This supports an INR-abuse hypothesis at medium likelihood, but the current order has AVS Y, CVV M, US IP country, US card BIN country, and no other accounts on the device or same email root. The account also shows tenure of 833 days, paid 9.0, late 0.0, and failed or written off 0.0. A benign established-account explanation remains plausible, but the historical INR activity is not explained by the listed benign mimics. Recommend hold_contact for reversible verification focused on the prior INR claims and current-order delivery evidence. Priority P2.\"}"
+ },
+ "task": "triage_memo"
+}

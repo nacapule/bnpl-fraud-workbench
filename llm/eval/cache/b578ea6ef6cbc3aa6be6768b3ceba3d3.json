@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "7820e4008d844b9d84e37f60b44516feb6c137cfd5f772d08ea3e67f07f1be72",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 46156,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"R03 fired: geo + verification mismatch\",\n    \"card BIN country CA vs IP country US with AVS=N/CVV=M\",\n    \"amount 224.75\",\n    \"card network amex\",\n    \"declines_on_card_24h: 0\",\n    \"account_events_90d: []\",\n    \"n_orders_prior: 0\",\n    \"total_spent_prior: 0.0\",\n    \"other_accounts_on_device: 0\",\n    \"other_accounts_on_ship_address: 0\",\n    \"other_accounts_same_email_root: 0\",\n    \"order status approved\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"stolen_card\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"The Canadian card BIN, US IP, AVS=N, and CVV=M support a payment-instrument concern. However, there are no prior card declines and no corroborating device, linkage, velocity, or repayment signals.\"\n    },\n    {\n      \"pattern\": \"account_takeover\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"The packet has no account events in the last 90 days and no linked accounts on the device, ship address, or email root.\"\n    },\n    {\n      \"pattern\": \"synthetic_ring\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"There are 0 other accounts on the device, 0 other accounts on the ship address, and 0 other accounts sharing the email root.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"A traveler could explain the foreign IP without credential changes, and a verification typo is a known benign mimic for AVS/CVV mismatch. The packet does not establish which explanation applies.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R03\",\n    \"FP-1 \u00a71\",\n    \"FP-1 \u00a75\",\n    \"FP-1 \u00a76\"\n  ],\n  \"recommended_action\": \"hold_contact\",\n  \"priority\": \"P2\",\n  \"evidence_gaps\": [\n    \"Confirm customer travel or location context for the US IP.\",\n    \"Run step-up customer verification of card ownership and billing details.\",\n    \"Check whether AVS=N and CVV=M reflect a verification typo or an unauthorized card use.\"\n  ],\n  \"memo_markdown\": \"R03 flagged order 31859 for geo and verification mismatch: the card BIN country is CA while the IP country is US, with AVS=N and CVV=M. The order amount is 224.75 and status is approved.\\n\\nStolen_card is a medium-likelihood hypothesis, but the packet contains no corroborating linkage, velocity, credential-manipulation, repayment, or vendor signals. Account takeover and synthetic ring are low likelihood; account_events_90d is empty and linked-account counts are 0. A benign traveler explanation and a known verification-typo mimic remain plausible.\\n\\nRecommend **hold_contact** for reversible step-up verification. Verification should distinguish legitimate travel and card ownership from unauthorized use. Priority: P2.\"\n}"
+ },
+ "task": "triage_memo"
+}

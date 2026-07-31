@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "90d0c1cac18faf0d8806544bc6bef4956c8ecb8733da38d129508a4376c4a5e1",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 27557,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 351940 was approved at 2025-10-24 07:42:21 for 88.29.\",\"AVS result was N and CVV result was N.\",\"R06 fired: email identity cost-reduction: disposable_domain=False, shared_root_accounts=80.\",\"R08 fired: ship-to address a_2899019 already used by 14 distinct accounts.\",\"Linkage shows other_accounts_on_ship_address: 39.\",\"Linkage shows other_accounts_same_email_root: 79.\",\"Linkage shows other_accounts_on_device: 2.\",\"The merchant was swift-trading-12 in the jewelry category.\",\"The IP country was US and the card BIN country was US.\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The ship-to address linkage is 39 and same-email-root linkage is 79, exceeding the multi-account linkage threshold. R06 and R08 independently flag identity-root and shared-address linkage.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"AVS result N and CVV result N support a payment-verification concern, but the packet provides no card decline history or vendor scores.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer or mover explanation could account for a non-home ship-to address, but it does not explain shared_root_accounts=80 and other_accounts_same_email_root: 79.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the 39 other accounts on ship address 2899019 for confirmed-fraud outcomes and shared payment instruments.\",\"Review the 79 other accounts sharing the email root for creation timing, orders, and confirmed-fraud outcomes.\",\"Verify whether swift-trading-12 shows suspected merchant complicity or related flagged orders.\",\"Confirm the apparent timestamp inconsistency between signup_ts 2025-11-07 19:39:33 and order timestamp 2025-10-24 07:42:21.\"],\"memo_markdown\":\"Order 351940 was approved for 88.29 at swift-trading-12. AVS and CVV both returned N. R06 records shared_root_accounts=80, and R08 records ship-to address a_2899019 used by 14 distinct accounts. Linkage additionally shows 39 other accounts on the ship address and 79 on the same email root.\\n\\nSynthetic_ring is the leading hypothesis. Address and email-root linkage meet FP-1\u2019s multi-account-ring escalation condition. AVS/CVV failures add a separate stolen-card concern, though available card history shows declines_on_card_24h: 0. A benign gift-buyer or mover explanation is weak because it does not explain the email-root and address linkage.\\n\\nRecommend escalation for ring review. Validate linked-account outcomes, merchant relationships, and the signup/order timestamp discrepancy before a final account-level disposition.\"}"
+ },
+ "task": "triage_memo"
+}

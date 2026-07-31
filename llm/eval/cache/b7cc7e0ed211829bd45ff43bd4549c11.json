@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "a3abdd3695cf75c1a7bd8776e0ef7db2ce678d7edda54108253f9dd39db85697",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 56353,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Alert 8353 for order 305024 is approved for 265.74 at 2026-05-11 08:17:07\",\"R09 fired: repeat INR disputes; rationale states 2 prior item-not-received chargebacks with healthy repayment\",\"AVS result is Y and CVV result is M\",\"IP country is CA; KYC country is US; card BIN country is US\",\"Device 37311 has 0 other accounts; ship address 26899 has 1 other account; email root has 0 other accounts\",\"Repayment history shows 14 installments due, 14.0 paid, 0.0 late, and 0.0 failed_or_written_off\",\"Vendor scores are null\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies 2 prior item-not-received chargebacks, making INR abuse plausible. Healthy repayment and consistently successful AVS results reduce confidence, and no multi-account linkage is present.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler mimic is plausible because the account has a US KYC country and US card BIN country but IP country CA, while AVS is Y and account_events_90d lists recurring logins from device 37311. The prior INR disputes remain unexplained.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 action selection \u00a74\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the 2 prior item-not-received chargebacks for delivery confirmation, refund outcome, and customer contact history.\",\"Run step-up verification and confirm whether the customer recognizes order 305024, merchant lux-province-10, and ship address 26899.\",\"Check whether the CA IP reflects the customer\u2019s travel or authorized access context.\"],\"memo_markdown\":\"Order 305024 is approved for 265.74 and triggered R09 for 2 prior item-not-received chargebacks. INR abuse is a medium-likelihood hypothesis, but the account shows healthy repayment: 14 installments due, 14.0 paid, 0.0 late, and 0.0 failed_or_written_off. AVS is Y and CVV is M. The US KYC country and US card BIN country alongside CA IP country support a possible traveler mimic. Device linkage is limited: 0 other accounts on device 37311, 1 other account on ship address 26899, and 0 other accounts on the same email root. No ring, merchant-complicity, or aggregate confirmed-fraud evidence is provided. Hold pending step-up verification and review of the 2 prior INR disputes.\"}"
+ },
+ "task": "triage_memo"
+}

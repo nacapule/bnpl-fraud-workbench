@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "0dd85a320e951a8081d1db0afd25bfc81f0c0733a177ab82f1d615954e9af232",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 38314,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert 2894: order_id 105875 was approved at 2025-11-01 23:57:27 for 68.26 at pure-row-52 in beauty\",\"R03 fired: card BIN country CA vs IP country US with AVS=Y/CVV=N\",\"device_id 16858 was used for the alert and the listed prior orders\",\"account tenure_days is 209 with n_orders_prior 5 and total_spent_prior 509.91\",\"n_cvv_mismatch_prior is 1.0 and n_avs_mismatch_prior is 0.0\",\"repayment history shows installments_due 14, paid 14.0, late 0.0, and failed_or_written_off 0.0\",\"linkage shows other_accounts_on_device 0, other_accounts_on_ship_address 1, and other_accounts_same_email_root 0\",\"card declines_on_card_24h is 0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler mimic explains the CA card BIN and CA KYC country with a US IP, while the packet shows no credential-change event and continued use of device_id 16858. The CVV=N is consistent with the stated verification-typo mimic and the account already has n_cvv_mismatch_prior of 1.0, with AVS=Y.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The geo-plus-verification rule supports this possibility, but it is not corroborated by device linkage, velocity, card declines, repayment behavior, or vendor scores in the packet.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection \u00a73\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether order_id 105875 has entered fulfillment or remains cancellable.\",\"If operationally needed, confirm cardholder verification for the CVV=N result on order_id 105875.\"],\"memo_markdown\":\"R03 fired because the CA card BIN was used from a US IP with AVS=Y and CVV=N. The benign traveler explanation is most plausible: the account has kyc_country CA, uses device_id 16858 across the listed orders, and the packet contains no credential-change event. CVV=N also has a documented benign verification-typo mimic; n_cvv_mismatch_prior is 1.0 while n_avs_mismatch_prior is 0.0.\\n\\nThere is no multi-account ring evidence: other_accounts_on_device is 0 and other_accounts_same_email_root is 0. Repayment history shows paid 14.0, late 0.0, and failed_or_written_off 0.0. Clear under FP-1 \u00a76 and action-selection \u00a73; no second independent fraud signal family supports decline_block.\"}"
+ },
+ "task": "triage_memo"
+}

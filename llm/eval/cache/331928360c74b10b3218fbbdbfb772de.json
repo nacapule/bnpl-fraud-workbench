@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "9fbfa5bd859222f3e6e10da531cd8ed9cb1a3994b35f98e23d20f9065cf5ef55",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 30419,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"account email graysongomez3490@mailinator.com\",\"email_domain mailinator.com\",\"tenure_days 6\",\"n_orders_prior 0\",\"total_spent_prior 0.0\",\"order amount 74.56\",\"avs_result N\",\"cvv_result M\",\"ship-to address a_2899016 already used by 27 distinct accounts\",\"other_accounts_on_device 2\",\"other_accounts_on_ship_address 39\",\"other_accounts_same_email_root 0\",\"fired rule R06 with disposable_domain=True and shared_root_accounts=1\",\"fired rule R08 for shared drop address\",\"order status approved\",\"merchant urban-goods-12\",\"merchant_category sports\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The disposable email domain and shared drop address are independent identity and linkage signals. The ship-to address is linked to 39 other accounts, meeting FP-1's multi-account linkage threshold for escalation.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The AVS result is N and CVV result is M, but there are 0 declines on the card in 24h and no prior repayment or order history to corroborate stolen-card behavior.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift buyer could explain a ship-to address that is not the customer's home, but the packet does not establish that explanation and it does not explain the disposable email domain or shared-address linkage.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 \u00a76.3\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query the account and order graph for the identities and outcomes of the 39 other accounts using ship-to address a_2899016.\",\"Check whether the merchant urban-goods-12 is associated with the shared ship-to address or other linked accounts.\"],\"memo_markdown\":\"Order 351641 is approved for 74.56 and merits escalation. R06 flags disposable email identity cost reduction; R08 flags ship-to address a_2899016 as already used by 27 distinct accounts. Linkage shows 39 other accounts on the ship address, which meets FP-1's multi-account ring escalation threshold. The account has tenure_days 6 and n_orders_prior 0, with no repayment history available. AVS is N and CVV is M, but the card has 0 declines in 24h. Synthetic ring is the leading hypothesis at high likelihood; stolen_card is low likelihood. A gift-buyer benign mimic is possible but does not explain the disposable email domain or address linkage. Human analyst review should examine the linked-account graph and merchant association.\"}"
+ },
+ "task": "triage_memo"
+}

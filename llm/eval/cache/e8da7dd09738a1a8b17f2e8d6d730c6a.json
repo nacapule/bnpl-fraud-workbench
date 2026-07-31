@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "ab8edc7a24f38b96f2ad1610c25d5c193450a5bb260b13e36f76ee681666e76c",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 26316,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 350949 was approved at 2025-12-09 12:07:04 for 668.38 in electronics\",\"AVS result was N and CVV result was N for order_id 350949\",\"card BIN country was US while IP country was CA\",\"4 declined attempts on this card/device in the prior 24h, then this approval\",\"order_id 350948 was approved at 2025-12-09 04:32:32 for 883.55 with AVS=N and CVV=N\",\"device_id 5181577 was used for the declined attempts and both approved electronics orders\",\"account tenure_days was 2\",\"other_accounts_on_device was 0, other_accounts_on_ship_address was 0, and other_accounts_same_email_root was 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"high\",\"reasoning\":\"The approved electronics order has US BIN versus CA IP with AVS=N/CVV=N, and follows 4 declined attempts on the same card/device in the prior 24h. Geography+verification and velocity independently corroborate a card-testing pattern.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler could explain a CA IP against a US BIN, but it does not explain the 4 declined attempts followed by approvals with AVS=N/CVV=N. The verification-typo mimic is stated at ~3% and does not explain the velocity pattern.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"There is no multi-account linkage: other_accounts_on_device, other_accounts_on_ship_address, and other_accounts_same_email_root are all 0.\"}],\"policy_citations\":[\"R03\",\"R07\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 action selection step 2\"],\"recommended_action\":\"decline_block\",\"priority\":\"P1\",\"evidence_gaps\":[\"Confirm whether fulfillment for order_id 350949 is imminent or has begun.\",\"Check issuer or payment-network feedback for card_id 52194.\",\"Review the delivery destination and shipment-routing details for ship_address_id 2898903.\"],\"memo_markdown\":\"**Recommendation: decline_block \u2014 P1**\\n\\nOrder 350949 was approved for 668.38 in electronics at 2025-12-09 12:07:04, with AVS=N and CVV=N. R03 fired because the card BIN country is US and the IP country is CA. R07 fired because 4 attempts on the same card/device were declined in the prior 24h before approval.\\n\\nThe same device_id 5181577 also placed an approved 883.55 electronics order at 2025-12-09 04:32:32 with AVS=N/CVV=N. This supports stolen_card as the top hypothesis at high likelihood through two independent signal families: geography+verification and velocity. A traveler explanation can account for foreign IP, but not the preceding decline sequence and repeated verification failures. No linkage supports a ring escalation.\\n\\nHuman analyst should freeze the plan/block the account pending review and check fulfillment status immediately.\"}"
+ },
+ "task": "triage_memo"
+}

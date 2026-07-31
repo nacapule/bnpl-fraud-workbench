@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "0f4c0f59fec2c3ba8ea64e49547656faf05c105349be06ba776448c2c5f34ceb",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 47576,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"R03 fired: card BIN country US vs IP country ID with AVS=N/CVV=N\",\n    \"R07 fired: 7 declined attempts on this card/device in the prior 24h, then this approval\",\n    \"Order 350421 amount 364.1 was approved at 2025-08-04 19:30:26\",\n    \"Device 5181414 was used on the listed orders\",\n    \"Account tenure_days is 2\",\n    \"Linkage shows other_accounts_on_device 0, other_accounts_on_ship_address 0, and other_accounts_same_email_root 0\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"stolen_card\",\n      \"likelihood\": \"high\",\n      \"reasoning\": \"The card-testing burst, followed by an approval, corroborates a stolen-card hypothesis with velocity and geography+verification signal families. The card BIN country is US while the IP country is ID, with AVS=N and CVV=N.\"\n    },\n    {\n      \"pattern\": \"account_takeover\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"The account is 2 days old and shows activity from IP country ID, but account_events_90d is empty and the packet does not show credential manipulation.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"A traveler mimic could explain a foreign IP, but it does not adequately explain 7 declined attempts on this card/device followed by approval and AVS=N/CVV=N.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R03\",\n    \"R07\",\n    \"FP-1 \u00a71\",\n    \"FP-1 \u00a75\",\n    \"FP-1 \u00a76\"\n  ],\n  \"recommended_action\": \"decline_block\",\n  \"priority\": \"P0\",\n  \"evidence_gaps\": [\n    \"Check whether the customer confirms the 7 declined attempts and the approved order\",\n    \"Verify whether the ship address and device are known to the customer\",\n    \"Check cardholder or issuer confirmation for card 52031\"\n  ],\n  \"memo_markdown\": \"Order 350421 is approved for 364.1 and is flagged by R03 and R07. The card BIN country is US while the IP country is ID, with AVS=N and CVV=N. R07 reports 7 declined attempts on this card/device in the prior 24h, followed by this approval. The account is 2 days old, and device 5181414 was used on the listed orders.\\\\n\\\\nTop hypothesis: stolen_card, high likelihood. Velocity plus geography+verification signals independently corroborate the pattern. Account takeover is medium likelihood, but the packet shows no credential manipulation. A traveler benign mimic is low likelihood because it does not explain the card-testing burst and failed verification results.\\\\n\\\\nRecommend decline_block under FP-1: decline the order, freeze the plan, and block the account pending review. Priority P0 reflects the active burst and approved fulfillment exposure. Human analyst decision required.\"\n}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "cb0f135442a8908ba9d28565cb763ce97ecc9137fc556cb2b156be6b721c596a",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 35617,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R02 multi-account device: 6 accounts have transacted on device d_5182248\",\"R06 identity cost reduction: shared_root_accounts=95\",\"R08 shared drop address: ship-to address a_2899501 used by 44 distinct accounts\",\"R10 promo farming cluster: 44 linked redemptions\",\"Account tenure is 2 days with n_orders_prior=0\",\"Order amount is 61.47 and alert score is 130\",\"Order status is approved\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The device, ship-to address, and email root link to multiple accounts, with promo activity inside the same cluster. This is consistent with coordinated synthetic identity or promo-farming activity.\"},{\"pattern\":\"promo_abuse\",\"likelihood\":\"high\",\"reasoning\":\"R10 identifies promo redemption inside a device/address cluster with 44 linked redemptions. The shared linkage supports organized promo abuse.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet contains no account events showing credential manipulation, and the linkage pattern is more consistent with a multi-account cluster.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler, mover, gift buyer, hardship defaulter, verification typo, or new-phone explanation does not adequately explain the device, address, email-root, and promo linkages.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"R10\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P1\",\"evidence_gaps\":[\"Query confirmed-fraud outcomes for accounts linked by device d_5182248, address a_2899501, and the email root.\",\"Check whether the linked redemptions share merchant, payment, or fulfillment patterns.\",\"Review merchant-level evidence for suspected complicity.\"],\"memo_markdown\":\"The order is approved for 61.47 from a 2-day-old account with no prior orders. Multiple independent linkage signals are present: 6 accounts on the device, 44 distinct accounts on the ship-to address, and 95 accounts sharing the email root. R10 also identifies 44 linked promo redemptions in the device/address cluster. The combined pattern is highly consistent with a synthetic ring and organized promo abuse; benign mimics do not explain the cross-account linkage. Recommend **escalate** under FP-1 because linkage counts meet the multi-account-ring criterion. Priority: **P1** due to the growing cluster and potential broader exposure.\"}"
+ },
+ "task": "triage_memo"
+}

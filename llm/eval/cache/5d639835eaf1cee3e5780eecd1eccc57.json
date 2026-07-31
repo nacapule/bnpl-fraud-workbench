@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "9ac74bbe867f508fbaf793fda4dced3e300ecc5e75bb99ae9ac52a37651139b8",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 45112,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R02: 6 accounts have transacted on device d_5182249 as of this order\",\"R06: shared_root_accounts=95\",\"R08: ship-to address a_2899501 already used by 46 distinct accounts\",\"R10: promo redeemed inside a device/address cluster with 46 linked redemptions\",\"Alert score is 130 and status is approved\",\"Order amount is 98.23\",\"Account tenure is 3 days with n_orders_prior=0\",\"AVS result is Y and CVV result is M\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The device, ship-to address, email root, and promo redemption linkages indicate a multi-account cluster. R02, R06, R08, and R10 provide corroboration across device/linkage and promo-related signals.\"},{\"pattern\":\"promo_abuse\",\"likelihood\":\"med\",\"reasoning\":\"The packet identifies a promo farming cluster with 46 linked redemptions. The broader multi-account linkage makes synthetic_ring more plausible as the primary pattern.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler, mover, gift buyer, hardship defaulter, or new phone could explain an isolated anomaly, but the packet provides no benign explanation for the device, address, email-root, and promo cluster linkages.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"R10\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 \u00a7ACTION SELECTION 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check whether the 6 accounts on device d_5182249, 46 accounts using ship-to address a_2899501, or 95 shared-root accounts contain confirmed fraud.\",\"Check merchant-level linkage for atlas-trading-87 and the linked promo redemptions.\",\"Review fulfillment status for order 352658.\"],\"memo_markdown\":\"Order 352658 is a high-likelihood synthetic-ring candidate. R02 reports 6 accounts transacting on device d_5182249; R08 reports the ship-to address a_2899501 used by 46 distinct accounts; R06 reports shared_root_accounts=95; and R10 identifies 46 linked promo redemptions. The account is only 3 days old with n_orders_prior=0, while the order is approved for 98.23. AVS is Y and CVV is M, so verification results do not independently establish payment fraud. The linkage evidence meets FP-1 escalation criteria for a multi-account ring. Escalate for human review, including confirmation of fraud among linked accounts and any merchant-level involvement.\"}"
+ },
+ "task": "triage_memo"
+}

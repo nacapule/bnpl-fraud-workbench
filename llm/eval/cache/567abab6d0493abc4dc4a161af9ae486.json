@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "2cf1b5d71434e65662406f068d5bff290b105abf3542766bf4ea7128f563c752",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 29995,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R06 fired: email identity cost-reduction; disposable_domain=True; shared_root_accounts=1\",\"R08 fired: ship-to address a_2899016 already used by 32 distinct accounts\",\"other_accounts_on_device=2\",\"other_accounts_on_ship_address=39\",\"email_domain=mailinator.com\",\"amount=312.63\",\"status=approved\",\"avs_result=Y\",\"cvv_result=M\",\"ip_country=US\",\"bin_country=US\",\"account_events_90d=[]\",\"failed_or_written_off=0.0\",\"installments_due=6\",\"late=0.0\",\"paid=6.0\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The disposable email domain and heavily shared ship-to address support coordinated multi-account activity. Address linkage meets the escalation threshold, although the packet does not establish merchant complicity.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift buyer could explain a ship-to address that is not the customer\u2019s home, but the disposable email domain and shared-address linkage are not explained by that mimic.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"No account events are present, and the device, US geography, AVS result, and repayment history do not indicate credential compromise.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"AVS result is Y, CVV result is M, declines_on_card_24h is 0, and the card and account share US geography.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"The repayment history shows failed_or_written_off=0.0, late=0.0, and paid=6.0.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a75\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Query the linked accounts using ship_address_id 2899016 to confirm whether at least 3 accounts share coordinated identifiers or transaction behavior.\",\"Check whether merchant urban-haus-62 is associated with the linked accounts or prior confirmed-fraud orders.\"],\"memo_markdown\":\"Order 351771 is approved for 312.63 and triggered R06 and R08. The disposable mailinator.com domain, shared-root account signal, and ship-to address a_2899016 linkage across 39 other accounts support a synthetic-ring hypothesis. The device has 2 other accounts, while the address has 39 other accounts. AVS is Y, CVV is M, geography is US-to-US, and repayment history shows 6 paid installments with no late or failed/written-off payments, weakening stolen-card, account-takeover, and never-pay hypotheses. A gift-buyer explanation is possible but does not explain the disposable domain or address concentration. Escalate because the address linkage meets FP-1\u2019s multi-account-ring threshold. Priority is P2 because no fulfillment-imminent or active-burst fact is provided.\"}"
+ },
+ "task": "triage_memo"
+}

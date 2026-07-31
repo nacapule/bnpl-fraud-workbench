@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "b3828372714c57da09dd547c3331c15a1fe67ea82127e77d83c5395d06e9be04",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 39301,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"R03 fired: card BIN country CA vs IP country US with AVS=Y/CVV=N\",\n    \"R09 fired: 2 prior item-not-received chargebacks on this account with healthy repayment\",\n    \"Alert score 80 and band review\",\n    \"Alert amount 127.91\",\n    \"Account tenure_days 649\",\n    \"Account n_orders_prior 2\",\n    \"Account n_avs_mismatch_prior 0.0\",\n    \"Account n_cvv_mismatch_prior 0.0\",\n    \"Repayment installments_due 6, paid 6.0, late 0.0, failed_or_written_off 0.0\",\n    \"other_accounts_on_device 0\",\n    \"other_accounts_on_ship_address 1\",\n    \"other_accounts_same_email_root 0\",\n    \"Card declines_on_card_24h 0\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"inr_abuse\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"R09 identifies 2 prior item-not-received chargebacks, which supports possible INR abuse. Healthy repayment and tenure_days 649 reduce confidence that this is an established repayment-failure pattern.\"\n    },\n    {\n      \"pattern\": \"stolen_card\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"The card BIN country is CA while the IP country is US, and CVV=N. However, AVS=Y, declines_on_card_24h is 0, and prior AVS/CVV mismatch counts are 0.0.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"A traveler mimic could explain the CA card BIN and US IP country. The AVS/CVV mismatch may also fit the stated verification-typo mimic, but the 2 prior item-not-received chargebacks remain unexplained.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R03\",\n    \"R09\",\n    \"FP-1 \u00a76\"\n  ],\n  \"recommended_action\": \"hold_contact\",\n  \"priority\": \"P2\",\n  \"evidence_gaps\": [\n    \"Confirm whether the 2 prior item-not-received chargebacks were adjudicated as confirmed fraud or customer-valid disputes\",\n    \"Check customer travel or location context for the US IP country\",\n    \"Perform step-up customer verification focused on possession of the card and order receipt\"\n  ],\n  \"memo_markdown\": \"Alert 6664 concerns approved order 241818 for 127.91. R03 fired on CA card BIN versus US IP country with AVS=Y/CVV=N. R09 fired because the account has 2 prior item-not-received chargebacks with healthy repayment. INR abuse is a medium-likelihood hypothesis; stolen card is low likelihood because AVS=Y, declines_on_card_24h is 0, and prior AVS/CVV mismatch counts are 0.0. A traveler or verification-typo benign mimic is also medium likelihood, but does not explain the prior INR disputes. Linkage is limited: other_accounts_on_device is 0, other_accounts_same_email_root is 0, and other_accounts_on_ship_address is 1. Recommend hold_contact for reversible step-up verification. Priority P2.\"\n}"
+ },
+ "task": "triage_memo"
+}

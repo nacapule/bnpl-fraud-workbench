@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "148a9296726b7432909804262d030023c7ebdcef90ef5531e2b0fca4c5800c29",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 31316,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: \\\"2 prior item-not-received chargebacks on this account with healthy repayment\\\".\",\"Order 197687 was approved at 2026-01-19 07:28:27 for 183.89 at swift-threads-40 in apparel.\",\"AVS result is Y and CVV result is M.\",\"IP country is US, BIN country is US, and KYC country is US.\",\"Account tenure is 651 days with 3 prior orders and total_spent_prior of 657.13.\",\"Repayment history shows 5.0 paid, 5 installments_due, 0.0 late, and 0.0 failed_or_written_off.\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0.\",\"account_events_90d is empty and declines_on_card_24h is 0.\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies 2 prior item-not-received chargebacks with healthy repayment, which supports repeat INR-dispute concern. The packet does not provide a second independent corroborating fraud-signal family for the current order.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"The account has 651 days of tenure, stable US geography, AVS Y, CVV M, healthy repayment, no account events in 90 days, and no linkage to other accounts. The packet does not provide delivery or dispute-detail evidence to determine whether the prior INR claims were abusive or legitimate.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 2\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the case details and fulfillment evidence for the 2 prior item-not-received chargebacks.\",\"Step up customer verification to confirm ownership and intent for order 197687.\",\"Check whether order 197687 has shipment, delivery, or dispute activity.\"],\"memo_markdown\":\"R09 fired because the account has 2 prior item-not-received chargebacks with healthy repayment. Current order 197687 is an approved 183.89 apparel purchase at swift-threads-40, with AVS Y, CVV M, US IP, US BIN, and US KYC country.\\n\\nRepeat INR behavior is a medium-likelihood concern, but the packet provides only the R09/repayment signal family. It shows no account events in 90 days, no card declines in 24 hours, and no device, ship-address, or email-root linkage. The 651-day account tenure and repayment history of 5.0 paid, 0.0 late, and 0.0 failed_or_written_off support a plausible benign explanation, but do not resolve the prior INR history.\\n\\nRecommend hold_contact for ownership/intent verification while reviewing prior-dispute and delivery evidence. This is P2 because the packet shows no stated fulfillment-imminence, active burst, exposure above 500, or growing cluster.\"}"
+ },
+ "task": "triage_memo"
+}

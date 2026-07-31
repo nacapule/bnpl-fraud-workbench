@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "df5a661ca29ca84bbc639e7b8f3cb88d66b68538921b8a336a5da5db7edc4dca",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 32300,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R02: 3 accounts have transacted on device d_5181707 as of this order\",\"R06: disposable_domain=True, shared_root_accounts=1\",\"R08: ship-to address a_2899017 already used by 19 distinct accounts\",\"linkage: 39 other accounts on ship address\",\"cvv_result: N\",\"avs_result: Y\",\"alert score: 100\",\"account tenure_days: 9\",\"n_orders_prior: 0\",\"order status: approved\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The order combines multi-account device activity, a disposable email domain, and a heavily shared ship-to address. These independent device/linkage and identity/geography signals support a suspected multi-account ring.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The CVV result is N, but AVS is Y and the packet provides no confirmed card theft or prior card activity.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler, mover, gift buyer, or new-phone mimic does not adequately explain the multi-account device activity and heavily shared ship-to address.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 escalation ladder\",\"FP-1 \u00a76\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Query the linked accounts on device d_5181707 and ship-to address a_2899017 for common credentials, payment instruments, or confirmed-fraud outcomes.\",\"Check whether merchant nova-market-78 shows related orders or fulfillment anomalies.\"],\"memo_markdown\":\"Order 351679 is approved for 76.94 at nova-market-78. The strongest hypothesis is synthetic_ring: R02 reports 3 accounts transacted on device d_5181707; R06 identifies a disposable email domain with shared_root_accounts=1; and R08 reports ship-to address a_2899017 used by 19 distinct accounts. Linkage also shows 39 other accounts on the ship address. CVV is N while AVS is Y. A benign traveler, mover, gift-buyer, or new-phone explanation does not account for the combined linkage signals. Escalate for ring review under the FP-1 escalation ladder; human analyst decision required.\"}"
+ },
+ "task": "triage_memo"
+}

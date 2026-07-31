@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "368b6d6c8004488d755165ceda75501e036064f2c631a8c1df04ba026390d59d",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 38730,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\n    \"order amount 79.77\",\n    \"order status approved\",\n    \"merchant category toys\",\n    \"merchant name prime-province-26\",\n    \"account tenure_days 112\",\n    \"n_orders_prior 0\",\n    \"total_spent_prior 0.0\",\n    \"other_accounts_on_device 0\",\n    \"other_accounts_on_ship_address 0\",\n    \"other_accounts_same_email_root 0\",\n    \"declines_on_card_24h 0\",\n    \"account_events_90d empty\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"stolen_card\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"The foreign IP, AVS=N, and CVV=M are consistent with possible unauthorized card use. However, no linkage, velocity, or credential-manipulation signals corroborate this hypothesis.\"\n    },\n    {\n      \"pattern\": \"account_takeover\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"The account has no account_events_90d and no other accounts on the device, ship address, or same email root.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"med\",\n      \"reasoning\": \"A traveler mimic is plausible because the card BIN country is CA while the IP country is US, with no credential changes or linkage evidence. A verification typo is also possible, but the packet does not establish prior AVS or CVV mismatch history.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R03\",\n    \"FP-1 \u00a76\",\n    \"FP-1 action selection step 4\"\n  ],\n  \"recommended_action\": \"hold_contact\",\n  \"priority\": \"P2\",\n  \"evidence_gaps\": [\n    \"Confirm whether the customer is traveling or currently located in the US\",\n    \"Verify cardholder ownership and billing-address details through step-up verification\",\n    \"Check whether the IP is associated with a known VPN, proxy, or travel network\"\n  ],\n  \"memo_markdown\": \"R03 triggered on approved order 14651 for 79.77: card BIN country CA versus IP country US, with AVS=N and CVV=M. The evidence supports possible stolen-card use, but only one signal family\u2014geography plus verification\u2014is present. There is no account-event activity, prior order history, card decline activity, or linkage to other accounts. A traveler is a plausible benign mimic; a verification typo is also possible, although the packet provides no prior AVS/CVV mismatch history. Recommend hold_contact for reversible step-up verification to distinguish legitimate travel from unauthorized card use. Priority P2.\"\n}"
+ },
+ "task": "triage_memo"
+}

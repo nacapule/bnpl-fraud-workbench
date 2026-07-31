@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "266bac24554709e3e4927bac2c861d688bfe3a1500fbb8cb9726a2e2c3b5f392",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 26087,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 244900 was approved at 2026-03-09 19:23:55 for 892.92 in electronics.\",\"Order 244900 had AVS=N and CVV=M.\",\"Card BIN country is US; IP 72.106.231.61 is in CA.\",\"R03 fired: card BIN country US vs IP country CA with AVS=N/CVV=M.\",\"The account has 6 prior orders and tenure_days of 732.\",\"Prior orders used device_id 38412 and IP country CA, including order 229653 at 2026-02-21 19:29:47 with AVS=Y/CVV=M.\",\"account_events_90d is empty.\",\"Repayment history shows paid 16.0 of installments_due 16, with late 0.0 and failed_or_written_off 0.0.\",\"Linkage shows other_accounts_on_device 0, other_accounts_on_ship_address 1, and other_accounts_same_email_root 0.\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler mimic is most consistent with the established CA IP-country history, stable device_id 38412, and empty account_events_90d. The isolated AVS=N can be consistent with the stated verification-typo benign noise rate, while CVV=M and prior repayment is fully paid.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The US BIN versus CA IP and AVS=N support a payment-verification concern, but there is no credential manipulation, device linkage, velocity signal, card decline activity, or adverse repayment behavior in the packet.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"account_events_90d is empty and the order uses the same device_id 38412 seen in prior orders; the packet provides no credential-change evidence.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 3\"],\"recommended_action\":\"clear\",\"priority\":\"P1\",\"evidence_gaps\":[\"Confirm whether IP 72.106.231.61 is associated with this account's prior trusted sessions.\",\"Confirm whether the AVS=N reflects a correctable address-entry discrepancy for order 244900.\"],\"memo_markdown\":\"P1 review: order 244900 was approved for 892.92 in electronics with AVS=N, CVV=M, a US BIN, and a CA IP; R03 fired. The account has a consistent CA IP-country and device_id 38412 history, including prior approved electronics activity with AVS=Y/CVV=M. account_events_90d is empty, linkage is limited, and repayment shows paid 16.0 of installments_due 16 with late 0.0 and failed_or_written_off 0.0. The best-supported explanation is benign traveler behavior plus an isolated verification typo. Clear under FP-1 action selection step 3; no second independent fraud-signal family corroborates a high-likelihood fraud pattern.\"}"
+ },
+ "task": "triage_memo"
+}

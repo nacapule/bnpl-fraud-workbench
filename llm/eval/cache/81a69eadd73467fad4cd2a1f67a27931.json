@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "7e119733f56db7dfaf67dd0d8b7279a0679e1a707ec76813de2f4b5669f73be0",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 45152,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\n  \"signals_observed\": [\n    \"R03 fired: card BIN country BR vs IP country DE with AVS=N/CVV=M\",\n    \"R07 fired: 7 declined attempts on this card/device in the prior 24h, then this approval\",\n    \"Order 350490 for 109.61 was approved at 2026-05-05 03:43:23\",\n    \"Card 52045 has bin_country BR and declines_on_card_24h 7\",\n    \"Account user_id 40061 has n_orders_prior 0, tenure_days 2, and total_spent_prior 0.0\",\n    \"Device 5181428 has other_accounts_on_device 0\",\n    \"Ship address 2898754 has other_accounts_on_ship_address 0\",\n    \"Email root has other_accounts_same_email_root 0\"\n  ],\n  \"hypotheses\": [\n    {\n      \"pattern\": \"stolen_card\",\n      \"likelihood\": \"high\",\n      \"reasoning\": \"The card was used from IP country DE while its BIN country is BR, with AVS=N and CVV=M. The same card/device had 7 declined attempts in the prior 24h before this approval, supporting card testing or unauthorized card use.\"\n    },\n    {\n      \"pattern\": \"account_takeover\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"The account is new with n_orders_prior 0 and tenure_days 2, but account_events_90d is empty and there are no other accounts linked to the device, ship address, or email root.\"\n    },\n    {\n      \"pattern\": \"benign\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"A traveler could explain foreign IP activity, but the AVS=N/CVV=M results and repeated declined attempts are not explained by the stated traveler mimic.\"\n    }\n  ],\n  \"policy_citations\": [\n    \"R03\",\n    \"R07\",\n    \"FP-1 \u00a71\",\n    \"FP-1 \u00a75\",\n    \"FP-1 \u00a76\"\n  ],\n  \"recommended_action\": \"decline_block\",\n  \"priority\": \"P0\",\n  \"evidence_gaps\": [\n    \"Obtain step-up cardholder verification and compare the response with the approved order.\",\n    \"Check issuer or 3-D Secure authentication results for order 350490.\",\n    \"Review whether the shipping recipient and address 2898754 match the verified customer.\"\n  ],\n  \"memo_markdown\": \"Order 350490 is approved for 109.61 on a 2-day-old account with no prior orders or spend. R03 identified a BR card BIN used from a DE IP with AVS=N/CVV=M. R07 identified 7 declined attempts on the same card/device in the prior 24h before approval. This combination supports high-likelihood stolen-card or card-testing activity across geography/verification and velocity signal families. Account-takeover and synthetic-ring hypotheses are low: account_events_90d is empty, and linkage counts are 0 for the device, ship address, and email root. A traveler explanation is possible but does not explain the verification mismatches and repeated declines. Recommend decline_block under FP-1; human analyst review remains required.\"\n}"
+ },
+ "task": "triage_memo"
+}

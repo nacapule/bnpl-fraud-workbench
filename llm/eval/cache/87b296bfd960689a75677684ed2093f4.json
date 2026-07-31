@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "95875603a6f57d2c6f53b0f214767aed89a588149a7daff20999aa0f951d420f",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 51756,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country US vs IP country CA with AVS=N/CVV=M\",\"Current order amount 100.79\",\"Current order timestamp 2025-12-03 23:59:38\",\"Account has 6 prior orders\",\"Account tenure is 658 days\",\"Prior AVS mismatches: 0.0\",\"Prior CVV mismatches: 0.0\",\"Repayment history: 12.0 installments paid, 12 installments due, 0.0 late, 0.0 failed or written off\",\"Other accounts on device: 0\",\"Other accounts on ship address: 2\",\"Card declines on card 24h: 0\",\"Prior orders show IP country CA and CVV=M\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler mimic is plausible because the IP country is CA while the card BIN country is US, and prior orders also show IP country CA. The current AVS mismatch is consistent with the stated verification-typo benign mimic, while the account has stable repayment and no prior AVS or CVV mismatches.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The foreign IP and current AVS mismatch could indicate card misuse, but prior orders consistently show IP country CA and CVV=M, with 0 card declines on card 24h.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet provides no account-event evidence of credential manipulation, and other accounts on the device are 0.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the customer was traveling in CA at 2025-12-03 23:59:38.\",\"Verify whether the AVS=N result reflects a billing-address formatting or verification typo.\"],\"memo_markdown\":\"R03 fired on a US card BIN used from a CA IP with AVS=N/CVV=M. The strongest explanation is a benign traveler pattern plus a verification typo: prior orders also used IP country CA, prior AVS mismatches were 0.0, and prior CVV mismatches were 0.0. Account behavior is stable, with 12.0 installments paid, 12 installments due, 0.0 late, and 0.0 failed or written off. Device linkage is 0, and there is no credential-manipulation evidence in the packet. Stolen-card and account-takeover hypotheses remain low likelihood. Recommend clear; no independent signal-family corroboration supports decline_block.\"}"
+ },
+ "task": "triage_memo"
+}

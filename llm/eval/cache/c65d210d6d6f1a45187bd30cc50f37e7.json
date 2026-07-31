@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "ae6883d8e054b14341d9c2b5c1587a88bb1c9c04b84b183fe3b068c67ffe4c60",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 31354,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 329668 was approved at 2026-06-05 13:50:12 for 114.0 at merchant urban-goods-12 in sports\",\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"account has 9 prior orders and tenure_days 917\",\"n_avs_mismatch_prior is 0.0 and n_cvv_mismatch_prior is 0.0\",\"last_orders show device_id 34569 and IP country US on approved orders at 2026-04-05 21:27:02, 2026-01-29 17:39:37, and 2026-01-09 01:39:49\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 1, and other_accounts_same_email_root is 0\",\"declines_on_card_24h is 0\",\"repayment_history shows 26.0 paid, 1.0 late, 0.0 failed_or_written_off, and 27 installments_due\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler/verification-typo mimic is most consistent with the established US IP-country history on device_id 34569, the account's 917-day tenure, and 9 prior orders. The current AVS=N can be weighed against FP-1 \u00a76's stated verification-typo noise rate; there is no packet evidence of credential manipulation or device-based multi-account linkage.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The current CA BIN versus US IP and AVS=N support R03, but this is one signal family. The packet shows 0 card declines in 24h, device_id 34569 on prior approved orders, and no prior AVS or CVV mismatches.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm whether the AVS=N result reflects an address-entry or verification typo.\",\"Check whether the current shipping address matches the account's established delivery history.\"],\"memo_markdown\":\"**Recommendation: clear (P2).**\\n\\nOrder 329668 is an approved 114.0 sports purchase that fired R03 because the CA BIN was used from a US IP with AVS=N/CVV=M. The account has 917 days of tenure, 9 prior orders, and prior approved US-IP orders on device_id 34569. Linkage does not indicate a multi-account device or email-root cluster, and the card has 0 declines in 24h.\\n\\nThe most plausible explanation is benign traveler/verification-typo activity. FP-1 \u00a76 identifies foreign-IP travel and verification typos as benign mimics; the packet provides no credential-manipulation evidence and no corroborating independent fraud-signal family. Clear under the action ladder; optionally verify the AVS result and shipping-address continuity for documentation.\"}"
+ },
+ "task": "triage_memo"
+}

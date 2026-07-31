@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "aacf7d31b66c65663f32fa62845adf2b22ec5bddd8551e3a22a2c5032d67251d",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 27740,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"account signup_ts: 2026-01-24 03:52:10\",\"tenure_days: 0\",\"n_orders_prior: 0\",\"order_id 352676 amount: 137.22\",\"order status: approved\",\"order ts: 2026-01-24 07:12:41\",\"avs_result: Y\",\"cvv_result: M\",\"ip_country: US\",\"bin_country: US\",\"R06: shared_root_accounts=95\",\"R08: ship-to address a_2899501 already used by 10 distinct accounts\",\"R10: promo redeemed inside a device/address cluster with 10 linked redemptions\",\"other_accounts_on_device: 6\",\"other_accounts_on_ship_address: 46\",\"other_accounts_same_email_root: 94\",\"score: 90\",\"alert band: decline\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The new account is linked to 6 other accounts on the device, 46 other accounts on the ship address, and 94 other accounts on the same email root. The fired rules also identify 10 distinct accounts at the ship-to address and 10 linked promo redemptions in the device/address cluster.\"},{\"pattern\":\"promo_abuse\",\"likelihood\":\"high\",\"reasoning\":\"R10 states that a promo was redeemed inside a device/address cluster with 10 linked redemptions, alongside extensive device, address, and email-root linkage.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer or mover explanation is not supported by stable history because n_orders_prior is 0, and the shared device and shared ship-address linkage is inconsistent with the stated mover mimic.\"}],\"policy_citations\":[\"R06\",\"R08\",\"R10\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review the 6 other accounts on device_id 5182237 for order status, fraud outcomes, and shared attributes.\",\"Review orders and promo redemptions linked to ship_address_id 2899501.\",\"Review accounts sharing the email root for fraud outcomes and account-creation timing.\",\"Confirm whether pure-row-52 shows suspected merchant complicity.\"],\"memo_markdown\":\"New account 41102 placed approved beauty order 352676 for 137.22 shortly after signup. AVS is Y and CVV is M; IP country and BIN country are US. However, R06 identifies 95 shared-root accounts, R08 identifies 10 distinct accounts at ship-to address a_2899501, and R10 identifies 10 linked promo redemptions. Linkage reports 6 other accounts on the device, 46 on the ship address, and 94 on the same email root. This meets FP-1 action-selection criterion for escalation based on multi-account linkage counts of at least 3. Escalate for ring review; human analyst to determine downstream account and order controls.\"}"
+ },
+ "task": "triage_memo"
+}

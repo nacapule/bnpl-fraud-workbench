@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "60f55ea6dafd4c565834be172ad736b346ffb921d982f2efac19a4ba1b64d4d6",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 31967,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"order_id 176278 was approved at 2025-12-26 22:54:34 for 59.83\",\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"account tenure_days is 677 with n_orders_prior of 2\",\"prior orders 132215 and 106848 used device_id 10667 and ip_country US with AVS=Y/CVV=M\",\"account_events_90d contains login events on device_id 10667 from IPs 79.162.139.228, 79.162.139.1, and 79.162.139.141\",\"linkage shows 0 other_accounts_on_device, 0 other_accounts_on_ship_address, and 0 other_accounts_same_email_root\",\"repayment_history shows installments_due 5, paid 5.0, late 0.0, and failed_or_written_off 0.0\",\"card declines_on_card_24h is 0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler mimic is plausible: the account has prior US activity on device_id 10667, while the card BIN country and KYC country are CA. The sole fired rule is an AVS=N/CVV=M mismatch, which FP-1 \u00a76 identifies as a verification-typo benign mimic at ~3%.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The CA BIN versus US IP and AVS=N support concern, but the CVV result is M, device_id 10667 is established, card declines_on_card_24h is 0, and repayment history shows paid 5.0.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a76\",\"FP-1 \u00a76.1\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Confirm the billing-address verification result for order_id 176278 with the payment processor.\",\"Check whether the order has been fulfilled or has a customer dispute associated with order_id 176278.\"],\"memo_markdown\":\"Order 176278 was approved for 59.83 after R03 fired for CA BIN versus US IP with AVS=N/CVV=M. The account has tenure_days 677, prior US orders on device_id 10667 with AVS=Y/CVV=M, no linkage to other accounts, and repayment_history of paid 5.0 with late 0.0 and failed_or_written_off 0.0. \\n\\nBenign traveler activity and the FP-1 \u00a76 verification-typo mimic best explain the isolated mismatch. Stolen-card concern is low because CVV=M, the device is established, and declines_on_card_24h is 0. Clear as benign; a hold is not supported by an unresolved, decision-changing conflict.\"}"
+ },
+ "task": "triage_memo"
+}

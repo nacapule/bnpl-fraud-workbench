@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "67903bd8612d7212070cf2c8024f7dd7e17d17c465ace944895986e988d3addf",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 35492,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"alert_id 842 is for an approved order_id 351724 at nova-tech-24\",\"amount 65.07 in electronics\",\"email graysongomez7457@mailinator.com has email_domain mailinator.com\",\"R06 rationale: disposable_domain=True, shared_root_accounts=1\",\"R08 rationale: ship-to address a_2899016 already used by 7 distinct accounts\",\"linkage shows other_accounts_on_ship_address=39\",\"linkage shows other_accounts_on_device=2\",\"linkage shows other_accounts_same_email_root=0\",\"avs_result Y and cvv_result M\",\"ip_country US, bin_country US, and kyc_country US\",\"n_orders_prior=0 and total_spent_prior=0.0\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The shared ship-to linkage is consistent with a multi-account ring: other_accounts_on_ship_address=39, and R08 states the address was used by 7 distinct accounts. The disposable mailinator.com email also fired R06.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift buyer or mover could use a non-home/shared delivery address, but the packet provides no stable purchase history and shows device linkage to 2 other accounts.\"}],\"policy_citations\":[\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check whether the 39 other accounts on ship_address_id 2899016 have confirmed-fraud outcomes.\",\"Check whether the 2 other accounts on device_id 5181726 share additional identifiers or confirmed-fraud outcomes.\",\"Review fulfillment status for order_id 351724.\"],\"memo_markdown\":\"Approved order_id 351724 for amount 65.07 at nova-tech-24 fired R06 and R08. The account uses graysongomez7457@mailinator.com, with email_domain mailinator.com. R08 reports ship-to address a_2899016 used by 7 distinct accounts; linkage reports other_accounts_on_ship_address=39 and other_accounts_on_device=2. AVS and CVV passed, and IP, BIN, and KYC countries are US. Synthetic-ring activity is the leading hypothesis. Escalate under FP-1 action selection step 1 because the ship-address linkage meets the multi-account-ring threshold. Confirm linked-account fraud outcomes and fulfillment status.\"}"
+ },
+ "task": "triage_memo"
+}

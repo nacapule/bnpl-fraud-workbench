@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "de4af281e02515fe3406a820391bc3dfa73aa67d319f6b4ba25216b98b4d30ed",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 28294,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R03 fired: card BIN country CA vs IP country US with AVS=N/CVV=M\",\"Current order amount 72.56; status approved\",\"Current order timestamp 2026-02-19 05:28:16\",\"Account tenure_days is 806\",\"Account has n_orders_prior 12 and total_spent_prior 3083.53\",\"Account event log shows login from device_id 24856 at 2026-02-11 06:09:49\",\"linkage shows other_accounts_on_device 0 and other_accounts_same_email_root 0\",\"repayment_history shows failed_or_written_off 0.0, late 1.0, and paid 30.0\",\"card declines_on_card_24h is 0\"],\"hypotheses\":[{\"pattern\":\"benign\",\"likelihood\":\"high\",\"reasoning\":\"A traveler is plausible because the account has KYC country CA, repeated IP country US activity, no credential manipulation shown, stable device usage, and long tenure. The AVS=N/CVV=M result can also fit a verification typo, a listed benign mimic.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"The geography and verification mismatch is consistent with stolen-card risk, but the account shows established tenure, repeated approved orders, stable device usage, and no recent card declines.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"No password change, new device, or device linkage is present in the packet; the account event log shows device_id 24856.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows other_accounts_on_device 0 and other_accounts_same_email_root 0, so there is no stated multi-account linkage.\"},{\"pattern\":\"never_pay\",\"likelihood\":\"low\",\"reasoning\":\"Repayment history shows failed_or_written_off 0.0, late 1.0, and paid 30.0.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 \u00a76.1\"],\"recommended_action\":\"clear\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check whether the customer was traveling or otherwise using a US IP at 2026-02-19 05:28:16.\",\"Confirm whether the current AVS=N/CVV=M result was a verification typo or matches the customer\u2019s billing details.\"],\"memo_markdown\":\"R03 fired on a CA card BIN versus US IP with AVS=N/CVV=M. The strongest explanation is benign travel combined with a verification typo: the account has 806 days of tenure, 12 prior orders, stable device_id 24856 usage, no other accounts on device or email root, and repayment history of failed_or_written_off 0.0, late 1.0, and paid 30.0. Stolen card and account takeover remain low likelihood because no credential manipulation, new device, card declines, or multi-account linkage is shown. Clear under FP-1 because the sole fired rule is explained by listed benign mimics and the packet does not establish corroboration from a second signal family.\"}"
+ },
+ "task": "triage_memo"
+}

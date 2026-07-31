@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "b9132d2a7902bcf7402345b315e7b4901f320599749152f41f4f514c7dbc4051",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 32052,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: repeat INR disputes\",\"R09 rationale: 4 prior item-not-received chargebacks on this account with healthy repayment\",\"Alert amount: 48.42; status: approved\",\"AVS result: Y; CVV result: M\",\"IP country: US; KYC country: CA; card BIN country: CA\",\"Device ID: 24232; ship address ID: 24232; other accounts on device: 0\",\"Other accounts on ship address: 0; other accounts sharing email root: 0\",\"Failed or written off: 0.0; installments due: 12; late: 0.0; paid: 12.0\",\"Tenure days: 876; total spent prior: 2175.73\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies repeat item-not-received chargebacks, which is consistent with INR abuse. However, the account has healthy repayment and no linkage to other accounts.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A legitimate customer dispute remains plausible because repayment is healthy, AVS is Y, and there are no linked accounts. The packet does not provide enough evidence to confirm a traveler or other specific benign mimic.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Verify the 4 prior item-not-received chargebacks against carrier delivery and customer-contact records.\",\"Check whether the prior INR disputes were resolved as valid, invalid, or inconclusive.\",\"Perform step-up customer verification and confirm receipt details for order 225653.\"],\"memo_markdown\":\"R09 flagged the approved 48.42 order for repeat INR disputes, citing 4 prior item-not-received chargebacks with healthy repayment. INR abuse is a moderate hypothesis, but the packet lacks delivery-resolution evidence and shows no account linkage. The account has AVS Y, CA card BIN, US IP activity, device ID 24232, ship address ID 24232, and no other accounts on the device, address, or email root. Repayment is healthy: 12 installments due, 12.0 paid, 0.0 late, and 0.0 failed or written off. Recommend hold_contact for reversible step-up verification and targeted review of prior INR outcomes. Human analyst retains the decision.\"}"
+ },
+ "task": "triage_memo"
+}

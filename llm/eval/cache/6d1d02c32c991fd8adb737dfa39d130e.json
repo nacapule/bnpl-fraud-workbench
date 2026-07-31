@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "82d2456ff54761c6de744f463517e058f0e6d873744fba0b91f64c228fad62e4",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 32915,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 24490 for 149.92 approved at 2025-07-30 16:58:24\",\"Merchant category jewelry; merchant swift-trading-12\",\"IP country CA versus card BIN country US\",\"AVS result N and CVV result M\",\"Rule R03 fired: geo + verification mismatch, weight 35\",\"Account has 0 prior orders and total_spent_prior 0.0\",\"Other accounts on device, ship address, and same email root are all 0\",\"Card has 0 declines_on_card_24h\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card BIN, CA IP, AVS=N, and CVV=M triggered R03. This is one corroborating signal family and does not establish stolen-card fraud by itself.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The packet shows logins from device 10412, but provides no credential-manipulation or account-linkage evidence.\"},{\"pattern\":\"synthetic_ring\",\"likelihood\":\"low\",\"reasoning\":\"Linkage counts are 0 for device, ship address, and email root, with no multi-account evidence.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler could explain the foreign IP and verification mismatch, but the packet does not establish travel or absence of credential changes.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a75\",\"FP-1 \u00a76\",\"FP-1 action selection \u00a72\",\"FP-1 action selection \u00a74\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check for credential changes near 2025-07-30 16:58:24.\",\"Request step-up verification of the customer and billing details.\",\"Check whether the customer was traveling in CA at 2025-07-30 16:58:24.\"],\"memo_markdown\":\"Order 24490, amount 149.92, was approved for jewelry merchant swift-trading-12 at 2025-07-30 16:58:24. R03 fired with score 35 because the card BIN country is US while the IP country is CA, with AVS=N and CVV=M.\\n\\nStolen-card fraud is a medium-likelihood hypothesis. Account takeover and synthetic ring are low likelihood: the packet shows no credential-manipulation evidence, and linkage counts are 0 across device, ship address, and email root. A traveler benign mimic is also plausible, but travel and the absence of credential changes are not established.\\n\\nThe packet contains only one signal family, so decline_block is not supported. Recommend hold_contact for reversible step-up verification. Priority is P2 because the order is approved but the packet shows no imminent fulfillment, active burst, exposure above 500, or cluster.\"}"
+ },
+ "task": "triage_memo"
+}

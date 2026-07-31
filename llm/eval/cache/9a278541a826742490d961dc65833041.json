@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "1a37ed1e714e110227051d19acd1c45afa3ad5246318988803c767c483edc74f",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 44615,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: repeat INR disputes\",\"2 prior item-not-received chargebacks on this account with healthy repayment\",\"alert amount 38.97\",\"alert status approved\",\"AVS result Y\",\"CVV result M\",\"account tenure_days 460\",\"account n_orders_prior 3\",\"linkage other_accounts_on_device 0\",\"linkage other_accounts_on_ship_address 0\",\"linkage other_accounts_same_email_root 0\",\"repayment failed_or_written_off 0.0\",\"repayment installments_due 4\",\"repayment late 0.0\",\"repayment paid 4.0\",\"card declines_on_card_24h 0\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"The account has 2 prior item-not-received chargebacks, which directly matches the fired R09 rule. Healthy repayment and the absence of device, address, or email-root linkage weaken confidence in deliberate abuse.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A legitimate customer with repeated delivery problems is plausible, but the packet does not identify a specific traveler, mover, gift-buyer, hardship, typo, or new-phone mimic explaining the disputes.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P2\",\"evidence_gaps\":[\"Check delivery and tracking evidence for the 2 prior item-not-received chargebacks.\",\"Request step-up customer verification focused on the prior item-not-received claims.\"],\"memo_markdown\":\"R09 fired for repeat INR disputes: the account has 2 prior item-not-received chargebacks with healthy repayment. Current order amount is 38.97 and status is approved. AVS is Y and CVV is M; there are no linked accounts on the device, ship address, or email root. Repayment shows 4 installments due and 4.0 paid, with 0.0 late and 0.0 failed or written off.\\\\n\\\\nTop hypothesis is inr_abuse at medium likelihood, but evidence is limited to one signal family. A benign delivery-problem explanation remains plausible, while no specific FP-1 \u00a76 mimic is established. Use reversible hold_contact pending step-up verification and review of delivery evidence for the prior claims.\"}"
+ },
+ "task": "triage_memo"
+}

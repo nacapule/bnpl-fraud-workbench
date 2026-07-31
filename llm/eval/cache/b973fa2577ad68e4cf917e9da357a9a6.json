@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "d1c5064115e6fef27d8ac55f594264a9c83a20c07e67a4d916a59ba7dc0b82e2",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 31887,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R02: 5 accounts have transacted on device d_5181689 as of this order\",\"R06: disposable_domain=False, shared_root_accounts=80\",\"R08: ship-to address a_2899015 already used by 35 distinct accounts\",\"other_accounts_on_device: 4\",\"other_accounts_on_ship_address: 39\",\"other_accounts_same_email_root: 79\",\"order amount: 26.43\",\"score: 100\",\"status: approved\",\"AVS result: Y\",\"CVV result: M\",\"IP country: US\",\"BIN country: US\",\"declines_on_card_24h: 0\"],\"hypotheses\":[{\"pattern\":\"synthetic_ring\",\"likelihood\":\"high\",\"reasoning\":\"The account is linked across device, ship-to address, and email root, with linkage counts exceeding the FP-1 escalation threshold. R02, R06, and R08 independently corroborate multi-account activity.\"},{\"pattern\":\"stolen_card\",\"likelihood\":\"low\",\"reasoning\":\"AVS result is Y, CVV result is M, and declines_on_card_24h is 0; the packet provides stronger linkage evidence for a multi-account pattern.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A gift-buyer or shared-household explanation could account for a shared ship-to address, but it does not explain the concurrent device and email-root linkage.\"}],\"policy_citations\":[\"R02\",\"R06\",\"R08\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 1\"],\"recommended_action\":\"escalate\",\"priority\":\"P2\",\"evidence_gaps\":[\"Review linked-account order outcomes and fraud dispositions to confirm whether the linkage reflects a multi-account ring.\",\"Check whether ship-to address a_2899015 is a known shared residential or commercial delivery location.\",\"Review ownership and recent activity of the 5 accounts that transacted on device d_5181689.\"],\"memo_markdown\":\"Escalate for human fraud review. The approved apparel order for 26.43 triggered R02, R06, and R08. Device d_5181689 has transacted across 5 accounts; ship-to address a_2899015 has been used by 35 distinct accounts; and the email root has shared_root_accounts=80. Linkage fields independently show 4 other accounts on the device, 39 other accounts at the ship-to address, and 79 other accounts with the same email root. These counts meet FP-1\u2019s multi-account-ring escalation condition. Payment verification is favorable (AVS Y; CVV M), so stolen-card evidence is limited, but it does not resolve the linked-account concern. Obtain linked-account outcomes and delivery-location context before the human decision.\"}"
+ },
+ "task": "triage_memo"
+}

@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "0fd0563c4e46e533ab74b469687573689236349189e7ae6ebb58a64e77ddf2a6",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 36288,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R07: 6 declined attempts on this card/device in the prior 24h, then this approval\",\"order_id 350748 was approved at 2025-08-25 12:14:10 for 894.64\",\"card bin_country is GB; account kyc_country is US; alert ip_country is ID\",\"order_id 350748 has avs_result Y and cvv_result M\",\"device_id 5181518 was used for the declined orders and the approved order\",\"account tenure_days is 2 and n_orders_prior is 0\",\"other_accounts_on_device is 0, other_accounts_on_ship_address is 0, and other_accounts_same_email_root is 0\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"high\",\"reasoning\":\"The R07 card-testing sequence culminated in an approved 894.64 electronics order. Velocity and the GB card, US KYC country, and ID IP country provide two independent corroborating signal families.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A traveler could explain a foreign IP without credential changes, but it does not explain 6 declined attempts on the same card/device before the approval.\"}],\"policy_citations\":[\"R07\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 2\"],\"recommended_action\":\"decline_block\",\"priority\":\"P1\",\"evidence_gaps\":[\"Confirm whether the cardholder authorized order_id 350748.\",\"Check fulfillment status for order_id 350748.\",\"Check whether device_id 5181518 or card_id 52135 has additional recent activity.\"],\"memo_markdown\":\"R07 fired after 6 declined attempts on the same card/device in the prior 24h, followed by approval of order_id 350748 for 894.64 in electronics. The account has tenure_days 2 and n_orders_prior 0. Geography is inconsistent across the ID IP, GB card BIN, and US KYC country. Although the approved order returned AVS Y and CVV M, the prior decline burst plus geography corroborate stolen_card at high likelihood. No linkage threshold is present: all listed linkage counts are 0. Recommend decline_block pending human review; prioritize P1 because exposure is 894.64.\"}"
+ },
+ "task": "triage_memo"
+}

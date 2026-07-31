@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-luna",
+ "prompt_sha256": "1b76ef8660b45e663eca54c859ba93f1285fd52fba61039c87030fbea7804559",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 35344,
+  "input_tokens": null,
+  "model": "gpt-5.6-luna",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"Order 352982 for 794.2 in jewelry was approved at 2025-11-27 03:42:11.\",\"IP country CA differs from card BIN country US.\",\"AVS result N and CVV result N.\",\"Account user_id 41408 has 0 prior orders, 0.0 total_spent_prior, and tenure_days 1.\",\"Device 5182443, ship address 2899681, and email root have 0 linked other accounts.\",\"R03 fired: geo + verification mismatch.\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The US card used from a CA IP with AVS=N/CVV=N supports possible unauthorized card use. No prior repayment or order history is available to corroborate the hypothesis.\"},{\"pattern\":\"account_takeover\",\"likelihood\":\"low\",\"reasoning\":\"The account is new, but account_events_90d is empty and there are no credential-manipulation or linkage signals.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A traveler could explain a foreign IP, but the packet does not document travel and AVS=N/CVV=N remain unexplained.\"}],\"policy_citations\":[\"R03\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 \u00a76.1\",\"FP-1 \u00a72\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Run step-up customer verification to confirm card ownership and travel/location context.\",\"Check issuer authorization details for the AVS=N/CVV=N results and cardholder-country consistency.\"],\"memo_markdown\":\"**Advisory investigation memo \u2014 order 352982**\\n\\nThe approved 794.2 jewelry order was placed from IP country CA using a card with BIN country US; AVS and CVV both returned N. The account is new, with 0 prior orders and no prior spend or repayment history. R03 is the only fired rule. There is no observed device, shipping-address, or email-root sharing, and no account-event history indicating takeover.\\n\\nStolen-card risk and a benign traveler explanation are both plausible. The foreign IP supports the traveler mimic, but the packet does not document travel and does not explain the AVS/CVV failures. Evidence is insufficient for decline_block because only the geography+verification signal family corroborates fraud. A step-up verification should decide between these hypotheses.\\n\\n**Recommendation:** hold_contact pending customer and cardholder verification. Priority P1 because the exposure is above 500.\"}"
+ },
+ "task": "triage_memo"
+}
