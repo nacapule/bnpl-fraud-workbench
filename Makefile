@@ -36,6 +36,13 @@ llm-eval:
 llm-eval-live:
 	$(PY) -m llm.eval.harness
 
+vendor:
+	$(PY) -m vendor.enrich
+	@echo "synthetic stand-in scores written — re-run 'make rules' to activate R12"
+
+vendor-live:
+	$(PY) -m vendor.enrich --live
+
 test:
 	$(PY) -m pytest tests/ -q
 

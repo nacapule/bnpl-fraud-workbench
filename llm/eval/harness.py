@@ -36,6 +36,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
+
 from llm.client import load_config
 from llm.eval.verifier import verify_memo
 from llm.triage import draft_memo
@@ -218,6 +220,18 @@ def main() -> None:
         lines.append(f"| {key} | " + " | ".join(str(s[key]) for s in summaries) + " |")
     Path("reports/llm_eval.md").write_text("\n".join(lines) + "\n")
     print("wrote reports/llm_eval.md")
+
+    # Export per-alert priorities from the configured default arm so the queue
+    # simulation can dispatch on LLM priority (advisory artifact, not truth).
+    default_model = tcfg["model"]
+    for s in summaries:
+        if s["model"] == default_model:
+            pr = pd.DataFrame(
+                [{"alert_id": r["alert_id"], "priority": r["priority"]} for r in s["rows"]]
+            )
+            out_pr = RESULTS_DIR / "priorities.csv"
+            pr.to_csv(out_pr, index=False)
+            print(f"wrote {out_pr}")
 
 
 if __name__ == "__main__":
