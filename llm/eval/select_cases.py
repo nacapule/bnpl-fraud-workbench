@@ -65,7 +65,7 @@ def main() -> None:
     per_pattern = max(1, n_fraud_budget // frauds["taxonomy"].nunique())
 
     chosen: list[pd.DataFrame] = []
-    for pat, grp in frauds.groupby("taxonomy"):
+    for _pat, grp in frauds.groupby("taxonomy"):
         k = min(per_pattern, len(grp))
         chosen.append(grp.iloc[rng.choice(len(grp), k, replace=False)])
     fraud_sel = pd.concat(chosen)
@@ -93,7 +93,8 @@ def main() -> None:
     for i, c in enumerate(cases):
         out = pdir / f"{c['alert_id']}.json"
         if not out.exists():
-            out.write_text(json.dumps(build_packet(c["alert_id"], engine), indent=1, sort_keys=True))
+            pkt = build_packet(c["alert_id"], engine)
+            out.write_text(json.dumps(pkt, indent=1, sort_keys=True))
         if (i + 1) % 25 == 0:
             print(f"packets {i + 1}/{len(cases)}")
 

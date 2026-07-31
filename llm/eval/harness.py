@@ -95,9 +95,12 @@ def evaluate_arm(
         )
 
     n = len(rows)
-    tp = sum(1 for r in rows if r["action"] == "decline_block" and r["truth_action"] == "decline_block")
-    fp = sum(1 for r in rows if r["action"] == "decline_block" and r["truth_action"] != "decline_block")
-    fn = sum(1 for r in rows if r["action"] != "decline_block" and r["truth_action"] == "decline_block")
+    def _is_decl(x: str) -> bool:
+        return x == "decline_block"
+
+    tp = sum(1 for r in rows if _is_decl(r["action"]) and _is_decl(r["truth_action"]))
+    fp = sum(1 for r in rows if _is_decl(r["action"]) and not _is_decl(r["truth_action"]))
+    fn = sum(1 for r in rows if not _is_decl(r["action"]) and _is_decl(r["truth_action"]))
     claims = sum(r["n_claims"] for r in rows)
     unsupported = sum(r["n_unsupported"] for r in rows)
     fired_rates = [r["citation_fired_rate"] for r in rows if r["citation_fired_rate"] is not None]
@@ -191,7 +194,8 @@ def main() -> None:
         out = RESULTS_DIR / f"{args.prompt_version}__{model}.json"
         out.write_text(json.dumps(res, indent=1, sort_keys=True))
         summaries.append(res)
-        keep = {k: v for k, v in res.items() if k not in {"rows", "per_pattern", "action_confusion"}}
+        drop = {"rows", "per_pattern", "action_confusion"}
+        keep = {k: v for k, v in res.items() if k not in drop}
         print(json.dumps(keep, indent=1))
 
     lines = [
