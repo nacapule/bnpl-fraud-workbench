@@ -1,0 +1,108 @@
+{
+ "account": {
+  "amount_over_category_median": 1.39,
+  "avg_amount_prior": 378.195,
+  "email": "graysongomez5331@mailinator.com",
+  "email_domain": "mailinator.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 2,
+  "signup_ts": "2025-08-13 23:30:31",
+  "tenure_days": 68,
+  "total_spent_prior": 756.39,
+  "user_id": 40454
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 2502,
+  "amount": 723.78,
+  "avs_result": "Y",
+  "band": "decline",
+  "card_id": 52438,
+  "cvv_result": "M",
+  "device_id": 5181705,
+  "fired_rules": [
+   {
+    "id": "R02",
+    "name": "multi-account device",
+    "rationale": "4 accounts have transacted on device d_5181705 as of this order",
+    "weight": 40
+   },
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=True, shared_root_accounts=1",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899017 already used by 34 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "91.40.28.240",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "nova-market-56",
+  "order_id": 351815,
+  "score": 100,
+  "ship_address_id": 2899017,
+  "status": "approved",
+  "ts": "2025-10-20 13:36:08",
+  "user_id": 40454
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 723.78,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181705,
+   "ip_country": "US",
+   "order_id": 351815,
+   "status": "approved",
+   "ts": "2025-10-20 13:36:08"
+  },
+  {
+   "amount": 670.09,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181705,
+   "ip_country": "US",
+   "order_id": 351816,
+   "status": "approved",
+   "ts": "2025-10-20 12:10:21"
+  },
+  {
+   "amount": 86.3,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181705,
+   "ip_country": "US",
+   "order_id": 351675,
+   "status": "approved",
+   "ts": "2025-09-19 11:30:32"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 3,
+  "other_accounts_on_ship_address": 39,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 2,
+  "late": 0.0,
+  "paid": 2.0
+ },
+ "vendor_scores": null
+}

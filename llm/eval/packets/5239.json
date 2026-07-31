@@ -1,0 +1,192 @@
+{
+ "account": {
+  "amount_over_category_median": 1.69,
+  "avg_amount_prior": 122.600714,
+  "email": "hannah.johnson9747@hotmail.com",
+  "email_domain": "hotmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 1.0,
+  "n_cvv_mismatch_prior": 2.0,
+  "n_orders_prior": 28,
+  "signup_ts": "2024-03-20 21:09:52",
+  "tenure_days": 661,
+  "total_spent_prior": 3432.82,
+  "user_id": 35724
+ },
+ "account_events_90d": [
+  {
+   "device_id": 5181180,
+   "ip": "77.202.119.240",
+   "kind": "address_add",
+   "ts": "2026-01-10 16:24:56"
+  },
+  {
+   "device_id": 5181180,
+   "ip": "77.202.119.240",
+   "kind": "password_change",
+   "ts": "2026-01-10 15:24:56"
+  },
+  {
+   "device_id": 35724,
+   "ip": "80.167.105.161",
+   "kind": "login",
+   "ts": "2025-10-26 14:27:34"
+  }
+ ],
+ "alert": {
+  "alert_id": 5239,
+  "amount": 376.81,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 35724,
+  "cvv_result": "M",
+  "device_id": 5181180,
+  "fired_rules": [
+   {
+    "id": "R01",
+    "name": "credential change before order",
+    "rationale": "credential/contact change 4.3h before order on 660d-old account, order from new device d_5181180",
+    "weight": 45
+   }
+  ],
+  "ip": "77.202.119.240",
+  "ip_country": "VN",
+  "merchant_category": "gaming",
+  "merchant_name": "peak-depot-66",
+  "order_id": 349812,
+  "score": 45,
+  "ship_address_id": 2898506,
+  "status": "approved",
+  "ts": "2026-01-10 19:45:19",
+  "user_id": 35724
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 376.81,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5181180,
+   "ip_country": "VN",
+   "order_id": 349812,
+   "status": "approved",
+   "ts": "2026-01-10 19:45:19"
+  },
+  {
+   "amount": 15.98,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 35724,
+   "ip_country": "US",
+   "order_id": 171221,
+   "status": "approved",
+   "ts": "2025-12-22 09:13:20"
+  },
+  {
+   "amount": 55.8,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 35724,
+   "ip_country": "US",
+   "order_id": 170335,
+   "status": "approved",
+   "ts": "2025-12-21 17:31:29"
+  },
+  {
+   "amount": 61.55,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 35724,
+   "ip_country": "US",
+   "order_id": 161125,
+   "status": "approved",
+   "ts": "2025-12-15 14:44:07"
+  },
+  {
+   "amount": 150.72,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 35724,
+   "ip_country": "US",
+   "order_id": 160637,
+   "status": "approved",
+   "ts": "2025-12-15 07:11:09"
+  },
+  {
+   "amount": 85.26,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 35724,
+   "ip_country": "US",
+   "order_id": 148021,
+   "status": "approved",
+   "ts": "2025-12-06 14:26:00"
+  },
+  {
+   "amount": 176.59,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 35724,
+   "ip_country": "US",
+   "order_id": 125615,
+   "status": "approved",
+   "ts": "2025-11-20 21:19:39"
+  },
+  {
+   "amount": 170.88,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 35724,
+   "ip_country": "US",
+   "order_id": 123281,
+   "status": "approved",
+   "ts": "2025-11-19 10:03:51"
+  },
+  {
+   "amount": 56.64,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 35724,
+   "ip_country": "US",
+   "order_id": 121206,
+   "status": "approved",
+   "ts": "2025-11-17 19:00:44"
+  },
+  {
+   "amount": 429.44,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "N",
+   "device_id": 35724,
+   "ip_country": "US",
+   "order_id": 115551,
+   "status": "approved",
+   "ts": "2025-11-12 20:20:44"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 75,
+  "late": 1.0,
+  "paid": 74.0
+ },
+ "vendor_scores": null
+}

@@ -1,0 +1,198 @@
+{
+ "account": {
+  "amount_over_category_median": 0.58,
+  "avg_amount_prior": 145.646563,
+  "email": "emily.rodriguez4968@proton.me",
+  "email_domain": "proton.me",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 32,
+  "signup_ts": "2025-03-26 01:16:09",
+  "tenure_days": 386,
+  "total_spent_prior": 4660.69,
+  "user_id": 10741
+ },
+ "account_events_90d": [
+  {
+   "device_id": 5181243,
+   "ip": "77.241.162.222",
+   "kind": "address_add",
+   "ts": "2026-04-16 05:03:38"
+  },
+  {
+   "device_id": 5181243,
+   "ip": "77.241.162.222",
+   "kind": "email_change",
+   "ts": "2026-04-16 04:07:38"
+  },
+  {
+   "device_id": 5181243,
+   "ip": "77.241.162.222",
+   "kind": "password_change",
+   "ts": "2026-04-16 04:03:38"
+  },
+  {
+   "device_id": 10741,
+   "ip": "77.207.148.88",
+   "kind": "login",
+   "ts": "2026-02-19 02:15:40"
+  }
+ ],
+ "alert": {
+  "alert_id": 7718,
+  "amount": 303.45,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 10741,
+  "cvv_result": "M",
+  "device_id": 5181243,
+  "fired_rules": [
+   {
+    "id": "R01",
+    "name": "credential change before order",
+    "rationale": "credential/contact change 6.6h before order on 386d-old account, order from new device d_5181243",
+    "weight": 45
+   }
+  ],
+  "ip": "77.241.162.222",
+  "ip_country": "IN",
+  "merchant_category": "electronics",
+  "merchant_name": "pure-gallery-28",
+  "order_id": 349981,
+  "score": 45,
+  "ship_address_id": 2898569,
+  "status": "approved",
+  "ts": "2026-04-16 10:43:33",
+  "user_id": 10741
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 303.45,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181243,
+   "ip_country": "IN",
+   "order_id": 349981,
+   "status": "approved",
+   "ts": "2026-04-16 10:43:33"
+  },
+  {
+   "amount": 238.59,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5181243,
+   "ip_country": "IN",
+   "order_id": 349980,
+   "status": "approved",
+   "ts": "2026-04-16 09:07:42"
+  },
+  {
+   "amount": 97.15,
+   "avs_result": "Y",
+   "category": "shoes",
+   "cvv_result": "M",
+   "device_id": 10741,
+   "ip_country": "US",
+   "order_id": 275842,
+   "status": "approved",
+   "ts": "2026-04-11 00:01:12"
+  },
+  {
+   "amount": 64.69,
+   "avs_result": "Y",
+   "category": "shoes",
+   "cvv_result": "M",
+   "device_id": 10741,
+   "ip_country": "US",
+   "order_id": 267592,
+   "status": "approved",
+   "ts": "2026-04-02 15:42:23"
+  },
+  {
+   "amount": 20.95,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 10741,
+   "ip_country": "US",
+   "order_id": 260032,
+   "status": "approved",
+   "ts": "2026-03-25 18:53:05"
+  },
+  {
+   "amount": 100.2,
+   "avs_result": "Y",
+   "category": "auto",
+   "cvv_result": "M",
+   "device_id": 10741,
+   "ip_country": "US",
+   "order_id": 235962,
+   "status": "approved",
+   "ts": "2026-02-28 13:56:18"
+  },
+  {
+   "amount": 107.32,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 10741,
+   "ip_country": "US",
+   "order_id": 232332,
+   "status": "approved",
+   "ts": "2026-02-24 17:42:34"
+  },
+  {
+   "amount": 271.55,
+   "avs_result": "Y",
+   "category": "auto",
+   "cvv_result": "M",
+   "device_id": 10741,
+   "ip_country": "US",
+   "order_id": 230849,
+   "status": "approved",
+   "ts": "2026-02-23 06:34:29"
+  },
+  {
+   "amount": 109.2,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 10741,
+   "ip_country": "US",
+   "order_id": 214664,
+   "status": "approved",
+   "ts": "2026-02-06 05:26:04"
+  },
+  {
+   "amount": 304.97,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 10741,
+   "ip_country": "US",
+   "order_id": 213738,
+   "status": "approved",
+   "ts": "2026-02-05 07:05:35"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 85,
+  "late": 0.0,
+  "paid": 85.0
+ },
+ "vendor_scores": null
+}

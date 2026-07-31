@@ -1,0 +1,151 @@
+{
+ "account": {
+  "amount_over_category_median": 1.33,
+  "avg_amount_prior": 280.024286,
+  "email": "isabella.martin3790@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 1.0,
+  "n_cvv_mismatch_prior": 1.0,
+  "n_orders_prior": 7,
+  "signup_ts": "2025-08-25 18:07:12",
+  "tenure_days": 149,
+  "total_spent_prior": 1960.17,
+  "user_id": 33530
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 5511,
+  "amount": 230.27,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 33530,
+  "cvv_result": "M",
+  "device_id": 33530,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country CA vs IP country US with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "82.184.248.44",
+  "ip_country": "US",
+  "merchant_category": "home",
+  "merchant_name": "bright-gallery-69",
+  "order_id": 199869,
+  "score": 35,
+  "ship_address_id": 33530,
+  "status": "approved",
+  "ts": "2026-01-21 14:41:33",
+  "user_id": 33530
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "amex"
+ },
+ "last_orders": [
+  {
+   "amount": 230.27,
+   "avs_result": "N",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 33530,
+   "ip_country": "US",
+   "order_id": 199869,
+   "status": "approved",
+   "ts": "2026-01-21 14:41:33"
+  },
+  {
+   "amount": 133.55,
+   "avs_result": "N",
+   "category": "auto",
+   "cvv_result": "M",
+   "device_id": 48366,
+   "ip_country": "US",
+   "order_id": 135676,
+   "status": "approved",
+   "ts": "2025-11-27 20:26:23"
+  },
+  {
+   "amount": 56.45,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "N",
+   "device_id": 33530,
+   "ip_country": "US",
+   "order_id": 103149,
+   "status": "approved",
+   "ts": "2025-10-29 22:06:53"
+  },
+  {
+   "amount": 435.35,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 33530,
+   "ip_country": "US",
+   "order_id": 85794,
+   "status": "approved",
+   "ts": "2025-10-10 14:12:07"
+  },
+  {
+   "amount": 119.99,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 33530,
+   "ip_country": "US",
+   "order_id": 83434,
+   "status": "approved",
+   "ts": "2025-10-07 19:10:23"
+  },
+  {
+   "amount": 269.03,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 33530,
+   "ip_country": "US",
+   "order_id": 82727,
+   "status": "approved",
+   "ts": "2025-10-06 21:19:24"
+  },
+  {
+   "amount": 537.93,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 33530,
+   "ip_country": "US",
+   "order_id": 55238,
+   "status": "approved",
+   "ts": "2025-09-05 12:03:47"
+  },
+  {
+   "amount": 407.87,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 33530,
+   "ip_country": "US",
+   "order_id": 47328,
+   "status": "approved",
+   "ts": "2025-08-26 21:21:08"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 21,
+  "late": 0.0,
+  "paid": 21.0
+ },
+ "vendor_scores": null
+}

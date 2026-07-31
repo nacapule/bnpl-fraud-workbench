@@ -1,0 +1,74 @@
+{
+ "account": {
+  "amount_over_category_median": 1.17,
+  "avg_amount_prior": 0.0,
+  "email": "nathan.brown9709@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": null,
+  "n_cvv_mismatch_prior": null,
+  "n_orders_prior": 0,
+  "signup_ts": "2025-03-28 10:06:01",
+  "tenure_days": 112,
+  "total_spent_prior": 0.0,
+  "user_id": 16881
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 235,
+  "amount": 79.77,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 16881,
+  "cvv_result": "M",
+  "device_id": 16881,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country CA vs IP country US with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "37.128.31.46",
+  "ip_country": "US",
+  "merchant_category": "toys",
+  "merchant_name": "prime-province-26",
+  "order_id": 14651,
+  "score": 35,
+  "ship_address_id": 40017,
+  "status": "approved",
+  "ts": "2025-07-18 19:30:58",
+  "user_id": 16881
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 79.77,
+   "avs_result": "N",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 16881,
+   "ip_country": "US",
+   "order_id": 14651,
+   "status": "approved",
+   "ts": "2025-07-18 19:30:58"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

@@ -1,0 +1,85 @@
+{
+ "account": {
+  "amount_over_category_median": 0.52,
+  "avg_amount_prior": 738.01,
+  "email": "james62827@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 1.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 1,
+  "signup_ts": "2026-03-15 22:47:35",
+  "tenure_days": 2,
+  "total_spent_prior": 738.01,
+  "user_id": 40203
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 6900,
+  "amount": 271.94,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 52187,
+  "cvv_result": "N",
+  "device_id": 5181570,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country US vs IP country CA with AVS=Y/CVV=N",
+    "weight": 35
+   }
+  ],
+  "ip": "43.198.14.50",
+  "ip_country": "CA",
+  "merchant_category": "electronics",
+  "merchant_name": "prime-goods-21",
+  "order_id": 350931,
+  "score": 35,
+  "ship_address_id": 2898896,
+  "status": "approved",
+  "ts": "2026-03-17 12:46:00",
+  "user_id": 40203
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 271.94,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "N",
+   "device_id": 5181570,
+   "ip_country": "CA",
+   "order_id": 350931,
+   "status": "approved",
+   "ts": "2026-03-17 12:46:00"
+  },
+  {
+   "amount": 738.01,
+   "avs_result": "N",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181570,
+   "ip_country": "CA",
+   "order_id": 350930,
+   "status": "approved",
+   "ts": "2026-03-17 03:56:59"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

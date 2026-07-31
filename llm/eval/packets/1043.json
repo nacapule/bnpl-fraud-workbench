@@ -1,0 +1,91 @@
+{
+ "account": {
+  "amount_over_category_median": 0.1,
+  "avg_amount_prior": 60.7,
+  "email": "graysongomez7128@mailinator.com",
+  "email_domain": "mailinator.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 1,
+  "signup_ts": "2025-08-17 00:03:29",
+  "tenure_days": 11,
+  "total_spent_prior": 60.7,
+  "user_id": 40472
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 1043,
+  "amount": 52.88,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 52456,
+  "cvv_result": "M",
+  "device_id": 5181723,
+  "fired_rules": [
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=True, shared_root_accounts=1",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899017 already used by 27 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "91.40.28.207",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "nova-gallery-27",
+  "order_id": 351717,
+  "score": 60,
+  "ship_address_id": 2899017,
+  "status": "approved",
+  "ts": "2025-08-28 11:23:43",
+  "user_id": 40472
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 52.88,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181723,
+   "ip_country": "US",
+   "order_id": 351717,
+   "status": "approved",
+   "ts": "2025-08-28 11:23:43"
+  },
+  {
+   "amount": 60.7,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 5181723,
+   "ip_country": "US",
+   "order_id": 351718,
+   "status": "approved",
+   "ts": "2025-08-21 03:18:29"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 2,
+  "other_accounts_on_ship_address": 39,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

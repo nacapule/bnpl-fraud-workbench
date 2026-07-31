@@ -1,0 +1,192 @@
+{
+ "account": {
+  "amount_over_category_median": 0.19,
+  "avg_amount_prior": 120.918387,
+  "email": "sophia.scott1026@proton.me",
+  "email_domain": "proton.me",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 1.0,
+  "n_orders_prior": 31,
+  "signup_ts": "2024-12-05 02:46:28",
+  "tenure_days": 554,
+  "total_spent_prior": 3748.47,
+  "user_id": 39756
+ },
+ "account_events_90d": [
+  {
+   "device_id": 39756,
+   "ip": "60.75.38.131",
+   "kind": "login",
+   "ts": "2026-06-01 10:15:48"
+  },
+  {
+   "device_id": 39756,
+   "ip": "60.75.38.249",
+   "kind": "login",
+   "ts": "2026-04-22 04:23:37"
+  },
+  {
+   "device_id": 39756,
+   "ip": "60.75.38.170",
+   "kind": "login",
+   "ts": "2026-04-16 23:55:33"
+  }
+ ],
+ "alert": {
+  "alert_id": 9145,
+  "amount": 19.47,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 39756,
+  "cvv_result": "M",
+  "device_id": 39756,
+  "fired_rules": [
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_39756 already used by 3 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "60.75.38.79",
+  "ip_country": "US",
+  "merchant_category": "apparel",
+  "merchant_name": "north-province-11",
+  "order_id": 336961,
+  "score": 35,
+  "ship_address_id": 39756,
+  "status": "approved",
+  "ts": "2026-06-12 20:54:34",
+  "user_id": 39756
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "amex"
+ },
+ "last_orders": [
+  {
+   "amount": 19.47,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 39756,
+   "ip_country": "US",
+   "order_id": 336961,
+   "status": "approved",
+   "ts": "2026-06-12 20:54:34"
+  },
+  {
+   "amount": 241.32,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "N",
+   "device_id": 39756,
+   "ip_country": "US",
+   "order_id": 322846,
+   "status": "approved",
+   "ts": "2026-05-29 12:56:28"
+  },
+  {
+   "amount": 63.37,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 39756,
+   "ip_country": "US",
+   "order_id": 315702,
+   "status": "approved",
+   "ts": "2026-05-22 07:09:28"
+  },
+  {
+   "amount": 52.22,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 39756,
+   "ip_country": "US",
+   "order_id": 305306,
+   "status": "approved",
+   "ts": "2026-05-11 14:21:08"
+  },
+  {
+   "amount": 64.9,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 39756,
+   "ip_country": "US",
+   "order_id": 302694,
+   "status": "approved",
+   "ts": "2026-05-08 18:34:04"
+  },
+  {
+   "amount": 87.25,
+   "avs_result": "Y",
+   "category": "accessories",
+   "cvv_result": "M",
+   "device_id": 39756,
+   "ip_country": "US",
+   "order_id": 297111,
+   "status": "approved",
+   "ts": "2026-05-02 21:56:05"
+  },
+  {
+   "amount": 212.86,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 39756,
+   "ip_country": "US",
+   "order_id": 293351,
+   "status": "approved",
+   "ts": "2026-04-29 07:07:51"
+  },
+  {
+   "amount": 82.43,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 39756,
+   "ip_country": "US",
+   "order_id": 279738,
+   "status": "approved",
+   "ts": "2026-04-15 07:36:59"
+  },
+  {
+   "amount": 139.18,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 39756,
+   "ip_country": "US",
+   "order_id": 272962,
+   "status": "approved",
+   "ts": "2026-04-08 05:43:46"
+  },
+  {
+   "amount": 95.85,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 39756,
+   "ip_country": "US",
+   "order_id": 251463,
+   "status": "approved",
+   "ts": "2026-03-16 19:04:11"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 3,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 86,
+  "late": 2.0,
+  "paid": 84.0
+ },
+ "vendor_scores": null
+}

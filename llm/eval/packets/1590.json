@@ -1,0 +1,108 @@
+{
+ "account": {
+  "amount_over_category_median": 1.25,
+  "avg_amount_prior": 426.235,
+  "email": "davidlee+74@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 2,
+  "signup_ts": "2025-08-24 16:54:32",
+  "tenure_days": 25,
+  "total_spent_prior": 852.47,
+  "user_id": 40395
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 1590,
+  "amount": 649.6,
+  "avs_result": "Y",
+  "band": "decline",
+  "card_id": 52379,
+  "cvv_result": "M",
+  "device_id": 5181698,
+  "fired_rules": [
+   {
+    "id": "R02",
+    "name": "multi-account device",
+    "rationale": "5 accounts have transacted on device d_5181698 as of this order",
+    "weight": 40
+   },
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=False, shared_root_accounts=80",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899014 already used by 32 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "91.229.48.46",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "prime-goods-20",
+  "order_id": 351558,
+  "score": 100,
+  "ship_address_id": 2899014,
+  "status": "approved",
+  "ts": "2025-09-18 07:05:32",
+  "user_id": 40395
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 649.6,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181698,
+   "ip_country": "US",
+   "order_id": 351558,
+   "status": "approved",
+   "ts": "2025-09-18 07:05:32"
+  },
+  {
+   "amount": 762.69,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5181698,
+   "ip_country": "US",
+   "order_id": 351559,
+   "status": "approved",
+   "ts": "2025-09-18 00:28:01"
+  },
+  {
+   "amount": 89.78,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 5181698,
+   "ip_country": "US",
+   "order_id": 351429,
+   "status": "approved",
+   "ts": "2025-08-18 04:07:33"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 4,
+  "other_accounts_on_ship_address": 39,
+  "other_accounts_same_email_root": 79
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 2,
+  "late": 0.0,
+  "paid": 2.0
+ },
+ "vendor_scores": null
+}

@@ -1,0 +1,192 @@
+{
+ "account": {
+  "amount_over_category_median": 0.36,
+  "avg_amount_prior": 279.375,
+  "email": "scarlett.garcia9269@outlook.com",
+  "email_domain": "outlook.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 1.0,
+  "n_orders_prior": 26,
+  "signup_ts": "2023-10-10 06:40:25",
+  "tenure_days": 826,
+  "total_spent_prior": 7263.75,
+  "user_id": 38857
+ },
+ "account_events_90d": [
+  {
+   "device_id": 38857,
+   "ip": "77.242.85.193",
+   "kind": "login",
+   "ts": "2025-12-16 10:10:56"
+  },
+  {
+   "device_id": 38857,
+   "ip": "77.242.85.142",
+   "kind": "login",
+   "ts": "2025-11-28 16:16:08"
+  },
+  {
+   "device_id": 38857,
+   "ip": "77.242.85.28",
+   "kind": "login",
+   "ts": "2025-10-26 06:14:49"
+  }
+ ],
+ "alert": {
+  "alert_id": 5309,
+  "amount": 80.32,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 38857,
+  "cvv_result": "M",
+  "device_id": 38857,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "2 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "77.242.85.147",
+  "ip_country": "US",
+  "merchant_category": "gaming",
+  "merchant_name": "blue-tech-33",
+  "order_id": 192586,
+  "score": 45,
+  "ship_address_id": 38857,
+  "status": "approved",
+  "ts": "2026-01-13 16:50:14",
+  "user_id": 38857
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "amex"
+ },
+ "last_orders": [
+  {
+   "amount": 80.32,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 38857,
+   "ip_country": "US",
+   "order_id": 192586,
+   "status": "approved",
+   "ts": "2026-01-13 16:50:14"
+  },
+  {
+   "amount": 841.73,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 38857,
+   "ip_country": "US",
+   "order_id": 189888,
+   "status": "approved",
+   "ts": "2026-01-10 19:19:49"
+  },
+  {
+   "amount": 521.81,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "N",
+   "device_id": 38857,
+   "ip_country": "US",
+   "order_id": 181090,
+   "status": "approved",
+   "ts": "2026-01-01 09:19:51"
+  },
+  {
+   "amount": 109.01,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 38857,
+   "ip_country": "US",
+   "order_id": 177243,
+   "status": "approved",
+   "ts": "2025-12-28 04:12:39"
+  },
+  {
+   "amount": 357.96,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 38857,
+   "ip_country": "US",
+   "order_id": 171450,
+   "status": "approved",
+   "ts": "2025-12-22 12:37:53"
+  },
+  {
+   "amount": 283.05,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 38857,
+   "ip_country": "US",
+   "order_id": 161494,
+   "status": "approved",
+   "ts": "2025-12-15 18:54:55"
+  },
+  {
+   "amount": 102.8,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 38857,
+   "ip_country": "US",
+   "order_id": 157720,
+   "status": "approved",
+   "ts": "2025-12-13 08:00:33"
+  },
+  {
+   "amount": 160.91,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 38857,
+   "ip_country": "US",
+   "order_id": 145447,
+   "status": "approved",
+   "ts": "2025-12-04 18:03:40"
+  },
+  {
+   "amount": 316.33,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 38857,
+   "ip_country": "US",
+   "order_id": 145324,
+   "status": "approved",
+   "ts": "2025-12-04 16:42:12"
+  },
+  {
+   "amount": 696.74,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 38857,
+   "ip_country": "US",
+   "order_id": 135966,
+   "status": "approved",
+   "ts": "2025-11-28 02:36:49"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 64,
+  "late": 0.0,
+  "paid": 64.0
+ },
+ "vendor_scores": null
+}

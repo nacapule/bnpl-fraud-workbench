@@ -1,0 +1,222 @@
+{
+ "account": {
+  "amount_over_category_median": 0.83,
+  "avg_amount_prior": 166.295833,
+  "email": "anthony.lee8713@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 1.0,
+  "n_orders_prior": 12,
+  "signup_ts": "2023-11-28 06:05:18",
+  "tenure_days": 924,
+  "total_spent_prior": 1995.55,
+  "user_id": 34244
+ },
+ "account_events_90d": [
+  {
+   "device_id": 34244,
+   "ip": "40.32.178.34",
+   "kind": "login",
+   "ts": "2026-06-07 17:05:01"
+  },
+  {
+   "device_id": 34244,
+   "ip": "40.32.178.49",
+   "kind": "login",
+   "ts": "2026-05-27 19:49:55"
+  },
+  {
+   "device_id": 34244,
+   "ip": "40.32.178.111",
+   "kind": "login",
+   "ts": "2026-05-22 12:08:49"
+  },
+  {
+   "device_id": 34244,
+   "ip": "40.32.178.242",
+   "kind": "login",
+   "ts": "2026-05-20 16:07:46"
+  },
+  {
+   "device_id": 34244,
+   "ip": "40.32.178.28",
+   "kind": "login",
+   "ts": "2026-05-01 14:32:24"
+  },
+  {
+   "device_id": 34244,
+   "ip": "40.32.178.177",
+   "kind": "login",
+   "ts": "2026-04-23 20:33:26"
+  },
+  {
+   "device_id": 34244,
+   "ip": "40.32.178.180",
+   "kind": "login",
+   "ts": "2026-04-10 00:52:17"
+  },
+  {
+   "device_id": 34244,
+   "ip": "40.32.178.93",
+   "kind": "login",
+   "ts": "2026-03-14 06:24:12"
+  }
+ ],
+ "alert": {
+  "alert_id": 9092,
+  "amount": 87.31,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 34244,
+  "cvv_result": "N",
+  "device_id": 34244,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country GB vs IP country US with AVS=Y/CVV=N",
+    "weight": 35
+   }
+  ],
+  "ip": "40.32.178.66",
+  "ip_country": "US",
+  "merchant_category": "apparel",
+  "merchant_name": "prime-market-31",
+  "order_id": 334138,
+  "score": 35,
+  "ship_address_id": 34244,
+  "status": "approved",
+  "ts": "2026-06-09 22:48:36",
+  "user_id": 34244
+ },
+ "card": {
+  "bin_country": "GB",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 87.31,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "N",
+   "device_id": 34244,
+   "ip_country": "US",
+   "order_id": 334138,
+   "status": "approved",
+   "ts": "2026-06-09 22:48:36"
+  },
+  {
+   "amount": 544.03,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 34244,
+   "ip_country": "US",
+   "order_id": 315878,
+   "status": "approved",
+   "ts": "2026-05-22 12:01:30"
+  },
+  {
+   "amount": 230.85,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 34244,
+   "ip_country": "US",
+   "order_id": 256996,
+   "status": "approved",
+   "ts": "2026-03-22 15:34:36"
+  },
+  {
+   "amount": 54.98,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34244,
+   "ip_country": "US",
+   "order_id": 254517,
+   "status": "approved",
+   "ts": "2026-03-19 20:49:59"
+  },
+  {
+   "amount": 150.38,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "N",
+   "device_id": 34244,
+   "ip_country": "US",
+   "order_id": 245808,
+   "status": "approved",
+   "ts": "2026-03-10 18:36:52"
+  },
+  {
+   "amount": 149.11,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 34244,
+   "ip_country": "US",
+   "order_id": 200007,
+   "status": "approved",
+   "ts": "2026-01-21 16:49:11"
+  },
+  {
+   "amount": 336.97,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 34244,
+   "ip_country": "US",
+   "order_id": 153534,
+   "status": "approved",
+   "ts": "2025-12-10 10:06:37"
+  },
+  {
+   "amount": 62.03,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34244,
+   "ip_country": "US",
+   "order_id": 134486,
+   "status": "approved",
+   "ts": "2025-11-27 01:13:36"
+  },
+  {
+   "amount": 34.08,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34244,
+   "ip_country": "US",
+   "order_id": 133273,
+   "status": "approved",
+   "ts": "2025-11-26 07:22:40"
+  },
+  {
+   "amount": 128.09,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34244,
+   "ip_country": "US",
+   "order_id": 127917,
+   "status": "approved",
+   "ts": "2025-11-22 13:54:32"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 34,
+  "late": 0.0,
+  "paid": 34.0
+ },
+ "vendor_scores": null
+}

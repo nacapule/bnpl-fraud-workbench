@@ -1,0 +1,140 @@
+{
+ "account": {
+  "amount_over_category_median": 1.72,
+  "avg_amount_prior": 153.78,
+  "email": "luna.ramirez8105@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 6,
+  "signup_ts": "2024-03-07 13:10:06",
+  "tenure_days": 732,
+  "total_spent_prior": 922.68,
+  "user_id": 38412
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 6732,
+  "amount": 892.92,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 38412,
+  "cvv_result": "M",
+  "device_id": 38412,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country US vs IP country CA with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "72.106.231.61",
+  "ip_country": "CA",
+  "merchant_category": "electronics",
+  "merchant_name": "iron-collective-16",
+  "order_id": 244900,
+  "score": 35,
+  "ship_address_id": 30015,
+  "status": "approved",
+  "ts": "2026-03-09 19:23:55",
+  "user_id": 38412
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 892.92,
+   "avs_result": "N",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 38412,
+   "ip_country": "CA",
+   "order_id": 244900,
+   "status": "approved",
+   "ts": "2026-03-09 19:23:55"
+  },
+  {
+   "amount": 328.86,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 38412,
+   "ip_country": "CA",
+   "order_id": 229653,
+   "status": "approved",
+   "ts": "2026-02-21 19:29:47"
+  },
+  {
+   "amount": 74.3,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 38412,
+   "ip_country": "CA",
+   "order_id": 151449,
+   "status": "approved",
+   "ts": "2025-12-08 20:28:25"
+  },
+  {
+   "amount": 45.24,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 38412,
+   "ip_country": "CA",
+   "order_id": 151416,
+   "status": "approved",
+   "ts": "2025-12-08 19:57:46"
+  },
+  {
+   "amount": 62.51,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 38412,
+   "ip_country": "CA",
+   "order_id": 133453,
+   "status": "approved",
+   "ts": "2025-11-26 10:44:04"
+  },
+  {
+   "amount": 95.15,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 38412,
+   "ip_country": "CA",
+   "order_id": 14033,
+   "status": "approved",
+   "ts": "2025-07-17 23:48:27"
+  },
+  {
+   "amount": 316.62,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 38412,
+   "ip_country": "CA",
+   "order_id": 4358,
+   "status": "approved",
+   "ts": "2025-07-06 11:28:42"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 1,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 16,
+  "late": 0.0,
+  "paid": 16.0
+ },
+ "vendor_scores": null
+}

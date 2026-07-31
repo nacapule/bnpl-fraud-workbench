@@ -1,0 +1,173 @@
+{
+ "account": {
+  "amount_over_category_median": 1.17,
+  "avg_amount_prior": 188.637143,
+  "email": "isaac.thompson2684@yahoo.com",
+  "email_domain": "yahoo.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 1.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 14,
+  "signup_ts": "2024-08-27 23:51:24",
+  "tenure_days": 503,
+  "total_spent_prior": 2640.92,
+  "user_id": 31847
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 5275,
+  "amount": 174.76,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 31847,
+  "cvv_result": "N",
+  "device_id": 31847,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country CA vs IP country US with AVS=Y/CVV=N",
+    "weight": 35
+   }
+  ],
+  "ip": "39.178.67.144",
+  "ip_country": "US",
+  "merchant_category": "sports",
+  "merchant_name": "pure-haus-97",
+  "order_id": 191269,
+  "score": 35,
+  "ship_address_id": 31847,
+  "status": "approved",
+  "ts": "2026-01-12 10:16:44",
+  "user_id": 31847
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 174.76,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "N",
+   "device_id": 31847,
+   "ip_country": "US",
+   "order_id": 191269,
+   "status": "approved",
+   "ts": "2026-01-12 10:16:44"
+  },
+  {
+   "amount": 108.4,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 31847,
+   "ip_country": "US",
+   "order_id": 145043,
+   "status": "approved",
+   "ts": "2025-12-04 12:54:55"
+  },
+  {
+   "amount": 271.34,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 31847,
+   "ip_country": "US",
+   "order_id": 122930,
+   "status": "approved",
+   "ts": "2025-11-19 00:39:34"
+  },
+  {
+   "amount": 50.7,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 31847,
+   "ip_country": "US",
+   "order_id": 118516,
+   "status": "approved",
+   "ts": "2025-11-15 22:08:47"
+  },
+  {
+   "amount": 90.85,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 31847,
+   "ip_country": "US",
+   "order_id": 110745,
+   "status": "approved",
+   "ts": "2025-11-07 14:10:34"
+  },
+  {
+   "amount": 347.54,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 31847,
+   "ip_country": "US",
+   "order_id": 102954,
+   "status": "approved",
+   "ts": "2025-10-29 18:54:25"
+  },
+  {
+   "amount": 62.86,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 31847,
+   "ip_country": "US",
+   "order_id": 100909,
+   "status": "approved",
+   "ts": "2025-10-27 14:52:01"
+  },
+  {
+   "amount": 671.37,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 31847,
+   "ip_country": "US",
+   "order_id": 82437,
+   "status": "approved",
+   "ts": "2025-10-06 16:55:39"
+  },
+  {
+   "amount": 116.38,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 31847,
+   "ip_country": "US",
+   "order_id": 74957,
+   "status": "approved",
+   "ts": "2025-09-28 07:45:32"
+  },
+  {
+   "amount": 86.79,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 31847,
+   "ip_country": "US",
+   "order_id": 64601,
+   "status": "approved",
+   "ts": "2025-09-16 12:40:50"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 3,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 41,
+  "late": 2.0,
+  "paid": 39.0
+ },
+ "vendor_scores": null
+}

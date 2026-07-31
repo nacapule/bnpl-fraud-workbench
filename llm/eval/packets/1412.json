@@ -1,0 +1,80 @@
+{
+ "account": {
+  "amount_over_category_median": 0.5,
+  "avg_amount_prior": 0.0,
+  "email": "graysongomez3490@mailinator.com",
+  "email_domain": "mailinator.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": null,
+  "n_cvv_mismatch_prior": null,
+  "n_orders_prior": 0,
+  "signup_ts": "2025-09-05 06:24:20",
+  "tenure_days": 6,
+  "total_spent_prior": 0.0,
+  "user_id": 40435
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 1412,
+  "amount": 74.56,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 52419,
+  "cvv_result": "M",
+  "device_id": 5181712,
+  "fired_rules": [
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=True, shared_root_accounts=1",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899016 already used by 27 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "91.40.28.205",
+  "ip_country": "US",
+  "merchant_category": "sports",
+  "merchant_name": "urban-goods-12",
+  "order_id": 351641,
+  "score": 60,
+  "ship_address_id": 2899016,
+  "status": "approved",
+  "ts": "2025-09-11 09:51:17",
+  "user_id": 40435
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 74.56,
+   "avs_result": "N",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 5181712,
+   "ip_country": "US",
+   "order_id": 351641,
+   "status": "approved",
+   "ts": "2025-09-11 09:51:17"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 2,
+  "other_accounts_on_ship_address": 39,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

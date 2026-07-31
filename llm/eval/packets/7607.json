@@ -1,0 +1,192 @@
+{
+ "account": {
+  "amount_over_category_median": 0.64,
+  "avg_amount_prior": 205.783333,
+  "email": "chloe.gomez3301@yahoo.com",
+  "email_domain": "yahoo.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 1.0,
+  "n_orders_prior": 12,
+  "signup_ts": "2024-02-16 00:28:59",
+  "tenure_days": 786,
+  "total_spent_prior": 2469.4,
+  "user_id": 18514
+ },
+ "account_events_90d": [
+  {
+   "device_id": 5181240,
+   "ip": "58.229.12.135",
+   "kind": "address_add",
+   "ts": "2026-04-11 07:58:23"
+  },
+  {
+   "device_id": 5181240,
+   "ip": "58.229.12.135",
+   "kind": "password_change",
+   "ts": "2026-04-11 06:58:23"
+  },
+  {
+   "device_id": 18514,
+   "ip": "46.194.254.38",
+   "kind": "login",
+   "ts": "2026-02-12 06:43:07"
+  }
+ ],
+ "alert": {
+  "alert_id": 7607,
+  "amount": 334.41,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 18514,
+  "cvv_result": "M",
+  "device_id": 5181240,
+  "fired_rules": [
+   {
+    "id": "R01",
+    "name": "credential change before order",
+    "rationale": "credential/contact change 18.3h before order on 786d-old account, order from new device d_5181240",
+    "weight": 45
+   }
+  ],
+  "ip": "58.229.12.135",
+  "ip_country": "CA",
+  "merchant_category": "electronics",
+  "merchant_name": "iron-supply-33",
+  "order_id": 349972,
+  "score": 45,
+  "ship_address_id": 2898566,
+  "status": "approved",
+  "ts": "2026-04-12 01:16:17",
+  "user_id": 18514
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 334.41,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181240,
+   "ip_country": "CA",
+   "order_id": 349972,
+   "status": "approved",
+   "ts": "2026-04-12 01:16:17"
+  },
+  {
+   "amount": 351.0,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181240,
+   "ip_country": "CA",
+   "order_id": 349971,
+   "status": "approved",
+   "ts": "2026-04-11 20:12:33"
+  },
+  {
+   "amount": 235.71,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5181240,
+   "ip_country": "CA",
+   "order_id": 349970,
+   "status": "approved",
+   "ts": "2026-04-11 12:52:08"
+  },
+  {
+   "amount": 129.66,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 18514,
+   "ip_country": "CA",
+   "order_id": 269292,
+   "status": "approved",
+   "ts": "2026-04-04 10:56:19"
+  },
+  {
+   "amount": 1035.02,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 18514,
+   "ip_country": "CA",
+   "order_id": 255406,
+   "status": "approved",
+   "ts": "2026-03-20 20:14:29"
+  },
+  {
+   "amount": 157.32,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 18514,
+   "ip_country": "CA",
+   "order_id": 220355,
+   "status": "approved",
+   "ts": "2026-02-12 08:57:25"
+  },
+  {
+   "amount": 31.55,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 18514,
+   "ip_country": "CA",
+   "order_id": 212531,
+   "status": "approved",
+   "ts": "2026-02-03 20:00:48"
+  },
+  {
+   "amount": 122.45,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 18514,
+   "ip_country": "CA",
+   "order_id": 80161,
+   "status": "approved",
+   "ts": "2025-10-03 23:51:10"
+  },
+  {
+   "amount": 65.68,
+   "avs_result": "Y",
+   "category": "accessories",
+   "cvv_result": "N",
+   "device_id": 18514,
+   "ip_country": "CA",
+   "order_id": 52845,
+   "status": "approved",
+   "ts": "2025-09-02 15:27:18"
+  },
+  {
+   "amount": 163.56,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 18514,
+   "ip_country": "CA",
+   "order_id": 43970,
+   "status": "approved",
+   "ts": "2025-08-22 23:28:04"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 25,
+  "late": 0.0,
+  "paid": 25.0
+ },
+ "vendor_scores": null
+}

@@ -1,0 +1,74 @@
+{
+ "account": {
+  "amount_over_category_median": 1.58,
+  "avg_amount_prior": 0.0,
+  "email": "david60097@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": null,
+  "n_cvv_mismatch_prior": null,
+  "n_orders_prior": 0,
+  "signup_ts": "2026-05-08 04:45:57",
+  "tenure_days": 0,
+  "total_spent_prior": 0.0,
+  "user_id": 40236
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 8282,
+  "amount": 353.46,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 52220,
+  "cvv_result": "M",
+  "device_id": 5181603,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country FR vs IP country US with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "56.117.53.183",
+  "ip_country": "US",
+  "merchant_category": "gaming",
+  "merchant_name": "peak-gallery-60",
+  "order_id": 351022,
+  "score": 35,
+  "ship_address_id": 2898929,
+  "status": "approved",
+  "ts": "2026-05-08 10:51:06",
+  "user_id": 40236
+ },
+ "card": {
+  "bin_country": "FR",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 353.46,
+   "avs_result": "N",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5181603,
+   "ip_country": "US",
+   "order_id": 351022,
+   "status": "approved",
+   "ts": "2026-05-08 10:51:06"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

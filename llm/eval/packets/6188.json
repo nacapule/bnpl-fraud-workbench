@@ -1,0 +1,137 @@
+{
+ "account": {
+  "amount_over_category_median": 1.59,
+  "avg_amount_prior": 470.475,
+  "email": "evelyn.white1054@proton.me",
+  "email_domain": "proton.me",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 1.0,
+  "n_orders_prior": 4,
+  "signup_ts": "2025-03-04 19:22:18",
+  "tenure_days": 349,
+  "total_spent_prior": 1881.9,
+  "user_id": 33938
+ },
+ "account_events_90d": [
+  {
+   "device_id": 5181336,
+   "ip": "77.205.112.211",
+   "kind": "address_add",
+   "ts": "2026-02-15 13:57:05"
+  },
+  {
+   "device_id": 5181336,
+   "ip": "77.205.112.211",
+   "kind": "password_change",
+   "ts": "2026-02-15 12:57:05"
+  },
+  {
+   "device_id": 33938,
+   "ip": "58.170.98.97",
+   "kind": "login",
+   "ts": "2025-12-25 13:51:29"
+  }
+ ],
+ "alert": {
+  "alert_id": 6188,
+  "amount": 826.21,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 33938,
+  "cvv_result": "M",
+  "device_id": 5181336,
+  "fired_rules": [
+   {
+    "id": "R01",
+    "name": "credential change before order",
+    "rationale": "credential/contact change 11.9h before order on 348d-old account, order from new device d_5181336",
+    "weight": 45
+   }
+  ],
+  "ip": "77.205.112.211",
+  "ip_country": "RU",
+  "merchant_category": "electronics",
+  "merchant_name": "lux-province-10",
+  "order_id": 350199,
+  "score": 45,
+  "ship_address_id": 2898662,
+  "status": "approved",
+  "ts": "2026-02-16 00:52:12",
+  "user_id": 33938
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 826.21,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181336,
+   "ip_country": "RU",
+   "order_id": 350199,
+   "status": "approved",
+   "ts": "2026-02-16 00:52:12"
+  },
+  {
+   "amount": 632.17,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "N",
+   "device_id": 5181336,
+   "ip_country": "RU",
+   "order_id": 350198,
+   "status": "approved",
+   "ts": "2026-02-15 16:32:26"
+  },
+  {
+   "amount": 72.81,
+   "avs_result": "Y",
+   "category": "accessories",
+   "cvv_result": "M",
+   "device_id": 33938,
+   "ip_country": "US",
+   "order_id": 102976,
+   "status": "approved",
+   "ts": "2025-10-29 19:11:31"
+  },
+  {
+   "amount": 59.61,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 33938,
+   "ip_country": "US",
+   "order_id": 57233,
+   "status": "approved",
+   "ts": "2025-09-07 17:15:49"
+  },
+  {
+   "amount": 1117.31,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 48467,
+   "ip_country": "US",
+   "order_id": 54577,
+   "status": "approved",
+   "ts": "2025-09-04 16:15:10"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 9,
+  "late": 0.0,
+  "paid": 9.0
+ },
+ "vendor_scores": null
+}

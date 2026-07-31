@@ -1,0 +1,92 @@
+{
+ "account": {
+  "amount_over_category_median": 0.72,
+  "avg_amount_prior": 88.59,
+  "email": "henry.williams6268@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 1.0,
+  "n_orders_prior": 1,
+  "signup_ts": "2024-05-30 15:38:25",
+  "tenure_days": 527,
+  "total_spent_prior": 88.59,
+  "user_id": 7618
+ },
+ "account_events_90d": [
+  {
+   "device_id": 7618,
+   "ip": "54.69.211.105",
+   "kind": "login",
+   "ts": "2025-11-05 17:21:52"
+  }
+ ],
+ "alert": {
+  "alert_id": 3090,
+  "amount": 96.92,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 7618,
+  "cvv_result": "N",
+  "device_id": 7618,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country CN vs IP country US with AVS=Y/CVV=N",
+    "weight": 35
+   }
+  ],
+  "ip": "54.69.211.100",
+  "ip_country": "US",
+  "merchant_category": "shoes",
+  "merchant_name": "prime-outfitters-39",
+  "order_id": 111592,
+  "score": 35,
+  "ship_address_id": 7618,
+  "status": "approved",
+  "ts": "2025-11-08 13:00:55",
+  "user_id": 7618
+ },
+ "card": {
+  "bin_country": "CN",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 96.92,
+   "avs_result": "Y",
+   "category": "shoes",
+   "cvv_result": "N",
+   "device_id": 7618,
+   "ip_country": "US",
+   "order_id": 111592,
+   "status": "approved",
+   "ts": "2025-11-08 13:00:55"
+  },
+  {
+   "amount": 88.59,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "N",
+   "device_id": 7618,
+   "ip_country": "US",
+   "order_id": 68369,
+   "status": "approved",
+   "ts": "2025-09-20 18:16:52"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 3,
+  "late": 0.0,
+  "paid": 3.0
+ },
+ "vendor_scores": null
+}

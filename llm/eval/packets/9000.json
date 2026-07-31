@@ -1,0 +1,96 @@
+{
+ "account": {
+  "amount_over_category_median": 1.32,
+  "avg_amount_prior": 246.595,
+  "email": "stella.gomez6392@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 2,
+  "signup_ts": "2026-04-02 19:49:52",
+  "tenure_days": 64,
+  "total_spent_prior": 493.19,
+  "user_id": 18136
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 9000,
+  "amount": 684.06,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 18136,
+  "cvv_result": "M",
+  "device_id": 18136,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "2 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "52.19.21.3",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "north-gallery-23",
+  "order_id": 329780,
+  "score": 45,
+  "ship_address_id": 18136,
+  "status": "approved",
+  "ts": "2026-06-05 16:01:44",
+  "user_id": 18136
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "amex"
+ },
+ "last_orders": [
+  {
+   "amount": 684.06,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 18136,
+   "ip_country": "US",
+   "order_id": 329780,
+   "status": "approved",
+   "ts": "2026-06-05 16:01:44"
+  },
+  {
+   "amount": 446.46,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 18136,
+   "ip_country": "US",
+   "order_id": 306764,
+   "status": "approved",
+   "ts": "2026-05-12 21:21:57"
+  },
+  {
+   "amount": 46.73,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 18136,
+   "ip_country": "US",
+   "order_id": 269045,
+   "status": "approved",
+   "ts": "2026-04-03 23:03:44"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 1,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 4,
+  "late": 0.0,
+  "paid": 4.0
+ },
+ "vendor_scores": null
+}

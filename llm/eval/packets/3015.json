@@ -1,0 +1,154 @@
+{
+ "account": {
+  "amount_over_category_median": 1.53,
+  "avg_amount_prior": 213.728,
+  "email": "harper.baker326@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 1.0,
+  "n_orders_prior": 5,
+  "signup_ts": "2024-12-17 04:26:46",
+  "tenure_days": 323,
+  "total_spent_prior": 1068.64,
+  "user_id": 23463
+ },
+ "account_events_90d": [
+  {
+   "device_id": 5181275,
+   "ip": "59.112.128.128",
+   "kind": "address_add",
+   "ts": "2025-11-05 01:06:05"
+  },
+  {
+   "device_id": 5181275,
+   "ip": "59.112.128.128",
+   "kind": "password_change",
+   "ts": "2025-11-05 00:06:05"
+  },
+  {
+   "device_id": 23463,
+   "ip": "47.77.114.108",
+   "kind": "login",
+   "ts": "2025-10-04 22:42:59"
+  },
+  {
+   "device_id": 23463,
+   "ip": "47.77.114.173",
+   "kind": "login",
+   "ts": "2025-09-05 21:33:46"
+  }
+ ],
+ "alert": {
+  "alert_id": 3015,
+  "amount": 342.13,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 23463,
+  "cvv_result": "M",
+  "device_id": 5181275,
+  "fired_rules": [
+   {
+    "id": "R01",
+    "name": "credential change before order",
+    "rationale": "credential/contact change 10.9h before order on 323d-old account, order from new device d_5181275",
+    "weight": 45
+   }
+  ],
+  "ip": "59.112.128.128",
+  "ip_country": "US",
+  "merchant_category": "gaming",
+  "merchant_name": "peak-goods-90",
+  "order_id": 350054,
+  "score": 45,
+  "ship_address_id": 2898601,
+  "status": "approved",
+  "ts": "2025-11-05 11:03:03",
+  "user_id": 23463
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 342.13,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5181275,
+   "ip_country": "US",
+   "order_id": 350054,
+   "status": "approved",
+   "ts": "2025-11-05 11:03:03"
+  },
+  {
+   "amount": 473.32,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "N",
+   "device_id": 5181275,
+   "ip_country": "US",
+   "order_id": 350052,
+   "status": "approved",
+   "ts": "2025-11-05 05:54:28"
+  },
+  {
+   "amount": 319.92,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5181275,
+   "ip_country": "US",
+   "order_id": 350051,
+   "status": "approved",
+   "ts": "2025-11-05 03:02:09"
+  },
+  {
+   "amount": 116.46,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 23463,
+   "ip_country": "US",
+   "order_id": 81387,
+   "status": "approved",
+   "ts": "2025-10-05 14:19:30"
+  },
+  {
+   "amount": 81.28,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 23463,
+   "ip_country": "US",
+   "order_id": 58551,
+   "status": "approved",
+   "ts": "2025-09-09 10:02:06"
+  },
+  {
+   "amount": 77.66,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 23463,
+   "ip_country": "US",
+   "order_id": 30106,
+   "status": "approved",
+   "ts": "2025-08-06 15:27:16"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 8,
+  "late": 0.0,
+  "paid": 8.0
+ },
+ "vendor_scores": null
+}

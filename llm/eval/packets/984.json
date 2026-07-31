@@ -1,0 +1,108 @@
+{
+ "account": {
+  "amount_over_category_median": 1.43,
+  "avg_amount_prior": 61.21,
+  "email": "davidlee+61@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 2,
+  "signup_ts": "2025-08-13 06:05:42",
+  "tenure_days": 12,
+  "total_spent_prior": 122.42,
+  "user_id": 40382
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 984,
+  "amount": 84.12,
+  "avs_result": "Y",
+  "band": "decline",
+  "card_id": 52366,
+  "cvv_result": "M",
+  "device_id": 5181701,
+  "fired_rules": [
+   {
+    "id": "R02",
+    "name": "multi-account device",
+    "rationale": "4 accounts have transacted on device d_5181701 as of this order",
+    "weight": 40
+   },
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=False, shared_root_accounts=80",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899015 already used by 32 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "91.229.48.214",
+  "ip_country": "US",
+  "merchant_category": "beauty",
+  "merchant_name": "lux-labs-43",
+  "order_id": 351405,
+  "score": 100,
+  "ship_address_id": 2899015,
+  "status": "approved",
+  "ts": "2025-08-25 08:22:37",
+  "user_id": 40382
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 84.12,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 5181701,
+   "ip_country": "US",
+   "order_id": 351405,
+   "status": "approved",
+   "ts": "2025-08-25 08:22:37"
+  },
+  {
+   "amount": 87.4,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 5181701,
+   "ip_country": "US",
+   "order_id": 351403,
+   "status": "approved",
+   "ts": "2025-08-14 01:27:23"
+  },
+  {
+   "amount": 35.02,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 5181701,
+   "ip_country": "US",
+   "order_id": 351404,
+   "status": "approved",
+   "ts": "2025-08-10 13:57:41"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 4,
+  "other_accounts_on_ship_address": 39,
+  "other_accounts_same_email_root": 79
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 1,
+  "late": 0.0,
+  "paid": 1.0
+ },
+ "vendor_scores": null
+}

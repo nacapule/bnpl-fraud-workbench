@@ -1,0 +1,114 @@
+{
+ "account": {
+  "amount_over_category_median": 0.37,
+  "avg_amount_prior": 97.65,
+  "email": "thomas.harris3485@yahoo.com",
+  "email_domain": "yahoo.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 3,
+  "signup_ts": "2024-05-12 07:53:21",
+  "tenure_days": 460,
+  "total_spent_prior": 292.95,
+  "user_id": 31218
+ },
+ "account_events_90d": [
+  {
+   "device_id": 31218,
+   "ip": "54.178.245.167",
+   "kind": "login",
+   "ts": "2025-08-05 08:35:24"
+  }
+ ],
+ "alert": {
+  "alert_id": 727,
+  "amount": 38.97,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 31218,
+  "cvv_result": "M",
+  "device_id": 31218,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "2 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "54.178.245.31",
+  "ip_country": "US",
+  "merchant_category": "apparel",
+  "merchant_name": "cedar-row-95",
+  "order_id": 37565,
+  "score": 45,
+  "ship_address_id": 31218,
+  "status": "approved",
+  "ts": "2025-08-15 14:40:03",
+  "user_id": 31218
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 38.97,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 31218,
+   "ip_country": "US",
+   "order_id": 37565,
+   "status": "approved",
+   "ts": "2025-08-15 14:40:03"
+  },
+  {
+   "amount": 114.19,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 31218,
+   "ip_country": "US",
+   "order_id": 24425,
+   "status": "approved",
+   "ts": "2025-07-30 15:50:55"
+  },
+  {
+   "amount": 111.94,
+   "avs_result": "Y",
+   "category": "accessories",
+   "cvv_result": "M",
+   "device_id": 31218,
+   "ip_country": "US",
+   "order_id": 15235,
+   "status": "approved",
+   "ts": "2025-07-19 15:48:16"
+  },
+  {
+   "amount": 66.82,
+   "avs_result": "Y",
+   "category": "accessories",
+   "cvv_result": "M",
+   "device_id": 31218,
+   "ip_country": "US",
+   "order_id": 7809,
+   "status": "approved",
+   "ts": "2025-07-10 16:29:09"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 4,
+  "late": 0.0,
+  "paid": 4.0
+ },
+ "vendor_scores": null
+}

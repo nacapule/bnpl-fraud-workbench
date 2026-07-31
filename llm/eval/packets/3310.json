@@ -1,0 +1,182 @@
+{
+ "account": {
+  "amount_over_category_median": 0.93,
+  "avg_amount_prior": 270.278333,
+  "email": "levi.green3117@yahoo.com",
+  "email_domain": "yahoo.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 1.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 6,
+  "signup_ts": "2023-12-18 00:10:06",
+  "tenure_days": 699,
+  "total_spent_prior": 1621.67,
+  "user_id": 13194
+ },
+ "account_events_90d": [
+  {
+   "device_id": 5181233,
+   "ip": "66.254.51.216",
+   "kind": "address_add",
+   "ts": "2025-11-15 18:52:42"
+  },
+  {
+   "device_id": 5181233,
+   "ip": "66.254.51.216",
+   "kind": "password_change",
+   "ts": "2025-11-15 17:52:42"
+  },
+  {
+   "device_id": 13194,
+   "ip": "54.220.37.126",
+   "kind": "login",
+   "ts": "2025-11-05 20:49:36"
+  },
+  {
+   "device_id": 13194,
+   "ip": "54.220.37.168",
+   "kind": "login",
+   "ts": "2025-08-22 00:48:54"
+  }
+ ],
+ "alert": {
+  "alert_id": 3310,
+  "amount": 485.55,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 13194,
+  "cvv_result": "M",
+  "device_id": 5181233,
+  "fired_rules": [
+   {
+    "id": "R01",
+    "name": "credential change before order",
+    "rationale": "credential/contact change 16.7h before order on 699d-old account, order from new device d_5181233",
+    "weight": 45
+   },
+   {
+    "id": "R05",
+    "name": "order burst",
+    "rationale": "burst: 4 orders/24h on account, 4 on device d_5181233",
+    "weight": 30
+   }
+  ],
+  "ip": "66.254.51.216",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "urban-outfitters-61",
+  "order_id": 349953,
+  "score": 75,
+  "ship_address_id": 2898559,
+  "status": "approved",
+  "ts": "2025-11-16 10:35:27",
+  "user_id": 13194
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "discover"
+ },
+ "last_orders": [
+  {
+   "amount": 485.55,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181233,
+   "ip_country": "US",
+   "order_id": 349953,
+   "status": "approved",
+   "ts": "2025-11-16 10:35:27"
+  },
+  {
+   "amount": 467.15,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181233,
+   "ip_country": "US",
+   "order_id": 349951,
+   "status": "approved",
+   "ts": "2025-11-16 09:13:26"
+  },
+  {
+   "amount": 464.3,
+   "avs_result": "N",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181233,
+   "ip_country": "US",
+   "order_id": 349954,
+   "status": "approved",
+   "ts": "2025-11-16 06:52:58"
+  },
+  {
+   "amount": 390.22,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 5181233,
+   "ip_country": "US",
+   "order_id": 349952,
+   "status": "approved",
+   "ts": "2025-11-16 04:50:37"
+  },
+  {
+   "amount": 148.21,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 13194,
+   "ip_country": "US",
+   "order_id": 98042,
+   "status": "approved",
+   "ts": "2025-10-24 10:25:03"
+  },
+  {
+   "amount": 86.75,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 13194,
+   "ip_country": "US",
+   "order_id": 78066,
+   "status": "declined",
+   "ts": "2025-10-01 17:28:43"
+  },
+  {
+   "amount": 80.65,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 13194,
+   "ip_country": "US",
+   "order_id": 61628,
+   "status": "approved",
+   "ts": "2025-09-12 19:27:52"
+  },
+  {
+   "amount": 71.14,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 13194,
+   "ip_country": "US",
+   "order_id": 45467,
+   "status": "approved",
+   "ts": "2025-08-24 19:18:37"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 7,
+  "late": 0.0,
+  "paid": 7.0
+ },
+ "vendor_scores": null
+}

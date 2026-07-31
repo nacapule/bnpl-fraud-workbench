@@ -1,0 +1,109 @@
+{
+ "account": {
+  "amount_over_category_median": 1.22,
+  "avg_amount_prior": 175.13,
+  "email": "ella.rivera7477@hotmail.com",
+  "email_domain": "hotmail.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 2,
+  "signup_ts": "2024-05-26 10:20:21",
+  "tenure_days": 649,
+  "total_spent_prior": 350.26,
+  "user_id": 26922
+ },
+ "account_events_90d": [
+  {
+   "device_id": 26922,
+   "ip": "78.144.3.69",
+   "kind": "login",
+   "ts": "2026-02-06 05:04:03"
+  }
+ ],
+ "alert": {
+  "alert_id": 6664,
+  "amount": 127.91,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 26922,
+  "cvv_result": "N",
+  "device_id": 26922,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country CA vs IP country US with AVS=Y/CVV=N",
+    "weight": 35
+   },
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "2 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "78.144.3.179",
+  "ip_country": "US",
+  "merchant_category": "apparel",
+  "merchant_name": "north-province-11",
+  "order_id": 241818,
+  "score": 80,
+  "ship_address_id": 26922,
+  "status": "approved",
+  "ts": "2026-03-06 16:27:38",
+  "user_id": 26922
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "amex"
+ },
+ "last_orders": [
+  {
+   "amount": 127.91,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "N",
+   "device_id": 26922,
+   "ip_country": "US",
+   "order_id": 241818,
+   "status": "approved",
+   "ts": "2026-03-06 16:27:38"
+  },
+  {
+   "amount": 108.1,
+   "avs_result": "Y",
+   "category": "shoes",
+   "cvv_result": "M",
+   "device_id": 26922,
+   "ip_country": "US",
+   "order_id": 128711,
+   "status": "approved",
+   "ts": "2025-11-23 00:38:16"
+  },
+  {
+   "amount": 242.16,
+   "avs_result": "Y",
+   "category": "auto",
+   "cvv_result": "M",
+   "device_id": 26922,
+   "ip_country": "US",
+   "order_id": 58241,
+   "status": "approved",
+   "ts": "2025-09-08 19:42:26"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 1,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 6,
+  "late": 0.0,
+  "paid": 6.0
+ },
+ "vendor_scores": null
+}

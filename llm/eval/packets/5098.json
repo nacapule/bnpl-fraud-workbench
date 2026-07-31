@@ -1,0 +1,177 @@
+{
+ "account": {
+  "amount_over_category_median": 1.48,
+  "avg_amount_prior": 398.193333,
+  "email": "luna.phillips9183@yahoo.com",
+  "email_domain": "yahoo.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 1.0,
+  "n_orders_prior": 6,
+  "signup_ts": "2024-11-25 05:42:29",
+  "tenure_days": 404,
+  "total_spent_prior": 2389.16,
+  "user_id": 1616
+ },
+ "account_events_90d": [
+  {
+   "device_id": 5181229,
+   "ip": "77.79.62.145",
+   "kind": "address_add",
+   "ts": "2026-01-02 16:25:31"
+  },
+  {
+   "device_id": 5181229,
+   "ip": "77.79.62.145",
+   "kind": "email_change",
+   "ts": "2026-01-02 15:34:31"
+  },
+  {
+   "device_id": 5181229,
+   "ip": "77.79.62.145",
+   "kind": "password_change",
+   "ts": "2026-01-02 15:25:31"
+  },
+  {
+   "device_id": 1616,
+   "ip": "72.45.48.26",
+   "kind": "login",
+   "ts": "2025-11-24 15:55:53"
+  },
+  {
+   "device_id": 1616,
+   "ip": "72.45.48.101",
+   "kind": "address_add",
+   "ts": "2025-10-14 11:21:12"
+  }
+ ],
+ "alert": {
+  "alert_id": 5098,
+  "amount": 766.95,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 1616,
+  "cvv_result": "M",
+  "device_id": 5181229,
+  "fired_rules": [
+   {
+    "id": "R01",
+    "name": "credential change before order",
+    "rationale": "credential/contact change 10.3h before order on 403d-old account, order from new device d_5181229",
+    "weight": 45
+   },
+   {
+    "id": "R05",
+    "name": "order burst",
+    "rationale": "burst: 4 orders/24h on account, 4 on device d_5181229",
+    "weight": 30
+   }
+  ],
+  "ip": "77.79.62.145",
+  "ip_country": "GB",
+  "merchant_category": "electronics",
+  "merchant_name": "bright-threads-21",
+  "order_id": 349945,
+  "score": 75,
+  "ship_address_id": 2898555,
+  "status": "approved",
+  "ts": "2026-01-03 01:55:21",
+  "user_id": 1616
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 766.95,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181229,
+   "ip_country": "GB",
+   "order_id": 349945,
+   "status": "approved",
+   "ts": "2026-01-03 01:55:21"
+  },
+  {
+   "amount": 686.01,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 5181229,
+   "ip_country": "GB",
+   "order_id": 349942,
+   "status": "approved",
+   "ts": "2026-01-03 00:06:05"
+  },
+  {
+   "amount": 641.98,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "N",
+   "device_id": 5181229,
+   "ip_country": "GB",
+   "order_id": 349943,
+   "status": "approved",
+   "ts": "2026-01-02 23:29:22"
+  },
+  {
+   "amount": 651.19,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181229,
+   "ip_country": "GB",
+   "order_id": 349944,
+   "status": "approved",
+   "ts": "2026-01-02 22:21:08"
+  },
+  {
+   "amount": 112.51,
+   "avs_result": "Y",
+   "category": "shoes",
+   "cvv_result": "M",
+   "device_id": 1616,
+   "ip_country": "US",
+   "order_id": 155161,
+   "status": "approved",
+   "ts": "2025-12-11 13:21:16"
+  },
+  {
+   "amount": 267.06,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 1616,
+   "ip_country": "US",
+   "order_id": 127754,
+   "status": "approved",
+   "ts": "2025-11-22 11:43:46"
+  },
+  {
+   "amount": 30.41,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 1616,
+   "ip_country": "US",
+   "order_id": 61828,
+   "status": "approved",
+   "ts": "2025-09-13 00:35:12"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 6,
+  "late": 1.0,
+  "paid": 5.0
+ },
+ "vendor_scores": null
+}

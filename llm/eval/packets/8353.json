@@ -1,0 +1,148 @@
+{
+ "account": {
+  "amount_over_category_median": 0.51,
+  "avg_amount_prior": 144.774,
+  "email": "aurora.gonzalez4519@hotmail.com",
+  "email_domain": "hotmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 5,
+  "signup_ts": "2023-07-29 12:29:34",
+  "tenure_days": 1017,
+  "total_spent_prior": 723.87,
+  "user_id": 37311
+ },
+ "account_events_90d": [
+  {
+   "device_id": 37311,
+   "ip": "71.12.81.209",
+   "kind": "login",
+   "ts": "2026-05-01 15:00:17"
+  },
+  {
+   "device_id": 37311,
+   "ip": "71.12.81.191",
+   "kind": "login",
+   "ts": "2026-04-01 03:40:23"
+  },
+  {
+   "device_id": 37311,
+   "ip": "71.12.81.140",
+   "kind": "login",
+   "ts": "2026-03-09 17:54:03"
+  }
+ ],
+ "alert": {
+  "alert_id": 8353,
+  "amount": 265.74,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 37311,
+  "cvv_result": "M",
+  "device_id": 37311,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "2 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "71.12.81.119",
+  "ip_country": "CA",
+  "merchant_category": "electronics",
+  "merchant_name": "lux-province-10",
+  "order_id": 305024,
+  "score": 45,
+  "ship_address_id": 26899,
+  "status": "approved",
+  "ts": "2026-05-11 08:17:07",
+  "user_id": 37311
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 265.74,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 37311,
+   "ip_country": "CA",
+   "order_id": 305024,
+   "status": "approved",
+   "ts": "2026-05-11 08:17:07"
+  },
+  {
+   "amount": 108.54,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 37311,
+   "ip_country": "CA",
+   "order_id": 267667,
+   "status": "approved",
+   "ts": "2026-04-02 17:05:38"
+  },
+  {
+   "amount": 442.8,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 37311,
+   "ip_country": "CA",
+   "order_id": 250032,
+   "status": "approved",
+   "ts": "2026-03-15 10:55:32"
+  },
+  {
+   "amount": 114.51,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 37311,
+   "ip_country": "CA",
+   "order_id": 89864,
+   "status": "approved",
+   "ts": "2025-10-15 02:56:14"
+  },
+  {
+   "amount": 27.3,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 37311,
+   "ip_country": "CA",
+   "order_id": 67340,
+   "status": "approved",
+   "ts": "2025-09-19 15:26:14"
+  },
+  {
+   "amount": 30.72,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 37311,
+   "ip_country": "CA",
+   "order_id": 29674,
+   "status": "approved",
+   "ts": "2025-08-05 21:41:45"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 1,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 14,
+  "late": 0.0,
+  "paid": 14.0
+ },
+ "vendor_scores": null
+}

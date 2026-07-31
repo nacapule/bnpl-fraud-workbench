@@ -1,0 +1,113 @@
+{
+ "account": {
+  "amount_over_category_median": 0.95,
+  "avg_amount_prior": 65.193333,
+  "email": "graysongomez969@mailinator.com",
+  "email_domain": "mailinator.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 3,
+  "signup_ts": "2025-09-17 09:58:46",
+  "tenure_days": 32,
+  "total_spent_prior": 195.58,
+  "user_id": 40410
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 2395,
+  "amount": 496.14,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 52394,
+  "cvv_result": "N",
+  "device_id": 5181713,
+  "fired_rules": [
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=True, shared_root_accounts=1",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899017 already used by 16 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "91.40.28.200",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "urban-works-60",
+  "order_id": 351752,
+  "score": 60,
+  "ship_address_id": 2899017,
+  "status": "approved",
+  "ts": "2025-10-19 01:31:48",
+  "user_id": 40410
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 496.14,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "N",
+   "device_id": 5181713,
+   "ip_country": "US",
+   "order_id": 351752,
+   "status": "approved",
+   "ts": "2025-10-19 01:31:48"
+  },
+  {
+   "amount": 78.9,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181713,
+   "ip_country": "US",
+   "order_id": 351585,
+   "status": "approved",
+   "ts": "2025-09-23 23:55:23"
+  },
+  {
+   "amount": 41.01,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 5181713,
+   "ip_country": "US",
+   "order_id": 351586,
+   "status": "approved",
+   "ts": "2025-09-20 13:28:01"
+  },
+  {
+   "amount": 75.67,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181713,
+   "ip_country": "US",
+   "order_id": 351587,
+   "status": "approved",
+   "ts": "2025-09-01 04:00:52"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 2,
+  "other_accounts_on_ship_address": 39,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 6,
+  "late": 0.0,
+  "paid": 6.0
+ },
+ "vendor_scores": null
+}

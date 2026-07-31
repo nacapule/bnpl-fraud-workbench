@@ -1,0 +1,181 @@
+{
+ "account": {
+  "amount_over_category_median": 0.88,
+  "avg_amount_prior": 170.7725,
+  "email": "noah.garcia9293@hotmail.com",
+  "email_domain": "hotmail.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 1.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 8,
+  "signup_ts": "2025-07-11 04:38:39",
+  "tenure_days": 158,
+  "total_spent_prior": 1366.18,
+  "user_id": 36595
+ },
+ "account_events_90d": [
+  {
+   "device_id": 36595,
+   "ip": "83.177.40.158",
+   "kind": "login",
+   "ts": "2025-11-14 08:38:42"
+  },
+  {
+   "device_id": 36595,
+   "ip": "83.177.40.184",
+   "kind": "login",
+   "ts": "2025-11-01 23:30:13"
+  },
+  {
+   "device_id": 36595,
+   "ip": "83.177.40.160",
+   "kind": "login",
+   "ts": "2025-10-08 09:58:34"
+  }
+ ],
+ "alert": {
+  "alert_id": 4398,
+  "amount": 92.47,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 36595,
+  "cvv_result": "N",
+  "device_id": 36595,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country CA vs IP country US with AVS=Y/CVV=N",
+    "weight": 35
+   }
+  ],
+  "ip": "83.177.40.97",
+  "ip_country": "US",
+  "merchant_category": "apparel",
+  "merchant_name": "swift-gallery-96",
+  "order_id": 162762,
+  "score": 35,
+  "ship_address_id": 36595,
+  "status": "approved",
+  "ts": "2025-12-16 16:05:00",
+  "user_id": 36595
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 92.47,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "N",
+   "device_id": 36595,
+   "ip_country": "US",
+   "order_id": 162762,
+   "status": "approved",
+   "ts": "2025-12-16 16:05:00"
+  },
+  {
+   "amount": 219.64,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 36595,
+   "ip_country": "US",
+   "order_id": 160701,
+   "status": "approved",
+   "ts": "2025-12-15 08:19:10"
+  },
+  {
+   "amount": 60.79,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 36595,
+   "ip_country": "US",
+   "order_id": 139995,
+   "status": "approved",
+   "ts": "2025-11-30 20:50:01"
+  },
+  {
+   "amount": 146.33,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 36595,
+   "ip_country": "US",
+   "order_id": 126439,
+   "status": "approved",
+   "ts": "2025-11-21 13:54:06"
+  },
+  {
+   "amount": 354.87,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 36595,
+   "ip_country": "US",
+   "order_id": 124451,
+   "status": "approved",
+   "ts": "2025-11-20 04:23:34"
+  },
+  {
+   "amount": 61.69,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 36595,
+   "ip_country": "US",
+   "order_id": 92623,
+   "status": "approved",
+   "ts": "2025-10-18 08:43:15"
+  },
+  {
+   "amount": 45.95,
+   "avs_result": "N",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 36595,
+   "ip_country": "US",
+   "order_id": 90212,
+   "status": "approved",
+   "ts": "2025-10-15 14:24:32"
+  },
+  {
+   "amount": 368.07,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 36595,
+   "ip_country": "US",
+   "order_id": 66975,
+   "status": "approved",
+   "ts": "2025-09-19 07:34:41"
+  },
+  {
+   "amount": 108.84,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 36595,
+   "ip_country": "US",
+   "order_id": 37739,
+   "status": "approved",
+   "ts": "2025-08-15 17:57:58"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 15,
+  "late": 1.0,
+  "paid": 14.0
+ },
+ "vendor_scores": null
+}

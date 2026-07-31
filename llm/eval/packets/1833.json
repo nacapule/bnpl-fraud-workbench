@@ -1,0 +1,136 @@
+{
+ "account": {
+  "amount_over_category_median": 0.81,
+  "avg_amount_prior": 261.184,
+  "email": "caleb.anderson3842@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 5,
+  "signup_ts": "2024-07-20 11:57:58",
+  "tenure_days": 431,
+  "total_spent_prior": 1305.92,
+  "user_id": 32209
+ },
+ "account_events_90d": [
+  {
+   "device_id": 32209,
+   "ip": "57.198.181.33",
+   "kind": "login",
+   "ts": "2025-09-15 17:15:51"
+  }
+ ],
+ "alert": {
+  "alert_id": 1833,
+  "amount": 109.1,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 32209,
+  "cvv_result": "M",
+  "device_id": 32209,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country US vs IP country CA with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "57.198.181.109",
+  "ip_country": "CA",
+  "merchant_category": "shoes",
+  "merchant_name": "nova-works-13",
+  "order_id": 71974,
+  "score": 35,
+  "ship_address_id": 32209,
+  "status": "approved",
+  "ts": "2025-09-24 18:48:15",
+  "user_id": 32209
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 109.1,
+   "avs_result": "N",
+   "category": "shoes",
+   "cvv_result": "M",
+   "device_id": 32209,
+   "ip_country": "CA",
+   "order_id": 71974,
+   "status": "approved",
+   "ts": "2025-09-24 18:48:15"
+  },
+  {
+   "amount": 333.71,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 32209,
+   "ip_country": "CA",
+   "order_id": 54212,
+   "status": "approved",
+   "ts": "2025-09-04 08:09:55"
+  },
+  {
+   "amount": 19.42,
+   "avs_result": "Y",
+   "category": "shoes",
+   "cvv_result": "M",
+   "device_id": 32209,
+   "ip_country": "CA",
+   "order_id": 39435,
+   "status": "approved",
+   "ts": "2025-08-17 18:09:42"
+  },
+  {
+   "amount": 114.18,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 32209,
+   "ip_country": "CA",
+   "order_id": 35786,
+   "status": "approved",
+   "ts": "2025-08-13 13:26:43"
+  },
+  {
+   "amount": 158.34,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 32209,
+   "ip_country": "CA",
+   "order_id": 18449,
+   "status": "approved",
+   "ts": "2025-07-23 14:38:36"
+  },
+  {
+   "amount": 680.27,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 32209,
+   "ip_country": "CA",
+   "order_id": 3701,
+   "status": "approved",
+   "ts": "2025-07-05 15:48:55"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 12,
+  "late": 1.0,
+  "paid": 11.0
+ },
+ "vendor_scores": null
+}

@@ -1,0 +1,87 @@
+{
+ "account": {
+  "amount_over_category_median": 0.32,
+  "avg_amount_prior": 0.0,
+  "email": "jackson.green7803@hotmail.com",
+  "email_domain": "hotmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": null,
+  "n_cvv_mismatch_prior": null,
+  "n_orders_prior": 0,
+  "signup_ts": "2024-09-16 12:33:35",
+  "tenure_days": 317,
+  "total_spent_prior": 0.0,
+  "user_id": 10412
+ },
+ "account_events_90d": [
+  {
+   "device_id": 10412,
+   "ip": "72.106.73.254",
+   "kind": "login",
+   "ts": "2025-07-29 23:56:10"
+  },
+  {
+   "device_id": 10412,
+   "ip": "72.106.73.51",
+   "kind": "login",
+   "ts": "2025-07-02 02:11:57"
+  }
+ ],
+ "alert": {
+  "alert_id": 414,
+  "amount": 149.92,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 10412,
+  "cvv_result": "M",
+  "device_id": 10412,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country US vs IP country CA with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "72.106.73.91",
+  "ip_country": "CA",
+  "merchant_category": "jewelry",
+  "merchant_name": "swift-trading-12",
+  "order_id": 24490,
+  "score": 35,
+  "ship_address_id": 10412,
+  "status": "approved",
+  "ts": "2025-07-30 16:58:24",
+  "user_id": 10412
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 149.92,
+   "avs_result": "N",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 10412,
+   "ip_country": "CA",
+   "order_id": 24490,
+   "status": "approved",
+   "ts": "2025-07-30 16:58:24"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

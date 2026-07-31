@@ -1,0 +1,175 @@
+{
+ "account": {
+  "amount_over_category_median": 0.65,
+  "avg_amount_prior": 209.57625,
+  "email": "aurora.evans9514@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 8,
+  "signup_ts": "2023-09-30 06:37:57",
+  "tenure_days": 783,
+  "total_spent_prior": 1676.61,
+  "user_id": 33065
+ },
+ "account_events_90d": [
+  {
+   "device_id": 33065,
+   "ip": "69.174.52.38",
+   "kind": "address_add",
+   "ts": "2025-09-22 17:35:14"
+  },
+  {
+   "device_id": 33065,
+   "ip": "69.174.52.112",
+   "kind": "login",
+   "ts": "2025-09-11 21:23:57"
+  }
+ ],
+ "alert": {
+  "alert_id": 3495,
+  "amount": 128.51,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 33065,
+  "cvv_result": "M",
+  "device_id": 33065,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country US vs IP country CN with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "77.174.52.145",
+  "ip_country": "CN",
+  "merchant_category": "auto",
+  "merchant_name": "north-province-49",
+  "order_id": 125907,
+  "score": 35,
+  "ship_address_id": 1971740,
+  "status": "approved",
+  "ts": "2025-11-21 05:14:01",
+  "user_id": 33065
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "amex"
+ },
+ "last_orders": [
+  {
+   "amount": 128.51,
+   "avs_result": "N",
+   "category": "auto",
+   "cvv_result": "M",
+   "device_id": 33065,
+   "ip_country": "CN",
+   "order_id": 125907,
+   "status": "approved",
+   "ts": "2025-11-21 05:14:01"
+  },
+  {
+   "amount": 93.74,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 33065,
+   "ip_country": "US",
+   "order_id": 108663,
+   "status": "approved",
+   "ts": "2025-11-05 08:11:49"
+  },
+  {
+   "amount": 73.5,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 33065,
+   "ip_country": "US",
+   "order_id": 90529,
+   "status": "approved",
+   "ts": "2025-10-15 19:25:16"
+  },
+  {
+   "amount": 53.88,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 33065,
+   "ip_country": "US",
+   "order_id": 80084,
+   "status": "approved",
+   "ts": "2025-10-03 21:12:10"
+  },
+  {
+   "amount": 110.4,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 33065,
+   "ip_country": "US",
+   "order_id": 76317,
+   "status": "approved",
+   "ts": "2025-09-29 17:52:33"
+  },
+  {
+   "amount": 274.02,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 33065,
+   "ip_country": "US",
+   "order_id": 76051,
+   "status": "approved",
+   "ts": "2025-09-29 12:45:21"
+  },
+  {
+   "amount": 623.43,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 33065,
+   "ip_country": "US",
+   "order_id": 56944,
+   "status": "approved",
+   "ts": "2025-09-07 11:53:43"
+  },
+  {
+   "amount": 102.42,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 33065,
+   "ip_country": "US",
+   "order_id": 22614,
+   "status": "approved",
+   "ts": "2025-07-28 12:13:06"
+  },
+  {
+   "amount": 345.22,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 33065,
+   "ip_country": "US",
+   "order_id": 2227,
+   "status": "approved",
+   "ts": "2025-07-03 18:59:56"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 21,
+  "late": 0.0,
+  "paid": 21.0
+ },
+ "vendor_scores": null
+}

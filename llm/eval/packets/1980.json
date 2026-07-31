@@ -1,0 +1,104 @@
+{
+ "account": {
+  "amount_over_category_median": 1.97,
+  "avg_amount_prior": 558.28,
+  "email": "caleb.edwards3174@outlook.com",
+  "email_domain": "outlook.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 1,
+  "signup_ts": "2023-12-29 15:35:21",
+  "tenure_days": 642,
+  "total_spent_prior": 558.28,
+  "user_id": 8263
+ },
+ "account_events_90d": [
+  {
+   "device_id": 5181307,
+   "ip": "43.2.167.17",
+   "kind": "address_add",
+   "ts": "2025-09-30 16:18:03"
+  },
+  {
+   "device_id": 5181307,
+   "ip": "43.2.167.17",
+   "kind": "password_change",
+   "ts": "2025-09-30 15:18:03"
+  },
+  {
+   "device_id": 8263,
+   "ip": "31.224.152.148",
+   "kind": "address_add",
+   "ts": "2025-08-18 23:23:44"
+  }
+ ],
+ "alert": {
+  "alert_id": 1980,
+  "amount": 925.44,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 8263,
+  "cvv_result": "M",
+  "device_id": 5181307,
+  "fired_rules": [
+   {
+    "id": "R01",
+    "name": "credential change before order",
+    "rationale": "credential/contact change 13.5h before order on 641d-old account, order from new device d_5181307",
+    "weight": 45
+   }
+  ],
+  "ip": "43.2.167.17",
+  "ip_country": "US",
+  "merchant_category": "jewelry",
+  "merchant_name": "swift-tech-38",
+  "order_id": 350129,
+  "score": 45,
+  "ship_address_id": 2898633,
+  "status": "approved",
+  "ts": "2025-10-01 04:49:31",
+  "user_id": 8263
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 925.44,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 5181307,
+   "ip_country": "US",
+   "order_id": 350129,
+   "status": "approved",
+   "ts": "2025-10-01 04:49:31"
+  },
+  {
+   "amount": 558.28,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181307,
+   "ip_country": "US",
+   "order_id": 350128,
+   "status": "approved",
+   "ts": "2025-09-30 21:43:10"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

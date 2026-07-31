@@ -1,0 +1,186 @@
+{
+ "account": {
+  "amount_over_category_median": 1.33,
+  "avg_amount_prior": 101.116667,
+  "email": "henry.torres5462@vistamail.mx",
+  "email_domain": "vistamail.mx",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 1.0,
+  "n_orders_prior": 21,
+  "signup_ts": "2024-03-27 09:54:48",
+  "tenure_days": 729,
+  "total_spent_prior": 2123.45,
+  "user_id": 9550
+ },
+ "account_events_90d": [
+  {
+   "device_id": 9550,
+   "ip": "42.168.125.185",
+   "kind": "login",
+   "ts": "2026-03-14 13:39:35"
+  },
+  {
+   "device_id": 9550,
+   "ip": "42.168.125.99",
+   "kind": "login",
+   "ts": "2025-12-31 06:06:34"
+  }
+ ],
+ "alert": {
+  "alert_id": 7180,
+  "amount": 78.44,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 9550,
+  "cvv_result": "M",
+  "device_id": 9550,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "2 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "42.168.125.245",
+  "ip_country": "US",
+  "merchant_category": "beauty",
+  "merchant_name": "gold-collective-34",
+  "order_id": 261098,
+  "score": 45,
+  "ship_address_id": 9550,
+  "status": "approved",
+  "ts": "2026-03-26 20:02:54",
+  "user_id": 9550
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "amex"
+ },
+ "last_orders": [
+  {
+   "amount": 78.44,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 9550,
+   "ip_country": "US",
+   "order_id": 261098,
+   "status": "approved",
+   "ts": "2026-03-26 20:02:54"
+  },
+  {
+   "amount": 43.33,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 339151,
+   "ip_country": "US",
+   "order_id": 248039,
+   "status": "approved",
+   "ts": "2026-03-13 07:34:55"
+  },
+  {
+   "amount": 42.78,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 9550,
+   "ip_country": "US",
+   "order_id": 234558,
+   "status": "approved",
+   "ts": "2026-02-26 21:59:42"
+  },
+  {
+   "amount": 206.33,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 339151,
+   "ip_country": "US",
+   "order_id": 208586,
+   "status": "approved",
+   "ts": "2026-01-30 18:03:16"
+  },
+  {
+   "amount": 59.54,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 339151,
+   "ip_country": "US",
+   "order_id": 204604,
+   "status": "approved",
+   "ts": "2026-01-26 15:26:46"
+  },
+  {
+   "amount": 98.93,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 339151,
+   "ip_country": "US",
+   "order_id": 203578,
+   "status": "approved",
+   "ts": "2026-01-25 13:34:15"
+  },
+  {
+   "amount": 34.45,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 9550,
+   "ip_country": "US",
+   "order_id": 158697,
+   "status": "approved",
+   "ts": "2025-12-13 20:18:36"
+  },
+  {
+   "amount": 59.8,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 339151,
+   "ip_country": "US",
+   "order_id": 141041,
+   "status": "approved",
+   "ts": "2025-12-01 16:33:45"
+  },
+  {
+   "amount": 94.85,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 9550,
+   "ip_country": "US",
+   "order_id": 139497,
+   "status": "approved",
+   "ts": "2025-11-30 15:14:45"
+  },
+  {
+   "amount": 65.45,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "N",
+   "device_id": 339151,
+   "ip_country": "US",
+   "order_id": 130614,
+   "status": "approved",
+   "ts": "2025-11-24 11:19:08"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 58,
+  "late": 27.0,
+  "paid": 31.0
+ },
+ "vendor_scores": null
+}

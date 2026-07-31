@@ -1,0 +1,74 @@
+{
+ "account": {
+  "amount_over_category_median": 1.36,
+  "avg_amount_prior": 0.0,
+  "email": "ellie27563@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": null,
+  "n_cvv_mismatch_prior": null,
+  "n_orders_prior": 0,
+  "signup_ts": "2026-03-03 09:29:15",
+  "tenure_days": 1,
+  "total_spent_prior": 0.0,
+  "user_id": 40039
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 6605,
+  "amount": 705.0,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 52023,
+  "cvv_result": "N",
+  "device_id": 5181406,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country US vs IP country ID with AVS=Y/CVV=N",
+    "weight": 35
+   }
+  ],
+  "ip": "77.208.132.175",
+  "ip_country": "ID",
+  "merchant_category": "electronics",
+  "merchant_name": "true-province-61",
+  "order_id": 350374,
+  "score": 35,
+  "ship_address_id": 2898732,
+  "status": "approved",
+  "ts": "2026-03-04 04:18:47",
+  "user_id": 40039
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 705.0,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "N",
+   "device_id": 5181406,
+   "ip_country": "ID",
+   "order_id": 350374,
+   "status": "approved",
+   "ts": "2026-03-04 04:18:47"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

@@ -1,0 +1,162 @@
+{
+ "account": {
+  "amount_over_category_median": 1.27,
+  "avg_amount_prior": 626.89,
+  "email": "elijah3238@outlook.com",
+  "email_domain": "outlook.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 2,
+  "signup_ts": "2025-12-16 20:23:34",
+  "tenure_days": 2,
+  "total_spent_prior": 1253.78,
+  "user_id": 40037
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 4462,
+  "amount": 594.94,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 52021,
+  "cvv_result": "M",
+  "device_id": 5181404,
+  "fired_rules": [
+   {
+    "id": "R07",
+    "name": "card testing",
+    "rationale": "6 declined attempts on this card/device in the prior 24h, then this approval",
+    "weight": 40
+   }
+  ],
+  "ip": "25.221.21.119",
+  "ip_country": "US",
+  "merchant_category": "jewelry",
+  "merchant_name": "swift-tech-38",
+  "order_id": 350362,
+  "score": 40,
+  "ship_address_id": 2898730,
+  "status": "approved",
+  "ts": "2025-12-18 13:13:44",
+  "user_id": 40037
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 6,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 594.94,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 5181404,
+   "ip_country": "US",
+   "order_id": 350362,
+   "status": "approved",
+   "ts": "2025-12-18 13:13:44"
+  },
+  {
+   "amount": 1083.84,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181404,
+   "ip_country": "US",
+   "order_id": 350364,
+   "status": "approved",
+   "ts": "2025-12-18 09:06:08"
+  },
+  {
+   "amount": 169.94,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5181404,
+   "ip_country": "US",
+   "order_id": 350363,
+   "status": "approved",
+   "ts": "2025-12-18 02:55:01"
+  },
+  {
+   "amount": 22.02,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 5181404,
+   "ip_country": "US",
+   "order_id": 350361,
+   "status": "declined",
+   "ts": "2025-12-17 19:25:27"
+  },
+  {
+   "amount": 39.63,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 5181404,
+   "ip_country": "US",
+   "order_id": 350360,
+   "status": "declined",
+   "ts": "2025-12-17 19:21:27"
+  },
+  {
+   "amount": 31.18,
+   "avs_result": "N",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 5181404,
+   "ip_country": "US",
+   "order_id": 350359,
+   "status": "declined",
+   "ts": "2025-12-17 19:17:27"
+  },
+  {
+   "amount": 32.05,
+   "avs_result": "N",
+   "category": "toys",
+   "cvv_result": "N",
+   "device_id": 5181404,
+   "ip_country": "US",
+   "order_id": 350358,
+   "status": "declined",
+   "ts": "2025-12-17 19:13:27"
+  },
+  {
+   "amount": 17.53,
+   "avs_result": "N",
+   "category": "home",
+   "cvv_result": "N",
+   "device_id": 5181404,
+   "ip_country": "US",
+   "order_id": 350357,
+   "status": "declined",
+   "ts": "2025-12-17 19:09:27"
+  },
+  {
+   "amount": 34.24,
+   "avs_result": "Y",
+   "category": "auto",
+   "cvv_result": "M",
+   "device_id": 5181404,
+   "ip_country": "US",
+   "order_id": 350356,
+   "status": "declined",
+   "ts": "2025-12-17 19:05:27"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

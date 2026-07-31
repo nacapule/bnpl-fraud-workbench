@@ -1,0 +1,119 @@
+{
+ "account": {
+  "amount_over_category_median": 1.78,
+  "avg_amount_prior": 48.91,
+  "email": "davidlee+62@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 3,
+  "signup_ts": "2025-08-14 10:59:27",
+  "tenure_days": 36,
+  "total_spent_prior": 146.73,
+  "user_id": 40383
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 1673,
+  "amount": 923.79,
+  "avs_result": "Y",
+  "band": "decline",
+  "card_id": 52367,
+  "cvv_result": "M",
+  "device_id": 5181702,
+  "fired_rules": [
+   {
+    "id": "R02",
+    "name": "multi-account device",
+    "rationale": "5 accounts have transacted on device d_5181702 as of this order",
+    "weight": 40
+   },
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=False, shared_root_accounts=80",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899014 already used by 36 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "91.229.48.123",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "north-gallery-23",
+  "order_id": 351542,
+  "score": 100,
+  "ship_address_id": 2899014,
+  "status": "approved",
+  "ts": "2025-09-19 10:35:44",
+  "user_id": 40383
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 923.79,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181702,
+   "ip_country": "US",
+   "order_id": 351542,
+   "status": "approved",
+   "ts": "2025-09-19 10:35:44"
+  },
+  {
+   "amount": 25.91,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181702,
+   "ip_country": "US",
+   "order_id": 351407,
+   "status": "approved",
+   "ts": "2025-09-11 00:14:21"
+  },
+  {
+   "amount": 81.08,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181702,
+   "ip_country": "US",
+   "order_id": 351406,
+   "status": "approved",
+   "ts": "2025-08-04 08:13:13"
+  },
+  {
+   "amount": 39.74,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 5181702,
+   "ip_country": "US",
+   "order_id": 351408,
+   "status": "approved",
+   "ts": "2025-07-28 18:18:22"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 4,
+  "other_accounts_on_ship_address": 39,
+  "other_accounts_same_email_root": 79
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 6,
+  "late": 0.0,
+  "paid": 6.0
+ },
+ "vendor_scores": null
+}

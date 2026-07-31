@@ -1,0 +1,114 @@
+{
+ "account": {
+  "amount_over_category_median": 0.59,
+  "avg_amount_prior": 266.355,
+  "email": "davidlee+27@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 2,
+  "signup_ts": "2025-08-04 06:52:40",
+  "tenure_days": 46,
+  "total_spent_prior": 532.71,
+  "user_id": 40348
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 1658,
+  "amount": 308.19,
+  "avs_result": "Y",
+  "band": "decline",
+  "card_id": 52332,
+  "cvv_result": "M",
+  "device_id": 5181699,
+  "fired_rules": [
+   {
+    "id": "R02",
+    "name": "multi-account device",
+    "rationale": "5 accounts have transacted on device d_5181699 as of this order",
+    "weight": 40
+   },
+   {
+    "id": "R05",
+    "name": "order burst",
+    "rationale": "burst: 2 orders/24h on account, 7 on device d_5181699",
+    "weight": 30
+   },
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=False, shared_root_accounts=80",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899015 already used by 38 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "91.229.48.113",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "urban-works-60",
+  "order_id": 351482,
+  "score": 130,
+  "ship_address_id": 2899015,
+  "status": "approved",
+  "ts": "2025-09-19 07:11:28",
+  "user_id": 40348
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 308.19,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181699,
+   "ip_country": "US",
+   "order_id": 351482,
+   "status": "approved",
+   "ts": "2025-09-19 07:11:28"
+  },
+  {
+   "amount": 471.44,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181699,
+   "ip_country": "US",
+   "order_id": 351483,
+   "status": "approved",
+   "ts": "2025-09-19 06:11:51"
+  },
+  {
+   "amount": 61.27,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 5181699,
+   "ip_country": "US",
+   "order_id": 351330,
+   "status": "approved",
+   "ts": "2025-08-01 21:26:29"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 4,
+  "other_accounts_on_ship_address": 39,
+  "other_accounts_same_email_root": 79
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 3,
+  "late": 0.0,
+  "paid": 3.0
+ },
+ "vendor_scores": null
+}

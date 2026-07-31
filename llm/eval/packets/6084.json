@@ -1,0 +1,125 @@
+{
+ "account": {
+  "amount_over_category_median": 1.34,
+  "avg_amount_prior": 255.925,
+  "email": "oliver.carter2226@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 4,
+  "signup_ts": "2025-10-24 00:43:20",
+  "tenure_days": 110,
+  "total_spent_prior": 1023.7,
+  "user_id": 35249
+ },
+ "account_events_90d": [
+  {
+   "device_id": 35249,
+   "ip": "33.220.122.138",
+   "kind": "login",
+   "ts": "2026-01-30 12:04:53"
+  }
+ ],
+ "alert": {
+  "alert_id": 6084,
+  "amount": 140.52,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 35249,
+  "cvv_result": "M",
+  "device_id": 35249,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "4 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "33.220.122.67",
+  "ip_country": "US",
+  "merchant_category": "apparel",
+  "merchant_name": "pure-collective-79",
+  "order_id": 219490,
+  "score": 45,
+  "ship_address_id": 35249,
+  "status": "approved",
+  "ts": "2026-02-11 10:13:54",
+  "user_id": 35249
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "amex"
+ },
+ "last_orders": [
+  {
+   "amount": 140.52,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 35249,
+   "ip_country": "US",
+   "order_id": 219490,
+   "status": "approved",
+   "ts": "2026-02-11 10:13:54"
+  },
+  {
+   "amount": 48.5,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 35249,
+   "ip_country": "US",
+   "order_id": 157594,
+   "status": "approved",
+   "ts": "2025-12-13 05:16:54"
+  },
+  {
+   "amount": 673.53,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 35249,
+   "ip_country": "US",
+   "order_id": 118206,
+   "status": "approved",
+   "ts": "2025-11-15 18:34:31"
+  },
+  {
+   "amount": 261.04,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 35249,
+   "ip_country": "US",
+   "order_id": 117597,
+   "status": "approved",
+   "ts": "2025-11-15 08:33:56"
+  },
+  {
+   "amount": 40.63,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 35249,
+   "ip_country": "US",
+   "order_id": 104408,
+   "status": "approved",
+   "ts": "2025-10-31 13:36:24"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 12,
+  "late": 0.0,
+  "paid": 12.0
+ },
+ "vendor_scores": null
+}

@@ -1,0 +1,107 @@
+{
+ "account": {
+  "amount_over_category_median": 0.45,
+  "avg_amount_prior": 111.46,
+  "email": "layla.lopez6926@outlook.com",
+  "email_domain": "outlook.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 3,
+  "signup_ts": "2024-04-05 05:09:57",
+  "tenure_days": 608,
+  "total_spent_prior": 334.38,
+  "user_id": 12249
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 3948,
+  "amount": 210.05,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 12249,
+  "cvv_result": "N",
+  "device_id": 43085,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country CA vs IP country US with AVS=Y/CVV=N",
+    "weight": 35
+   }
+  ],
+  "ip": "53.166.93.21",
+  "ip_country": "US",
+  "merchant_category": "jewelry",
+  "merchant_name": "swift-tech-38",
+  "order_id": 144709,
+  "score": 35,
+  "ship_address_id": 12249,
+  "status": "approved",
+  "ts": "2025-12-04 08:11:51",
+  "user_id": 12249
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 210.05,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "N",
+   "device_id": 43085,
+   "ip_country": "US",
+   "order_id": 144709,
+   "status": "approved",
+   "ts": "2025-12-04 08:11:51"
+  },
+  {
+   "amount": 61.53,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 12249,
+   "ip_country": "US",
+   "order_id": 105304,
+   "status": "approved",
+   "ts": "2025-11-01 13:22:31"
+  },
+  {
+   "amount": 242.18,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 12249,
+   "ip_country": "US",
+   "order_id": 65239,
+   "status": "approved",
+   "ts": "2025-09-17 08:48:29"
+  },
+  {
+   "amount": 30.67,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 12249,
+   "ip_country": "US",
+   "order_id": 47750,
+   "status": "approved",
+   "ts": "2025-08-27 14:20:49"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 8,
+  "late": 0.0,
+  "paid": 8.0
+ },
+ "vendor_scores": null
+}

@@ -1,0 +1,85 @@
+{
+ "account": {
+  "amount_over_category_median": 0.93,
+  "avg_amount_prior": 407.07,
+  "email": "hannah51610@outlook.com",
+  "email_domain": "outlook.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 1,
+  "signup_ts": "2025-07-31 20:32:58",
+  "tenure_days": 2,
+  "total_spent_prior": 407.07,
+  "user_id": 40318
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 484,
+  "amount": 484.38,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 52302,
+  "cvv_result": "M",
+  "device_id": 5181685,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country US vs IP country NG with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "77.112.250.120",
+  "ip_country": "NG",
+  "merchant_category": "electronics",
+  "merchant_name": "true-province-61",
+  "order_id": 351274,
+  "score": 35,
+  "ship_address_id": 2899011,
+  "status": "approved",
+  "ts": "2025-08-02 21:38:31",
+  "user_id": 40318
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 484.38,
+   "avs_result": "N",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181685,
+   "ip_country": "NG",
+   "order_id": 351274,
+   "status": "approved",
+   "ts": "2025-08-02 21:38:31"
+  },
+  {
+   "amount": 407.07,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181685,
+   "ip_country": "NG",
+   "order_id": 351275,
+   "status": "approved",
+   "ts": "2025-08-02 19:54:00"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

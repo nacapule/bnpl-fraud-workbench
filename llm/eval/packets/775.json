@@ -1,0 +1,114 @@
+{
+ "account": {
+  "amount_over_category_median": 0.84,
+  "avg_amount_prior": 149.993333,
+  "email": "joshua.johnson2495@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 3,
+  "signup_ts": "2023-12-01 02:36:00",
+  "tenure_days": 625,
+  "total_spent_prior": 449.98,
+  "user_id": 31865
+ },
+ "account_events_90d": [
+  {
+   "device_id": 31865,
+   "ip": "61.64.42.116",
+   "kind": "login",
+   "ts": "2025-07-26 19:51:28"
+  }
+ ],
+ "alert": {
+  "alert_id": 775,
+  "amount": 124.61,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 31865,
+  "cvv_result": "M",
+  "device_id": 31865,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "2 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "61.64.42.126",
+  "ip_country": "US",
+  "merchant_category": "sports",
+  "merchant_name": "pure-works-66",
+  "order_id": 39361,
+  "score": 45,
+  "ship_address_id": 31865,
+  "status": "approved",
+  "ts": "2025-08-17 16:52:10",
+  "user_id": 31865
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 124.61,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 31865,
+   "ip_country": "US",
+   "order_id": 39361,
+   "status": "approved",
+   "ts": "2025-08-17 16:52:10"
+  },
+  {
+   "amount": 153.85,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 31865,
+   "ip_country": "US",
+   "order_id": 34939,
+   "status": "approved",
+   "ts": "2025-08-12 12:37:51"
+  },
+  {
+   "amount": 104.71,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 31865,
+   "ip_country": "US",
+   "order_id": 15545,
+   "status": "approved",
+   "ts": "2025-07-19 20:59:06"
+  },
+  {
+   "amount": 191.42,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 31865,
+   "ip_country": "US",
+   "order_id": 4260,
+   "status": "approved",
+   "ts": "2025-07-06 08:57:39"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 1,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 5,
+  "late": 0.0,
+  "paid": 5.0
+ },
+ "vendor_scores": null
+}

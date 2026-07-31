@@ -1,0 +1,92 @@
+{
+ "account": {
+  "amount_over_category_median": 0.52,
+  "avg_amount_prior": 0.0,
+  "email": "oliver86+21@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": null,
+  "n_cvv_mismatch_prior": null,
+  "n_orders_prior": 0,
+  "signup_ts": "2026-02-01 23:58:20",
+  "tenure_days": 1,
+  "total_spent_prior": 0.0,
+  "user_id": 41062
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 5832,
+  "amount": 77.46,
+  "avs_result": "Y",
+  "band": "decline",
+  "card_id": 53046,
+  "cvv_result": "M",
+  "device_id": 5182242,
+  "fired_rules": [
+   {
+    "id": "R02",
+    "name": "multi-account device",
+    "rationale": "6 accounts have transacted on device d_5182242 as of this order",
+    "weight": 40
+   },
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=False, shared_root_accounts=95",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899501 already used by 31 distinct accounts",
+    "weight": 35
+   },
+   {
+    "id": "R10",
+    "name": "promo farming cluster",
+    "rationale": "promo redeemed inside a device/address cluster with 31 linked redemptions",
+    "weight": 30
+   }
+  ],
+  "ip": "103.44.7.6",
+  "ip_country": "US",
+  "merchant_category": "sports",
+  "merchant_name": "swift-supply-45",
+  "order_id": 352636,
+  "score": 130,
+  "ship_address_id": 2899501,
+  "status": "approved",
+  "ts": "2026-02-02 06:16:55",
+  "user_id": 41062
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 77.46,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 5182242,
+   "ip_country": "US",
+   "order_id": 352636,
+   "status": "approved",
+   "ts": "2026-02-02 06:16:55"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 5,
+  "other_accounts_on_ship_address": 46,
+  "other_accounts_same_email_root": 94
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

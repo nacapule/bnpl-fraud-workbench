@@ -1,0 +1,107 @@
+{
+ "account": {
+  "amount_over_category_median": 1.13,
+  "avg_amount_prior": 258.746667,
+  "email": "james.evans2508@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 3,
+  "signup_ts": "2023-08-04 20:00:03",
+  "tenure_days": 829,
+  "total_spent_prior": 776.24,
+  "user_id": 11571
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 3164,
+  "amount": 97.66,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 11571,
+  "cvv_result": "M",
+  "device_id": 11571,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country CA vs IP country US with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "79.91.113.119",
+  "ip_country": "US",
+  "merchant_category": "health",
+  "merchant_name": "atlas-trading-87",
+  "order_id": 113730,
+  "score": 35,
+  "ship_address_id": 11571,
+  "status": "approved",
+  "ts": "2025-11-10 19:48:14",
+  "user_id": 11571
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "discover"
+ },
+ "last_orders": [
+  {
+   "amount": 97.66,
+   "avs_result": "N",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 11571,
+   "ip_country": "US",
+   "order_id": 113730,
+   "status": "approved",
+   "ts": "2025-11-10 19:48:14"
+  },
+  {
+   "amount": 105.57,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 11571,
+   "ip_country": "US",
+   "order_id": 30700,
+   "status": "approved",
+   "ts": "2025-08-07 09:22:02"
+  },
+  {
+   "amount": 63.64,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 11571,
+   "ip_country": "US",
+   "order_id": 26941,
+   "status": "approved",
+   "ts": "2025-08-02 16:46:17"
+  },
+  {
+   "amount": 607.03,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 11571,
+   "ip_country": "US",
+   "order_id": 5545,
+   "status": "approved",
+   "ts": "2025-07-07 19:16:31"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 9,
+  "late": 0.0,
+  "paid": 9.0
+ },
+ "vendor_scores": null
+}

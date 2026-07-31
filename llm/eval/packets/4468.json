@@ -1,0 +1,153 @@
+{
+ "account": {
+  "amount_over_category_median": 1.02,
+  "avg_amount_prior": 67.358333,
+  "email": "eleanor.moore7922@proton.me",
+  "email_domain": "proton.me",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 6,
+  "signup_ts": "2024-01-15 08:01:48",
+  "tenure_days": 703,
+  "total_spent_prior": 404.15,
+  "user_id": 11528
+ },
+ "account_events_90d": [
+  {
+   "device_id": 11528,
+   "ip": "48.234.31.96",
+   "kind": "login",
+   "ts": "2025-12-09 02:14:59"
+  },
+  {
+   "device_id": 11528,
+   "ip": "48.234.31.34",
+   "kind": "login",
+   "ts": "2025-10-25 02:58:17"
+  }
+ ],
+ "alert": {
+  "alert_id": 4468,
+  "amount": 531.71,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 11528,
+  "cvv_result": "M",
+  "device_id": 11528,
+  "fired_rules": [
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_21810 already used by 3 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "48.234.31.75",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "true-supply-90",
+  "order_id": 165684,
+  "score": 35,
+  "ship_address_id": 21810,
+  "status": "approved",
+  "ts": "2025-12-18 14:59:15",
+  "user_id": 11528
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 531.71,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 11528,
+   "ip_country": "US",
+   "order_id": 165684,
+   "status": "approved",
+   "ts": "2025-12-18 14:59:15"
+  },
+  {
+   "amount": 66.19,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 11528,
+   "ip_country": "US",
+   "order_id": 156670,
+   "status": "approved",
+   "ts": "2025-12-12 13:56:07"
+  },
+  {
+   "amount": 158.87,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 11528,
+   "ip_country": "US",
+   "order_id": 152755,
+   "status": "approved",
+   "ts": "2025-12-09 18:44:24"
+  },
+  {
+   "amount": 29.18,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 11528,
+   "ip_country": "US",
+   "order_id": 146561,
+   "status": "approved",
+   "ts": "2025-12-05 15:10:38"
+  },
+  {
+   "amount": 66.53,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 11528,
+   "ip_country": "US",
+   "order_id": 85195,
+   "status": "approved",
+   "ts": "2025-10-09 18:53:37"
+  },
+  {
+   "amount": 45.37,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 11528,
+   "ip_country": "US",
+   "order_id": 45634,
+   "status": "approved",
+   "ts": "2025-08-24 22:35:18"
+  },
+  {
+   "amount": 38.01,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 11528,
+   "ip_country": "US",
+   "order_id": 19263,
+   "status": "approved",
+   "ts": "2025-07-24 13:58:45"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 2,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 9,
+  "late": 0.0,
+  "paid": 9.0
+ },
+ "vendor_scores": null
+}

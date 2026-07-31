@@ -1,0 +1,173 @@
+{
+ "account": {
+  "amount_over_category_median": 2.08,
+  "avg_amount_prior": 75.779,
+  "email": "christopher.wilson369@hotmail.com",
+  "email_domain": "hotmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 10,
+  "signup_ts": "2023-08-31 03:59:23",
+  "tenure_days": 782,
+  "total_spent_prior": 757.79,
+  "user_id": 10102
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 2587,
+  "amount": 122.25,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 10102,
+  "cvv_result": "N",
+  "device_id": 10102,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country US vs IP country CA with AVS=Y/CVV=N",
+    "weight": 35
+   }
+  ],
+  "ip": "58.14.28.164",
+  "ip_country": "CA",
+  "merchant_category": "beauty",
+  "merchant_name": "pure-goods-92",
+  "order_id": 95942,
+  "score": 35,
+  "ship_address_id": 10102,
+  "status": "approved",
+  "ts": "2025-10-21 21:40:44",
+  "user_id": 10102
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 122.25,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "N",
+   "device_id": 10102,
+   "ip_country": "CA",
+   "order_id": 95942,
+   "status": "approved",
+   "ts": "2025-10-21 21:40:44"
+  },
+  {
+   "amount": 74.21,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 10102,
+   "ip_country": "CA",
+   "order_id": 93579,
+   "status": "approved",
+   "ts": "2025-10-19 11:28:20"
+  },
+  {
+   "amount": 24.63,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 10102,
+   "ip_country": "CA",
+   "order_id": 87619,
+   "status": "approved",
+   "ts": "2025-10-12 15:45:25"
+  },
+  {
+   "amount": 102.98,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 10102,
+   "ip_country": "CA",
+   "order_id": 78082,
+   "status": "approved",
+   "ts": "2025-10-01 17:42:32"
+  },
+  {
+   "amount": 49.52,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 10102,
+   "ip_country": "CA",
+   "order_id": 75807,
+   "status": "approved",
+   "ts": "2025-09-29 07:01:44"
+  },
+  {
+   "amount": 76.43,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 10102,
+   "ip_country": "CA",
+   "order_id": 58027,
+   "status": "approved",
+   "ts": "2025-09-08 16:32:33"
+  },
+  {
+   "amount": 67.51,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 10102,
+   "ip_country": "CA",
+   "order_id": 43205,
+   "status": "approved",
+   "ts": "2025-08-22 07:35:09"
+  },
+  {
+   "amount": 178.97,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 10102,
+   "ip_country": "CA",
+   "order_id": 40981,
+   "status": "approved",
+   "ts": "2025-08-19 14:47:27"
+  },
+  {
+   "amount": 95.23,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 10102,
+   "ip_country": "CA",
+   "order_id": 38786,
+   "status": "approved",
+   "ts": "2025-08-16 20:51:24"
+  },
+  {
+   "amount": 62.49,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 10102,
+   "ip_country": "CA",
+   "order_id": 28764,
+   "status": "approved",
+   "ts": "2025-08-04 19:45:05"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 20,
+  "late": 1.0,
+  "paid": 19.0
+ },
+ "vendor_scores": null
+}

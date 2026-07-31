@@ -1,0 +1,80 @@
+{
+ "account": {
+  "amount_over_category_median": 0.13,
+  "avg_amount_prior": 0.0,
+  "email": "graysongomez7457@mailinator.com",
+  "email_domain": "mailinator.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": null,
+  "n_cvv_mismatch_prior": null,
+  "n_orders_prior": 0,
+  "signup_ts": "2025-09-12 11:54:35",
+  "tenure_days": -24,
+  "total_spent_prior": 0.0,
+  "user_id": 40475
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 842,
+  "amount": 65.07,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 52459,
+  "cvv_result": "M",
+  "device_id": 5181726,
+  "fired_rules": [
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=True, shared_root_accounts=1",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899016 already used by 7 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "91.40.28.137",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "nova-tech-24",
+  "order_id": 351724,
+  "score": 60,
+  "ship_address_id": 2899016,
+  "status": "approved",
+  "ts": "2025-08-19 19:40:12",
+  "user_id": 40475
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 65.07,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181726,
+   "ip_country": "US",
+   "order_id": 351724,
+   "status": "approved",
+   "ts": "2025-08-19 19:40:12"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 2,
+  "other_accounts_on_ship_address": 39,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

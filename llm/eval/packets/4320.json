@@ -1,0 +1,126 @@
+{
+ "account": {
+  "amount_over_category_median": 1.66,
+  "avg_amount_prior": 57.54,
+  "email": "oliver.roberts2705@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 1.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 3,
+  "signup_ts": "2025-03-04 12:00:29",
+  "tenure_days": 285,
+  "total_spent_prior": 172.62,
+  "user_id": 7949
+ },
+ "account_events_90d": [
+  {
+   "device_id": 7949,
+   "ip": "61.156.141.183",
+   "kind": "login",
+   "ts": "2025-12-11 05:36:29"
+  },
+  {
+   "device_id": 262197,
+   "ip": "61.156.141.15",
+   "kind": "device_add",
+   "ts": "2025-12-02 00:00:00"
+  },
+  {
+   "device_id": 7949,
+   "ip": "61.156.141.224",
+   "kind": "login",
+   "ts": "2025-09-29 14:39:11"
+  }
+ ],
+ "alert": {
+  "alert_id": 4320,
+  "amount": 174.3,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 7949,
+  "cvv_result": "M",
+  "device_id": 7949,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "3 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "61.156.141.119",
+  "ip_country": "US",
+  "merchant_category": "apparel",
+  "merchant_name": "cedar-supply-60",
+  "order_id": 159482,
+  "score": 45,
+  "ship_address_id": 7949,
+  "status": "approved",
+  "ts": "2025-12-14 12:09:45",
+  "user_id": 7949
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 174.3,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 7949,
+   "ip_country": "US",
+   "order_id": 159482,
+   "status": "approved",
+   "ts": "2025-12-14 12:09:45"
+  },
+  {
+   "amount": 86.37,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 7949,
+   "ip_country": "US",
+   "order_id": 104329,
+   "status": "approved",
+   "ts": "2025-10-31 11:57:40"
+  },
+  {
+   "amount": 42.66,
+   "avs_result": "N",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 7949,
+   "ip_country": "US",
+   "order_id": 17001,
+   "status": "approved",
+   "ts": "2025-07-21 17:47:53"
+  },
+  {
+   "amount": 43.59,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 7949,
+   "ip_country": "US",
+   "order_id": 2751,
+   "status": "approved",
+   "ts": "2025-07-04 13:21:57"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 9,
+  "late": 0.0,
+  "paid": 9.0
+ },
+ "vendor_scores": null
+}

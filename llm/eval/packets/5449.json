@@ -1,0 +1,107 @@
+{
+ "account": {
+  "amount_over_category_median": 1.75,
+  "avg_amount_prior": 219.043333,
+  "email": "amelia.scott9416@outlook.com",
+  "email_domain": "outlook.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 3,
+  "signup_ts": "2024-04-08 15:07:00",
+  "tenure_days": 651,
+  "total_spent_prior": 657.13,
+  "user_id": 228
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 5449,
+  "amount": 183.89,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 228,
+  "cvv_result": "M",
+  "device_id": 228,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "2 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "52.97.104.228",
+  "ip_country": "US",
+  "merchant_category": "apparel",
+  "merchant_name": "swift-threads-40",
+  "order_id": 197687,
+  "score": 45,
+  "ship_address_id": 228,
+  "status": "approved",
+  "ts": "2026-01-19 07:28:27",
+  "user_id": 228
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "discover"
+ },
+ "last_orders": [
+  {
+   "amount": 183.89,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 228,
+   "ip_country": "US",
+   "order_id": 197687,
+   "status": "approved",
+   "ts": "2026-01-19 07:28:27"
+  },
+  {
+   "amount": 314.33,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 228,
+   "ip_country": "US",
+   "order_id": 195365,
+   "status": "approved",
+   "ts": "2026-01-16 16:33:25"
+  },
+  {
+   "amount": 281.48,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 228,
+   "ip_country": "US",
+   "order_id": 163148,
+   "status": "approved",
+   "ts": "2025-12-16 20:03:48"
+  },
+  {
+   "amount": 61.32,
+   "avs_result": "Y",
+   "category": "auto",
+   "cvv_result": "M",
+   "device_id": 228,
+   "ip_country": "US",
+   "order_id": 125506,
+   "status": "approved",
+   "ts": "2025-11-20 19:52:10"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 5,
+  "late": 0.0,
+  "paid": 5.0
+ },
+ "vendor_scores": null
+}

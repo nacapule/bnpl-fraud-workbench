@@ -1,0 +1,186 @@
+{
+ "account": {
+  "amount_over_category_median": 0.69,
+  "avg_amount_prior": 195.804615,
+  "email": "ethan.flores2051@outlook.com",
+  "email_domain": "outlook.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 13,
+  "signup_ts": "2025-05-18 04:04:44",
+  "tenure_days": 329,
+  "total_spent_prior": 2545.46,
+  "user_id": 13343
+ },
+ "account_events_90d": [
+  {
+   "device_id": 13343,
+   "ip": "51.176.111.22",
+   "kind": "login",
+   "ts": "2026-02-16 12:49:18"
+  },
+  {
+   "device_id": 13343,
+   "ip": "51.176.111.208",
+   "kind": "address_add",
+   "ts": "2026-02-05 12:20:48"
+  }
+ ],
+ "alert": {
+  "alert_id": 7610,
+  "amount": 40.42,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 13343,
+  "cvv_result": "M",
+  "device_id": 13343,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "3 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "51.176.111.182",
+  "ip_country": "US",
+  "merchant_category": "beauty",
+  "merchant_name": "pure-goods-92",
+  "order_id": 276907,
+  "score": 45,
+  "ship_address_id": 367238,
+  "status": "approved",
+  "ts": "2026-04-12 10:02:48",
+  "user_id": 13343
+ },
+ "card": {
+  "bin_country": "RU",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 40.42,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 13343,
+   "ip_country": "US",
+   "order_id": 276907,
+   "status": "approved",
+   "ts": "2026-04-12 10:02:48"
+  },
+  {
+   "amount": 287.76,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 13343,
+   "ip_country": "US",
+   "order_id": 212109,
+   "status": "approved",
+   "ts": "2026-02-03 13:33:44"
+  },
+  {
+   "amount": 325.07,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 13343,
+   "ip_country": "US",
+   "order_id": 211299,
+   "status": "approved",
+   "ts": "2026-02-02 15:59:33"
+  },
+  {
+   "amount": 120.72,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 13343,
+   "ip_country": "US",
+   "order_id": 207365,
+   "status": "approved",
+   "ts": "2026-01-29 13:51:26"
+  },
+  {
+   "amount": 122.91,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 13343,
+   "ip_country": "US",
+   "order_id": 202535,
+   "status": "approved",
+   "ts": "2026-01-24 11:02:16"
+  },
+  {
+   "amount": 650.06,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 13343,
+   "ip_country": "US",
+   "order_id": 141467,
+   "status": "approved",
+   "ts": "2025-12-01 21:40:33"
+  },
+  {
+   "amount": 107.63,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 13343,
+   "ip_country": "US",
+   "order_id": 128997,
+   "status": "approved",
+   "ts": "2025-11-23 08:35:47"
+  },
+  {
+   "amount": 30.14,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 13343,
+   "ip_country": "US",
+   "order_id": 119235,
+   "status": "approved",
+   "ts": "2025-11-16 13:08:43"
+  },
+  {
+   "amount": 111.77,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 13343,
+   "ip_country": "US",
+   "order_id": 109227,
+   "status": "approved",
+   "ts": "2025-11-05 19:02:35"
+  },
+  {
+   "amount": 596.26,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 13343,
+   "ip_country": "US",
+   "order_id": 93608,
+   "status": "approved",
+   "ts": "2025-10-19 12:02:30"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 1,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 39,
+  "late": 0.0,
+  "paid": 39.0
+ },
+ "vendor_scores": null
+}

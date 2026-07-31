@@ -1,0 +1,180 @@
+{
+ "account": {
+  "amount_over_category_median": 0.77,
+  "avg_amount_prior": 136.515556,
+  "email": "aurora.gonzalez8915@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 9,
+  "signup_ts": "2023-12-01 12:04:46",
+  "tenure_days": 917,
+  "total_spent_prior": 1228.64,
+  "user_id": 34569
+ },
+ "account_events_90d": [
+  {
+   "device_id": 34569,
+   "ip": "29.158.31.97",
+   "kind": "login",
+   "ts": "2026-04-29 18:15:11"
+  }
+ ],
+ "alert": {
+  "alert_id": 8999,
+  "amount": 114.0,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 34569,
+  "cvv_result": "M",
+  "device_id": 34569,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country CA vs IP country US with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "29.158.31.128",
+  "ip_country": "US",
+  "merchant_category": "sports",
+  "merchant_name": "urban-goods-12",
+  "order_id": 329668,
+  "score": 35,
+  "ship_address_id": 34569,
+  "status": "approved",
+  "ts": "2026-06-05 13:50:12",
+  "user_id": 34569
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 114.0,
+   "avs_result": "N",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 34569,
+   "ip_country": "US",
+   "order_id": 329668,
+   "status": "approved",
+   "ts": "2026-06-05 13:50:12"
+  },
+  {
+   "amount": 122.62,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 34569,
+   "ip_country": "US",
+   "order_id": 270934,
+   "status": "approved",
+   "ts": "2026-04-05 21:27:02"
+  },
+  {
+   "amount": 127.5,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 34569,
+   "ip_country": "US",
+   "order_id": 207580,
+   "status": "approved",
+   "ts": "2026-01-29 17:39:37"
+  },
+  {
+   "amount": 502.49,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 34569,
+   "ip_country": "US",
+   "order_id": 188224,
+   "status": "approved",
+   "ts": "2026-01-09 01:39:49"
+  },
+  {
+   "amount": 127.26,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34569,
+   "ip_country": "US",
+   "order_id": 183295,
+   "status": "approved",
+   "ts": "2026-01-03 16:32:00"
+  },
+  {
+   "amount": 63.38,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34569,
+   "ip_country": "US",
+   "order_id": 170430,
+   "status": "approved",
+   "ts": "2025-12-21 18:24:39"
+  },
+  {
+   "amount": 59.38,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34569,
+   "ip_country": "US",
+   "order_id": 166126,
+   "status": "approved",
+   "ts": "2025-12-18 19:51:21"
+  },
+  {
+   "amount": 60.72,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34569,
+   "ip_country": "US",
+   "order_id": 150034,
+   "status": "approved",
+   "ts": "2025-12-07 20:43:24"
+  },
+  {
+   "amount": 129.59,
+   "avs_result": "Y",
+   "category": "auto",
+   "cvv_result": "M",
+   "device_id": 34569,
+   "ip_country": "US",
+   "order_id": 128420,
+   "status": "approved",
+   "ts": "2025-11-22 19:44:03"
+  },
+  {
+   "amount": 562.35,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 34569,
+   "ip_country": "US",
+   "order_id": 57410,
+   "status": "declined",
+   "ts": "2025-09-07 19:48:40"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 1,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 27,
+  "late": 1.0,
+  "paid": 26.0
+ },
+ "vendor_scores": null
+}

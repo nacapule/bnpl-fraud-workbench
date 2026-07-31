@@ -1,0 +1,118 @@
+{
+ "account": {
+  "amount_over_category_median": 0.39,
+  "avg_amount_prior": 470.2725,
+  "email": "lucas.thomas9605@outlook.com",
+  "email_domain": "outlook.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 4,
+  "signup_ts": "2023-11-22 22:15:18",
+  "tenure_days": 621,
+  "total_spent_prior": 1881.09,
+  "user_id": 11900
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 508,
+  "amount": 40.81,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 11900,
+  "cvv_result": "N",
+  "device_id": 11900,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country US vs IP country CA with AVS=Y/CVV=N",
+    "weight": 35
+   }
+  ],
+  "ip": "40.191.188.18",
+  "ip_country": "CA",
+  "merchant_category": "apparel",
+  "merchant_name": "swift-gallery-96",
+  "order_id": 28353,
+  "score": 35,
+  "ship_address_id": 11900,
+  "status": "approved",
+  "ts": "2025-08-04 11:58:55",
+  "user_id": 11900
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 40.81,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "N",
+   "device_id": 11900,
+   "ip_country": "CA",
+   "order_id": 28353,
+   "status": "approved",
+   "ts": "2025-08-04 11:58:55"
+  },
+  {
+   "amount": 759.64,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 11900,
+   "ip_country": "CA",
+   "order_id": 27010,
+   "status": "approved",
+   "ts": "2025-08-02 17:58:10"
+  },
+  {
+   "amount": 49.26,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 11900,
+   "ip_country": "CA",
+   "order_id": 24406,
+   "status": "approved",
+   "ts": "2025-07-30 15:25:09"
+  },
+  {
+   "amount": 951.82,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 11900,
+   "ip_country": "CA",
+   "order_id": 16737,
+   "status": "approved",
+   "ts": "2025-07-21 13:06:15"
+  },
+  {
+   "amount": 120.37,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 11900,
+   "ip_country": "CA",
+   "order_id": 11535,
+   "status": "approved",
+   "ts": "2025-07-14 23:54:15"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 1,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 1,
+  "late": 0.0,
+  "paid": 1.0
+ },
+ "vendor_scores": null
+}

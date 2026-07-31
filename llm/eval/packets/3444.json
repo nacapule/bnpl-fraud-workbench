@@ -1,0 +1,192 @@
+{
+ "account": {
+  "amount_over_category_median": 1.22,
+  "avg_amount_prior": 175.465833,
+  "email": "asher.baker4173@hotmail.com",
+  "email_domain": "hotmail.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 3.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 12,
+  "signup_ts": "2023-09-07 12:40:15",
+  "tenure_days": 804,
+  "total_spent_prior": 2105.59,
+  "user_id": 17352
+ },
+ "account_events_90d": [
+  {
+   "device_id": 17352,
+   "ip": "52.101.48.246",
+   "kind": "address_add",
+   "ts": "2025-11-08 23:17:50"
+  },
+  {
+   "device_id": 17352,
+   "ip": "52.101.48.119",
+   "kind": "login",
+   "ts": "2025-09-25 22:52:51"
+  },
+  {
+   "device_id": 17352,
+   "ip": "52.101.48.84",
+   "kind": "login",
+   "ts": "2025-09-01 00:33:23"
+  }
+ ],
+ "alert": {
+  "alert_id": 3444,
+  "amount": 165.41,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 17352,
+  "cvv_result": "M",
+  "device_id": 17352,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country CA vs IP country US with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "52.101.48.156",
+  "ip_country": "US",
+  "merchant_category": "shoes",
+  "merchant_name": "prime-outfitters-39",
+  "order_id": 124053,
+  "score": 35,
+  "ship_address_id": 580098,
+  "status": "approved",
+  "ts": "2025-11-19 19:57:47",
+  "user_id": 17352
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 165.41,
+   "avs_result": "N",
+   "category": "shoes",
+   "cvv_result": "M",
+   "device_id": 17352,
+   "ip_country": "US",
+   "order_id": 124053,
+   "status": "approved",
+   "ts": "2025-11-19 19:57:47"
+  },
+  {
+   "amount": 78.18,
+   "avs_result": "Y",
+   "category": "accessories",
+   "cvv_result": "M",
+   "device_id": 17352,
+   "ip_country": "US",
+   "order_id": 118986,
+   "status": "approved",
+   "ts": "2025-11-16 09:34:33"
+  },
+  {
+   "amount": 190.11,
+   "avs_result": "Y",
+   "category": "accessories",
+   "cvv_result": "M",
+   "device_id": 17352,
+   "ip_country": "US",
+   "order_id": 111220,
+   "status": "approved",
+   "ts": "2025-11-07 21:58:12"
+  },
+  {
+   "amount": 56.62,
+   "avs_result": "Y",
+   "category": "accessories",
+   "cvv_result": "M",
+   "device_id": 17352,
+   "ip_country": "US",
+   "order_id": 109641,
+   "status": "approved",
+   "ts": "2025-11-06 10:47:28"
+  },
+  {
+   "amount": 41.24,
+   "avs_result": "Y",
+   "category": "accessories",
+   "cvv_result": "M",
+   "device_id": 17352,
+   "ip_country": "US",
+   "order_id": 89023,
+   "status": "approved",
+   "ts": "2025-10-14 06:49:13"
+  },
+  {
+   "amount": 110.99,
+   "avs_result": "N",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 17352,
+   "ip_country": "US",
+   "order_id": 88030,
+   "status": "approved",
+   "ts": "2025-10-12 22:03:17"
+  },
+  {
+   "amount": 159.54,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 17352,
+   "ip_country": "US",
+   "order_id": 76852,
+   "status": "approved",
+   "ts": "2025-09-30 11:00:59"
+  },
+  {
+   "amount": 111.78,
+   "avs_result": "Y",
+   "category": "accessories",
+   "cvv_result": "M",
+   "device_id": 17352,
+   "ip_country": "US",
+   "order_id": 67104,
+   "status": "approved",
+   "ts": "2025-09-19 11:10:29"
+  },
+  {
+   "amount": 102.46,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 17352,
+   "ip_country": "US",
+   "order_id": 51350,
+   "status": "approved",
+   "ts": "2025-08-31 19:15:45"
+  },
+  {
+   "amount": 494.19,
+   "avs_result": "N",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 17352,
+   "ip_country": "US",
+   "order_id": 20870,
+   "status": "approved",
+   "ts": "2025-07-26 10:15:35"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 25,
+  "late": 0.0,
+  "paid": 25.0
+ },
+ "vendor_scores": null
+}

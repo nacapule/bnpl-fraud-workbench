@@ -1,0 +1,131 @@
+{
+ "account": {
+  "amount_over_category_median": 0.48,
+  "avg_amount_prior": 142.946667,
+  "email": "elijah.green671@yahoo.com",
+  "email_domain": "yahoo.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 3,
+  "signup_ts": "2023-09-28 10:54:46",
+  "tenure_days": 833,
+  "total_spent_prior": 428.84,
+  "user_id": 13243
+ },
+ "account_events_90d": [
+  {
+   "device_id": 13243,
+   "ip": "43.39.196.131",
+   "kind": "login",
+   "ts": "2025-11-26 07:43:51"
+  },
+  {
+   "device_id": 13243,
+   "ip": "43.39.196.120",
+   "kind": "login",
+   "ts": "2025-11-23 09:05:46"
+  }
+ ],
+ "alert": {
+  "alert_id": 5198,
+  "amount": 247.11,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 13243,
+  "cvv_result": "M",
+  "device_id": 13243,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "3 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "43.39.196.160",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "prime-goods-20",
+  "order_id": 187458,
+  "score": 45,
+  "ship_address_id": 13243,
+  "status": "approved",
+  "ts": "2026-01-08 09:27:24",
+  "user_id": 13243
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 247.11,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 13243,
+   "ip_country": "US",
+   "order_id": 187458,
+   "status": "approved",
+   "ts": "2026-01-08 09:27:24"
+  },
+  {
+   "amount": 226.27,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 13243,
+   "ip_country": "US",
+   "order_id": 127163,
+   "status": "approved",
+   "ts": "2025-11-21 22:14:25"
+  },
+  {
+   "amount": 77.27,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 13243,
+   "ip_country": "US",
+   "order_id": 58474,
+   "status": "declined",
+   "ts": "2025-09-09 07:11:06"
+  },
+  {
+   "amount": 80.63,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 13243,
+   "ip_country": "US",
+   "order_id": 55642,
+   "status": "approved",
+   "ts": "2025-09-05 19:16:55"
+  },
+  {
+   "amount": 121.94,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 13243,
+   "ip_country": "US",
+   "order_id": 7899,
+   "status": "approved",
+   "ts": "2025-07-10 17:59:19"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 1,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 9,
+  "late": 0.0,
+  "paid": 9.0
+ },
+ "vendor_scores": null
+}

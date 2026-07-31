@@ -1,0 +1,110 @@
+{
+ "account": {
+  "amount_over_category_median": 2.07,
+  "avg_amount_prior": 122.16,
+  "email": "evelyn.miller4673@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 1,
+  "signup_ts": "2024-10-18 04:38:15",
+  "tenure_days": 322,
+  "total_spent_prior": 122.16,
+  "user_id": 14321
+ },
+ "account_events_90d": [
+  {
+   "device_id": 5181241,
+   "ip": "77.185.108.31",
+   "kind": "address_add",
+   "ts": "2025-09-05 08:14:29"
+  },
+  {
+   "device_id": 5181241,
+   "ip": "77.185.108.31",
+   "kind": "email_change",
+   "ts": "2025-09-05 07:22:29"
+  },
+  {
+   "device_id": 5181241,
+   "ip": "77.185.108.31",
+   "kind": "password_change",
+   "ts": "2025-09-05 07:14:29"
+  },
+  {
+   "device_id": 707202,
+   "ip": "65.150.94.165",
+   "kind": "device_add",
+   "ts": "2025-07-22 00:00:00"
+  }
+ ],
+ "alert": {
+  "alert_id": 1225,
+  "amount": 972.11,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 14321,
+  "cvv_result": "M",
+  "device_id": 5181241,
+  "fired_rules": [
+   {
+    "id": "R01",
+    "name": "credential change before order",
+    "rationale": "credential/contact change 1.5h before order on 322d-old account, order from new device d_5181241",
+    "weight": 45
+   }
+  ],
+  "ip": "77.185.108.31",
+  "ip_country": "US",
+  "merchant_category": "jewelry",
+  "merchant_name": "iron-depot-40",
+  "order_id": 349975,
+  "score": 45,
+  "ship_address_id": 2898567,
+  "status": "approved",
+  "ts": "2025-09-05 08:51:14",
+  "user_id": 14321
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 972.11,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 5181241,
+   "ip_country": "US",
+   "order_id": 349975,
+   "status": "approved",
+   "ts": "2025-09-05 08:51:14"
+  },
+  {
+   "amount": 122.16,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 14321,
+   "ip_country": "US",
+   "order_id": 24219,
+   "status": "approved",
+   "ts": "2025-07-30 11:33:34"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 2,
+  "late": 0.0,
+  "paid": 2.0
+ },
+ "vendor_scores": null
+}

@@ -1,0 +1,135 @@
+{
+ "account": {
+  "amount_over_category_median": 1.29,
+  "avg_amount_prior": 883.55,
+  "email": "dylan66367@yahoo.com",
+  "email_domain": "yahoo.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 1.0,
+  "n_cvv_mismatch_prior": 1.0,
+  "n_orders_prior": 1,
+  "signup_ts": "2025-12-07 16:40:01",
+  "tenure_days": 2,
+  "total_spent_prior": 883.55,
+  "user_id": 40210
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 4147,
+  "amount": 668.38,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 52194,
+  "cvv_result": "N",
+  "device_id": 5181577,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country US vs IP country CA with AVS=N/CVV=N",
+    "weight": 35
+   },
+   {
+    "id": "R07",
+    "name": "card testing",
+    "rationale": "4 declined attempts on this card/device in the prior 24h, then this approval",
+    "weight": 40
+   }
+  ],
+  "ip": "46.25.147.185",
+  "ip_country": "CA",
+  "merchant_category": "electronics",
+  "merchant_name": "iron-supply-33",
+  "order_id": 350949,
+  "score": 75,
+  "ship_address_id": 2898903,
+  "status": "approved",
+  "ts": "2025-12-09 12:07:04",
+  "user_id": 40210
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 4,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 668.38,
+   "avs_result": "N",
+   "category": "electronics",
+   "cvv_result": "N",
+   "device_id": 5181577,
+   "ip_country": "CA",
+   "order_id": 350949,
+   "status": "approved",
+   "ts": "2025-12-09 12:07:04"
+  },
+  {
+   "amount": 883.55,
+   "avs_result": "N",
+   "category": "electronics",
+   "cvv_result": "N",
+   "device_id": 5181577,
+   "ip_country": "CA",
+   "order_id": 350948,
+   "status": "approved",
+   "ts": "2025-12-09 04:32:32"
+  },
+  {
+   "amount": 17.0,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "N",
+   "device_id": 5181577,
+   "ip_country": "CA",
+   "order_id": 350946,
+   "status": "declined",
+   "ts": "2025-12-09 03:15:03"
+  },
+  {
+   "amount": 37.99,
+   "avs_result": "N",
+   "category": "accessories",
+   "cvv_result": "M",
+   "device_id": 5181577,
+   "ip_country": "CA",
+   "order_id": 350945,
+   "status": "declined",
+   "ts": "2025-12-09 03:11:03"
+  },
+  {
+   "amount": 19.26,
+   "avs_result": "N",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 5181577,
+   "ip_country": "CA",
+   "order_id": 350944,
+   "status": "declined",
+   "ts": "2025-12-09 03:07:03"
+  },
+  {
+   "amount": 25.96,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5181577,
+   "ip_country": "CA",
+   "order_id": 350943,
+   "status": "declined",
+   "ts": "2025-12-09 03:03:03"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

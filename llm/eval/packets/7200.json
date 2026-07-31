@@ -1,0 +1,204 @@
+{
+ "account": {
+  "amount_over_category_median": 1.11,
+  "avg_amount_prior": 379.182727,
+  "email": "gianna.williams1950@hotmail.com",
+  "email_domain": "hotmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 1.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 11,
+  "signup_ts": "2023-08-26 11:58:21",
+  "tenure_days": 944,
+  "total_spent_prior": 4171.01,
+  "user_id": 33156
+ },
+ "account_events_90d": [
+  {
+   "device_id": 5181320,
+   "ip": "77.18.251.2",
+   "kind": "address_add",
+   "ts": "2026-03-27 08:34:03"
+  },
+  {
+   "device_id": 5181320,
+   "ip": "77.18.251.2",
+   "kind": "password_change",
+   "ts": "2026-03-27 07:34:03"
+  },
+  {
+   "device_id": 33156,
+   "ip": "44.240.236.211",
+   "kind": "login",
+   "ts": "2026-02-13 08:21:19"
+  },
+  {
+   "device_id": 33156,
+   "ip": "44.240.236.51",
+   "kind": "login",
+   "ts": "2026-01-27 03:27:20"
+  }
+ ],
+ "alert": {
+  "alert_id": 7200,
+  "amount": 574.47,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 33156,
+  "cvv_result": "M",
+  "device_id": 5181320,
+  "fired_rules": [
+   {
+    "id": "R01",
+    "name": "credential change before order",
+    "rationale": "credential/contact change 2.8h before order on 943d-old account, order from new device d_5181320",
+    "weight": 45
+   },
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country US vs IP country VN with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "77.18.251.2",
+  "ip_country": "VN",
+  "merchant_category": "electronics",
+  "merchant_name": "bright-threads-21",
+  "order_id": 350162,
+  "score": 80,
+  "ship_address_id": 2898646,
+  "status": "approved",
+  "ts": "2026-03-27 10:19:16",
+  "user_id": 33156
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 574.47,
+   "avs_result": "N",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181320,
+   "ip_country": "VN",
+   "order_id": 350162,
+   "status": "approved",
+   "ts": "2026-03-27 10:19:16"
+  },
+  {
+   "amount": 374.5,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 33156,
+   "ip_country": "US",
+   "order_id": 256759,
+   "status": "approved",
+   "ts": "2026-03-22 11:14:18"
+  },
+  {
+   "amount": 236.69,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 33156,
+   "ip_country": "US",
+   "order_id": 242063,
+   "status": "declined",
+   "ts": "2026-03-06 19:43:07"
+  },
+  {
+   "amount": 544.81,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 33156,
+   "ip_country": "US",
+   "order_id": 140773,
+   "status": "approved",
+   "ts": "2025-12-01 13:05:24"
+  },
+  {
+   "amount": 518.59,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 33156,
+   "ip_country": "US",
+   "order_id": 136556,
+   "status": "approved",
+   "ts": "2025-11-28 14:17:01"
+  },
+  {
+   "amount": 23.48,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 33156,
+   "ip_country": "US",
+   "order_id": 130936,
+   "status": "approved",
+   "ts": "2025-11-24 15:18:22"
+  },
+  {
+   "amount": 53.63,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 33156,
+   "ip_country": "US",
+   "order_id": 128306,
+   "status": "approved",
+   "ts": "2025-11-22 18:41:32"
+  },
+  {
+   "amount": 524.75,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 33156,
+   "ip_country": "US",
+   "order_id": 118430,
+   "status": "approved",
+   "ts": "2025-11-15 20:58:58"
+  },
+  {
+   "amount": 577.3,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 33156,
+   "ip_country": "US",
+   "order_id": 104749,
+   "status": "approved",
+   "ts": "2025-10-31 19:11:13"
+  },
+  {
+   "amount": 445.27,
+   "avs_result": "N",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 33156,
+   "ip_country": "US",
+   "order_id": 95212,
+   "status": "approved",
+   "ts": "2025-10-21 08:29:56"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 30,
+  "late": 0.0,
+  "paid": 30.0
+ },
+ "vendor_scores": null
+}

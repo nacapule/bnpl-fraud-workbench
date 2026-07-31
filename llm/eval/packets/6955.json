@@ -1,0 +1,192 @@
+{
+ "account": {
+  "amount_over_category_median": 1.41,
+  "avg_amount_prior": 259.176154,
+  "email": "henry.miller8876@hotmail.com",
+  "email_domain": "hotmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 1.0,
+  "n_cvv_mismatch_prior": 1.0,
+  "n_orders_prior": 13,
+  "signup_ts": "2024-05-16 17:50:06",
+  "tenure_days": 672,
+  "total_spent_prior": 3369.29,
+  "user_id": 22020
+ },
+ "account_events_90d": [
+  {
+   "device_id": 5181197,
+   "ip": "32.127.205.71",
+   "kind": "address_add",
+   "ts": "2026-03-19 07:28:09"
+  },
+  {
+   "device_id": 5181197,
+   "ip": "32.127.205.71",
+   "kind": "password_change",
+   "ts": "2026-03-19 06:28:09"
+  },
+  {
+   "device_id": 22020,
+   "ip": "80.92.191.210",
+   "kind": "login",
+   "ts": "2026-01-29 04:16:57"
+  }
+ ],
+ "alert": {
+  "alert_id": 6955,
+  "amount": 313.78,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 22020,
+  "cvv_result": "M",
+  "device_id": 5181197,
+  "fired_rules": [
+   {
+    "id": "R01",
+    "name": "credential change before order",
+    "rationale": "credential/contact change 5.9h before order on 671d-old account, order from new device d_5181197",
+    "weight": 45
+   }
+  ],
+  "ip": "32.127.205.71",
+  "ip_country": "US",
+  "merchant_category": "gaming",
+  "merchant_name": "peak-goods-91",
+  "order_id": 349856,
+  "score": 45,
+  "ship_address_id": 2898523,
+  "status": "approved",
+  "ts": "2026-03-19 12:20:21",
+  "user_id": 22020
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 313.78,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5181197,
+   "ip_country": "US",
+   "order_id": 349856,
+   "status": "approved",
+   "ts": "2026-03-19 12:20:21"
+  },
+  {
+   "amount": 265.02,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5181197,
+   "ip_country": "US",
+   "order_id": 349858,
+   "status": "approved",
+   "ts": "2026-03-19 11:52:16"
+  },
+  {
+   "amount": 166.98,
+   "avs_result": "Y",
+   "category": "shoes",
+   "cvv_result": "M",
+   "device_id": 22020,
+   "ip_country": "US",
+   "order_id": 241798,
+   "status": "approved",
+   "ts": "2026-03-06 16:03:43"
+  },
+  {
+   "amount": 160.25,
+   "avs_result": "Y",
+   "category": "shoes",
+   "cvv_result": "N",
+   "device_id": 22020,
+   "ip_country": "US",
+   "order_id": 234745,
+   "status": "approved",
+   "ts": "2026-02-27 08:35:38"
+  },
+  {
+   "amount": 137.8,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 22020,
+   "ip_country": "US",
+   "order_id": 220578,
+   "status": "approved",
+   "ts": "2026-02-12 14:03:16"
+  },
+  {
+   "amount": 297.64,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 22020,
+   "ip_country": "US",
+   "order_id": 219261,
+   "status": "approved",
+   "ts": "2026-02-10 21:54:38"
+  },
+  {
+   "amount": 156.28,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 22020,
+   "ip_country": "US",
+   "order_id": 215355,
+   "status": "approved",
+   "ts": "2026-02-06 19:25:06"
+  },
+  {
+   "amount": 73.09,
+   "avs_result": "Y",
+   "category": "shoes",
+   "cvv_result": "M",
+   "device_id": 22020,
+   "ip_country": "US",
+   "order_id": 149903,
+   "status": "approved",
+   "ts": "2025-12-07 19:21:31"
+  },
+  {
+   "amount": 188.79,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 22020,
+   "ip_country": "US",
+   "order_id": 148398,
+   "status": "approved",
+   "ts": "2025-12-06 18:35:53"
+  },
+  {
+   "amount": 223.56,
+   "avs_result": "Y",
+   "category": "shoes",
+   "cvv_result": "M",
+   "device_id": 22020,
+   "ip_country": "US",
+   "order_id": 104413,
+   "status": "approved",
+   "ts": "2025-10-31 13:40:06"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 28,
+  "late": 0.0,
+  "paid": 28.0
+ },
+ "vendor_scores": null
+}

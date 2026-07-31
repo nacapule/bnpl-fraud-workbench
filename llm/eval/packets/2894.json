@@ -1,0 +1,142 @@
+{
+ "account": {
+  "amount_over_category_median": 1.16,
+  "avg_amount_prior": 101.982,
+  "email": "daniel.perez499@yahoo.com",
+  "email_domain": "yahoo.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 1.0,
+  "n_orders_prior": 5,
+  "signup_ts": "2025-04-06 11:59:08",
+  "tenure_days": 209,
+  "total_spent_prior": 509.91,
+  "user_id": 16858
+ },
+ "account_events_90d": [
+  {
+   "device_id": 16858,
+   "ip": "74.145.35.1",
+   "kind": "login",
+   "ts": "2025-10-19 07:56:34"
+  },
+  {
+   "device_id": 16858,
+   "ip": "74.145.35.160",
+   "kind": "login",
+   "ts": "2025-10-14 14:51:40"
+  }
+ ],
+ "alert": {
+  "alert_id": 2894,
+  "amount": 68.26,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 16858,
+  "cvv_result": "N",
+  "device_id": 16858,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country CA vs IP country US with AVS=Y/CVV=N",
+    "weight": 35
+   }
+  ],
+  "ip": "74.145.35.254",
+  "ip_country": "US",
+  "merchant_category": "beauty",
+  "merchant_name": "pure-row-52",
+  "order_id": 105875,
+  "score": 35,
+  "ship_address_id": 16858,
+  "status": "approved",
+  "ts": "2025-11-01 23:57:27",
+  "user_id": 16858
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 68.26,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "N",
+   "device_id": 16858,
+   "ip_country": "US",
+   "order_id": 105875,
+   "status": "approved",
+   "ts": "2025-11-01 23:57:27"
+  },
+  {
+   "amount": 64.58,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 16858,
+   "ip_country": "US",
+   "order_id": 76905,
+   "status": "approved",
+   "ts": "2025-09-30 12:06:50"
+  },
+  {
+   "amount": 226.3,
+   "avs_result": "Y",
+   "category": "auto",
+   "cvv_result": "M",
+   "device_id": 16858,
+   "ip_country": "US",
+   "order_id": 64776,
+   "status": "approved",
+   "ts": "2025-09-16 16:56:06"
+  },
+  {
+   "amount": 20.95,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 16858,
+   "ip_country": "US",
+   "order_id": 39397,
+   "status": "approved",
+   "ts": "2025-08-17 17:31:17"
+  },
+  {
+   "amount": 99.02,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "N",
+   "device_id": 16858,
+   "ip_country": "US",
+   "order_id": 33545,
+   "status": "approved",
+   "ts": "2025-08-10 17:28:55"
+  },
+  {
+   "amount": 99.06,
+   "avs_result": "Y",
+   "category": "accessories",
+   "cvv_result": "M",
+   "device_id": 16858,
+   "ip_country": "US",
+   "order_id": 4673,
+   "status": "approved",
+   "ts": "2025-07-06 18:04:44"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 1,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 14,
+  "late": 0.0,
+  "paid": 14.0
+ },
+ "vendor_scores": null
+}

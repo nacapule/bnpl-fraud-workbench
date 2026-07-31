@@ -1,0 +1,180 @@
+{
+ "account": {
+  "amount_over_category_median": 0.49,
+  "avg_amount_prior": 120.262,
+  "email": "layla.thomas819@outlook.com",
+  "email_domain": "outlook.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 10,
+  "signup_ts": "2024-12-24 18:12:46",
+  "tenure_days": 462,
+  "total_spent_prior": 1202.62,
+  "user_id": 11516
+ },
+ "account_events_90d": [
+  {
+   "device_id": 11516,
+   "ip": "28.54.134.92",
+   "kind": "login",
+   "ts": "2026-02-20 20:25:13"
+  }
+ ],
+ "alert": {
+  "alert_id": 7331,
+  "amount": 28.94,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 11516,
+  "cvv_result": "M",
+  "device_id": 11516,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country CA vs IP country US with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "28.54.134.155",
+  "ip_country": "US",
+  "merchant_category": "beauty",
+  "merchant_name": "nova-works-64",
+  "order_id": 266123,
+  "score": 35,
+  "ship_address_id": 11516,
+  "status": "approved",
+  "ts": "2026-03-31 22:59:03",
+  "user_id": 11516
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 28.94,
+   "avs_result": "N",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 11516,
+   "ip_country": "US",
+   "order_id": 266123,
+   "status": "approved",
+   "ts": "2026-03-31 22:59:03"
+  },
+  {
+   "amount": 19.73,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 11516,
+   "ip_country": "US",
+   "order_id": 242290,
+   "status": "approved",
+   "ts": "2026-03-07 02:44:47"
+  },
+  {
+   "amount": 44.02,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 11516,
+   "ip_country": "US",
+   "order_id": 211629,
+   "status": "approved",
+   "ts": "2026-02-02 20:53:31"
+  },
+  {
+   "amount": 86.12,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 11516,
+   "ip_country": "US",
+   "order_id": 201246,
+   "status": "approved",
+   "ts": "2026-01-22 20:34:47"
+  },
+  {
+   "amount": 168.37,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 11516,
+   "ip_country": "US",
+   "order_id": 200117,
+   "status": "approved",
+   "ts": "2026-01-21 18:31:37"
+  },
+  {
+   "amount": 97.33,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 11516,
+   "ip_country": "US",
+   "order_id": 160110,
+   "status": "approved",
+   "ts": "2025-12-14 19:45:31"
+  },
+  {
+   "amount": 49.74,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 11516,
+   "ip_country": "US",
+   "order_id": 146669,
+   "status": "approved",
+   "ts": "2025-12-05 16:30:57"
+  },
+  {
+   "amount": 281.45,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 11516,
+   "ip_country": "US",
+   "order_id": 129471,
+   "status": "approved",
+   "ts": "2025-11-23 15:48:00"
+  },
+  {
+   "amount": 188.91,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 11516,
+   "ip_country": "US",
+   "order_id": 88129,
+   "status": "approved",
+   "ts": "2025-10-13 06:12:44"
+  },
+  {
+   "amount": 139.57,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 11516,
+   "ip_country": "US",
+   "order_id": 55040,
+   "status": "approved",
+   "ts": "2025-09-05 06:43:28"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 2,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 28,
+  "late": 0.0,
+  "paid": 28.0
+ },
+ "vendor_scores": null
+}

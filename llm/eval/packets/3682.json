@@ -1,0 +1,159 @@
+{
+ "account": {
+  "amount_over_category_median": 1.67,
+  "avg_amount_prior": 295.693333,
+  "email": "aurora.nguyen5658@outlook.com",
+  "email_domain": "outlook.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 6,
+  "signup_ts": "2023-09-17 04:38:53",
+  "tenure_days": 801,
+  "total_spent_prior": 1774.16,
+  "user_id": 36396
+ },
+ "account_events_90d": [
+  {
+   "device_id": 36396,
+   "ip": "52.24.9.41",
+   "kind": "login",
+   "ts": "2025-11-14 04:50:51"
+  },
+  {
+   "device_id": 36396,
+   "ip": "52.24.9.4",
+   "kind": "login",
+   "ts": "2025-10-25 22:25:29"
+  },
+  {
+   "device_id": 36396,
+   "ip": "52.24.9.32",
+   "kind": "login",
+   "ts": "2025-10-04 21:25:42"
+  }
+ ],
+ "alert": {
+  "alert_id": 3682,
+  "amount": 174.8,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 36396,
+  "cvv_result": "M",
+  "device_id": 36396,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "3 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "52.24.9.53",
+  "ip_country": "US",
+  "merchant_category": "apparel",
+  "merchant_name": "swift-province-53",
+  "order_id": 134171,
+  "score": 45,
+  "ship_address_id": 36396,
+  "status": "approved",
+  "ts": "2025-11-26 19:36:35",
+  "user_id": 36396
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "discover"
+ },
+ "last_orders": [
+  {
+   "amount": 174.8,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 36396,
+   "ip_country": "US",
+   "order_id": 134171,
+   "status": "approved",
+   "ts": "2025-11-26 19:36:35"
+  },
+  {
+   "amount": 83.67,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 36396,
+   "ip_country": "US",
+   "order_id": 129942,
+   "status": "approved",
+   "ts": "2025-11-23 21:10:19"
+  },
+  {
+   "amount": 197.94,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 36396,
+   "ip_country": "US",
+   "order_id": 97671,
+   "status": "approved",
+   "ts": "2025-10-23 19:40:49"
+  },
+  {
+   "amount": 134.44,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 36396,
+   "ip_country": "US",
+   "order_id": 68600,
+   "status": "approved",
+   "ts": "2025-09-20 21:49:38"
+  },
+  {
+   "amount": 730.14,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 36396,
+   "ip_country": "US",
+   "order_id": 55281,
+   "status": "approved",
+   "ts": "2025-09-05 13:08:37"
+  },
+  {
+   "amount": 611.22,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 36396,
+   "ip_country": "US",
+   "order_id": 42592,
+   "status": "approved",
+   "ts": "2025-08-21 13:20:44"
+  },
+  {
+   "amount": 16.75,
+   "avs_result": "Y",
+   "category": "shoes",
+   "cvv_result": "M",
+   "device_id": 36396,
+   "ip_country": "US",
+   "order_id": 38464,
+   "status": "approved",
+   "ts": "2025-08-16 16:01:45"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 1,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 14,
+  "late": 9.0,
+  "paid": 5.0
+ },
+ "vendor_scores": null
+}

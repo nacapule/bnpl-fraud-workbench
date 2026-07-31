@@ -1,0 +1,108 @@
+{
+ "account": {
+  "amount_over_category_median": 1.42,
+  "avg_amount_prior": 59.29,
+  "email": "graysongomez3713@mailinator.com",
+  "email_domain": "mailinator.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 1.0,
+  "n_orders_prior": 2,
+  "signup_ts": "2025-09-08 08:50:40",
+  "tenure_days": 43,
+  "total_spent_prior": 118.58,
+  "user_id": 40438
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 2556,
+  "amount": 735.68,
+  "avs_result": "Y",
+  "band": "decline",
+  "card_id": 52422,
+  "cvv_result": "M",
+  "device_id": 5181715,
+  "fired_rules": [
+   {
+    "id": "R02",
+    "name": "multi-account device",
+    "rationale": "3 accounts have transacted on device d_5181715 as of this order",
+    "weight": 40
+   },
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=True, shared_root_accounts=1",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899017 already used by 40 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "91.40.28.86",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "bright-tech-92",
+  "order_id": 351790,
+  "score": 100,
+  "ship_address_id": 2899017,
+  "status": "approved",
+  "ts": "2025-10-21 08:49:06",
+  "user_id": 40438
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 735.68,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181715,
+   "ip_country": "US",
+   "order_id": 351790,
+   "status": "approved",
+   "ts": "2025-10-21 08:49:06"
+  },
+  {
+   "amount": 65.41,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "N",
+   "device_id": 5181715,
+   "ip_country": "US",
+   "order_id": 351648,
+   "status": "approved",
+   "ts": "2025-09-20 02:33:05"
+  },
+  {
+   "amount": 53.17,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 5181715,
+   "ip_country": "US",
+   "order_id": 351647,
+   "status": "approved",
+   "ts": "2025-08-28 11:21:52"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 2,
+  "other_accounts_on_ship_address": 39,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 5,
+  "late": 0.0,
+  "paid": 5.0
+ },
+ "vendor_scores": null
+}

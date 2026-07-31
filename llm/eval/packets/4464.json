@@ -1,0 +1,108 @@
+{
+ "account": {
+  "amount_over_category_median": 1.4,
+  "avg_amount_prior": 49.04,
+  "email": "julianjackson+55@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 2,
+  "signup_ts": "2025-10-22 20:52:05",
+  "tenure_days": 57,
+  "total_spent_prior": 98.08,
+  "user_id": 40536
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 4464,
+  "amount": 655.38,
+  "avs_result": "Y",
+  "band": "decline",
+  "card_id": 52520,
+  "cvv_result": "N",
+  "device_id": 5181733,
+  "fired_rules": [
+   {
+    "id": "R02",
+    "name": "multi-account device",
+    "rationale": "3 accounts have transacted on device d_5181733 as of this order",
+    "weight": 40
+   },
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=False, shared_root_accounts=80",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899019 already used by 17 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "91.22.225.86",
+  "ip_country": "US",
+  "merchant_category": "jewelry",
+  "merchant_name": "bright-threads-46",
+  "order_id": 352094,
+  "score": 100,
+  "ship_address_id": 2899019,
+  "status": "approved",
+  "ts": "2025-12-18 14:09:44",
+  "user_id": 40536
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 655.38,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "N",
+   "device_id": 5181733,
+   "ip_country": "US",
+   "order_id": 352094,
+   "status": "approved",
+   "ts": "2025-12-18 14:09:44"
+  },
+  {
+   "amount": 62.56,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5181733,
+   "ip_country": "US",
+   "order_id": 351965,
+   "status": "approved",
+   "ts": "2025-11-09 21:02:07"
+  },
+  {
+   "amount": 35.52,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 5181733,
+   "ip_country": "US",
+   "order_id": 351966,
+   "status": "approved",
+   "ts": "2025-10-14 02:03:07"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 2,
+  "other_accounts_on_ship_address": 39,
+  "other_accounts_same_email_root": 79
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 5,
+  "late": 0.0,
+  "paid": 5.0
+ },
+ "vendor_scores": null
+}

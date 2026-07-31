@@ -1,0 +1,137 @@
+{
+ "account": {
+  "amount_over_category_median": 0.56,
+  "avg_amount_prior": 543.9325,
+  "email": "stella.taylor9706@vistamail.mx",
+  "email_domain": "vistamail.mx",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 4,
+  "signup_ts": "2023-09-25 17:41:07",
+  "tenure_days": 876,
+  "total_spent_prior": 2175.73,
+  "user_id": 24232
+ },
+ "account_events_90d": [
+  {
+   "device_id": 24232,
+   "ip": "40.218.22.51",
+   "kind": "login",
+   "ts": "2025-12-10 20:24:23"
+  },
+  {
+   "device_id": 24232,
+   "ip": "40.218.22.155",
+   "kind": "login",
+   "ts": "2025-12-10 13:30:36"
+  },
+  {
+   "device_id": 24232,
+   "ip": "40.218.22.133",
+   "kind": "login",
+   "ts": "2025-12-08 16:20:06"
+  }
+ ],
+ "alert": {
+  "alert_id": 6231,
+  "amount": 48.42,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 24232,
+  "cvv_result": "M",
+  "device_id": 24232,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "4 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "40.218.22.55",
+  "ip_country": "US",
+  "merchant_category": "health",
+  "merchant_name": "atlas-trading-87",
+  "order_id": 225653,
+  "score": 45,
+  "ship_address_id": 24232,
+  "status": "approved",
+  "ts": "2026-02-17 17:48:16",
+  "user_id": 24232
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 48.42,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 24232,
+   "ip_country": "US",
+   "order_id": 225653,
+   "status": "approved",
+   "ts": "2026-02-17 17:48:16"
+  },
+  {
+   "amount": 336.9,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 24232,
+   "ip_country": "US",
+   "order_id": 147718,
+   "status": "approved",
+   "ts": "2025-12-06 10:21:12"
+  },
+  {
+   "amount": 1196.04,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 24232,
+   "ip_country": "US",
+   "order_id": 140462,
+   "status": "approved",
+   "ts": "2025-12-01 08:00:01"
+  },
+  {
+   "amount": 264.3,
+   "avs_result": "Y",
+   "category": "accessories",
+   "cvv_result": "M",
+   "device_id": 24232,
+   "ip_country": "US",
+   "order_id": 111455,
+   "status": "approved",
+   "ts": "2025-11-08 10:17:48"
+  },
+  {
+   "amount": 378.49,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 24232,
+   "ip_country": "US",
+   "order_id": 93854,
+   "status": "approved",
+   "ts": "2025-10-19 17:04:44"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 12,
+  "late": 0.0,
+  "paid": 12.0
+ },
+ "vendor_scores": null
+}

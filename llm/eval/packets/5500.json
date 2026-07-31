@@ -1,0 +1,86 @@
+{
+ "account": {
+  "amount_over_category_median": 0.67,
+  "avg_amount_prior": 0.0,
+  "email": "oliver86+86@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": null,
+  "n_cvv_mismatch_prior": null,
+  "n_orders_prior": 0,
+  "signup_ts": "2026-01-19 07:06:50",
+  "tenure_days": 2,
+  "total_spent_prior": 0.0,
+  "user_id": 41127
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 5500,
+  "amount": 149.22,
+  "avs_result": "Y",
+  "band": "decline",
+  "card_id": 53111,
+  "cvv_result": "M",
+  "device_id": 5182247,
+  "fired_rules": [
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=False, shared_root_accounts=95",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899500 already used by 8 distinct accounts",
+    "weight": 35
+   },
+   {
+    "id": "R10",
+    "name": "promo farming cluster",
+    "rationale": "promo redeemed inside a device/address cluster with 8 linked redemptions",
+    "weight": 30
+   }
+  ],
+  "ip": "103.44.7.199",
+  "ip_country": "US",
+  "merchant_category": "gaming",
+  "merchant_name": "urban-haus-62",
+  "order_id": 352701,
+  "score": 90,
+  "ship_address_id": 2899500,
+  "status": "approved",
+  "ts": "2026-01-21 05:43:47",
+  "user_id": 41127
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 149.22,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5182247,
+   "ip_country": "US",
+   "order_id": 352701,
+   "status": "approved",
+   "ts": "2026-01-21 05:43:47"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 5,
+  "other_accounts_on_ship_address": 47,
+  "other_accounts_same_email_root": 94
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

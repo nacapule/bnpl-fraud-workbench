@@ -1,0 +1,173 @@
+{
+ "account": {
+  "amount_over_category_median": 0.91,
+  "avg_amount_prior": 117.9875,
+  "email": "luna.roberts9044@yahoo.com",
+  "email_domain": "yahoo.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 12,
+  "signup_ts": "2024-03-07 17:00:09",
+  "tenure_days": 750,
+  "total_spent_prior": 1415.85,
+  "user_id": 34738
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 7206,
+  "amount": 95.77,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 34738,
+  "cvv_result": "M",
+  "device_id": 34738,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country CA vs IP country US with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "78.244.190.92",
+  "ip_country": "US",
+  "merchant_category": "apparel",
+  "merchant_name": "lux-labs-59",
+  "order_id": 261678,
+  "score": 35,
+  "ship_address_id": 34738,
+  "status": "approved",
+  "ts": "2026-03-27 13:42:19",
+  "user_id": 34738
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 95.77,
+   "avs_result": "N",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34738,
+   "ip_country": "US",
+   "order_id": 261678,
+   "status": "approved",
+   "ts": "2026-03-27 13:42:19"
+  },
+  {
+   "amount": 73.1,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34738,
+   "ip_country": "US",
+   "order_id": 256724,
+   "status": "declined",
+   "ts": "2026-03-22 10:28:57"
+  },
+  {
+   "amount": 15.09,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34738,
+   "ip_country": "US",
+   "order_id": 254565,
+   "status": "approved",
+   "ts": "2026-03-19 21:45:57"
+  },
+  {
+   "amount": 25.69,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34738,
+   "ip_country": "US",
+   "order_id": 215387,
+   "status": "approved",
+   "ts": "2026-02-06 19:41:05"
+  },
+  {
+   "amount": 84.86,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34738,
+   "ip_country": "US",
+   "order_id": 198469,
+   "status": "approved",
+   "ts": "2026-01-19 21:57:25"
+  },
+  {
+   "amount": 122.63,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34738,
+   "ip_country": "US",
+   "order_id": 186577,
+   "status": "approved",
+   "ts": "2026-01-07 09:52:51"
+  },
+  {
+   "amount": 96.78,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34738,
+   "ip_country": "US",
+   "order_id": 126324,
+   "status": "approved",
+   "ts": "2025-11-21 12:23:20"
+  },
+  {
+   "amount": 38.36,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 34738,
+   "ip_country": "US",
+   "order_id": 96825,
+   "status": "approved",
+   "ts": "2025-10-22 21:03:14"
+  },
+  {
+   "amount": 229.76,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34738,
+   "ip_country": "US",
+   "order_id": 94325,
+   "status": "approved",
+   "ts": "2025-10-20 08:26:25"
+  },
+  {
+   "amount": 149.72,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 34738,
+   "ip_country": "US",
+   "order_id": 67263,
+   "status": "approved",
+   "ts": "2025-09-19 14:05:59"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 33,
+  "late": 3.0,
+  "paid": 30.0
+ },
+ "vendor_scores": null
+}

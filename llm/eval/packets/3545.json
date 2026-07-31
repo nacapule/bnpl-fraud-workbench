@@ -1,0 +1,85 @@
+{
+ "account": {
+  "amount_over_category_median": 1.07,
+  "avg_amount_prior": 114.49,
+  "email": "ellie50422@yahoo.com",
+  "email_domain": "yahoo.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 1,
+  "signup_ts": "2025-11-21 10:46:03",
+  "tenure_days": 1,
+  "total_spent_prior": 114.49,
+  "user_id": 40223
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 3545,
+  "amount": 504.27,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 52207,
+  "cvv_result": "M",
+  "device_id": 5181590,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country BR vs IP country US with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "51.71.100.57",
+  "ip_country": "US",
+  "merchant_category": "jewelry",
+  "merchant_name": "north-threads-75",
+  "order_id": 350993,
+  "score": 35,
+  "ship_address_id": 2898916,
+  "status": "approved",
+  "ts": "2025-11-22 17:13:47",
+  "user_id": 40223
+ },
+ "card": {
+  "bin_country": "BR",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 504.27,
+   "avs_result": "N",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 5181590,
+   "ip_country": "US",
+   "order_id": 350993,
+   "status": "approved",
+   "ts": "2025-11-22 17:13:47"
+  },
+  {
+   "amount": 114.49,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5181590,
+   "ip_country": "US",
+   "order_id": 350992,
+   "status": "approved",
+   "ts": "2025-11-22 04:02:56"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

@@ -1,0 +1,168 @@
+{
+ "account": {
+  "amount_over_category_median": 0.7,
+  "avg_amount_prior": 242.34,
+  "email": "zoey10790@outlook.com",
+  "email_domain": "outlook.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 1.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 1,
+  "signup_ts": "2025-08-02 17:29:52",
+  "tenure_days": 2,
+  "total_spent_prior": 242.34,
+  "user_id": 40047
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 517,
+  "amount": 364.1,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 52031,
+  "cvv_result": "N",
+  "device_id": 5181414,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country US vs IP country ID with AVS=N/CVV=N",
+    "weight": 35
+   },
+   {
+    "id": "R07",
+    "name": "card testing",
+    "rationale": "7 declined attempts on this card/device in the prior 24h, then this approval",
+    "weight": 40
+   }
+  ],
+  "ip": "77.158.64.243",
+  "ip_country": "ID",
+  "merchant_category": "electronics",
+  "merchant_name": "lux-depot-44",
+  "order_id": 350421,
+  "score": 75,
+  "ship_address_id": 2898740,
+  "status": "approved",
+  "ts": "2025-08-04 19:30:26",
+  "user_id": 40047
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 7,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 364.1,
+   "avs_result": "N",
+   "category": "electronics",
+   "cvv_result": "N",
+   "device_id": 5181414,
+   "ip_country": "ID",
+   "order_id": 350421,
+   "status": "approved",
+   "ts": "2025-08-04 19:30:26"
+  },
+  {
+   "amount": 242.34,
+   "avs_result": "N",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5181414,
+   "ip_country": "ID",
+   "order_id": 350422,
+   "status": "approved",
+   "ts": "2025-08-04 10:35:52"
+  },
+  {
+   "amount": 24.91,
+   "avs_result": "N",
+   "category": "toys",
+   "cvv_result": "N",
+   "device_id": 5181414,
+   "ip_country": "ID",
+   "order_id": 350420,
+   "status": "declined",
+   "ts": "2025-08-04 05:35:51"
+  },
+  {
+   "amount": 23.99,
+   "avs_result": "N",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 5181414,
+   "ip_country": "ID",
+   "order_id": 350419,
+   "status": "declined",
+   "ts": "2025-08-04 05:31:51"
+  },
+  {
+   "amount": 34.48,
+   "avs_result": "N",
+   "category": "home",
+   "cvv_result": "N",
+   "device_id": 5181414,
+   "ip_country": "ID",
+   "order_id": 350418,
+   "status": "declined",
+   "ts": "2025-08-04 05:27:51"
+  },
+  {
+   "amount": 29.52,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 5181414,
+   "ip_country": "ID",
+   "order_id": 350417,
+   "status": "declined",
+   "ts": "2025-08-04 05:23:51"
+  },
+  {
+   "amount": 35.7,
+   "avs_result": "Y",
+   "category": "accessories",
+   "cvv_result": "N",
+   "device_id": 5181414,
+   "ip_country": "ID",
+   "order_id": 350416,
+   "status": "declined",
+   "ts": "2025-08-04 05:19:51"
+  },
+  {
+   "amount": 27.92,
+   "avs_result": "N",
+   "category": "health",
+   "cvv_result": "N",
+   "device_id": 5181414,
+   "ip_country": "ID",
+   "order_id": 350415,
+   "status": "declined",
+   "ts": "2025-08-04 05:15:51"
+  },
+  {
+   "amount": 33.18,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "N",
+   "device_id": 5181414,
+   "ip_country": "ID",
+   "order_id": 350414,
+   "status": "declined",
+   "ts": "2025-08-04 05:11:51"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

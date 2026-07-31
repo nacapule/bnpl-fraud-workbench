@@ -1,0 +1,113 @@
+{
+ "account": {
+  "amount_over_category_median": 1.69,
+  "avg_amount_prior": 56.3,
+  "email": "graysongomez7457@mailinator.com",
+  "email_domain": "mailinator.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 3,
+  "signup_ts": "2025-09-12 11:54:35",
+  "tenure_days": 38,
+  "total_spent_prior": 168.9,
+  "user_id": 40475
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 2512,
+  "amount": 876.62,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 52459,
+  "cvv_result": "M",
+  "device_id": 5181726,
+  "fired_rules": [
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=True, shared_root_accounts=1",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899016 already used by 37 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "91.40.28.16",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "iron-supply-33",
+  "order_id": 351842,
+  "score": 60,
+  "ship_address_id": 2899016,
+  "status": "approved",
+  "ts": "2025-10-20 17:07:44",
+  "user_id": 40475
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 876.62,
+   "avs_result": "N",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181726,
+   "ip_country": "US",
+   "order_id": 351842,
+   "status": "approved",
+   "ts": "2025-10-20 17:07:44"
+  },
+  {
+   "amount": 72.21,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 5181726,
+   "ip_country": "US",
+   "order_id": 351725,
+   "status": "approved",
+   "ts": "2025-08-25 23:17:08"
+  },
+  {
+   "amount": 31.62,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 5181726,
+   "ip_country": "US",
+   "order_id": 351726,
+   "status": "approved",
+   "ts": "2025-08-22 23:55:18"
+  },
+  {
+   "amount": 65.07,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181726,
+   "ip_country": "US",
+   "order_id": 351724,
+   "status": "approved",
+   "ts": "2025-08-19 19:40:12"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 2,
+  "other_accounts_on_ship_address": 39,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 9,
+  "late": 0.0,
+  "paid": 9.0
+ },
+ "vendor_scores": null
+}

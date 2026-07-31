@@ -1,0 +1,199 @@
+{
+ "account": {
+  "amount_over_category_median": 1.64,
+  "avg_amount_prior": 321.39125,
+  "email": "joshua.nguyen7577@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 8,
+  "signup_ts": "2024-11-13 14:49:58",
+  "tenure_days": 387,
+  "total_spent_prior": 2571.13,
+  "user_id": 23790
+ },
+ "account_events_90d": [
+  {
+   "device_id": 5181323,
+   "ip": "77.225.92.12",
+   "kind": "address_add",
+   "ts": "2025-12-05 01:23:53"
+  },
+  {
+   "device_id": 5181323,
+   "ip": "77.225.92.12",
+   "kind": "password_change",
+   "ts": "2025-12-05 00:23:53"
+  },
+  {
+   "device_id": 23790,
+   "ip": "66.190.78.197",
+   "kind": "login",
+   "ts": "2025-12-02 18:05:51"
+  },
+  {
+   "device_id": 23790,
+   "ip": "66.190.78.15",
+   "kind": "login",
+   "ts": "2025-11-09 22:28:32"
+  },
+  {
+   "device_id": 23790,
+   "ip": "66.190.78.20",
+   "kind": "login",
+   "ts": "2025-10-06 11:31:48"
+  }
+ ],
+ "alert": {
+  "alert_id": 4000,
+  "amount": 854.27,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 23790,
+  "cvv_result": "M",
+  "device_id": 5181323,
+  "fired_rules": [
+   {
+    "id": "R01",
+    "name": "credential change before order",
+    "rationale": "credential/contact change 11.6h before order on 386d-old account, order from new device d_5181323",
+    "weight": 45
+   },
+   {
+    "id": "R05",
+    "name": "order burst",
+    "rationale": "burst: 4 orders/24h on account, 4 on device d_5181323",
+    "weight": 30
+   }
+  ],
+  "ip": "77.225.92.12",
+  "ip_country": "NG",
+  "merchant_category": "electronics",
+  "merchant_name": "urban-outfitters-61",
+  "order_id": 350168,
+  "score": 75,
+  "ship_address_id": 2898649,
+  "status": "approved",
+  "ts": "2025-12-05 11:58:17",
+  "user_id": 23790
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "amex"
+ },
+ "last_orders": [
+  {
+   "amount": 854.27,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181323,
+   "ip_country": "NG",
+   "order_id": 350168,
+   "status": "approved",
+   "ts": "2025-12-05 11:58:17"
+  },
+  {
+   "amount": 570.54,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181323,
+   "ip_country": "NG",
+   "order_id": 350171,
+   "status": "approved",
+   "ts": "2025-12-05 09:29:50"
+  },
+  {
+   "amount": 693.54,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181323,
+   "ip_country": "NG",
+   "order_id": 350169,
+   "status": "approved",
+   "ts": "2025-12-05 05:43:02"
+  },
+  {
+   "amount": 302.65,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5181323,
+   "ip_country": "NG",
+   "order_id": 350170,
+   "status": "approved",
+   "ts": "2025-12-05 02:55:47"
+  },
+  {
+   "amount": 100.74,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 23790,
+   "ip_country": "US",
+   "order_id": 135927,
+   "status": "approved",
+   "ts": "2025-11-28 01:23:03"
+  },
+  {
+   "amount": 309.32,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 23790,
+   "ip_country": "US",
+   "order_id": 132022,
+   "status": "approved",
+   "ts": "2025-11-25 10:12:37"
+  },
+  {
+   "amount": 120.96,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 23790,
+   "ip_country": "US",
+   "order_id": 69447,
+   "status": "approved",
+   "ts": "2025-09-21 21:31:50"
+  },
+  {
+   "amount": 334.37,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 23790,
+   "ip_country": "US",
+   "order_id": 53408,
+   "status": "approved",
+   "ts": "2025-09-03 09:30:40"
+  },
+  {
+   "amount": 139.01,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 23790,
+   "ip_country": "US",
+   "order_id": 34698,
+   "status": "approved",
+   "ts": "2025-08-12 04:04:28"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 9,
+  "late": 0.0,
+  "paid": 9.0
+ },
+ "vendor_scores": null
+}

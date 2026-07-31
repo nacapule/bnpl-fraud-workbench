@@ -1,0 +1,85 @@
+{
+ "account": {
+  "amount_over_category_median": 0.56,
+  "avg_amount_prior": 58.32,
+  "email": "ella.king4385@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 1,
+  "signup_ts": "2025-06-13 22:35:24",
+  "tenure_days": 78,
+  "total_spent_prior": 58.32,
+  "user_id": 25332
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 1089,
+  "amount": 59.01,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 25332,
+  "cvv_result": "M",
+  "device_id": 25332,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country CA vs IP country US with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "40.190.117.165",
+  "ip_country": "US",
+  "merchant_category": "apparel",
+  "merchant_name": "pure-depot-45",
+  "order_id": 50054,
+  "score": 35,
+  "ship_address_id": 25332,
+  "status": "approved",
+  "ts": "2025-08-30 10:56:38",
+  "user_id": 25332
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 59.01,
+   "avs_result": "N",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 25332,
+   "ip_country": "US",
+   "order_id": 50054,
+   "status": "approved",
+   "ts": "2025-08-30 10:56:38"
+  },
+  {
+   "amount": 58.32,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 25332,
+   "ip_country": "US",
+   "order_id": 21609,
+   "status": "approved",
+   "ts": "2025-07-27 05:26:06"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 2,
+  "late": 0.0,
+  "paid": 2.0
+ },
+ "vendor_scores": null
+}

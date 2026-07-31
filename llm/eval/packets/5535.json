@@ -1,0 +1,161 @@
+{
+ "account": {
+  "amount_over_category_median": 1.36,
+  "avg_amount_prior": 339.4425,
+  "email": "gianna.young1874@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 4,
+  "signup_ts": "2024-05-14 23:47:59",
+  "tenure_days": 618,
+  "total_spent_prior": 1357.77,
+  "user_id": 36153
+ },
+ "account_events_90d": [
+  {
+   "device_id": 5181291,
+   "ip": "61.183.110.116",
+   "kind": "address_add",
+   "ts": "2026-01-22 11:54:49"
+  },
+  {
+   "device_id": 5181291,
+   "ip": "61.183.110.116",
+   "kind": "password_change",
+   "ts": "2026-01-22 10:54:49"
+  },
+  {
+   "device_id": 36153,
+   "ip": "49.149.96.249",
+   "kind": "login",
+   "ts": "2026-01-08 20:38:39"
+  },
+  {
+   "device_id": 36153,
+   "ip": "49.149.96.160",
+   "kind": "login",
+   "ts": "2026-01-05 09:13:47"
+  },
+  {
+   "device_id": 36153,
+   "ip": "49.149.96.65",
+   "kind": "login",
+   "ts": "2025-11-26 13:54:53"
+  },
+  {
+   "device_id": 36153,
+   "ip": "49.149.96.107",
+   "kind": "login",
+   "ts": "2025-11-07 17:37:58"
+  },
+  {
+   "device_id": 36153,
+   "ip": "49.149.96.30",
+   "kind": "login",
+   "ts": "2025-10-27 12:50:17"
+  }
+ ],
+ "alert": {
+  "alert_id": 5535,
+  "amount": 706.38,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 36153,
+  "cvv_result": "M",
+  "device_id": 5181291,
+  "fired_rules": [
+   {
+    "id": "R01",
+    "name": "credential change before order",
+    "rationale": "credential/contact change 5.8h before order on 617d-old account, order from new device d_5181291",
+    "weight": 45
+   }
+  ],
+  "ip": "61.183.110.116",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "iron-supply-33",
+  "order_id": 350092,
+  "score": 45,
+  "ship_address_id": 2898617,
+  "status": "approved",
+  "ts": "2026-01-22 16:42:14",
+  "user_id": 36153
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 706.38,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181291,
+   "ip_country": "US",
+   "order_id": 350092,
+   "status": "approved",
+   "ts": "2026-01-22 16:42:14"
+  },
+  {
+   "amount": 818.76,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 36153,
+   "ip_country": "US",
+   "order_id": 191331,
+   "status": "approved",
+   "ts": "2026-01-12 11:35:01"
+  },
+  {
+   "amount": 117.91,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 36153,
+   "ip_country": "US",
+   "order_id": 163346,
+   "status": "approved",
+   "ts": "2025-12-16 22:25:54"
+  },
+  {
+   "amount": 351.34,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 36153,
+   "ip_country": "US",
+   "order_id": 144870,
+   "status": "approved",
+   "ts": "2025-12-04 10:41:31"
+  },
+  {
+   "amount": 69.76,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 36153,
+   "ip_country": "US",
+   "order_id": 134859,
+   "status": "approved",
+   "ts": "2025-11-27 10:21:56"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 8,
+  "late": 0.0,
+  "paid": 8.0
+ },
+ "vendor_scores": null
+}

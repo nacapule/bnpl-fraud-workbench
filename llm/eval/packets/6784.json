@@ -1,0 +1,147 @@
+{
+ "account": {
+  "amount_over_category_median": 0.83,
+  "avg_amount_prior": 41.718333,
+  "email": "liam.campbell9740@hotmail.com",
+  "email_domain": "hotmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 1.0,
+  "n_orders_prior": 6,
+  "signup_ts": "2025-11-13 23:58:18",
+  "tenure_days": 119,
+  "total_spent_prior": 250.31,
+  "user_id": 15306
+ },
+ "account_events_90d": [
+  {
+   "device_id": 15306,
+   "ip": "66.208.209.35",
+   "kind": "login",
+   "ts": "2025-12-16 07:31:03"
+  }
+ ],
+ "alert": {
+  "alert_id": 6784,
+  "amount": 87.11,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 15306,
+  "cvv_result": "N",
+  "device_id": 15306,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country US vs IP country CA with AVS=Y/CVV=N",
+    "weight": 35
+   }
+  ],
+  "ip": "66.208.209.199",
+  "ip_country": "CA",
+  "merchant_category": "apparel",
+  "merchant_name": "bright-province-71",
+  "order_id": 247184,
+  "score": 35,
+  "ship_address_id": 15306,
+  "status": "approved",
+  "ts": "2026-03-12 08:48:03",
+  "user_id": 15306
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 87.11,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "N",
+   "device_id": 15306,
+   "ip_country": "CA",
+   "order_id": 247184,
+   "status": "approved",
+   "ts": "2026-03-12 08:48:03"
+  },
+  {
+   "amount": 90.8,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 15306,
+   "ip_country": "CA",
+   "order_id": 226217,
+   "status": "approved",
+   "ts": "2026-02-18 11:18:09"
+  },
+  {
+   "amount": 15.0,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 15306,
+   "ip_country": "CA",
+   "order_id": 211795,
+   "status": "approved",
+   "ts": "2026-02-03 05:32:08"
+  },
+  {
+   "amount": 20.59,
+   "avs_result": "Y",
+   "category": "accessories",
+   "cvv_result": "M",
+   "device_id": 15306,
+   "ip_country": "CA",
+   "order_id": 197697,
+   "status": "approved",
+   "ts": "2026-01-19 07:48:15"
+  },
+  {
+   "amount": 23.75,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 15306,
+   "ip_country": "CA",
+   "order_id": 181958,
+   "status": "approved",
+   "ts": "2026-01-02 07:20:17"
+  },
+  {
+   "amount": 40.67,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 15306,
+   "ip_country": "CA",
+   "order_id": 125116,
+   "status": "approved",
+   "ts": "2025-11-20 15:34:18"
+  },
+  {
+   "amount": 59.5,
+   "avs_result": "Y",
+   "category": "accessories",
+   "cvv_result": "N",
+   "device_id": 15306,
+   "ip_country": "CA",
+   "order_id": 123468,
+   "status": "approved",
+   "ts": "2025-11-19 12:50:04"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 2,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 15,
+  "late": 1.0,
+  "paid": 14.0
+ },
+ "vendor_scores": null
+}

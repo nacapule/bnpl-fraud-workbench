@@ -1,0 +1,74 @@
+{
+ "account": {
+  "amount_over_category_median": 1.0,
+  "avg_amount_prior": 0.0,
+  "email": "theodore.jones4264@hotmail.com",
+  "email_domain": "hotmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": null,
+  "n_cvv_mismatch_prior": null,
+  "n_orders_prior": 0,
+  "signup_ts": "2025-09-04 06:15:49",
+  "tenure_days": 46,
+  "total_spent_prior": 0.0,
+  "user_id": 21505
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 2529,
+  "amount": 73.66,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 21505,
+  "cvv_result": "N",
+  "device_id": 21505,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country US vs IP country CA with AVS=Y/CVV=N",
+    "weight": 35
+   }
+  ],
+  "ip": "49.141.37.204",
+  "ip_country": "CA",
+  "merchant_category": "accessories",
+  "merchant_name": "north-gallery-68",
+  "order_id": 95063,
+  "score": 35,
+  "ship_address_id": 21505,
+  "status": "approved",
+  "ts": "2025-10-20 22:27:34",
+  "user_id": 21505
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 73.66,
+   "avs_result": "Y",
+   "category": "accessories",
+   "cvv_result": "N",
+   "device_id": 21505,
+   "ip_country": "CA",
+   "order_id": 95063,
+   "status": "approved",
+   "ts": "2025-10-20 22:27:34"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

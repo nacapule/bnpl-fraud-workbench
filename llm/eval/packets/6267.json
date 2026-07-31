@@ -1,0 +1,186 @@
+{
+ "account": {
+  "amount_over_category_median": 0.69,
+  "avg_amount_prior": 256.960833,
+  "email": "zoey.nguyen1374@hotmail.com",
+  "email_domain": "hotmail.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 1.0,
+  "n_orders_prior": 12,
+  "signup_ts": "2023-12-06 10:07:54",
+  "tenure_days": 806,
+  "total_spent_prior": 3083.53,
+  "user_id": 24856
+ },
+ "account_events_90d": [
+  {
+   "device_id": 24856,
+   "ip": "24.121.79.125",
+   "kind": "login",
+   "ts": "2026-02-11 06:09:49"
+  },
+  {
+   "device_id": 24856,
+   "ip": "24.121.79.197",
+   "kind": "login",
+   "ts": "2026-02-02 10:55:09"
+  }
+ ],
+ "alert": {
+  "alert_id": 6267,
+  "amount": 72.56,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 24856,
+  "cvv_result": "M",
+  "device_id": 24856,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country CA vs IP country US with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "24.121.79.42",
+  "ip_country": "US",
+  "merchant_category": "apparel",
+  "merchant_name": "nova-supply-13",
+  "order_id": 227003,
+  "score": 35,
+  "ship_address_id": 24856,
+  "status": "approved",
+  "ts": "2026-02-19 05:28:16",
+  "user_id": 24856
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 72.56,
+   "avs_result": "N",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 24856,
+   "ip_country": "US",
+   "order_id": 227003,
+   "status": "approved",
+   "ts": "2026-02-19 05:28:16"
+  },
+  {
+   "amount": 546.66,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 24856,
+   "ip_country": "US",
+   "order_id": 217803,
+   "status": "approved",
+   "ts": "2026-02-09 12:58:11"
+  },
+  {
+   "amount": 294.94,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 24856,
+   "ip_country": "US",
+   "order_id": 211415,
+   "status": "approved",
+   "ts": "2026-02-02 18:00:45"
+  },
+  {
+   "amount": 139.15,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 24856,
+   "ip_country": "US",
+   "order_id": 151995,
+   "status": "approved",
+   "ts": "2025-12-09 09:02:32"
+  },
+  {
+   "amount": 308.06,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 24856,
+   "ip_country": "US",
+   "order_id": 132168,
+   "status": "approved",
+   "ts": "2025-11-25 12:31:11"
+  },
+  {
+   "amount": 73.21,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "N",
+   "device_id": 24856,
+   "ip_country": "US",
+   "order_id": 113613,
+   "status": "approved",
+   "ts": "2025-11-10 18:21:07"
+  },
+  {
+   "amount": 163.08,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 24856,
+   "ip_country": "US",
+   "order_id": 87791,
+   "status": "approved",
+   "ts": "2025-10-12 18:30:30"
+  },
+  {
+   "amount": 135.21,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 24856,
+   "ip_country": "US",
+   "order_id": 86742,
+   "status": "approved",
+   "ts": "2025-10-11 15:41:17"
+  },
+  {
+   "amount": 243.67,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 24856,
+   "ip_country": "US",
+   "order_id": 81381,
+   "status": "approved",
+   "ts": "2025-10-05 14:09:30"
+  },
+  {
+   "amount": 277.24,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 24856,
+   "ip_country": "US",
+   "order_id": 44835,
+   "status": "approved",
+   "ts": "2025-08-24 01:43:55"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 1,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 31,
+  "late": 1.0,
+  "paid": 30.0
+ },
+ "vendor_scores": null
+}

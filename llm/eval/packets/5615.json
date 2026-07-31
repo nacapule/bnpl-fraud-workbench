@@ -1,0 +1,92 @@
+{
+ "account": {
+  "amount_over_category_median": 0.84,
+  "avg_amount_prior": 0.0,
+  "email": "oliver86+25@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": null,
+  "n_cvv_mismatch_prior": null,
+  "n_orders_prior": 0,
+  "signup_ts": "2026-01-21 04:40:51",
+  "tenure_days": 4,
+  "total_spent_prior": 0.0,
+  "user_id": 41066
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 5615,
+  "amount": 88.06,
+  "avs_result": "Y",
+  "band": "decline",
+  "card_id": 53050,
+  "cvv_result": "M",
+  "device_id": 5182246,
+  "fired_rules": [
+   {
+    "id": "R02",
+    "name": "multi-account device",
+    "rationale": "3 accounts have transacted on device d_5182246 as of this order",
+    "weight": 40
+   },
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=False, shared_root_accounts=95",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899501 already used by 13 distinct accounts",
+    "weight": 35
+   },
+   {
+    "id": "R10",
+    "name": "promo farming cluster",
+    "rationale": "promo redeemed inside a device/address cluster with 13 linked redemptions",
+    "weight": 30
+   }
+  ],
+  "ip": "103.44.7.171",
+  "ip_country": "US",
+  "merchant_category": "apparel",
+  "merchant_name": "urban-supply-27",
+  "order_id": 352640,
+  "score": 130,
+  "ship_address_id": 2899501,
+  "status": "approved",
+  "ts": "2026-01-25 19:13:09",
+  "user_id": 41066
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 88.06,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 5182246,
+   "ip_country": "US",
+   "order_id": 352640,
+   "status": "approved",
+   "ts": "2026-01-25 19:13:09"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 5,
+  "other_accounts_on_ship_address": 46,
+  "other_accounts_same_email_root": 94
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

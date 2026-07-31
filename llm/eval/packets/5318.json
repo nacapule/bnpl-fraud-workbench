@@ -1,0 +1,186 @@
+{
+ "account": {
+  "amount_over_category_median": 0.32,
+  "avg_amount_prior": 500.144286,
+  "email": "andrew.evans3062@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 7,
+  "signup_ts": "2025-03-03 04:40:13",
+  "tenure_days": 316,
+  "total_spent_prior": 3501.01,
+  "user_id": 38310
+ },
+ "account_events_90d": [
+  {
+   "device_id": 38310,
+   "ip": "78.237.204.64",
+   "kind": "login",
+   "ts": "2025-12-16 10:57:54"
+  },
+  {
+   "device_id": 38310,
+   "ip": "78.237.204.29",
+   "kind": "login",
+   "ts": "2025-12-02 04:04:25"
+  }
+ ],
+ "alert": {
+  "alert_id": 5318,
+  "amount": 48.14,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 38310,
+  "cvv_result": "M",
+  "device_id": 38310,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country US vs IP country CA with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "78.237.204.89",
+  "ip_country": "CA",
+  "merchant_category": "sports",
+  "merchant_name": "nova-depot-64",
+  "order_id": 193001,
+  "score": 35,
+  "ship_address_id": 38310,
+  "status": "approved",
+  "ts": "2026-01-13 23:57:17",
+  "user_id": 38310
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 48.14,
+   "avs_result": "N",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 38310,
+   "ip_country": "CA",
+   "order_id": 193001,
+   "status": "approved",
+   "ts": "2026-01-13 23:57:17"
+  },
+  {
+   "amount": 122.53,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 38310,
+   "ip_country": "CA",
+   "order_id": 184854,
+   "status": "approved",
+   "ts": "2026-01-05 11:34:02"
+  },
+  {
+   "amount": 474.35,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 38310,
+   "ip_country": "CA",
+   "order_id": 160089,
+   "status": "approved",
+   "ts": "2025-12-14 19:26:41"
+  },
+  {
+   "amount": 605.02,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 38310,
+   "ip_country": "CA",
+   "order_id": 114299,
+   "status": "approved",
+   "ts": "2025-11-11 15:04:41"
+  },
+  {
+   "amount": 334.37,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 38310,
+   "ip_country": "CA",
+   "order_id": 75354,
+   "status": "approved",
+   "ts": "2025-09-28 17:10:28"
+  },
+  {
+   "amount": 29.66,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 38310,
+   "ip_country": "CA",
+   "order_id": 38476,
+   "status": "approved",
+   "ts": "2025-08-16 16:14:25"
+  },
+  {
+   "amount": 1732.74,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 38310,
+   "ip_country": "CA",
+   "order_id": 33496,
+   "status": "approved",
+   "ts": "2025-08-10 16:35:57"
+  },
+  {
+   "amount": 202.34,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 38310,
+   "ip_country": "CA",
+   "order_id": 33002,
+   "status": "approved",
+   "ts": "2025-08-09 22:00:54"
+  },
+  {
+   "amount": 1118.07,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 38310,
+   "ip_country": "CA",
+   "order_id": 32767,
+   "status": "declined",
+   "ts": "2025-08-09 17:57:53"
+  },
+  {
+   "amount": 111.24,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 38310,
+   "ip_country": "CA",
+   "order_id": 21297,
+   "status": "declined",
+   "ts": "2025-07-26 18:26:12"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 1,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 17,
+  "late": 0.0,
+  "paid": 17.0
+ },
+ "vendor_scores": null
+}

@@ -1,0 +1,169 @@
+{
+ "account": {
+  "amount_over_category_median": 1.16,
+  "avg_amount_prior": 217.85875,
+  "email": "gianna.perez9532@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 8,
+  "signup_ts": "2023-10-26 02:50:53",
+  "tenure_days": 715,
+  "total_spent_prior": 1742.87,
+  "user_id": 11399
+ },
+ "account_events_90d": [
+  {
+   "device_id": 11399,
+   "ip": "59.152.43.178",
+   "kind": "login",
+   "ts": "2025-09-23 16:18:48"
+  }
+ ],
+ "alert": {
+  "alert_id": 2184,
+  "amount": 602.9,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 11399,
+  "cvv_result": "M",
+  "device_id": 11399,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "3 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "59.152.43.190",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "nova-tech-24",
+  "order_id": 85837,
+  "score": 45,
+  "ship_address_id": 11399,
+  "status": "approved",
+  "ts": "2025-10-10 15:02:44",
+  "user_id": 11399
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 602.9,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 11399,
+   "ip_country": "US",
+   "order_id": 85837,
+   "status": "approved",
+   "ts": "2025-10-10 15:02:44"
+  },
+  {
+   "amount": 77.63,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 11399,
+   "ip_country": "US",
+   "order_id": 77100,
+   "status": "approved",
+   "ts": "2025-09-30 16:07:22"
+  },
+  {
+   "amount": 36.51,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 11399,
+   "ip_country": "US",
+   "order_id": 75208,
+   "status": "approved",
+   "ts": "2025-09-28 14:13:14"
+  },
+  {
+   "amount": 1184.31,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 11399,
+   "ip_country": "US",
+   "order_id": 72127,
+   "status": "approved",
+   "ts": "2025-09-24 21:07:37"
+  },
+  {
+   "amount": 29.93,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 11399,
+   "ip_country": "US",
+   "order_id": 64251,
+   "status": "approved",
+   "ts": "2025-09-15 20:52:32"
+  },
+  {
+   "amount": 180.33,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 11399,
+   "ip_country": "US",
+   "order_id": 61088,
+   "status": "approved",
+   "ts": "2025-09-12 08:31:50"
+  },
+  {
+   "amount": 69.74,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 11399,
+   "ip_country": "US",
+   "order_id": 46920,
+   "status": "approved",
+   "ts": "2025-08-26 14:44:29"
+  },
+  {
+   "amount": 80.24,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 42857,
+   "ip_country": "US",
+   "order_id": 7069,
+   "status": "approved",
+   "ts": "2025-07-09 17:56:48"
+  },
+  {
+   "amount": 84.18,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 11399,
+   "ip_country": "US",
+   "order_id": 19,
+   "status": "approved",
+   "ts": "2025-07-01 04:50:03"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 13,
+  "late": 1.0,
+  "paid": 12.0
+ },
+ "vendor_scores": null
+}

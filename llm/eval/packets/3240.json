@@ -1,0 +1,180 @@
+{
+ "account": {
+  "amount_over_category_median": 0.58,
+  "avg_amount_prior": 331.41,
+  "email": "mason.smith3077@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 1.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 14,
+  "signup_ts": "2024-10-17 13:35:21",
+  "tenure_days": 392,
+  "total_spent_prior": 4639.74,
+  "user_id": 31000
+ },
+ "account_events_90d": [
+  {
+   "device_id": 31000,
+   "ip": "60.17.184.236",
+   "kind": "login",
+   "ts": "2025-09-19 15:05:39"
+  }
+ ],
+ "alert": {
+  "alert_id": 3240,
+  "amount": 272.24,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 31000,
+  "cvv_result": "N",
+  "device_id": 31000,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country GB vs IP country CA with AVS=Y/CVV=N",
+    "weight": 35
+   }
+  ],
+  "ip": "60.17.184.31",
+  "ip_country": "CA",
+  "merchant_category": "jewelry",
+  "merchant_name": "blue-gallery-60",
+  "order_id": 116171,
+  "score": 35,
+  "ship_address_id": 31000,
+  "status": "approved",
+  "ts": "2025-11-13 16:15:47",
+  "user_id": 31000
+ },
+ "card": {
+  "bin_country": "GB",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 272.24,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "N",
+   "device_id": 31000,
+   "ip_country": "CA",
+   "order_id": 116171,
+   "status": "approved",
+   "ts": "2025-11-13 16:15:47"
+  },
+  {
+   "amount": 520.04,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 31000,
+   "ip_country": "CA",
+   "order_id": 109716,
+   "status": "approved",
+   "ts": "2025-11-06 12:07:50"
+  },
+  {
+   "amount": 433.85,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 31000,
+   "ip_country": "CA",
+   "order_id": 103450,
+   "status": "approved",
+   "ts": "2025-10-30 12:23:07"
+  },
+  {
+   "amount": 609.64,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 31000,
+   "ip_country": "CA",
+   "order_id": 90510,
+   "status": "approved",
+   "ts": "2025-10-15 19:15:18"
+  },
+  {
+   "amount": 58.97,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 31000,
+   "ip_country": "CA",
+   "order_id": 86830,
+   "status": "approved",
+   "ts": "2025-10-11 17:01:09"
+  },
+  {
+   "amount": 355.76,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 31000,
+   "ip_country": "CA",
+   "order_id": 74272,
+   "status": "approved",
+   "ts": "2025-09-27 12:37:27"
+  },
+  {
+   "amount": 446.9,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 31000,
+   "ip_country": "CA",
+   "order_id": 73495,
+   "status": "approved",
+   "ts": "2025-09-26 14:27:04"
+  },
+  {
+   "amount": 652.51,
+   "avs_result": "N",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 31000,
+   "ip_country": "CA",
+   "order_id": 70159,
+   "status": "approved",
+   "ts": "2025-09-22 18:30:09"
+  },
+  {
+   "amount": 54.93,
+   "avs_result": "Y",
+   "category": "health",
+   "cvv_result": "M",
+   "device_id": 31000,
+   "ip_country": "CA",
+   "order_id": 48514,
+   "status": "approved",
+   "ts": "2025-08-28 12:39:57"
+  },
+  {
+   "amount": 268.08,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 31000,
+   "ip_country": "CA",
+   "order_id": 45327,
+   "status": "approved",
+   "ts": "2025-08-24 17:16:40"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 1,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 35,
+  "late": 1.0,
+  "paid": 34.0
+ },
+ "vendor_scores": null
+}

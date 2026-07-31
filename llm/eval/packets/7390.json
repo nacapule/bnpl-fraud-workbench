@@ -1,0 +1,180 @@
+{
+ "account": {
+  "amount_over_category_median": 1.1,
+  "avg_amount_prior": 264.18027,
+  "email": "theodore.garcia954@icloud.com",
+  "email_domain": "icloud.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 37,
+  "signup_ts": "2024-01-24 17:21:38",
+  "tenure_days": 799,
+  "total_spent_prior": 9774.67,
+  "user_id": 10311
+ },
+ "account_events_90d": [
+  {
+   "device_id": 10311,
+   "ip": "63.104.102.129",
+   "kind": "login",
+   "ts": "2026-02-05 00:06:06"
+  }
+ ],
+ "alert": {
+  "alert_id": 7390,
+  "amount": 64.51,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 10311,
+  "cvv_result": "M",
+  "device_id": 10311,
+  "fired_rules": [
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_26630 already used by 3 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "63.104.102.161",
+  "ip_country": "CA",
+  "merchant_category": "beauty",
+  "merchant_name": "pure-goods-92",
+  "order_id": 267963,
+  "score": 35,
+  "ship_address_id": 26630,
+  "status": "approved",
+  "ts": "2026-04-02 21:10:47",
+  "user_id": 10311
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 64.51,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 10311,
+   "ip_country": "CA",
+   "order_id": 267963,
+   "status": "approved",
+   "ts": "2026-04-02 21:10:47"
+  },
+  {
+   "amount": 156.41,
+   "avs_result": "Y",
+   "category": "auto",
+   "cvv_result": "M",
+   "device_id": 10311,
+   "ip_country": "CA",
+   "order_id": 266085,
+   "status": "approved",
+   "ts": "2026-03-31 22:01:59"
+  },
+  {
+   "amount": 829.45,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 10311,
+   "ip_country": "CA",
+   "order_id": 261289,
+   "status": "approved",
+   "ts": "2026-03-26 23:38:33"
+  },
+  {
+   "amount": 660.34,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 10311,
+   "ip_country": "CA",
+   "order_id": 254618,
+   "status": "approved",
+   "ts": "2026-03-19 23:04:35"
+  },
+  {
+   "amount": 188.5,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 10311,
+   "ip_country": "CA",
+   "order_id": 249238,
+   "status": "approved",
+   "ts": "2026-03-14 13:29:52"
+  },
+  {
+   "amount": 387.02,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 10311,
+   "ip_country": "CA",
+   "order_id": 246307,
+   "status": "declined",
+   "ts": "2026-03-11 10:40:49"
+  },
+  {
+   "amount": 23.41,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 10311,
+   "ip_country": "CA",
+   "order_id": 220568,
+   "status": "approved",
+   "ts": "2026-02-12 13:49:11"
+  },
+  {
+   "amount": 197.76,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 10311,
+   "ip_country": "CA",
+   "order_id": 210206,
+   "status": "approved",
+   "ts": "2026-02-01 12:59:08"
+  },
+  {
+   "amount": 126.26,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 10311,
+   "ip_country": "CA",
+   "order_id": 207525,
+   "status": "approved",
+   "ts": "2026-01-29 16:47:16"
+  },
+  {
+   "amount": 537.61,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 10311,
+   "ip_country": "CA",
+   "order_id": 198010,
+   "status": "approved",
+   "ts": "2026-01-19 15:13:34"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 3,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 100,
+  "late": 1.0,
+  "paid": 99.0
+ },
+ "vendor_scores": null
+}

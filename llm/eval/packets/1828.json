@@ -1,0 +1,74 @@
+{
+ "account": {
+  "amount_over_category_median": 0.59,
+  "avg_amount_prior": 0.0,
+  "email": "leah98355@outlook.com",
+  "email_domain": "outlook.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": null,
+  "n_cvv_mismatch_prior": null,
+  "n_orders_prior": 0,
+  "signup_ts": "2025-09-22 16:55:13",
+  "tenure_days": 2,
+  "total_spent_prior": 0.0,
+  "user_id": 40078
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 1828,
+  "amount": 277.94,
+  "avs_result": "N",
+  "band": "review",
+  "card_id": 52062,
+  "cvv_result": "M",
+  "device_id": 5181445,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country US vs IP country FR with AVS=N/CVV=M",
+    "weight": 35
+   }
+  ],
+  "ip": "77.90.248.136",
+  "ip_country": "FR",
+  "merchant_category": "jewelry",
+  "merchant_name": "swift-tech-38",
+  "order_id": 350537,
+  "score": 35,
+  "ship_address_id": 2898771,
+  "status": "approved",
+  "ts": "2025-09-24 14:46:36",
+  "user_id": 40078
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 277.94,
+   "avs_result": "N",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 5181445,
+   "ip_country": "FR",
+   "order_id": 350537,
+   "status": "approved",
+   "ts": "2025-09-24 14:46:36"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

@@ -1,0 +1,103 @@
+{
+ "account": {
+  "amount_over_category_median": 0.97,
+  "avg_amount_prior": 69.175,
+  "email": "layla.evans3370@icloud.com",
+  "email_domain": "icloud.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 2,
+  "signup_ts": "2024-06-10 20:35:33",
+  "tenure_days": 627,
+  "total_spent_prior": 138.35,
+  "user_id": 9599
+ },
+ "account_events_90d": [
+  {
+   "device_id": 9599,
+   "ip": "31.243.27.150",
+   "kind": "login",
+   "ts": "2026-01-13 06:53:06"
+  }
+ ],
+ "alert": {
+  "alert_id": 6470,
+  "amount": 168.81,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 9599,
+  "cvv_result": "M",
+  "device_id": 9599,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "2 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "31.243.27.63",
+  "ip_country": "US",
+  "merchant_category": "home",
+  "merchant_name": "iron-province-63",
+  "order_id": 234665,
+  "score": 45,
+  "ship_address_id": 9599,
+  "status": "approved",
+  "ts": "2026-02-27 05:36:58",
+  "user_id": 9599
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 168.81,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 9599,
+   "ip_country": "US",
+   "order_id": 234665,
+   "status": "approved",
+   "ts": "2026-02-27 05:36:58"
+  },
+  {
+   "amount": 77.85,
+   "avs_result": "Y",
+   "category": "auto",
+   "cvv_result": "M",
+   "device_id": 9599,
+   "ip_country": "US",
+   "order_id": 146728,
+   "status": "approved",
+   "ts": "2025-12-05 17:19:31"
+  },
+  {
+   "amount": 60.5,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 9599,
+   "ip_country": "US",
+   "order_id": 64611,
+   "status": "approved",
+   "ts": "2025-09-16 13:00:35"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 2,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 6,
+  "late": 3.0,
+  "paid": 3.0
+ },
+ "vendor_scores": null
+}

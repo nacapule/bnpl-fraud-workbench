@@ -1,0 +1,98 @@
+{
+ "account": {
+  "amount_over_category_median": 1.26,
+  "avg_amount_prior": 44.37,
+  "email": "caleb.gomez2540@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 1,
+  "signup_ts": "2025-05-30 03:14:07",
+  "tenure_days": 126,
+  "total_spent_prior": 44.37,
+  "user_id": 16860
+ },
+ "account_events_90d": [
+  {
+   "device_id": 16860,
+   "ip": "44.133.146.219",
+   "kind": "login",
+   "ts": "2025-09-01 17:23:54"
+  },
+  {
+   "device_id": 16860,
+   "ip": "44.133.146.207",
+   "kind": "login",
+   "ts": "2025-08-28 10:34:21"
+  }
+ ],
+ "alert": {
+  "alert_id": 2028,
+  "amount": 652.67,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 16860,
+  "cvv_result": "N",
+  "device_id": 16860,
+  "fired_rules": [
+   {
+    "id": "R03",
+    "name": "geo + verification mismatch",
+    "rationale": "card BIN country CA vs IP country US with AVS=Y/CVV=N",
+    "weight": 35
+   }
+  ],
+  "ip": "44.133.146.125",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "true-province-38",
+  "order_id": 79687,
+  "score": 35,
+  "ship_address_id": 41193,
+  "status": "approved",
+  "ts": "2025-10-03 14:24:42",
+  "user_id": 16860
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 652.67,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "N",
+   "device_id": 16860,
+   "ip_country": "US",
+   "order_id": 79687,
+   "status": "approved",
+   "ts": "2025-10-03 14:24:42"
+  },
+  {
+   "amount": 44.37,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 16860,
+   "ip_country": "US",
+   "order_id": 33559,
+   "status": "approved",
+   "ts": "2025-08-10 17:43:23"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 2,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 3,
+  "late": 0.0,
+  "paid": 3.0
+ },
+ "vendor_scores": null
+}

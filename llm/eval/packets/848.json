@@ -1,0 +1,80 @@
+{
+ "account": {
+  "amount_over_category_median": 0.63,
+  "avg_amount_prior": 0.0,
+  "email": "graysongomez7864@mailinator.com",
+  "email_domain": "mailinator.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": null,
+  "n_cvv_mismatch_prior": null,
+  "n_orders_prior": 0,
+  "signup_ts": "2025-09-07 14:21:22",
+  "tenure_days": -18,
+  "total_spent_prior": 0.0,
+  "user_id": 40479
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 848,
+  "amount": 85.55,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 52463,
+  "cvv_result": "M",
+  "device_id": 5181704,
+  "fired_rules": [
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=True, shared_root_accounts=1",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899016 already used by 8 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "91.40.28.36",
+  "ip_country": "US",
+  "merchant_category": "shoes",
+  "merchant_name": "lux-haus-95",
+  "order_id": 351736,
+  "score": 60,
+  "ship_address_id": 2899016,
+  "status": "approved",
+  "ts": "2025-08-20 01:10:10",
+  "user_id": 40479
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 85.55,
+   "avs_result": "Y",
+   "category": "shoes",
+   "cvv_result": "M",
+   "device_id": 5181704,
+   "ip_country": "US",
+   "order_id": 351736,
+   "status": "approved",
+   "ts": "2025-08-20 01:10:10"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 3,
+  "other_accounts_on_ship_address": 39,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

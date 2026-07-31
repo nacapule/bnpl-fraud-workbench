@@ -1,0 +1,198 @@
+{
+ "account": {
+  "amount_over_category_median": 0.78,
+  "avg_amount_prior": 123.327059,
+  "email": "joseph.phillips4343@nortelink.net",
+  "email_domain": "nortelink.net",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 17,
+  "signup_ts": "2023-09-01 02:51:25",
+  "tenure_days": 992,
+  "total_spent_prior": 2096.56,
+  "user_id": 23860
+ },
+ "account_events_90d": [
+  {
+   "device_id": 23860,
+   "ip": "48.4.122.181",
+   "kind": "login",
+   "ts": "2026-04-26 15:14:05"
+  },
+  {
+   "device_id": 23860,
+   "ip": "48.4.122.44",
+   "kind": "login",
+   "ts": "2026-04-18 15:47:03"
+  },
+  {
+   "device_id": 23860,
+   "ip": "48.4.122.201",
+   "kind": "login",
+   "ts": "2026-04-08 01:42:19"
+  },
+  {
+   "device_id": 23860,
+   "ip": "48.4.122.186",
+   "kind": "login",
+   "ts": "2026-03-15 06:58:31"
+  }
+ ],
+ "alert": {
+  "alert_id": 8608,
+  "amount": 81.23,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 23860,
+  "cvv_result": "M",
+  "device_id": 1848327,
+  "fired_rules": [
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_23860 already used by 3 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "48.4.122.14",
+  "ip_country": "US",
+  "merchant_category": "apparel",
+  "merchant_name": "urban-province-94",
+  "order_id": 314496,
+  "score": 35,
+  "ship_address_id": 23860,
+  "status": "approved",
+  "ts": "2026-05-20 20:33:44",
+  "user_id": 23860
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 81.23,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 1848327,
+   "ip_country": "US",
+   "order_id": 314496,
+   "status": "approved",
+   "ts": "2026-05-20 20:33:44"
+  },
+  {
+   "amount": 143.52,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 1848327,
+   "ip_country": "US",
+   "order_id": 309951,
+   "status": "approved",
+   "ts": "2026-05-16 10:35:15"
+  },
+  {
+   "amount": 67.74,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 1848327,
+   "ip_country": "US",
+   "order_id": 300810,
+   "status": "approved",
+   "ts": "2026-05-06 19:15:20"
+  },
+  {
+   "amount": 510.62,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 1848327,
+   "ip_country": "US",
+   "order_id": 294963,
+   "status": "approved",
+   "ts": "2026-04-30 18:52:30"
+  },
+  {
+   "amount": 240.53,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 1848327,
+   "ip_country": "US",
+   "order_id": 258736,
+   "status": "approved",
+   "ts": "2026-03-24 13:39:16"
+  },
+  {
+   "amount": 88.62,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 23860,
+   "ip_country": "US",
+   "order_id": 258090,
+   "status": "approved",
+   "ts": "2026-03-23 18:08:00"
+  },
+  {
+   "amount": 44.03,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 23860,
+   "ip_country": "US",
+   "order_id": 243909,
+   "status": "approved",
+   "ts": "2026-03-08 19:20:10"
+  },
+  {
+   "amount": 32.95,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 1848327,
+   "ip_country": "US",
+   "order_id": 224103,
+   "status": "approved",
+   "ts": "2026-02-16 08:18:48"
+  },
+  {
+   "amount": 36.66,
+   "avs_result": "Y",
+   "category": "toys",
+   "cvv_result": "M",
+   "device_id": 1848327,
+   "ip_country": "US",
+   "order_id": 192310,
+   "status": "approved",
+   "ts": "2026-01-13 11:40:02"
+  },
+  {
+   "amount": 24.72,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 1848327,
+   "ip_country": "US",
+   "order_id": 185733,
+   "status": "approved",
+   "ts": "2026-01-06 10:23:09"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 2,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 44,
+  "late": 0.0,
+  "paid": 44.0
+ },
+ "vendor_scores": null
+}

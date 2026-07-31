@@ -1,0 +1,97 @@
+{
+ "account": {
+  "amount_over_category_median": 0.25,
+  "avg_amount_prior": 38.59,
+  "email": "davidlee+17@gmail.com",
+  "email_domain": "gmail.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 1,
+  "signup_ts": "2025-08-10 18:01:48",
+  "tenure_days": 31,
+  "total_spent_prior": 38.59,
+  "user_id": 40338
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 1365,
+  "amount": 26.43,
+  "avs_result": "Y",
+  "band": "decline",
+  "card_id": 52322,
+  "cvv_result": "M",
+  "device_id": 5181689,
+  "fired_rules": [
+   {
+    "id": "R02",
+    "name": "multi-account device",
+    "rationale": "5 accounts have transacted on device d_5181689 as of this order",
+    "weight": 40
+   },
+   {
+    "id": "R06",
+    "name": "identity cost reduction",
+    "rationale": "email identity cost-reduction: disposable_domain=False, shared_root_accounts=80",
+    "weight": 25
+   },
+   {
+    "id": "R08",
+    "name": "shared drop address",
+    "rationale": "ship-to address a_2899015 already used by 35 distinct accounts",
+    "weight": 35
+   }
+  ],
+  "ip": "91.229.48.237",
+  "ip_country": "US",
+  "merchant_category": "apparel",
+  "merchant_name": "nova-supply-38",
+  "order_id": 351310,
+  "score": 100,
+  "ship_address_id": 2899015,
+  "status": "approved",
+  "ts": "2025-09-10 01:07:53",
+  "user_id": 40338
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 26.43,
+   "avs_result": "Y",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 5181689,
+   "ip_country": "US",
+   "order_id": 351310,
+   "status": "approved",
+   "ts": "2025-09-10 01:07:53"
+  },
+  {
+   "amount": 38.59,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 5181689,
+   "ip_country": "US",
+   "order_id": 351311,
+   "status": "approved",
+   "ts": "2025-08-30 03:45:24"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 4,
+  "other_accounts_on_ship_address": 39,
+  "other_accounts_same_email_root": 79
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

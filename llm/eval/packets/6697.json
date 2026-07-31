@@ -1,0 +1,140 @@
+{
+ "account": {
+  "amount_over_category_median": 0.52,
+  "avg_amount_prior": 0.0,
+  "email": "thomas33791@yahoo.com",
+  "email_domain": "yahoo.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": null,
+  "n_cvv_mismatch_prior": null,
+  "n_orders_prior": 0,
+  "signup_ts": "2026-03-07 04:59:07",
+  "tenure_days": 0,
+  "total_spent_prior": 0.0,
+  "user_id": 40162
+ },
+ "account_events_90d": [],
+ "alert": {
+  "alert_id": 6697,
+  "amount": 269.85,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 52146,
+  "cvv_result": "M",
+  "device_id": 5181529,
+  "fired_rules": [
+   {
+    "id": "R07",
+    "name": "card testing",
+    "rationale": "6 declined attempts on this card/device in the prior 24h, then this approval",
+    "weight": 40
+   }
+  ],
+  "ip": "58.72.44.219",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "pure-gallery-28",
+  "order_id": 350773,
+  "score": 40,
+  "ship_address_id": 2898855,
+  "status": "approved",
+  "ts": "2026-03-07 23:12:16",
+  "user_id": 40162
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 6,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 269.85,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181529,
+   "ip_country": "US",
+   "order_id": 350773,
+   "status": "approved",
+   "ts": "2026-03-07 23:12:16"
+  },
+  {
+   "amount": 29.06,
+   "avs_result": "Y",
+   "category": "home",
+   "cvv_result": "M",
+   "device_id": 5181529,
+   "ip_country": "US",
+   "order_id": 350771,
+   "status": "declined",
+   "ts": "2026-03-07 15:43:14"
+  },
+  {
+   "amount": 28.24,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 5181529,
+   "ip_country": "US",
+   "order_id": 350770,
+   "status": "declined",
+   "ts": "2026-03-07 15:39:14"
+  },
+  {
+   "amount": 28.11,
+   "avs_result": "N",
+   "category": "gaming",
+   "cvv_result": "N",
+   "device_id": 5181529,
+   "ip_country": "US",
+   "order_id": 350769,
+   "status": "declined",
+   "ts": "2026-03-07 15:35:14"
+  },
+  {
+   "amount": 39.05,
+   "avs_result": "N",
+   "category": "shoes",
+   "cvv_result": "N",
+   "device_id": 5181529,
+   "ip_country": "US",
+   "order_id": 350768,
+   "status": "declined",
+   "ts": "2026-03-07 15:31:14"
+  },
+  {
+   "amount": 36.71,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 5181529,
+   "ip_country": "US",
+   "order_id": 350767,
+   "status": "declined",
+   "ts": "2026-03-07 15:27:14"
+  },
+  {
+   "amount": 19.29,
+   "avs_result": "N",
+   "category": "apparel",
+   "cvv_result": "M",
+   "device_id": 5181529,
+   "ip_country": "US",
+   "order_id": 350766,
+   "status": "declined",
+   "ts": "2026-03-07 15:23:14"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

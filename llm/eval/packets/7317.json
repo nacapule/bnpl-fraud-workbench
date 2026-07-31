@@ -1,0 +1,103 @@
+{
+ "account": {
+  "amount_over_category_median": 1.96,
+  "avg_amount_prior": 643.475,
+  "email": "aubrey.taylor4585@yahoo.com",
+  "email_domain": "yahoo.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 0.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 2,
+  "signup_ts": "2025-10-15 00:52:58",
+  "tenure_days": 167,
+  "total_spent_prior": 1286.95,
+  "user_id": 824
+ },
+ "account_events_90d": [
+  {
+   "device_id": 824,
+   "ip": "24.177.143.215",
+   "kind": "login",
+   "ts": "2026-01-01 21:10:30"
+  }
+ ],
+ "alert": {
+  "alert_id": 7317,
+  "amount": 115.33,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 824,
+  "cvv_result": "M",
+  "device_id": 824,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "2 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "24.177.143.18",
+  "ip_country": "US",
+  "merchant_category": "beauty",
+  "merchant_name": "prime-row-93",
+  "order_id": 265691,
+  "score": 45,
+  "ship_address_id": 824,
+  "status": "approved",
+  "ts": "2026-03-31 16:36:57",
+  "user_id": 824
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 115.33,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 824,
+   "ip_country": "US",
+   "order_id": 265691,
+   "status": "approved",
+   "ts": "2026-03-31 16:36:57"
+  },
+  {
+   "amount": 248.38,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 824,
+   "ip_country": "US",
+   "order_id": 145507,
+   "status": "approved",
+   "ts": "2025-12-04 18:40:00"
+  },
+  {
+   "amount": 1038.57,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 824,
+   "ip_country": "US",
+   "order_id": 104387,
+   "status": "approved",
+   "ts": "2025-10-31 13:08:49"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 6,
+  "late": 0.0,
+  "paid": 6.0
+ },
+ "vendor_scores": null
+}

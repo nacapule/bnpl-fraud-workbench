@@ -1,0 +1,125 @@
+{
+ "account": {
+  "amount_over_category_median": 1.46,
+  "avg_amount_prior": 223.145,
+  "email": "sebastian.torres6311@icloud.com",
+  "email_domain": "icloud.com",
+  "kyc_country": "CA",
+  "n_avs_mismatch_prior": 2.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 4,
+  "signup_ts": "2025-10-30 03:14:53",
+  "tenure_days": 139,
+  "total_spent_prior": 892.58,
+  "user_id": 12477
+ },
+ "account_events_90d": [
+  {
+   "device_id": 12477,
+   "ip": "65.7.198.67",
+   "kind": "login",
+   "ts": "2026-03-12 09:41:42"
+  }
+ ],
+ "alert": {
+  "alert_id": 6935,
+  "amount": 684.86,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 12477,
+  "cvv_result": "M",
+  "device_id": 12477,
+  "fired_rules": [
+   {
+    "id": "R09",
+    "name": "repeat INR disputes",
+    "rationale": "3 prior item-not-received chargebacks on this account with healthy repayment",
+    "weight": 45
+   }
+  ],
+  "ip": "65.7.198.41",
+  "ip_country": "US",
+  "merchant_category": "jewelry",
+  "merchant_name": "swift-tech-38",
+  "order_id": 253519,
+  "score": 45,
+  "ship_address_id": 12477,
+  "status": "approved",
+  "ts": "2026-03-18 20:25:40",
+  "user_id": 12477
+ },
+ "card": {
+  "bin_country": "CA",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 684.86,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 12477,
+   "ip_country": "US",
+   "order_id": 253519,
+   "status": "approved",
+   "ts": "2026-03-18 20:25:40"
+  },
+  {
+   "amount": 81.33,
+   "avs_result": "N",
+   "category": "accessories",
+   "cvv_result": "M",
+   "device_id": 12477,
+   "ip_country": "US",
+   "order_id": 240715,
+   "status": "approved",
+   "ts": "2026-03-05 13:59:07"
+  },
+  {
+   "amount": 42.77,
+   "avs_result": "N",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 12477,
+   "ip_country": "US",
+   "order_id": 234207,
+   "status": "approved",
+   "ts": "2026-02-26 17:10:05"
+  },
+  {
+   "amount": 557.66,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 12477,
+   "ip_country": "US",
+   "order_id": 227686,
+   "status": "approved",
+   "ts": "2026-02-19 19:09:12"
+  },
+  {
+   "amount": 210.82,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 12477,
+   "ip_country": "US",
+   "order_id": 104502,
+   "status": "approved",
+   "ts": "2025-10-31 15:22:05"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 5,
+  "late": 0.0,
+  "paid": 5.0
+ },
+ "vendor_scores": null
+}

@@ -1,0 +1,93 @@
+{
+ "account": {
+  "amount_over_category_median": 1.4,
+  "avg_amount_prior": 0.0,
+  "email": "ethan.walker272@outlook.com",
+  "email_domain": "outlook.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": null,
+  "n_cvv_mismatch_prior": null,
+  "n_orders_prior": 0,
+  "signup_ts": "2025-03-20 16:16:24",
+  "tenure_days": 158,
+  "total_spent_prior": 0.0,
+  "user_id": 26149
+ },
+ "account_events_90d": [
+  {
+   "device_id": 5181203,
+   "ip": "49.63.143.195",
+   "kind": "address_add",
+   "ts": "2025-08-25 18:35:47"
+  },
+  {
+   "device_id": 5181203,
+   "ip": "49.63.143.195",
+   "kind": "email_change",
+   "ts": "2025-08-25 17:49:47"
+  },
+  {
+   "device_id": 5181203,
+   "ip": "49.63.143.195",
+   "kind": "password_change",
+   "ts": "2025-08-25 17:35:47"
+  }
+ ],
+ "alert": {
+  "alert_id": 993,
+  "amount": 655.35,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 26149,
+  "cvv_result": "M",
+  "device_id": 5181203,
+  "fired_rules": [
+   {
+    "id": "R01",
+    "name": "credential change before order",
+    "rationale": "credential/contact change 6.0h before order on 158d-old account, order from new device d_5181203",
+    "weight": 45
+   }
+  ],
+  "ip": "49.63.143.195",
+  "ip_country": "US",
+  "merchant_category": "jewelry",
+  "merchant_name": "swift-tech-38",
+  "order_id": 349874,
+  "score": 45,
+  "ship_address_id": 2898529,
+  "status": "approved",
+  "ts": "2025-08-25 23:50:04",
+  "user_id": 26149
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "visa"
+ },
+ "last_orders": [
+  {
+   "amount": 655.35,
+   "avs_result": "Y",
+   "category": "jewelry",
+   "cvv_result": "M",
+   "device_id": 5181203,
+   "ip_country": "US",
+   "order_id": 349874,
+   "status": "approved",
+   "ts": "2025-08-25 23:50:04"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": null,
+  "installments_due": 0,
+  "late": null,
+  "paid": null
+ },
+ "vendor_scores": null
+}

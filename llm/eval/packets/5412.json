@@ -1,0 +1,160 @@
+{
+ "account": {
+  "amount_over_category_median": 1.21,
+  "avg_amount_prior": 119.154,
+  "email": "levi.garcia4574@yahoo.com",
+  "email_domain": "yahoo.com",
+  "kyc_country": "US",
+  "n_avs_mismatch_prior": 1.0,
+  "n_cvv_mismatch_prior": 0.0,
+  "n_orders_prior": 5,
+  "signup_ts": "2024-08-28 16:12:33",
+  "tenure_days": 507,
+  "total_spent_prior": 595.77,
+  "user_id": 22175
+ },
+ "account_events_90d": [
+  {
+   "device_id": 5181178,
+   "ip": "47.45.100.207",
+   "kind": "address_add",
+   "ts": "2026-01-17 08:14:03"
+  },
+  {
+   "device_id": 5181178,
+   "ip": "47.45.100.207",
+   "kind": "email_change",
+   "ts": "2026-01-17 07:35:03"
+  },
+  {
+   "device_id": 5181178,
+   "ip": "47.45.100.207",
+   "kind": "password_change",
+   "ts": "2026-01-17 07:14:03"
+  },
+  {
+   "device_id": 22175,
+   "ip": "35.10.86.149",
+   "kind": "login",
+   "ts": "2025-12-25 00:56:19"
+  },
+  {
+   "device_id": 22175,
+   "ip": "35.10.86.77",
+   "kind": "login",
+   "ts": "2025-11-12 23:46:44"
+  }
+ ],
+ "alert": {
+  "alert_id": 5412,
+  "amount": 630.98,
+  "avs_result": "Y",
+  "band": "review",
+  "card_id": 22175,
+  "cvv_result": "M",
+  "device_id": 5181178,
+  "fired_rules": [
+   {
+    "id": "R01",
+    "name": "credential change before order",
+    "rationale": "credential/contact change 10.6h before order on 507d-old account, order from new device d_5181178",
+    "weight": 45
+   }
+  ],
+  "ip": "47.45.100.207",
+  "ip_country": "US",
+  "merchant_category": "electronics",
+  "merchant_name": "bright-tech-92",
+  "order_id": 349809,
+  "score": 45,
+  "ship_address_id": 2898504,
+  "status": "approved",
+  "ts": "2026-01-17 18:13:14",
+  "user_id": 22175
+ },
+ "card": {
+  "bin_country": "US",
+  "declines_on_card_24h": 0,
+  "network": "mc"
+ },
+ "last_orders": [
+  {
+   "amount": 630.98,
+   "avs_result": "Y",
+   "category": "electronics",
+   "cvv_result": "M",
+   "device_id": 5181178,
+   "ip_country": "US",
+   "order_id": 349809,
+   "status": "approved",
+   "ts": "2026-01-17 18:13:14"
+  },
+  {
+   "amount": 290.53,
+   "avs_result": "Y",
+   "category": "gaming",
+   "cvv_result": "M",
+   "device_id": 5181178,
+   "ip_country": "US",
+   "order_id": 349807,
+   "status": "approved",
+   "ts": "2026-01-17 16:15:57"
+  },
+  {
+   "amount": 67.78,
+   "avs_result": "N",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 22175,
+   "ip_country": "US",
+   "order_id": 148275,
+   "status": "approved",
+   "ts": "2025-12-06 17:17:32"
+  },
+  {
+   "amount": 36.3,
+   "avs_result": "Y",
+   "category": "beauty",
+   "cvv_result": "M",
+   "device_id": 22175,
+   "ip_country": "US",
+   "order_id": 74041,
+   "status": "approved",
+   "ts": "2025-09-27 05:49:11"
+  },
+  {
+   "amount": 82.08,
+   "avs_result": "Y",
+   "category": "sports",
+   "cvv_result": "M",
+   "device_id": 22175,
+   "ip_country": "US",
+   "order_id": 43750,
+   "status": "approved",
+   "ts": "2025-08-22 18:51:00"
+  },
+  {
+   "amount": 119.08,
+   "avs_result": "Y",
+   "category": "auto",
+   "cvv_result": "M",
+   "device_id": 22175,
+   "ip_country": "US",
+   "order_id": 22933,
+   "status": "approved",
+   "ts": "2025-07-28 18:28:28"
+  }
+ ],
+ "linkage": {
+  "other_accounts_on_device": 0,
+  "other_accounts_on_ship_address": 0,
+  "other_accounts_same_email_root": 0
+ },
+ "repayment_history": {
+  "failed_or_written_off": 0.0,
+  "installments_due": 12,
+  "late": 0.0,
+  "paid": 12.0
+ },
+ "vendor_scores": null
+}
