@@ -433,12 +433,13 @@ def build_features(
         how="left",
         validate="many_to_one",
     )
-    if base[["signup_ts", "email_domain", "bin_country", "category"]].isna().any().any():
+    if base[["bin_country", "category"]].isna().any().any():
         raise ValueError("static dimensions do not cover all orders")
 
+    user_known = base["signup_ts"].notna() & base["signup_ts"].le(base["ts"])
     base["account_age_days"] = (
         (base["ts"] - base["signup_ts"]).dt.total_seconds() / 86_400
-    ).clip(lower=0)
+    ).where(user_known, 0.0).clip(lower=0)
     base["bin_ip_country_mismatch"] = base["bin_country"].ne(base["ip_country"]).astype(np.int8)
     base["night_order"] = base["ts"].dt.hour.between(0, 5).astype(np.int8)
     address_age_hours = (
@@ -447,7 +448,7 @@ def build_features(
     base["ship_addr_is_new"] = address_age_hours.between(0, 48, inclusive="left").astype(
         np.int8
     )
-    domain = base["email_domain"].str.lower()
+    domain = base["email_domain"].str.lower().where(user_known)
     base["email_domain_class"] = np.select(
         [domain.isin(DISPOSABLE_EMAIL_DOMAINS), domain.isin(COMMON_EMAIL_DOMAINS)],
         [2, 0],

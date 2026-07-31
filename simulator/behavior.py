@@ -222,7 +222,7 @@ def run_benign(cfg: dict, rng: np.random.Generator, world: World) -> None:
 
     gift = rng.random(n_orders) < 0.07
     second_dev = rng.random(n_orders) < 0.2
-    avs_bad = rng.random(n_orders) < 0.03
+    avs_bad = rng.random(n_orders) < 0.04
     cvv_bad = rng.random(n_orders) < 0.02
     declined = rng.random(n_orders) < 0.015
 

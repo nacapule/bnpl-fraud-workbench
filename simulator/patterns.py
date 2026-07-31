@@ -138,7 +138,7 @@ def inject_ato(cfg: dict, rng: np.random.Generator, world: World) -> None:
         t0 = _rand_ts(rng, world.start + timedelta(days=45), world.end - timedelta(days=50))
         dev = _new_device(world, rng, ua=str(rng.choice(["Chrome", "Firefox"])))
         _attach_device(world, uid, dev, t0)
-        ip, ipc = world.user_ip(90000 + uid, rng, foreign=bool(rng.random() < 0.7))
+        ip, ipc = world.user_ip(90000 + uid, rng, foreign=bool(rng.random() < 0.45))
         _event(world, uid, t0, "password_change", ip, dev)
         if rng.random() < 0.5:
             _event(world, uid, t0 + timedelta(minutes=int(rng.integers(2, 30))),
@@ -154,7 +154,7 @@ def inject_ato(cfg: dict, rng: np.random.Generator, world: World) -> None:
             oid = _fraud_order(
                 world, rng, uid=uid, mid=int(m.merchant_id), ts=ts, amount=amount, ip=ip,
                 ipc=ipc, dev=dev, card=world.pop.user_primary_card[uid], addr=addr,
-                avs_bad_p=0.4, cvv_bad_p=0.2, pattern="P-ATO",
+                avs_bad_p=0.12, cvv_bad_p=0.08, pattern="P-ATO",
             )
             oids.append(oid)
             if rng.random() < 0.6:
@@ -185,13 +185,13 @@ def inject_stolen(cfg: dict, rng: np.random.Generator, world: World) -> None:
         addr = _new_address(world, rng, uid, signup)
         world.pop.user_primary_device[uid] = dev
         world.pop.user_primary_address[uid] = addr
-        bin_cc = str(rng.choice(["US", "GB", "DE", "FR", "BR"], p=[0.25, 0.2, 0.2, 0.2, 0.15]))
+        bin_cc = str(rng.choice(["US", "GB", "DE", "FR", "BR"], p=[0.5, 0.15, 0.13, 0.12, 0.1]))
         card = _new_card(world, rng, uid, bin_cc)
         world.pop.user_primary_card[uid] = card
-        ip, ipc = world.user_ip(70000 + uid, rng, foreign=bool(rng.random() < 0.65))
+        ip, ipc = world.user_ip(70000 + uid, rng, foreign=bool(rng.random() < 0.35))
         t0 = signup + timedelta(hours=float(rng.uniform(0.2, 48)))
         oids: list[int] = []
-        tested = bool(rng.random() < 0.4)
+        tested = bool(rng.random() < 0.25)
         if tested:
             for k in range(int(rng.integers(3, 9))):
                 m = merch.iloc[int(rng.integers(0, len(merch)))]
@@ -199,17 +199,17 @@ def inject_stolen(cfg: dict, rng: np.random.Generator, world: World) -> None:
                     world, rng, uid=uid, mid=int(m.merchant_id),
                     ts=t0 + timedelta(minutes=4 * k), amount=float(rng.uniform(15, 40)),
                     ip=ip, ipc=ipc, dev=dev, card=card, addr=addr,
-                    avs_bad_p=0.7, cvv_bad_p=0.6, pattern="P-STOLEN", status="declined",
+                    avs_bad_p=0.5, cvv_bad_p=0.4, pattern="P-STOLEN", status="declined",
                 )
         hv = merch[merch.category.isin(HIGH_VALUE_CATS)]
         for _k in range(int(rng.integers(1, 4))):
             m = hv.iloc[int(rng.integers(0, len(hv)))]
             ts = t0 + timedelta(hours=float(rng.uniform(0.5, 24)))
-            amount = float(np.clip(np.exp(rng.normal(np.log(CAT_MEDIAN[m.category] * 1.4), 0.4)),
-                                   150, 2200))
+            amount = float(np.clip(np.exp(rng.normal(np.log(CAT_MEDIAN[m.category] * 1.15), 0.45)),
+                                   90, 2200))
             oid = _fraud_order(
                 world, rng, uid=uid, mid=int(m.merchant_id), ts=ts, amount=amount, ip=ip,
-                ipc=ipc, dev=dev, card=card, addr=addr, avs_bad_p=0.55, cvv_bad_p=0.45,
+                ipc=ipc, dev=dev, card=card, addr=addr, avs_bad_p=0.22, cvv_bad_p=0.15,
                 pattern="P-STOLEN",
             )
             oids.append(oid)
@@ -237,7 +237,7 @@ def inject_synth(cfg: dict, rng: np.random.Generator, world: World) -> None:
         disposable = bool(rng.random() < 0.5)
         root = f"{rng.choice(FIRST)}{rng.choice(LAST)}"
         domain = str(rng.choice(DISPOSABLE_DOMAINS)) if disposable else "gmail.com"
-        n_devices = max(2, per_ring // int(rng.integers(4, 8)))
+        n_devices = max(3, per_ring // int(rng.integers(3, 6)))
         devices = [_new_device(world, rng) for _ in range(n_devices)]
         subnet = f"91.{rng.integers(10, 250)}.{rng.integers(10, 250)}"
         share_addr_uids: list[int] = []
@@ -284,7 +284,7 @@ def inject_synth(cfg: dict, rng: np.random.Generator, world: World) -> None:
                 ip = f"{subnet}.{rng.integers(2, 254)}"
                 oid = _fraud_order(
                     world, rng, uid=uid, mid=int(m.merchant_id), ts=ts,
-                    amount=float(rng.uniform(400, 1400)), ip=ip, ipc="US",
+                    amount=float(rng.uniform(250, 950)), ip=ip, ipc="US",
                     dev=world.pop.user_primary_device[uid],
                     card=world.pop.user_primary_card[uid],
                     addr=world.pop.user_primary_address[uid],
@@ -320,10 +320,10 @@ def inject_neverpay(cfg: dict, rng: np.random.Generator, world: World) -> None:
         addr = _new_address(world, rng, uid, signup)
         world.pop.user_primary_address[uid] = addr
         m = merch.iloc[int(rng.integers(0, len(merch)))]
-        amount = CAT_MEDIAN[m.category] * float(rng.uniform(1.3, 1.8))
+        amount = CAT_MEDIAN[m.category] * float(rng.uniform(1.05, 1.6))
         ts = signup + timedelta(days=float(rng.uniform(0.1, 10)))
         ip, ipc = world.user_ip(uid, rng)
-        looks_benign = bool(rng.random() < 0.2)
+        looks_benign = bool(rng.random() < 0.3)
         oid = _fraud_order(
             world, rng, uid=uid, mid=int(m.merchant_id), ts=ts, amount=amount, ip=ip, ipc=ipc,
             dev=dev, card=card, addr=addr, avs_bad_p=0.06, cvv_bad_p=0.04,

@@ -1,0 +1,22 @@
+{
+ "review_band": 30,
+ "decline_band": 90,
+ "alerts_per_day": 24.9,
+ "n_alerts": 2119,
+ "precision": 0.089,
+ "recall_overall": 0.598,
+ "recall_by_pattern": {
+  "P-ATO": 1.0,
+  "P-INR-ABUSE": 0.714,
+  "P-NEVERPAY": 0.016,
+  "P-PROMO": 0.958,
+  "P-STOLEN": 0.394
+ },
+ "caught_usd": 37847.0,
+ "n_auto_declines": 92,
+ "n_insults": 0,
+ "insult_cost_usd": 0.0,
+ "review_cost_usd": 5298.0,
+ "net_usd": 32550.0,
+ "over_capacity": false
+}

@@ -36,8 +36,8 @@ costs:
 rules:
   # Score = sum of fired rule weights. Bands tuned in rules/tuning.py.
   bands:
-    review: 40      # score >= review -> analyst queue
-    decline: 80     # score >= decline -> auto-decline pending review
+    review: 30      # score >= review -> analyst queue   (tuned: rules/tuning.py)
+    decline: 90     # score >= decline -> auto-decline pending review
 
 queue:
   analysts:
