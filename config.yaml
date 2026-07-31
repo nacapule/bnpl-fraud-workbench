@@ -84,5 +84,7 @@ llm_eval:
 
 vendor:
   # Live lookups optional; sanitized fixtures committed in vendor/fixtures.
-  ipqs_sample_flagged: 100
-  ipqs_sample_benign: 100
+  # Sized for the IPQS free tier (1,000 lookups/mo, 35/day): 17 cases x
+  # (email + ip) = 34 lookups, one day's allowance.
+  ipqs_sample_flagged: 12
+  ipqs_sample_benign: 5
