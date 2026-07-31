@@ -139,8 +139,9 @@ def main() -> None:
     rows = enrich_live(targets) if args.live else enrich_synthetic(targets)
     FIXTURES.mkdir(parents=True, exist_ok=True)
     out = FIXTURES / "scores.csv"
+    cols = ["kind", "value", "fraud_score", "flagged_sample", "source"]
     with open(out, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["kind", "value", "fraud_score", "flagged_sample", "source"])
+        w = csv.DictWriter(f, fieldnames=cols)
         w.writeheader()
         w.writerows(rows)
     src = rows[0]["source"] if rows else "none"
