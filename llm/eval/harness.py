@@ -67,6 +67,7 @@ def evaluate_arm(
     consistency_runs: int,
 ) -> dict[str, Any]:
     rows = []
+    schema_failures = 0
     for c in cases:
         packet = json.loads((EVAL_DIR / "packets" / f"{c['alert_id']}.json").read_text())
         acceptable = c.get("truth_actions", [c["truth_action"]])
@@ -79,6 +80,11 @@ def evaluate_arm(
                 f"offline mode but no cached response for alert {c['alert_id']} "
                 f"({model}/{prompt_version}) — run live first"
             ) from None
+        except ValueError:
+            # unusable output (truncated/invalid JSON, schema violation) is a
+            # scored failure mode of the arm, not a harness error
+            schema_failures += 1
+            continue
         v = verify_memo(memo, packet)
         rows.append(
             {
@@ -150,6 +156,9 @@ def evaluate_arm(
         "model": model,
         "prompt_version": prompt_version,
         "n_cases": n,
+        "schema_failures": schema_failures,
+        "schema_failure_rate": round(schema_failures / (n + schema_failures), 4)
+        if n + schema_failures else None,
         "action_accuracy": round(sum(r["action_ok"] for r in rows) / n, 3),
         "decline_precision": round(tp / (tp + fp), 3) if tp + fp else None,
         "decline_recall": round(tp / (tp + fn), 3) if tp + fn else None,

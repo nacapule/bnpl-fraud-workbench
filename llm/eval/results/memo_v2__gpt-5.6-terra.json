@@ -1,0 +1,1827 @@
+{
+ "action_accuracy": 0.767,
+ "action_confusion": {
+  "clear->clear": 18,
+  "clear->escalate": 1,
+  "clear->hold_contact": 8,
+  "decline_block->decline_block": 14,
+  "decline_block->hold_contact": 6,
+  "escalate->escalate": 15,
+  "escalate->hold_contact": 3,
+  "hold_contact->clear": 1,
+  "hold_contact->decline_block": 1,
+  "hold_contact->escalate": 10,
+  "hold_contact->hold_contact": 9
+ },
+ "cache_hit_rate": 1.0,
+ "citation_fired_rate_mean": 1.0,
+ "consistency_action_agreement": null,
+ "cost_per_case_usd": null,
+ "decline_precision": 0.933,
+ "decline_recall": 0.7,
+ "hallucination_rate_claim": 0.0,
+ "hallucination_rate_memo": 0.0,
+ "invalid_citation_memos": 0,
+ "latency_p50_ms": 27670,
+ "model": "gpt-5.6-terra",
+ "n_cases": 86,
+ "pattern_id_rate": 0.721,
+ "per_pattern": {
+  "account_takeover": {
+   "action_accuracy": 1.0,
+   "n": 8,
+   "pattern_id_rate": 1.0
+  },
+  "benign": {
+   "action_accuracy": 0.667,
+   "n": 27,
+   "pattern_id_rate": 0.667
+  },
+  "inr_abuse": {
+   "action_accuracy": 0.818,
+   "n": 11,
+   "pattern_id_rate": 0.909
+  },
+  "merchant_bustout": {
+   "action_accuracy": 0.0,
+   "n": 3,
+   "pattern_id_rate": 0.0
+  },
+  "never_pay": {
+   "action_accuracy": 0.0,
+   "n": 1,
+   "pattern_id_rate": 0.0
+  },
+  "promo_abuse": {
+   "action_accuracy": 1.0,
+   "n": 10,
+   "pattern_id_rate": 0.0
+  },
+  "stolen_card": {
+   "action_accuracy": 0.545,
+   "n": 11,
+   "pattern_id_rate": 1.0
+  },
+  "synthetic_ring": {
+   "action_accuracy": 1.0,
+   "n": 15,
+   "pattern_id_rate": 1.0
+  }
+ },
+ "prompt_version": "memo_v2",
+ "rows": [
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 3942,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 36517,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 8353,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 40444,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "inr_abuse",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block",
+    "escalate"
+   ],
+   "action": "decline_block",
+   "action_ok": true,
+   "alert_id": 4000,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 42966,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P0",
+   "top_pattern": "account_takeover",
+   "truth_action": "decline_block",
+   "truth_pattern": "account_takeover"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact",
+    "escalate"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 5929,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 36054,
+   "hallucinated": false,
+   "n_claims": 16,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "hold_contact",
+   "truth_pattern": "promo_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block"
+   ],
+   "action": "decline_block",
+   "action_ok": true,
+   "alert_id": 987,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 36288,
+   "hallucinated": false,
+   "n_claims": 7,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "stolen_card",
+   "truth_action": "decline_block",
+   "truth_pattern": "stolen_card"
+  },
+  {
+   "acceptable_actions": [
+    "escalate",
+    "decline_block"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 842,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 35492,
+   "hallucinated": false,
+   "n_claims": 11,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "escalate",
+   "truth_pattern": "synthetic_ring"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact",
+    "escalate"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 8548,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 27843,
+   "hallucinated": false,
+   "n_claims": 11,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "hold_contact",
+   "truth_pattern": "promo_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 7180,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 30773,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "inr_abuse",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 3700,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 32292,
+   "hallucinated": false,
+   "n_claims": 7,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 644,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 38857,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "escalate",
+    "decline_block"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 3034,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 28050,
+   "hallucinated": false,
+   "n_claims": 13,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "escalate",
+   "truth_pattern": "synthetic_ring"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 3495,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 28210,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "account_takeover",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "escalate",
+    "decline_block"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 2466,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 21387,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "escalate",
+   "truth_pattern": "synthetic_ring"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block"
+   ],
+   "action": "decline_block",
+   "action_ok": true,
+   "alert_id": 4147,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 26316,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "stolen_card",
+   "truth_action": "decline_block",
+   "truth_pattern": "stolen_card"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 2028,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 34339,
+   "hallucinated": false,
+   "n_claims": 10,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact",
+    "escalate"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 5568,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 27740,
+   "hallucinated": false,
+   "n_claims": 18,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "hold_contact",
+   "truth_pattern": "promo_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 8866,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 26971,
+   "hallucinated": false,
+   "n_claims": 10,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block",
+    "escalate"
+   ],
+   "action": "decline_block",
+   "action_ok": true,
+   "alert_id": 1883,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 28000,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "account_takeover",
+   "truth_action": "decline_block",
+   "truth_pattern": "account_takeover"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 1376,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 24626,
+   "hallucinated": false,
+   "n_claims": 15,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 9092,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 21081,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 3164,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 26415,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 235,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 21979,
+   "hallucinated": false,
+   "n_claims": 6,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "stolen_card",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 8999,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 31354,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact"
+   ],
+   "action": "hold_contact",
+   "action_ok": true,
+   "alert_id": 2980,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 23780,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "inr_abuse",
+   "truth_action": "hold_contact",
+   "truth_pattern": "inr_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "escalate"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 3477,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 20227,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "stolen_card",
+   "truth_action": "escalate",
+   "truth_pattern": "merchant_bustout"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 8704,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 25465,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "inr_abuse",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 8282,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 22730,
+   "hallucinated": false,
+   "n_claims": 18,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "stolen_card",
+   "truth_action": "decline_block",
+   "truth_pattern": "stolen_card"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block",
+    "escalate"
+   ],
+   "action": "decline_block",
+   "action_ok": true,
+   "alert_id": 7290,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 24593,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "account_takeover",
+   "truth_action": "decline_block",
+   "truth_pattern": "account_takeover"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact",
+    "escalate"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 5787,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 26966,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "hold_contact",
+   "truth_pattern": "promo_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 729,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 22149,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "stolen_card",
+   "truth_action": "decline_block",
+   "truth_pattern": "stolen_card"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact",
+    "escalate"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 5979,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 26000,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "hold_contact",
+   "truth_pattern": "promo_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block",
+    "escalate"
+   ],
+   "action": "decline_block",
+   "action_ok": true,
+   "alert_id": 5097,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 30108,
+   "hallucinated": false,
+   "n_claims": 11,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P0",
+   "top_pattern": "account_takeover",
+   "truth_action": "decline_block",
+   "truth_pattern": "account_takeover"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block",
+    "escalate"
+   ],
+   "action": "decline_block",
+   "action_ok": true,
+   "alert_id": 6245,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 27600,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "account_takeover",
+   "truth_action": "decline_block",
+   "truth_pattern": "account_takeover"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block"
+   ],
+   "action": "decline_block",
+   "action_ok": true,
+   "alert_id": 7909,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 28647,
+   "hallucinated": false,
+   "n_claims": 7,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "stolen_card",
+   "truth_action": "decline_block",
+   "truth_pattern": "stolen_card"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "escalate",
+   "action_ok": false,
+   "alert_id": 7390,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 25709,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact",
+    "escalate"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 8669,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 25325,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "hold_contact",
+   "truth_pattern": "promo_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact"
+   ],
+   "action": "hold_contact",
+   "action_ok": true,
+   "alert_id": 5198,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 21758,
+   "hallucinated": false,
+   "n_claims": 7,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "inr_abuse",
+   "truth_action": "hold_contact",
+   "truth_pattern": "inr_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact"
+   ],
+   "action": "hold_contact",
+   "action_ok": true,
+   "alert_id": 727,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 28114,
+   "hallucinated": false,
+   "n_claims": 14,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "inr_abuse",
+   "truth_action": "hold_contact",
+   "truth_pattern": "inr_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 5511,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 26839,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "escalate",
+    "decline_block"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 2951,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 26266,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "escalate",
+   "truth_pattern": "synthetic_ring"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 4069,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 25907,
+   "hallucinated": false,
+   "n_claims": 6,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "escalate",
+    "decline_block"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 1043,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 29851,
+   "hallucinated": false,
+   "n_claims": 10,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "escalate",
+   "truth_pattern": "synthetic_ring"
+  },
+  {
+   "acceptable_actions": [
+    "escalate",
+    "decline_block"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 2655,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 27557,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "escalate",
+   "truth_pattern": "synthetic_ring"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact"
+   ],
+   "action": "decline_block",
+   "action_ok": false,
+   "alert_id": 7146,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 26593,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "inr_abuse",
+   "truth_action": "hold_contact",
+   "truth_pattern": "inr_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact"
+   ],
+   "action": "hold_contact",
+   "action_ok": true,
+   "alert_id": 775,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 28648,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "inr_abuse",
+   "truth_action": "hold_contact",
+   "truth_pattern": "inr_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "escalate",
+    "decline_block"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 1433,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 23483,
+   "hallucinated": false,
+   "n_claims": 11,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "escalate",
+   "truth_pattern": "synthetic_ring"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 6732,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 26087,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block"
+   ],
+   "action": "decline_block",
+   "action_ok": true,
+   "alert_id": 4462,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 40574,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "stolen_card",
+   "truth_action": "decline_block",
+   "truth_pattern": "stolen_card"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 1828,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 26370,
+   "hallucinated": false,
+   "n_claims": 6,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "stolen_card",
+   "truth_action": "decline_block",
+   "truth_pattern": "stolen_card"
+  },
+  {
+   "acceptable_actions": [
+    "escalate"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 2220,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 21121,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "stolen_card",
+   "truth_action": "escalate",
+   "truth_pattern": "merchant_bustout"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact"
+   ],
+   "action": "hold_contact",
+   "action_ok": true,
+   "alert_id": 7317,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 22798,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "inr_abuse",
+   "truth_action": "hold_contact",
+   "truth_pattern": "inr_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact"
+   ],
+   "action": "hold_contact",
+   "action_ok": true,
+   "alert_id": 3415,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 35992,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "inr_abuse",
+   "truth_action": "hold_contact",
+   "truth_pattern": "inr_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact",
+    "escalate"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 5830,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 25492,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "hold_contact",
+   "truth_pattern": "promo_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact",
+    "escalate"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 8702,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 24564,
+   "hallucinated": false,
+   "n_claims": 13,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "hold_contact",
+   "truth_pattern": "promo_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "escalate",
+    "decline_block"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 981,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 20633,
+   "hallucinated": false,
+   "n_claims": 14,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "escalate",
+   "truth_pattern": "synthetic_ring"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 1089,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 24366,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact",
+    "escalate"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 8563,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 27292,
+   "hallucinated": false,
+   "n_claims": 11,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "hold_contact",
+   "truth_pattern": "promo_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "escalate",
+    "decline_block"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 848,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 23135,
+   "hallucinated": false,
+   "n_claims": 13,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "escalate",
+   "truth_pattern": "synthetic_ring"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 7264,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 36867,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "inr_abuse",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact"
+   ],
+   "action": "clear",
+   "action_ok": false,
+   "alert_id": 6635,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 32312,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "benign",
+   "truth_action": "hold_contact",
+   "truth_pattern": "inr_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 9180,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 32811,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact"
+   ],
+   "action": "hold_contact",
+   "action_ok": true,
+   "alert_id": 6664,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 34154,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "inr_abuse",
+   "truth_action": "hold_contact",
+   "truth_pattern": "inr_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block"
+   ],
+   "action": "decline_block",
+   "action_ok": true,
+   "alert_id": 8195,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 32337,
+   "hallucinated": false,
+   "n_claims": 7,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P0",
+   "top_pattern": "stolen_card",
+   "truth_action": "decline_block",
+   "truth_pattern": "stolen_card"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block",
+    "escalate"
+   ],
+   "action": "decline_block",
+   "action_ok": true,
+   "alert_id": 3015,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 39588,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "account_takeover",
+   "truth_action": "decline_block",
+   "truth_pattern": "account_takeover"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 6764,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 30572,
+   "hallucinated": false,
+   "n_claims": 6,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "stolen_card",
+   "truth_action": "decline_block",
+   "truth_pattern": "stolen_card"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact"
+   ],
+   "action": "hold_contact",
+   "action_ok": true,
+   "alert_id": 9107,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 30069,
+   "hallucinated": false,
+   "n_claims": 11,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "inr_abuse",
+   "truth_action": "hold_contact",
+   "truth_pattern": "inr_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "escalate",
+    "decline_block"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 2395,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 31433,
+   "hallucinated": false,
+   "n_claims": 10,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "escalate",
+   "truth_pattern": "synthetic_ring"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact"
+   ],
+   "action": "hold_contact",
+   "action_ok": true,
+   "alert_id": 5449,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 31316,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "inr_abuse",
+   "truth_action": "hold_contact",
+   "truth_pattern": "inr_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block",
+    "escalate"
+   ],
+   "action": "decline_block",
+   "action_ok": true,
+   "alert_id": 5535,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 30760,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "account_takeover",
+   "truth_action": "decline_block",
+   "truth_pattern": "account_takeover"
+  },
+  {
+   "acceptable_actions": [
+    "escalate"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 3688,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 25920,
+   "hallucinated": false,
+   "n_claims": 7,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "stolen_card",
+   "truth_action": "escalate",
+   "truth_pattern": "merchant_bustout"
+  },
+  {
+   "acceptable_actions": [
+    "escalate",
+    "decline_block"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 686,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 34607,
+   "hallucinated": false,
+   "n_claims": 11,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "escalate",
+   "truth_pattern": "synthetic_ring"
+  },
+  {
+   "acceptable_actions": [
+    "escalate",
+    "decline_block"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 3720,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 27437,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "escalate",
+   "truth_pattern": "synthetic_ring"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 7476,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 32312,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 4898,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 31967,
+   "hallucinated": false,
+   "n_claims": 8,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 6900,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 34420,
+   "hallucinated": false,
+   "n_claims": 13,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "stolen_card",
+   "truth_action": "decline_block",
+   "truth_pattern": "stolen_card"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 3444,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 31968,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 7610,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 25921,
+   "hallucinated": false,
+   "n_claims": 11,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "inr_abuse",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "escalate",
+    "decline_block"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 882,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 27336,
+   "hallucinated": false,
+   "n_claims": 10,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "escalate",
+   "truth_pattern": "synthetic_ring"
+  },
+  {
+   "acceptable_actions": [
+    "escalate",
+    "decline_block"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 1365,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 31887,
+   "hallucinated": false,
+   "n_claims": 14,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "escalate",
+   "truth_pattern": "synthetic_ring"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 3682,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 34180,
+   "hallucinated": false,
+   "n_claims": 7,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "inr_abuse",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "hold_contact",
+    "escalate"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 8407,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 26697,
+   "hallucinated": false,
+   "n_claims": 17,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "hold_contact",
+   "truth_pattern": "promo_abuse"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block"
+   ],
+   "action": "hold_contact",
+   "action_ok": false,
+   "alert_id": 736,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 28764,
+   "hallucinated": false,
+   "n_claims": 9,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "stolen_card",
+   "truth_action": "decline_block",
+   "truth_pattern": "never_pay"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block",
+    "escalate"
+   ],
+   "action": "decline_block",
+   "action_ok": true,
+   "alert_id": 6188,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 26007,
+   "hallucinated": false,
+   "n_claims": 10,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "account_takeover",
+   "truth_action": "decline_block",
+   "truth_pattern": "account_takeover"
+  },
+  {
+   "acceptable_actions": [
+    "clear"
+   ],
+   "action": "clear",
+   "action_ok": true,
+   "alert_id": 4398,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 22848,
+   "hallucinated": false,
+   "n_claims": 7,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "benign",
+   "truth_action": "clear",
+   "truth_pattern": "benign"
+  },
+  {
+   "acceptable_actions": [
+    "decline_block"
+   ],
+   "action": "decline_block",
+   "action_ok": true,
+   "alert_id": 3389,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 24777,
+   "hallucinated": false,
+   "n_claims": 13,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P1",
+   "top_pattern": "stolen_card",
+   "truth_action": "decline_block",
+   "truth_pattern": "stolen_card"
+  },
+  {
+   "acceptable_actions": [
+    "escalate",
+    "decline_block"
+   ],
+   "action": "escalate",
+   "action_ok": true,
+   "alert_id": 1233,
+   "cached": true,
+   "citation_fired_rate": 1.0,
+   "cost_usd": null,
+   "duration_ms": 31263,
+   "hallucinated": false,
+   "n_claims": 10,
+   "n_invalid_citations": 0,
+   "n_unsupported": 0,
+   "priority": "P2",
+   "top_pattern": "synthetic_ring",
+   "truth_action": "escalate",
+   "truth_pattern": "synthetic_ring"
+  }
+ ]
+}

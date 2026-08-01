@@ -1,15 +1,15 @@
 # LLM triage eval
 
-prompt version: **memo_v1** · cases: 140
+prompt version: **memo_v2** · cases: 200
 
 | metric | claude-sonnet-5 |
 |---|---|
-| action_accuracy | 0.614 |
-| decline_precision | 0.895 |
-| decline_recall | 0.447 |
-| pattern_id_rate | 0.807 |
-| hallucination_rate_memo | 0.1 |
-| hallucination_rate_claim | 0.0105 |
-| consistency_action_agreement | None |
-| cost_per_case_usd | 0.12554 |
-| latency_p50_ms | 56513 |
+| action_accuracy | 0.735 |
+| decline_precision | 0.968 |
+| decline_recall | 0.526 |
+| pattern_id_rate | 0.75 |
+| hallucination_rate_memo | 0.0 |
+| hallucination_rate_claim | 0.0 |
+| consistency_action_agreement | 0.84 |
+| cost_per_case_usd | 7e-05 |
+| latency_p50_ms | 58275 |
