@@ -9,14 +9,14 @@ get these exact numbers).
 
 | metric | definition |
 |---|---|
-| action accuracy | `recommended_action` == ground-truth action (mapping in `select_cases.py`: ATO/stolen/synthetic/never-pay → decline_block, INR/promo abuse → hold_contact, merchant bust-out → escalate, benign → clear) |
+| action accuracy | `recommended_action` ∈ the policy-derived acceptable-action set for the true pattern (`select_cases.py TRUTH_ACTIONS`; single-action wherever FP-1 is unambiguous — see the corrections section) |
 | decline precision / recall | positive class = `decline_block` only; escalate does NOT count as a decline. Precision protects legitimate customers (insults), recall protects loss. |
 | pattern id rate | top hypothesis (highest likelihood; ties → first listed) matches true pattern |
 | hallucination rate (memo) | share of memos with ≥1 unsupported claim: a `signals_observed` entry containing a concrete token (timestamp, amount, id, number) absent from the packet (`verifier.py`, strict by design) |
 | hallucination rate (claim) | unsupported claims / all claims |
 | citation validity | cited rule ids exist in FP-1; `citation_fired_rate` = share of cited rules that actually fired on the alert |
 | consistency | 3 runs on 50 cases with a neutral numbered no-op line injected into the packet; all-3-agree rate on `recommended_action`. (Byte-identical prompts at temp 0 would be answered from the response cache, so consistency is measured under neutral perturbation — that is the honest version of the metric.) |
-| cost / latency | API-equivalent cost from CLI-reported token counts at 2026-07 list prices; wall-clock latency per call |
+| latency | wall-clock per call; cost columns omitted (CLI backends lack reliable token accounting) |
 
 A 30-case manual spot-check protocol accompanies the mechanical verifier each version:
 read the raw memos for the flagged-unsupported claims and record whether the verifier's
