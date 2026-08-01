@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "96f019f914694559c00bce083e6f379912261cc01aa1cbd2e0d875f961a96861",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 29258,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R09 fired: \\\"repeat INR disputes\\\" with rationale \\\"5 prior item-not-received chargebacks on this account with healthy repayment\\\"\",\"Order 297877 was approved at 2026-05-03 19:03:40 for 641.58 in electronics at iron-collective-16\",\"Order 297877 had AVS result Y and CVV result M\",\"Account user_id 6606 has tenure_days 356 and n_orders_prior 19\",\"Repayment history: installments_due 49, paid 49.0, late 0.0, failed_or_written_off 0.0\",\"The alert IP country is CA; KYC country is US; card BIN country is US\",\"The account event on 2026-04-20 04:47:48 was a login from IP 58.53.134.163 using device_id 6606\",\"Other_accounts_on_device is 0, other_accounts_on_ship_address is 1, and other_accounts_same_email_root is 0\"],\"hypotheses\":[{\"pattern\":\"inr_abuse\",\"likelihood\":\"med\",\"reasoning\":\"R09 identifies 5 prior item-not-received chargebacks with healthy repayment, which directly supports an INR pattern. The current approved electronics order is 641.58, but the packet does not provide fulfillment, delivery, or dispute evidence for this order.\"},{\"pattern\":\"benign\",\"likelihood\":\"med\",\"reasoning\":\"A gift-buyer mimic remains plausible because the account has tenure_days 356, n_orders_prior 19, and paid 49.0 installments with late 0.0. The CA IP geography is recurrent in the listed order history and the packet shows no multi-account device or email-root linkage.\"}],\"policy_citations\":[\"R09\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Check the disposition and supporting evidence for the 5 prior item-not-received chargebacks\",\"Confirm whether order 297877 has shipped or been delivered, including delivery proof\",\"Verify the intended recipient and shipping address for order 297877 with the customer\"],\"memo_markdown\":\"R09 fired for 5 prior item-not-received chargebacks with healthy repayment. The current approved electronics order is 641.58, with AVS Y and CVV M. Account history shows tenure_days 356, n_orders_prior 19, and repayment history of installments_due 49, paid 49.0, late 0.0, and failed_or_written_off 0.0.\\n\\nINR abuse is plausible, but the packet lacks delivery or current-dispute evidence and does not show ring linkage: other_accounts_on_device is 0 and other_accounts_same_email_root is 0. A benign gift-buyer explanation remains viable given stable repayment and account history. Place a reversible hold_contact and obtain recipient/shipping confirmation plus prior-dispute and delivery evidence before a final decision.\"}"
+ },
+ "task": "triage_memo"
+}

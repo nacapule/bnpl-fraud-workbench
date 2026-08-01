@@ -18,6 +18,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import subprocess
 import time
 from dataclasses import dataclass
@@ -75,12 +76,15 @@ class LLMResponse:
             t = t.split("\n", 1)[1] if "\n" in t else t
             t = t.rsplit("```", 1)[0]
         start = t.find("{")
-        end = t.rfind("}")
-        if start == -1 or end == -1:
+        if start == -1:
             raise ValueError(f"no JSON object in response: {t[:200]!r}")
-        # strict=False tolerates literal control characters inside strings
-        # (models occasionally emit raw newlines in memo_markdown)
-        return json.loads(t[start : end + 1], strict=False)
+        body = t[start:]
+        # remove trailing commas before } or ] (a recurring model artifact)
+        body = re.sub(r",\s*([}\]])", r"\1", body)
+        # raw_decode stops at the end of the first object, tolerating trailing
+        # junk; strict=False tolerates literal control chars inside strings
+        obj, _ = json.JSONDecoder(strict=False).raw_decode(body)
+        return obj
 
 
 def _api_equivalent_cost(model: str, tin: int | None, tout: int | None) -> float | None:

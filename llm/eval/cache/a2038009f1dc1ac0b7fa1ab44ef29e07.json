@@ -1,0 +1,15 @@
+{
+ "backend": "codex",
+ "model": "gpt-5.6-terra",
+ "prompt_sha256": "bbf0a8f2240cd891d0675e6189022fc038eb347b60fefd7f24e82bc7f7b2dbd5",
+ "response": {
+  "backend": "codex",
+  "cost_usd": null,
+  "duration_ms": 33687,
+  "input_tokens": null,
+  "model": "gpt-5.6-terra",
+  "output_tokens": null,
+  "text": "{\"signals_observed\":[\"R07 fired: \\\"4 declined attempts on this card/device in the prior 24h, then this approval\\\"\",\"Order 351097 was approved for 785.63 at 2025-08-05 04:31:58.\",\"The approved order was electronics at bright-threads-21.\",\"Card 52246 is visa with bin_country US and declines_on_card_24h 4.\",\"The approved order had avs_result Y and cvv_result M.\",\"Account 40262 has n_orders_prior 0, total_spent_prior 0.0, and tenure_days 2.\",\"Orders 351093, 351094, 351095, and 351096 were declined on device 5181629.\",\"other_accounts_on_device, other_accounts_on_ship_address, and other_accounts_same_email_root are each 0.\"],\"hypotheses\":[{\"pattern\":\"stolen_card\",\"likelihood\":\"med\",\"reasoning\":\"The R07 sequence of 4 declined attempts on the same card/device followed by an approval for 785.63 is consistent with card-testing activity. The approved transaction's AVS Y and CVV M results limit corroboration to the velocity family in this packet.\"},{\"pattern\":\"benign\",\"likelihood\":\"low\",\"reasoning\":\"A benign verification-typo mimic is less persuasive because the approved order had AVS Y and CVV M, while the prior declines span AVS and CVV outcomes. The packet provides no stable-history or organic-device-add evidence supporting a listed benign mimic.\"}],\"policy_citations\":[\"R07\",\"FP-1 \u00a71\",\"FP-1 \u00a76\",\"FP-1 action selection, step 2\",\"FP-1 action selection, step 4\"],\"recommended_action\":\"hold_contact\",\"priority\":\"P1\",\"evidence_gaps\":[\"Confirm the issuer authorization outcomes and reason codes for the 4 declined attempts on card 52246.\",\"Perform step-up customer verification for account 40262 to distinguish authorized card use from card testing.\",\"Check whether card 52246 has confirmed-fraud or chargeback history outside this packet.\"],\"memo_markdown\":\"Order 351097 was approved for 785.63 at 2025-08-05 04:31:58 after R07 identified 4 declined attempts on the same card/device in the prior 24h. The approved electronics transaction at bright-threads-21 used a US Visa card and returned AVS Y and CVV M.\\n\\nThe sequence is consistent with stolen-card testing, but the packet supplies corroboration only from the velocity family. Account 40262 is new, with tenure_days 2 and n_orders_prior 0; linkage counts are 0 for device, ship address, and email root. There is no multi-account linkage supporting escalation, and the successful AVS/CVV results do not support immediate decline_block under the required independent-family threshold.\\n\\nRecommend hold_contact pending step-up verification. Priority P1 because exposure is 785.63. Human analyst should review issuer decline reasons and any external confirmed-fraud history for card 52246.\"}"
+ },
+ "task": "triage_memo"
+}
