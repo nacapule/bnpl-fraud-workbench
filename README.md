@@ -37,8 +37,9 @@ graph LR
 | rules @ tuned bands (30/90) | 24.9 alerts/day · precision 8.9% · recall 59.8% · $37,847 fraud caught · 0 false auto-declines · net +$32,550 under the cost model |
 | ML (HistGradientBoosting) | PR-AUC 0.94 vs logistic 0.72 · precision@capacity 9.5% · recall-by-pattern table incl. the honest failures (INR abuse 24%, never-pay: see CASE-04) |
 | queue sim | 2 analysts, offset 7-day-coverage shifts · SLA(≤4 business h) 99.6% · score-priority blocks $27,496 of fraud pre-fulfillment vs $25,884 FIFO |
-| Claude triage (claude-sonnet-5, memo_v1) | ⟨LLM-EVAL⟩ |
-| Claude triage (claude-haiku-4-5, memo_v1) | ⟨LLM-EVAL⟩ |
+| Claude triage (claude-sonnet-5, prompt v2) | action accuracy 73.5% · decline precision 96.8% / recall 52.6% · **hallucination rate 0.0%** (mechanically verified) · consistency 84% · N=200 |
+| prompt iteration v1→v2 (same model, same cases) | action accuracy **+12.5pp** · hallucinations **10%→0%** · full log in [ITERATION.md](llm/eval/ITERATION.md) |
+| cross-model arms (same harness) | gpt-5.6-terra 76.7% acc / 70% decline recall (n=86, quota-cut) · gpt-5.6-luna 59.8% acc / 100% decline precision (n=199) · model per task is a config switch |
 
 ## Quickstart
 

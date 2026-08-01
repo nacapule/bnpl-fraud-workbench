@@ -54,7 +54,19 @@ Hypothesis: a policy-grounded prompt with an explicit benign-hypothesis requirem
 should already give high action accuracy on clear-cut patterns; expected weak spots were
 (a) the hold_contact/decline_block boundary and (b) hallucinated derived numbers.
 
-Results (claude-sonnet-5, N=200): ⟨V1-SONNET-TABLE⟩
+Results (post-correction):
+
+| metric | claude-sonnet-5 (N=200) |
+|---|---|
+| action accuracy (in-policy set) | **61.0%** |
+| decline precision / recall | 93.1% / 47.4% |
+| pattern identification | 80.5% |
+| hallucination rate (memo / claim) | 10.0% / 1.05% |
+| invalid citations | 0 memos |
+| consistency (3 perturbed runs, 50 cases) | 87.2% |
+| schema failures | 0 |
+| latency p50 | 56.5 s |
+
 
 Failure taxonomy from reading the misses raw (n=140 preliminary read, confirmed on the
 full run):
@@ -84,9 +96,38 @@ Predicted effects: action accuracy and decline recall rise materially; benign ac
 (clear-rate on hard negatives) rises most; hallucination rate drops toward the
 claim-level floor; pattern-id rate unchanged (diagnosis was never the problem).
 
-Results (both arms, N=200): ⟨V2-TABLE⟩
+Results:
 
-Delta table and verdict: ⟨V1V2-DELTA⟩
+| metric | sonnet-5 (N=200) | gpt-5.6-luna (N=199¹) | gpt-5.6-terra (N=86²) |
+|---|---|---|---|
+| action accuracy | **73.5%** | 59.8% | **76.7%** |
+| decline precision / recall | 96.8% / 52.6% | 100% / 37.5% | 93.3% / 70.0% |
+| pattern identification | 75.0% | 65.3% | 72.1% |
+| hallucination (memo) | **0.0%** | 0.0% | 0.0% |
+| consistency (perturbed) | 84.0% | — | — |
+| schema failure rate | 0.0% | 0.5% | 0.0% |
+| latency p50 | 58.3 s | 39.1 s | 27.7 s |
+
+¹ one Luna response was truncated JSON — scored as a schema failure, not dropped
+silently. ² the Terra run was cut short by a provider quota; reported on its
+contiguous 86-case prefix and labeled as such. Cost columns are omitted: CLI
+backends don't expose reliable token accounting; latency is measured directly.
+
+
+Delta and verdict:
+
+sonnet v1 → v2 on identical cases: action accuracy **+12.5pp**, decline
+precision **+3.7pp**, decline recall **+5.2pp**, hallucinations **10% → 0%**.
+Two honest regressions: pattern-id −5.5pp and consistency −3.2pp — the action
+procedure spends attention the free-form hypothesis step previously used, and a
+stricter decision boundary flips more actions under perturbation. Verdict: v2
+adopted (the decision metrics are the product; diagnosis remains strong), with
+the regression logged as the target for a future v3. Cross-model read: terra
+leads accuracy and recall at the lowest latency (partial n), sonnet leads
+precision and is the only arm with full consistency data, luna is maximally
+conservative (perfect decline precision, weakest recall) — arm choice is a
+config switch (`llm.tasks.triage_memo.model`), and this table is how it should
+be made.
 
 ## Manual spot-check protocol
 
