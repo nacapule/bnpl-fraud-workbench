@@ -70,11 +70,11 @@ llm:
   tasks:
     triage_memo:               # per-alert investigation memo + action + priority
       model: claude-sonnet-5
-      eval_arms:               # arms compared by llm/eval/harness.py
-        - claude-sonnet-5
-        - claude-haiku-4-5-20251001
-        - gpt-5.6-luna           # cross-vendor arms via the codex CLI backend
-        - gpt-5.6-terra          # (memo_v2 only; see ITERATION.md)
+      eval_arms:               # arms compared by llm/eval/harness.py (fully cached;
+        - claude-sonnet-5      #  CI replays these offline)
+        - gpt-5.6-luna         # cross-vendor arm via the codex CLI backend
+        # gpt-5.6-terra: partial run (n=86, quota-cut) — committed results in
+        #   llm/eval/results/; rerun with --arms gpt-5.6-terra when quota allows
       prompt_version: memo_v2  # active; memo_v1 kept for the ITERATION.md comparison
 
 llm_eval:
