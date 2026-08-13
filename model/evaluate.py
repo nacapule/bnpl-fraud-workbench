@@ -18,6 +18,7 @@ import joblib  # noqa: E402
 import matplotlib  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
+from sklearn.isotonic import IsotonicRegression  # noqa: E402
 from sklearn.metrics import average_precision_score, precision_recall_curve  # noqa: E402
 
 from model.features import FEATURE_COLUMNS, build_features, load_feature_frames  # noqa: E402
@@ -61,21 +62,84 @@ def _capacity_threshold(scores: np.ndarray, capacity: int) -> float:
     return float(np.sort(scores)[::-1][index])
 
 
-def _calibration_table(scores: np.ndarray, labels: np.ndarray) -> pd.DataFrame:
+CALIBRATION_SLICE_DAYS = 30
+
+
+def _score_deciles(scores: np.ndarray) -> np.ndarray:
+    """Equal-count decile index (0-9) over the score ranking."""
     order = np.argsort(scores, kind="stable")
     bins = np.empty(len(scores), dtype=np.int8)
     bins[order] = np.minimum(np.arange(len(scores)) * 10 // len(scores), 9)
-    raw = pd.DataFrame({"bin": bins + 1, "predicted": scores, "observed": labels})
+    return bins
+
+
+def _calibration_table(
+    scores: np.ndarray,
+    labels: np.ndarray,
+    calibrated: np.ndarray,
+) -> pd.DataFrame:
+    raw = pd.DataFrame(
+        {
+            "bin": _score_deciles(scores) + 1,
+            "predicted": scores,
+            "calibrated": calibrated,
+            "observed": labels,
+        }
+    )
     table = raw.groupby("bin", as_index=False).agg(
         orders=("observed", "size"),
         min_score=("predicted", "min"),
         max_score=("predicted", "max"),
         mean_predicted=("predicted", "mean"),
+        mean_calibrated=("calibrated", "mean"),
         observed_rate=("observed", "mean"),
     )
-    for column in ["min_score", "max_score", "mean_predicted", "observed_rate"]:
+    for column in [
+        "min_score",
+        "max_score",
+        "mean_predicted",
+        "mean_calibrated",
+        "observed_rate",
+    ]:
         table[column] = table[column].map(lambda value: f"{value:.4f}")
     return table
+
+
+def _fit_isotonic(scores: np.ndarray, labels: np.ndarray) -> IsotonicRegression:
+    """Isotonic map from model score to probability.
+
+    A separate head with a separate purpose: the ranking model keeps
+    ``class_weight='balanced'`` and is used for ordering, while this map is
+    what a limit or exposure decision would read. Isotonic is monotone, so it
+    cannot change the ranking and cannot change PR-AUC.
+    """
+    calibrator = IsotonicRegression(y_min=0.0, y_max=1.0, out_of_bounds="clip")
+    calibrator.fit(scores, labels)
+    return calibrator
+
+
+def _brier(probabilities: np.ndarray, labels: np.ndarray) -> float:
+    return float(np.mean((probabilities - labels) ** 2))
+
+
+def _expected_calibration_error(
+    probabilities: np.ndarray,
+    labels: np.ndarray,
+    bins: np.ndarray,
+) -> float:
+    """Weighted mean gap between predicted probability and observed rate.
+
+    Bins are the equal-count score deciles the calibration table already uses,
+    so the number here is the table read as one figure.
+    """
+    frame = pd.DataFrame({"bin": bins, "predicted": probabilities, "observed": labels})
+    grouped = frame.groupby("bin").agg(
+        size=("observed", "size"),
+        predicted=("predicted", "mean"),
+        observed=("observed", "mean"),
+    )
+    weights = grouped["size"] / len(frame)
+    return float((weights * (grouped["predicted"] - grouped["observed"]).abs()).sum())
 
 
 def _exposure_table(data_dir: Path) -> pd.DataFrame:
@@ -262,7 +326,6 @@ def main() -> None:
     frames = load_feature_frames(data_dir)
     features = build_features(**frames)
     train, holdout = chronological_split(features, config)
-    del train
 
     missing = [
         filename
@@ -277,6 +340,21 @@ def main() -> None:
     x_holdout = holdout[FEATURE_COLUMNS]
     labels = holdout["label"].to_numpy(dtype=int)
     scores = {name: model.predict_proba(x_holdout)[:, 1] for name, model in models.items()}
+
+    slice_start = pd.Timestamp(config["holdout_start"]) - pd.Timedelta(
+        days=CALIBRATION_SLICE_DAYS
+    )
+    calibration_slice = train[train["ts"] >= slice_start]
+    slice_labels = calibration_slice["label"].to_numpy(dtype=int)
+    calibrators = {
+        name: _fit_isotonic(
+            model.predict_proba(calibration_slice[FEATURE_COLUMNS])[:, 1], slice_labels
+        )
+        for name, model in models.items()
+    }
+    calibrated = {
+        name: calibrators[name].predict(values) for name, values in scores.items()
+    }
 
     holdout_days = max(
         (features["ts"].max() - pd.Timestamp(config["holdout_start"])).days,
@@ -353,13 +431,42 @@ def main() -> None:
     _save_pattern_recall(pattern_table, REPORT_DIR / "model_recall_by_pattern.svg")
 
     calibration_sections = []
+    calibration_metrics: dict[str, dict[str, float]] = {}
     for name, values in scores.items():
-        table = _markdown_table(_calibration_table(values, labels))
+        bins = _score_deciles(values)
+        calibration_metrics[name] = {
+            "brier_raw": round(_brier(values, labels), 6),
+            "brier_isotonic": round(_brier(calibrated[name], labels), 6),
+            "ece_raw": round(_expected_calibration_error(values, labels, bins), 6),
+            "ece_isotonic": round(
+                _expected_calibration_error(calibrated[name], labels, bins), 6
+            ),
+        }
+        table = _markdown_table(_calibration_table(values, labels, calibrated[name]))
         calibration_sections.append(f"### {name}\n\n{table}")
+
+    calibration_summary = _markdown_table(
+        pd.DataFrame(
+            [
+                {
+                    "Model": name,
+                    "Brier (raw)": f"{metrics['brier_raw']:.6f}",
+                    "Brier (isotonic)": f"{metrics['brier_isotonic']:.6f}",
+                    "ECE (raw)": f"{metrics['ece_raw']:.4f}",
+                    "ECE (isotonic)": f"{metrics['ece_isotonic']:.4f}",
+                }
+                for name, metrics in calibration_metrics.items()
+            ]
+        )
+    )
 
     elapsed = time.perf_counter() - started
     reviews_per_day = int(config["model"]["review_capacity_per_day"])
     review_cost = float(config["costs"]["review_cost_usd"])
+    slice_days = CALIBRATION_SLICE_DAYS
+    slice_from = slice_start.date()
+    slice_n = f"{len(calibration_slice):,}"
+    slice_fraud = f"{slice_labels.sum():,}"
     model_summary = {
         "holdout_start": config["holdout_start"],
         "holdout_end": str(holdout["ts"].max()),
@@ -384,6 +491,12 @@ def main() -> None:
                 name: round(float(str(row[name]).rstrip("%")) / 100, 4) for name in scores
             }
             for row in pattern_rows
+        },
+        "calibration": {
+            "slice_start": str(slice_start.date()),
+            "slice_orders": len(calibration_slice),
+            "slice_fraud_orders": int(slice_labels.sum()),
+            "models": calibration_metrics,
         },
     }
     report = f"""# Fraud model evaluation
@@ -411,6 +524,25 @@ the observed fraud rate. Because training uses `class_weight='balanced'`, the re
 probabilities are inflated by design. PR-AUC and precision@capacity are rank metrics and do not
 depend on probability calibration; the cost-optimal threshold is chosen by a score sweep, not by
 reading the score as a probability.
+
+Reporting that diagnostic and stopping there leaves the useful half undone, so the raw score
+is also passed through an isotonic map fitted on the last {slice_days} days of the training
+window ({slice_from} onward: {slice_n} orders, {slice_fraud} fraud). `mean_calibrated` below
+is that map applied to the holdout. The calibrator is a separate head with a separate purpose
+— isotonic regression is monotone, so it cannot reorder anything and cannot move PR-AUC or
+precision@capacity by construction. What it changes is whether the number can be read as a
+probability, which is what a credit limit or exposure decision needs and a rank does not.
+
+{calibration_summary}
+
+Expected calibration error is the order-weighted mean gap between predicted probability and
+observed rate across the same deciles, so it is the tables below read as one figure.
+
+The slice sits inside the training window rather than outside it: the committed model artifacts
+are trained on the full pre-holdout period, and refitting to carve out a clean calibration month
+would change every number in this report. The fitted map is therefore optimistic, because it
+learns from scores the model has already seen. A production calibrator would be fitted on data
+the ranking model never touched.
 
 {chr(10).join(calibration_sections)}
 

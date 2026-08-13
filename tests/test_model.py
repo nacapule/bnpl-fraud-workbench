@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
@@ -13,6 +15,12 @@ from sklearn.metrics import average_precision_score
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
+from model.evaluate import (  # noqa: E402
+    CALIBRATION_SLICE_DAYS,
+    _expected_calibration_error,
+    _fit_isotonic,
+    _score_deciles,
+)
 from model.features import FEATURE_COLUMNS, build_features, load_feature_frames  # noqa: E402
 from model.train import chronological_split, load_config, make_models  # noqa: E402
 
@@ -101,3 +109,44 @@ def test_tiny_world_logistic_smoke(tiny_world: dict[str, pd.DataFrame]) -> None:
     model.fit(train[FEATURE_COLUMNS], train["label"])
     scores = model.predict_proba(holdout[FEATURE_COLUMNS])[:, 1]
     assert average_precision_score(holdout["label"], scores) > 0.05
+
+
+def test_isotonic_calibration_is_monotone_and_pulls_toward_the_observed_rate() -> None:
+    rng = np.random.default_rng(load_config()["seed"])
+    labels = (rng.random(2000) < 0.02).astype(int)
+    # a ranking score that separates but over-predicts, as class_weight='balanced' does
+    scores = np.clip(rng.normal(0.2 + 0.5 * labels, 0.1), 0, 1)
+    calibrated = _fit_isotonic(scores, labels).predict(scores)
+
+    order = np.argsort(scores, kind="stable")
+    assert np.all(np.diff(calibrated[order]) >= -1e-12)
+    assert calibrated.mean() == pytest.approx(labels.mean(), abs=1e-6)
+    bins = _score_deciles(scores)
+    assert _expected_calibration_error(
+        calibrated, labels, bins
+    ) < _expected_calibration_error(scores, labels, bins)
+
+
+def test_expected_calibration_error_on_a_hand_computed_case() -> None:
+    # two equal bins: predicted 0.5 against observed 1.0, predicted 0.1 against observed 0.0
+    probabilities = np.array([0.5, 0.5, 0.1, 0.1])
+    labels = np.array([1, 1, 0, 0])
+    bins = np.array([1, 1, 0, 0])
+    assert _expected_calibration_error(probabilities, labels, bins) == pytest.approx(0.3)
+
+
+def test_committed_calibration_block_reports_an_improvement() -> None:
+    report = (REPO / "reports" / "model.md").read_text()
+    summary = json.loads(report.rsplit("```json\n", 1)[1].split("\n```", 1)[0])
+    calibration = summary["calibration"]
+    holdout_start = pd.Timestamp(load_config()["holdout_start"])
+    assert pd.Timestamp(calibration["slice_start"]) == holdout_start - pd.Timedelta(
+        days=CALIBRATION_SLICE_DAYS
+    )
+    assert calibration["slice_fraud_orders"] > 0
+    for name, metrics in calibration["models"].items():
+        assert metrics["ece_isotonic"] < metrics["ece_raw"], name
+        assert metrics["brier_isotonic"] < metrics["brier_raw"], name
+    assert calibration["models"]["HistGradient Boosting"]["ece_raw"] == pytest.approx(
+        0.0176, abs=5e-5
+    )
