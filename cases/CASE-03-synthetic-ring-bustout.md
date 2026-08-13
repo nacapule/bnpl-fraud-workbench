@@ -2,7 +2,7 @@
 
 **Alerts:** 280+ alerts across the burst window; exemplar #2467 (order 351786, score
 130, band decline: R02+R05+R06+R08) · **Cluster:** 80 accounts, 26 shared devices,
-2 shared ship addresses, one email root · **Window:** accounts created 2025-08-16 →
+2 shared ship addresses, one normalized email root · **Window:** accounts created 2025-08-16 →
 2025-09-16; burst 2025-10-19 01:31 → 10-21 12:48 · **Exposure:** $68,653 ordered in 60
 hours · **Resolution:** ring confirmed → `escalate`, all member accounts blocked ·
 **Pattern (ground truth, post-hoc):** P-SYNTH (ring R2)
@@ -25,7 +25,7 @@ Linkage (Q02 on the cluster):
 | ship address | a_2899017 | **40** (146 orders) |
 | device (top) | d_5181704 | 4 |
 | devices (26 total) | d_5181704…d_5181729 | 3–4 accounts each |
-| email root | `graysongomez***@mailinator.com` | **80** (e.g. graysongomez055, -188, -239, -325, -452) |
+| normalized email root | `graysongomez@mailinator.com` | **80** after Q02 strips trailing digit runs (e.g. graysongomez055, -188, -239, -325, -452) |
 | IP subnet | 91.40.28.0/24 | all 80 accounts |
 
 Two-phase behavior (the economics of a bust-out):
@@ -60,7 +60,7 @@ graph TD
 
 1. **Synthetic/multi-account ring (high).** 80 accounts on one mailbox root and one /24,
    sharing 26 devices and exactly two delivery points, moving in phase. No benign
-   population does this.
+   population does this. Q02's normalization now removes the injected trailing digit runs.
 2. **Household or reshipper (rejected).** FP-1 §6.2–6.3: a large household shares an
    address across ≤ a handful of accounts with organic timing; freight-forwarders
    aggregate many buyers but not one email root, one subnet, and synchronized
@@ -79,16 +79,18 @@ that escaped alerting (score < 30) were swept in the escalation.
 
 ## Prevention follow-up (measured — a proposal we REJECTED)
 
-Obvious idea: lower R08's threshold from 3 shared-address accounts to 2. Measured on
-holdout months 10–12: **+54.3 alerts/day** (tripling review load past the 40/day
-capacity) to gain **2** additional fraud orders against **4,938** benign ones — gift
+Both counterfactuals are reproduced by
+[`analysis/followups.py`](../analysis/followups.py) and the generated
+[`reports/followups.md`](../reports/followups.md) result.
+
+Obvious idea: lower R08's threshold from 3 shared-address accounts to 2. Measured from
+the configured holdout start: **4,842 added alerts (57.0/day)**, beyond the 40/day
+capacity, to gain **2** additional fraud orders against **4,840** benign ones — gift
 buyers (FP-1 §6.3) dominate 2-account addresses. Rejected per FP-1 §8; the change log
-records the negative result so it isn't re-proposed. The adopted alternative:
-**address-attach velocity** — alert when a single address accumulates ≥3 *new* accounts
-within 30 days (Q02's `ring_score` ranking already surfaces this weekly); in this
-dataset it flags both ring addresses in week 2 of the warm-up, 8 weeks before the burst,
-at zero benign cost (no benign address in the year gains 3 first-time accounts in 30
-days).
+records the negative result so it isn't re-proposed. A second idea—alerting when an
+address attaches at least 3 accounts—was also rejected: the literal definition flags
+3,392 addresses, including **3,382 with benign orders**. No address-attach rule was
+adopted; Q02 remains an investigation query rather than a rule.
 
 ## Claude-drafted memo (advisory) + analyst verdict
 

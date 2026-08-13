@@ -18,7 +18,7 @@ account's average ticket. That resembles the opening of a stolen-card case.
 
 ## Evidence — why this is §6.1, not P-STOLEN
 
-Account 1284, signed up 2023-12-28, 36 approved orders over the observed year:
+Account 1284, signed up 2023-12-28, 35 approved orders over the observed year:
 
 | signal | value | reading |
 |---|---|---|
@@ -55,14 +55,18 @@ decide). Logged as a benign-explanation clear under §6.1 for QA sampling.
 
 ## Prevention follow-up (measured)
 
+Reproduced by [`analysis/followups.py`](../analysis/followups.py) and the generated
+[`reports/followups.md`](../reports/followups.md) result.
+
 R03-only alerts are the queue's biggest benign contributor. Proposal: **suppress R03
 when the account is >180 days old, AVS passes, and there has been no credential change
-within 72h** — exactly this case's profile. Measured on holdout months 10–12: removes
-**364 of 1,303** R03-only alerts (−4.0 alerts/day, a 28% cut of that segment) with
+within 72h** — exactly this case's profile. Measured from the configured holdout start:
+removes **364 of 1,303** R03-only alerts (−4.3 alerts/day, a 28% cut of that segment) with
 **zero** fraud among the suppressed set (every true-fraud R03 alert in the holdout also
-carried a mismatched AVS, a young account, or a credential change). Adopted per FP-1 §8.
-The insult that never happens is invisible in a loss ledger; this is where it gets
-counted.
+carried a mismatched AVS, a young account, or a credential change). This is **proposed**,
+not implemented in R03, and remains pending the simulator geo fix because the simulated
+home-IP country is independent of KYC country. The insult that never happens is invisible
+in a loss ledger; this is where it gets counted.
 
 ## Claude-drafted memo (advisory) + analyst verdict
 

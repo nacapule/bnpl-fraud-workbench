@@ -1,7 +1,7 @@
 # CASE-01 — Account takeover of a 395-day tenured account
 
 **Alert:** #3215 (order 350035, score 80, band review) + three sibling alerts on the same
-account (#3202, #3234, #3213) · **Account:** user 21069 · **Window:** 2025-11-12 04:56 →
+account (#3202, #3234, #3203) · **Account:** user 21069 · **Window:** 2025-11-12 04:56 →
 2025-11-13 00:44 UTC · **Exposure:** $3,642.95 across 4 orders · **Resolution:**
 confirmed third-party ATO → `decline_block` + account recovery · **Pattern (ground truth,
 post-hoc):** P-ATO
@@ -77,9 +77,12 @@ order was inside the 12-hour fulfillment window.
 
 ## Prevention follow-up (measured)
 
-Alert #3202 (first order, score 45) sat in the review band — at 26 alerts/day a queue
+Reproduced by [`analysis/followups.py`](../analysis/followups.py) and the generated
+[`reports/followups.md`](../reports/followups.md) result.
+
+Alert #3202 (first order, score 45) sat in the review band — at 24.9 alerts/day a queue
 delay could have cost the whole burst. Proposal: **conjunction bonus — R01 + ship-to
-address added <48h before the order → +15**. Measured on holdout months 10–12: ATO
+address added <48h before the order → +15**. Measured from the configured holdout start: ATO
 orders crossing the auto-decline band rise **1 → 13 (of 50)**, with **zero** additional
 false declines (no benign order in the holdout fires R01 while shipping to a <48h-old
 address). Adopted into the proposed-changes queue per FP-1 §8.

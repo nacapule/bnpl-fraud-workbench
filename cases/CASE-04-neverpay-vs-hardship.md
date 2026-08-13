@@ -60,12 +60,15 @@ new devices/addresses/credential events, order sizes inside habit. **Credit loss
 
 ## Prevention follow-up (measured — an honest dead end)
 
+Reproduced by [`analysis/followups.py`](../analysis/followups.py) and the generated
+[`reports/followups.md`](../reports/followups.md) result.
+
 Only **1 of 63** holdout never-pay orders crossed the review band at all: after the
 simulator's realism pass, never-pay first orders sit *inside* the benign amount
 distribution (1.05–1.6× median), on clean devices, with plausible identities. We tested
 a candidate rule — first order >1.5× category median on a <48h account, +15 — and it
-added **one** alert on the whole holdout (a stolen-card order, not never-pay). We also
-sized a first-order amount cap and found it binds on 26.8% of *benign* first orders
+added **one** alert on the whole holdout (a P-PROMO order, not never-pay). We also
+sized a first-order amount cap and found it binds on 26.3% of *benign* first orders
 while barely touching this pattern. Both rejected. The honest conclusion, recorded per
 FP-1 §8: **first-party never-pay is not a transaction-time detection problem.** The
 lever is credit strategy — start small, grow limits with repayment history — plus the

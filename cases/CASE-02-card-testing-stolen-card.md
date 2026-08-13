@@ -60,6 +60,9 @@ issuing bank's dispute.
 
 ## Prevention follow-up (measured)
 
+Reproduced by [`analysis/followups.py`](../analysis/followups.py) and the generated
+[`reports/followups.md`](../reports/followups.md) result.
+
 The alerts fired on the *approvals* — after exposure existed. Proposal: **pre-approval
 device cooldown — ≥5 declines on one device within 24h places the device on a 24h
 order-hold** (holds, not blocks: FP-1 §3 reversibility). Measured across the full year
