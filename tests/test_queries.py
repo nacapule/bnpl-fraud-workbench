@@ -12,6 +12,14 @@ REPO = Path(__file__).resolve().parent.parent
 QUERIES = sorted(glob.glob(str(REPO / "db" / "queries" / "Q*.sql")))
 
 
+def _without_comments(sql: str) -> str:
+    return "\n".join(line for line in sql.splitlines() if not line.lstrip().startswith("--"))
+
+
+def _statements(sql: str) -> list[str]:
+    return [statement.strip() for statement in sql.split(";") if statement.strip()]
+
+
 def _db_up() -> bool:
     try:
         with socket.create_connection(("127.0.0.1", 3306), timeout=2):
@@ -27,7 +35,7 @@ def test_twelve_queries_exist() -> None:
 @pytest.mark.parametrize("path", QUERIES)
 def test_no_query_reads_ground_truth(path: str) -> None:
     """Q11 reads alerts (analyst-facing); nothing reads labels/stories."""
-    sql = Path(path).read_text().lower()
+    sql = _without_comments(Path(path).read_text()).lower()
     assert "labels" not in sql, f"{path} references the labels table"
     assert "stories" not in sql
 
@@ -43,9 +51,18 @@ def test_query_executes_and_returns_rows(path: str) -> None:
     url = (f"mysql+pymysql://{db['user']}:{db['password']}@{db['host']}:"
            f"{db['port']}/{db['database']}")
     eng = sa.create_engine(url)
+    statements = _statements(Path(path).read_text())
     with eng.connect() as c:
-        df = pd.read_sql(sa.text(Path(path).read_text()), c)
+        for statement in statements[:-1]:
+            c.execute(sa.text(statement))
+        df = pd.read_sql(sa.text(statements[-1]), c)
     if "Q11" in path:
         # queue-ops view may be empty until the rules engine has run
         return
     assert len(df) >= 1, f"{path} returned no rows on demo data"
+
+
+def test_q11_uses_calendar_day_window() -> None:
+    sql = _without_comments((REPO / "db" / "queries" / "Q11_queue_ops.sql").read_text())
+    assert "RANGE BETWEEN INTERVAL 6 DAY PRECEDING" in sql
+    assert "ROWS BETWEEN 6 PRECEDING" not in sql

@@ -9,5 +9,4 @@ data/*.jsonl
 mysql-data/
 reports/*.tmp
 .DS_Store
-.briefs/
-vendor/fixtures/scores.csv
+vendor/fixtures/

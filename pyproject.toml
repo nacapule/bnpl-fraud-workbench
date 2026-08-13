@@ -10,7 +10,6 @@ dependencies = [
     "scikit-learn>=1.5",
     "pymysql>=1.1",
     "sqlalchemy>=2.0",
-    "anthropic>=0.40",
     "pyyaml>=6.0",
     "matplotlib>=3.9",
     "requests>=2.32",
@@ -18,6 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6"]
+api = ["anthropic>=0.40"]
 
 [tool.ruff]
 line-length = 100

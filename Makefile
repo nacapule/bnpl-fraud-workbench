@@ -1,7 +1,7 @@
 PY := .venv/bin/python
 COMPOSE := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
 
-.PHONY: venv up down generate load rules queue model llm-eval reports cases test lint demo
+.PHONY: venv up down generate load rules queue model llm-eval llm-eval-live vendor vendor-live test lint demo
 
 venv:
 	python3 -m venv .venv && .venv/bin/pip install -q -e ".[dev]"
@@ -47,7 +47,7 @@ test:
 	$(PY) -m pytest tests/ -q
 
 lint:
-	.venv/bin/ruff check simulator db rules queue_sim model llm vendor tests
+	.venv/bin/ruff check simulator db rules queue_sim model llm vendor analysis tests
 
 demo: up generate load rules model queue llm-eval
 	@echo "demo complete — see reports/ and cases/"

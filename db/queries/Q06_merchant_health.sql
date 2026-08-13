@@ -4,6 +4,9 @@
 -- and installment-failure rate both explode while avg ticket drifts up and GMV
 -- concentrates in young accounts. Any single metric alone has benign
 -- explanations; the conjunction is the alarm.
+-- Set this date to the observation cutoff before running the query.
+SET @as_of = '2026-06-30';
+
 WITH per_order AS (
   SELECT o.order_id, o.merchant_id, o.ts, o.amount, o.user_id,
          (u.signup_ts > o.ts - INTERVAL 30 DAY) AS buyer_is_new,
@@ -17,12 +20,14 @@ WITH per_order AS (
 merch_window AS (
   SELECT merchant_id,
          COUNT(*) AS orders_all,
-         SUM(ts >= '2026-04-01') AS orders_90d,
+         SUM(ts >= @as_of - INTERVAL 90 DAY) AS orders_90d,
          ROUND(AVG(has_cb), 4) AS cb_rate_all,
-         ROUND(AVG(CASE WHEN ts >= '2026-04-01' THEN has_cb END), 4) AS cb_rate_90d,
+         ROUND(AVG(CASE WHEN ts >= @as_of - INTERVAL 90 DAY THEN has_cb END), 4)
+             AS cb_rate_90d,
          ROUND(AVG(n_failed_inst > 0), 4) AS inst_fail_rate,
          ROUND(AVG(amount), 2) AS avg_ticket_all,
-         ROUND(AVG(CASE WHEN ts >= '2026-04-01' THEN amount END), 2) AS avg_ticket_90d,
+         ROUND(AVG(CASE WHEN ts >= @as_of - INTERVAL 90 DAY THEN amount END), 2)
+             AS avg_ticket_90d,
          ROUND(AVG(buyer_is_new), 3) AS new_buyer_share
   FROM per_order
   GROUP BY merchant_id

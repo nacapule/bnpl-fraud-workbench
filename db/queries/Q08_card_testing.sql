@@ -2,7 +2,8 @@
 -- card/device, plus devices cycling many distinct cards.
 -- Read: fraudsters validate stolen credentials with cheap declined attempts,
 -- then spend. A burst of ≥3 declines inside an hour that converts to an
--- approval within 24h is the classic shape; distinct_cards_per_device catches
+-- approval within 24h is the classic shape. Declines use fixed clock-hour
+-- buckets, not a sliding one-hour window; distinct_cards_per_device catches
 -- the inventory-of-cards variant even when approvals land elsewhere.
 WITH declines AS (
   SELECT o.card_id, o.device_id,
@@ -11,7 +12,7 @@ WITH declines AS (
   FROM orders o
   WHERE o.status = 'declined'
   GROUP BY o.card_id, o.device_id,
-           FLOOR(UNIX_TIMESTAMP(o.ts) / 3600)  -- 1h buckets
+           FLOOR(UNIX_TIMESTAMP(o.ts) / 3600)  -- fixed clock-hour buckets
   HAVING COUNT(*) >= 3
 ),
 converted AS (
@@ -20,6 +21,7 @@ converted AS (
          MAX(a.amount) AS approved_amount
   FROM declines d
   JOIN orders a ON a.card_id = d.card_id
+               AND a.device_id = d.device_id
                AND a.status = 'approved'
                AND a.ts BETWEEN d.burst_end AND d.burst_end + INTERVAL 24 HOUR
   GROUP BY d.card_id, d.device_id, d.burst_start, d.burst_end, d.n_declines

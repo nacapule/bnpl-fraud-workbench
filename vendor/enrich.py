@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import os
 import time
@@ -91,7 +92,8 @@ def enrich_live(targets: pd.DataFrame) -> list[dict]:
             if not d.get("success", False):
                 raise SystemExit(f"IPQS error on {kind} {value}: {d.get('message')}")
             d.pop("request_id", None)  # sanitize
-            (raw_dir / f"{kind}_{abs(hash(value)) % 10**10}.json").write_text(
+            value_hash = hashlib.sha256(str(value).encode()).hexdigest()[:16]
+            (raw_dir / f"{kind}_{value_hash}.json").write_text(
                 json.dumps(d, indent=1, sort_keys=True)
             )
             rows.append(

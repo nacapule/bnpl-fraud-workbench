@@ -32,7 +32,11 @@ jobs:
           python -m venv .venv
           .venv/bin/pip install -q -e ".[dev]"
       - name: Lint
-        run: .venv/bin/ruff check simulator db rules queue_sim model llm vendor tests
+        run: .venv/bin/ruff check simulator db rules queue_sim model llm vendor analysis tests
+      - name: Preserve committed full-scale data
+        run: |
+          mkdir -p /tmp/bnpl-full-data
+          cp data/* /tmp/bnpl-full-data/
       - name: Generate scaled world + load
         env:
           SIM_SCALE: "0.05"
@@ -43,7 +47,16 @@ jobs:
         run: |
           .venv/bin/python -m rules.engine
           .venv/bin/python -m rules.tuning
+      - name: Model + queue reports (scaled)
+        run: |
+          .venv/bin/python -m model.train
+          .venv/bin/python -m model.evaluate
+          .venv/bin/python -m queue_sim.simulate
+      - name: Restore full-scale data for frozen evaluation
+        run: cp /tmp/bnpl-full-data/* data/
       - name: Tests
         run: .venv/bin/python -m pytest tests/ -q
-      - name: LLM eval (offline, committed cache — no keys)
-        run: .venv/bin/python -m llm.eval.harness --offline --no-consistency
+      - name: Case selection + LLM eval (offline, committed cache — no keys)
+        run: |
+          .venv/bin/python -m llm.eval.select_cases
+          .venv/bin/python -m llm.eval.harness --offline --no-consistency
