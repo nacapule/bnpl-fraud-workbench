@@ -1,0 +1,9 @@
+{
+ "rules_bands": {
+  "review": 30,
+  "decline": 90
+ },
+ "seed": 416,
+ "alerts_csv_sha256": "486c4ac1be1ff5e93e500aa909db0e189377c5f3faab8ccb662517047da6bdcd",
+ "packet_dir_sha256": "066c750110ae37b0bebe93a952e144dfa5f6317cbde4813850d5d454b375302b"
+}

@@ -11,8 +11,10 @@ Output (committed to the repo so CI and reviewers reproduce with zero keys):
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -21,6 +23,9 @@ from llm.client import load_config
 from llm.packet import build_packet, get_engine
 
 EVAL_DIR = Path(__file__).resolve().parent
+REPO = EVAL_DIR.parents[1]
+PACKETS_DIR = EVAL_DIR / "packets"
+PROVENANCE_PATH = EVAL_DIR / "provenance.json"
 
 PATTERN_TO_TAXONOMY = {
     "P-ATO": "account_takeover",
@@ -51,14 +56,64 @@ TRUTH_ACTIONS: dict[str, list[str]] = {
 TRUTH_ACTION = {k: v[0] for k, v in TRUTH_ACTIONS.items()}
 
 
-def main() -> None:
-    cfg = load_config()
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def packet_directory_sha256(packet_dir: Path = PACKETS_DIR) -> str:
+    """Hash packet names and bytes in a stable order."""
+    digest = hashlib.sha256()
+    for path in sorted(packet_dir.glob("*.json")):
+        digest.update(path.name.encode())
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def current_provenance(cfg: dict[str, Any] | None = None) -> dict[str, Any]:
+    cfg = cfg or load_config()
+    return {
+        "rules_bands": {
+            "review": cfg["rules"]["bands"]["review"],
+            "decline": cfg["rules"]["bands"]["decline"],
+        },
+        "seed": cfg["seed"],
+        "alerts_csv_sha256": _sha256_file(REPO / "data" / "alerts.csv"),
+        "packet_dir_sha256": packet_directory_sha256(),
+    }
+
+
+def assert_provenance(cfg: dict[str, Any] | None = None) -> None:
+    if not PROVENANCE_PATH.exists():
+        raise RuntimeError(f"missing frozen-eval provenance: {PROVENANCE_PATH}")
+    expected = json.loads(PROVENANCE_PATH.read_text())
+    actual = current_provenance(cfg)
+    if actual != expected:
+        raise RuntimeError(
+            "frozen-eval provenance mismatch; data, rules bands, seed, or packets changed\n"
+            f"expected: {json.dumps(expected, sort_keys=True)}\n"
+            f"actual:   {json.dumps(actual, sort_keys=True)}"
+        )
+
+
+def select_case_metadata(
+    cfg: dict[str, Any] | None = None,
+) -> tuple[list[dict[str, Any]], pd.DataFrame]:
+    """Return deterministic case metadata and the selected alert rows."""
+    cfg = cfg or load_config()
     n_total = cfg["llm_eval"]["n_cases"]
     n_neg_min = cfg["llm_eval"]["hard_negatives_min"]
     rng = np.random.default_rng(cfg["seed"] + 7)
 
-    alerts = pd.read_csv("data/alerts.csv", usecols=["alert_id", "order_id", "user_id"])
-    labels = pd.read_csv("data/labels.csv")
+    alerts = pd.read_csv(
+        REPO / "data" / "alerts.csv", usecols=["alert_id", "order_id", "user_id"]
+    )
+    labels = pd.read_csv(REPO / "data" / "labels.csv")
     lab_by_order = labels.set_index("order_id")["pattern_id"].to_dict()
     alerts["pattern"] = alerts["order_id"].map(lab_by_order)
     alerts["taxonomy"] = alerts["pattern"].map(PATTERN_TO_TAXONOMY).fillna("benign")
@@ -88,23 +143,38 @@ def main() -> None:
             "alert_id": int(r.alert_id),
             "truth_pattern": r.taxonomy,
             "truth_action": TRUTH_ACTION[r.taxonomy],
+            "truth_actions": TRUTH_ACTIONS[r.taxonomy],
         }
         for r in sel.itertuples()
     ]
+    return cases, sel
+
+
+def main() -> None:
+    cfg = load_config()
+    assert_provenance(cfg)
+    cases, selected = select_case_metadata(cfg)
     (EVAL_DIR / "cases.json").write_text(json.dumps(cases, indent=1))
 
-    pdir = EVAL_DIR / "packets"
-    pdir.mkdir(exist_ok=True)
-    engine = get_engine()
-    for i, c in enumerate(cases):
-        out = pdir / f"{c['alert_id']}.json"
+    engine = None
+    for i, (case, row) in enumerate(zip(cases, selected.itertuples(), strict=True)):
+        out = PACKETS_DIR / f"{case['alert_id']}.json"
+        expected_order_id = int(row.order_id)
         if not out.exists():
-            pkt = build_packet(c["alert_id"], engine)
-            out.write_text(json.dumps(pkt, indent=1, sort_keys=True))
+            engine = engine or get_engine()
+            packet = build_packet(case["alert_id"], engine)
+            out.write_text(json.dumps(packet, indent=1, sort_keys=True))
+        else:
+            packet = json.loads(out.read_text())
+        packet_order_id = int(packet.get("alert", {}).get("order_id", -1))
+        if packet_order_id != expected_order_id:
+            raise RuntimeError(
+                f"stale packet {out}: order_id {packet_order_id}, expected {expected_order_id}"
+            )
         if (i + 1) % 25 == 0:
             print(f"packets {i + 1}/{len(cases)}")
 
-    mix = sel["taxonomy"].value_counts().to_dict()
+    mix = selected["taxonomy"].value_counts().to_dict()
     print(f"eval set: {len(cases)} cases — {mix}")
 
 

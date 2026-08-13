@@ -38,6 +38,7 @@ PRICES: dict[str, tuple[float, float]] = {
     "claude-opus-5": (5.00, 25.00),
     "claude-haiku-4-5-20251001": (1.00, 5.00),
 }
+MIN_AUTHORITATIVE_INPUT_TOKENS = 100
 
 
 def load_config() -> dict[str, Any]:
@@ -88,7 +89,12 @@ class LLMResponse:
 
 
 def _api_equivalent_cost(model: str, tin: int | None, tout: int | None) -> float | None:
-    if tin is None or tout is None or model not in PRICES:
+    if (
+        tin is None
+        or tout is None
+        or tin < MIN_AUTHORITATIVE_INPUT_TOKENS
+        or model not in PRICES
+    ):
         return None
     pin, pout = PRICES[model]
     return round((tin * pin + tout * pout) / 1e6, 6)
@@ -116,9 +122,7 @@ class ClaudeCLIClient:
         if proc.returncode != 0:
             raise RuntimeError(f"{self.binary} exited {proc.returncode}: {proc.stderr[:500]}")
         result: dict[str, Any] | None = None
-        tin: int | None = None
-        tout = 0
-        saw_usage = False
+        assistant_usage: dict[str, dict[str, int]] = {}
         for line in proc.stdout.splitlines():
             try:
                 d = json.loads(line)
@@ -126,21 +130,54 @@ class ClaudeCLIClient:
                 continue
             if d.get("type") == "assistant":
                 u = d.get("message", {}).get("usage") or {}
-                if "output_tokens" in u:
-                    saw_usage = True
-                    tout = max(tout, int(u["output_tokens"]))
-                    cand = int(u.get("input_tokens", 0)) + int(
-                        u.get("cache_read_input_tokens", 0) or 0
-                    ) + int(u.get("cache_creation_input_tokens", 0) or 0)
-                    tin = max(tin or 0, cand)
+                if u:
+                    message_id = str(d.get("message", {}).get("id") or len(assistant_usage))
+                    previous = assistant_usage.setdefault(message_id, {})
+                    for key in (
+                        "input_tokens",
+                        "cache_read_input_tokens",
+                        "cache_creation_input_tokens",
+                        "output_tokens",
+                    ):
+                        if key in u:
+                            previous[key] = max(previous.get(key, 0), int(u[key] or 0))
             elif d.get("type") == "result":
                 result = d
         if result is None:
             raise RuntimeError(f"no result event from {self.binary}: {proc.stdout[-300:]}")
         if result.get("is_error"):
             raise RuntimeError(f"CLI error result: {result.get('result', '')[:500]}")
-        if not saw_usage:
-            tin, tout = None, None  # type: ignore[assignment]
+        # The final result event is authoritative when it carries usage.  Older
+        # CLI versions omit it, so sum per-message maxima as a non-overlapping
+        # fallback (stream events for one message can repeat cumulative usage).
+        usage = result.get("usage") or {}
+        if usage:
+            tin = sum(
+                int(usage.get(key, 0) or 0)
+                for key in (
+                    "input_tokens",
+                    "cache_read_input_tokens",
+                    "cache_creation_input_tokens",
+                )
+            )
+            tout: int | None = int(usage.get("output_tokens", 0) or 0)
+        elif assistant_usage:
+            tin = sum(
+                sum(
+                    values.get(key, 0)
+                    for key in (
+                        "input_tokens",
+                        "cache_read_input_tokens",
+                        "cache_creation_input_tokens",
+                    )
+                )
+                for values in assistant_usage.values()
+            )
+            tout = sum(values.get("output_tokens", 0) for values in assistant_usage.values())
+        else:
+            tin, tout = None, None
+        if tin is not None and tin < MIN_AUTHORITATIVE_INPUT_TOKENS:
+            tin, tout = None, None
         return LLMResponse(
             text=result["result"],
             model=model,
@@ -259,7 +296,10 @@ def complete_cached(
     path = cache_dir / f"{key}.json"
     if path.exists():
         d = json.loads(path.read_text())
-        return LLMResponse(**{**d["response"], "cached": True})
+        response = {**d["response"], "cached": True}
+        if (response.get("input_tokens") or 0) < MIN_AUTHORITATIVE_INPUT_TOKENS:
+            response.update(input_tokens=None, output_tokens=None, cost_usd=None)
+        return LLMResponse(**response)
     if offline:
         raise FileNotFoundError(f"offline mode: no cached response for {task}/{model}/{key}")
     client = client or get_client(model=model)

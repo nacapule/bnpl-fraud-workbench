@@ -47,6 +47,8 @@ def render_prompt(packet: dict[str, Any], prompt_version: str | None = None) -> 
 
 def validate_memo(memo: dict[str, Any]) -> list[str]:
     """Return a list of schema problems (empty = valid)."""
+    if not isinstance(memo, dict):
+        return ["memo must be an object"]
     problems = [f"missing field {f}" for f in REQUIRED_FIELDS if f not in memo]
     if not problems:
         if memo["recommended_action"] not in ACTIONS:
@@ -55,11 +57,23 @@ def validate_memo(memo: dict[str, Any]) -> list[str]:
             problems.append(f"bad priority {memo['priority']!r}")
         if not isinstance(memo["signals_observed"], list) or not memo["signals_observed"]:
             problems.append("signals_observed empty")
-        for h in memo.get("hypotheses", []):
-            if h.get("pattern") not in PATTERNS:
-                problems.append(f"bad hypothesis pattern {h.get('pattern')!r}")
-            if h.get("likelihood") not in {"low", "med", "high"}:
-                problems.append(f"bad likelihood {h.get('likelihood')!r}")
+        if not isinstance(memo["hypotheses"], list):
+            problems.append("hypotheses must be a list")
+        else:
+            for hypothesis in memo["hypotheses"]:
+                if not isinstance(hypothesis, dict):
+                    problems.append("each hypothesis must be an object")
+                    continue
+                if hypothesis.get("pattern") not in PATTERNS:
+                    problems.append(f"bad hypothesis pattern {hypothesis.get('pattern')!r}")
+                if hypothesis.get("likelihood") not in {"low", "med", "high"}:
+                    problems.append(f"bad likelihood {hypothesis.get('likelihood')!r}")
+        if not isinstance(memo["policy_citations"], list) or not all(
+            isinstance(citation, str) for citation in memo["policy_citations"]
+        ):
+            problems.append("policy_citations must be a list of strings")
+        if not isinstance(memo["memo_markdown"], str):
+            problems.append("memo_markdown must be a string")
     return problems
 
 
