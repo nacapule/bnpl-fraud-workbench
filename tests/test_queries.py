@@ -53,9 +53,12 @@ def test_query_executes_and_returns_rows(path: str) -> None:
     eng = sa.create_engine(url)
     statements = _statements(Path(path).read_text())
     with eng.connect() as c:
+        # exec_driver_sql: the files are plain MySQL (literal % in DATE_FORMAT),
+        # so they must bypass the DBAPI's parameter interpolation.
         for statement in statements[:-1]:
-            c.execute(sa.text(statement))
-        df = pd.read_sql(sa.text(statements[-1]), c)
+            c.exec_driver_sql(statement)
+        result = c.exec_driver_sql(statements[-1])
+        df = pd.DataFrame(result.fetchall(), columns=list(result.keys()))
     if "Q11" in path:
         # queue-ops view may be empty until the rules engine has run
         return
