@@ -78,28 +78,60 @@ def business_hours_between(t0: datetime, t1: datetime, analysts: list[Analyst]) 
             w = a.shift_window(day)
             if w:
                 windows.append(w)
-        # merge overlapping windows
-        for start, end in sorted(windows):
-            lo, hi = max(start, t0), min(end, t1)
-            if hi > lo:
-                total += (hi - lo).total_seconds() / 3600
+        clipped = sorted(
+            (max(start, t0), min(end, t1))
+            for start, end in windows
+            if min(end, t1) > max(start, t0)
+        )
+        merged: list[tuple[datetime, datetime]] = []
+        for start, end in clipped:
+            if merged and start <= merged[-1][1]:
+                merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+            else:
+                merged.append((start, end))
+        total += sum((end - start).total_seconds() / 3600 for start, end in merged)
         day += timedelta(days=1)
     return total
+
+
+def sample_service_minutes(
+    rng: np.random.Generator,
+    arithmetic_mean_min: float,
+    sigma: float,
+    size: int | None = None,
+) -> float | np.ndarray:
+    """Draw a lognormal service time with the configured arithmetic mean."""
+    mu = np.log(arithmetic_mean_min) - sigma**2 / 2
+    return np.exp(rng.normal(mu, sigma, size=size))
+
+
+def finish_service(analyst: Analyst, start: datetime, duration: timedelta) -> datetime:
+    """Consume service across shifts without restarting unfinished work."""
+    cursor = start
+    remaining = duration
+    while True:
+        day = cursor.replace(hour=0, minute=0, second=0, microsecond=0)
+        window = analyst.shift_window(day)
+        if window is None or not (window[0] <= cursor < window[1]):
+            cursor = analyst.next_available(cursor)
+            continue
+        available = window[1] - cursor
+        if remaining <= available:
+            return cursor + remaining
+        remaining -= available
+        cursor = analyst.next_available(window[1])
 
 
 def load_inputs() -> tuple[pd.DataFrame, dict, dict]:
     cfg = yaml.safe_load(open(REPO / "config.yaml"))
     op = json.loads((REPO / "reports" / "operating_point.json").read_text())
     alerts = pd.read_csv(REPO / "data" / "alerts.csv", parse_dates=["ts"])
-    orders = pd.read_csv(REPO / "data" / "orders.csv", parse_dates=["ts"],
-                         usecols=["order_id", "ts", "amount"])
     labels = pd.read_csv(REPO / "data" / "labels.csv").drop_duplicates("order_id")
     plans = pd.read_csv(REPO / "data" / "plans.csv")
     pays = pd.read_csv(REPO / "data" / "payments.csv")
 
-    start = orders.ts.min()
-    fit_end = start + pd.DateOffset(months=cfg["model"]["train_months"])
-    a = alerts[(alerts.ts >= fit_end) & (alerts.score >= op["review_band"])].copy()
+    holdout_start = pd.Timestamp(cfg["holdout_start"])
+    a = alerts[(alerts.ts >= holdout_start) & (alerts.score >= op["review_band"])].copy()
 
     got = pays[pays.result == "success"].groupby("plan_id").amount.sum()
     plans["collected"] = plans.plan_id.map(got).fillna(0)
@@ -127,7 +159,7 @@ def run_policy(alerts: pd.DataFrame, cfg: dict, policy: str, rng: np.random.Gene
                 + float(x["shift_start"].split(":")[1]) / 60, x["productive_hours"])
         for x in cfg["queue"]["analysts"]
     ]
-    mean_min = cfg["queue"]["service_time_mean_min"]
+    mean_min = cfg["queue"]["service_time_arithmetic_mean_min"]
     sigma = cfg["queue"]["service_time_sigma"]
     ship_lag = timedelta(hours=cfg["queue"]["fulfillment_lag_hours"])
     sla_h = cfg["queue"]["sla_target_hours"]
@@ -167,12 +199,8 @@ def run_policy(alerts: pd.DataFrame, cfg: dict, policy: str, rng: np.random.Gene
             i += 1
         j = pick(start)
         pending.remove(j)
-        dur = timedelta(minutes=float(np.exp(rng.normal(np.log(mean_min), sigma))))
-        end = start + dur
-        # clamp inside shift: spillover resumes next shift
-        win = nxt.shift_window(start.replace(hour=0, minute=0, second=0, microsecond=0))
-        if win and end > win[1]:
-            end = nxt.next_available(win[1] + timedelta(seconds=1)) + dur
+        dur = timedelta(minutes=float(sample_service_minutes(rng, mean_min, sigma)))
+        end = finish_service(nxt, start, dur)
         nxt.free_at = end
         resolved_at[j] = end
         served += 1
@@ -211,6 +239,8 @@ def run_policy(alerts: pd.DataFrame, cfg: dict, policy: str, rng: np.random.Gene
 
 def main() -> None:
     alerts, cfg, op = load_inputs()
+    orders = pd.read_csv(REPO / "data" / "orders.csv", parse_dates=["ts"], usecols=["ts"])
+    holdout_days = max((orders.ts.max() - pd.Timestamp(cfg["holdout_start"])).days, 1)
     rng_seed = cfg["seed"]
     have_llm = alerts.llm_priority.notna().any()
     policies = ["fifo", "score"] + (["llm"] if have_llm else [])
@@ -218,12 +248,32 @@ def main() -> None:
     for pol in policies:
         results.append(run_policy(alerts.copy(), cfg, pol, np.random.default_rng(rng_seed)))
 
+    coverage_analysts = [
+        Analyst(
+            item["name"],
+            item["shift_days"],
+            float(item["shift_start"].split(":")[0])
+            + float(item["shift_start"].split(":")[1]) / 60,
+            item["productive_hours"],
+        )
+        for item in cfg["queue"]["analysts"]
+    ]
+    coverage_hours = business_hours_between(
+        alerts.ts.min().to_pydatetime(),
+        alerts.ts.max().to_pydatetime(),
+        coverage_analysts,
+    )
+    offered_hours = (
+        len(alerts) * cfg["queue"]["service_time_arithmetic_mean_min"] / 60
+    )
+    utilization = offered_hours / coverage_hours
+
     lines = [
-        "# Alert queue / SLA simulation (holdout months 10–12)\n",
+        f"# Alert queue / SLA simulation (from {cfg['holdout_start']})\n",
         f"Operating point: review ≥ {op['review_band']} → {len(alerts)} alerts "
-        f"({len(alerts) / 91:.1f}/day). Two analysts on offset 5-day shifts, "
-        f"6.5 productive h), lognormal service (mean "
-        f"{cfg['queue']['service_time_mean_min']} min), orders ship "
+        f"({len(alerts) / holdout_days:.1f}/day). Two analysts on offset 5-day shifts, "
+        f"6.5 productive h, lognormal service (arithmetic mean "
+        f"{cfg['queue']['service_time_arithmetic_mean_min']} min), orders ship "
         f"{cfg['queue']['fulfillment_lag_hours']}h after checkout; SLA target "
         f"{cfg['queue']['sla_target_hours']} business hours.\n",
         ("| policy | SLA ≤ 4bh | P50 ttd (bh) | P90 ttd (bh) | max backlog "
@@ -232,7 +282,7 @@ def main() -> None:
     ]
     for r in results:
         lines.append(
-            f"| {r['policy']} | {r['sla_attainment']:.0%} | {r['ttd_p50_h']} | "
+            f"| {r['policy']} | {r['sla_attainment']:.1%} | {r['ttd_p50_h']} | "
             f"{r['ttd_p90_h']} | {r['max_backlog']} | ${r['fraud_blocked_usd']:,.0f} | "
             f"{r['fraud_blocked_n']}/{int(alerts.is_fraud.sum())} |"
         )
@@ -249,11 +299,19 @@ def main() -> None:
         )
     lines += [
         "",
+        f"The configured workload is far below saturation ({utilization:.1%} utilization of "
+        "union shift coverage), so high SLA attainment is expected.",
+        "",
         "Reading: the 12-hour fulfillment race means weekend/coverage gaps, not average "
         "throughput, decide how much fraud ships. Score-priority beats FIFO by resolving "
         "high-score (fraud-dense) alerts inside the ship window even when the backlog "
         "spans a coverage hole; the offset-shift pairing leaves parts of the week "
-        "single-covered, visible as the weekly backlog sawtooth.",
+            "single-covered, visible as the weekly backlog sawtooth.",
+        "",
+        "```json",
+        *[json.dumps({key: value for key, value in result.items() if key != "backlog_curve"})
+          for result in results],
+        "```",
     ]
     (REPO / "reports" / "queue.md").write_text("\n".join(lines) + "\n")
 
