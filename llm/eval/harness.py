@@ -293,6 +293,58 @@ def evaluate_arm(
     }
 
 
+ACTION_LADDER = ("clear", "hold_contact", "escalate", "decline_block")
+
+
+def _action_order(summary: dict[str, Any]) -> list[str]:
+    seen: set[str] = set()
+    for key in summary["action_confusion"]:
+        seen.update(key.split("->"))
+    return [action for action in ACTION_LADDER if action in seen] + sorted(
+        seen - set(ACTION_LADDER)
+    )
+
+
+def _confusion_lines(summary: dict[str, Any]) -> list[str]:
+    actions = _action_order(summary)
+    counts = summary["action_confusion"]
+    lines = [
+        f"### {summary['model']}",
+        "",
+        "| truth \\ recommended | " + " | ".join(actions) + " |",
+        "|---" * (len(actions) + 1) + "|",
+    ]
+    for truth in actions:
+        row = [counts.get(f"{truth}->{action}", 0) for action in actions]
+        lines.append(f"| {truth} | " + " | ".join(str(value) for value in row) + " |")
+    diagonal = sum(counts.get(f"{action}->{action}", 0) for action in actions)
+    correct = sum(row["action_ok"] for row in summary["rows"])
+    lines += [
+        "",
+        (
+            f"{diagonal} on the diagonal against {correct} scored correct: the remaining "
+            f"{correct - diagonal} recommendations differ from the labelled truth action but "
+            "sit inside its acceptable set."
+        ),
+    ]
+    return lines
+
+
+def _per_pattern_lines(summary: dict[str, Any]) -> list[str]:
+    lines = [
+        f"### {summary['model']}",
+        "",
+        "| truth pattern | n | action accuracy | pattern identification |",
+        "|---|---|---|---|",
+    ]
+    for pattern, stratum in sorted(summary["per_pattern"].items()):
+        lines.append(
+            f"| {pattern} | {stratum['n']} | {stratum['action_accuracy']} | "
+            f"{stratum['pattern_id_rate']} |"
+        )
+    return lines
+
+
 def _write_report(summaries: list[dict[str, Any]], n_requested: int) -> None:
     lines = [
         "# LLM triage eval\n",
@@ -338,7 +390,34 @@ def _write_report(summaries: list[dict[str, Any]], n_requested: int) -> None:
             f"{inclusive['action_accuracy']} over {inclusive['n']} outputs with schema failures "
             "counted as wrong."
         )
-    REPORT_PATH.write_text("\n".join(lines) + "\n")
+    lines += [
+        "",
+        "## Action confusion",
+        "",
+        (
+            "Rows are the labelled truth action, columns the recommended action. Accuracy "
+            "above is scored against the policy-derived acceptable set in `cases.json`, which "
+            "is wider than the single truth label, so off-diagonal cells are not all errors."
+        ),
+        "",
+    ]
+    for summary in summaries:
+        lines.extend(_confusion_lines(summary))
+        lines.append("")
+    lines += [
+        "## Accuracy by truth pattern",
+        "",
+        (
+            "Pattern identification is the share of memos whose highest-likelihood hypothesis "
+            "names the injected pattern. Strata are small — see `reports/uncertainty.md` for "
+            "the intervals."
+        ),
+        "",
+    ]
+    for summary in summaries:
+        lines.extend(_per_pattern_lines(summary))
+        lines.append("")
+    REPORT_PATH.write_text("\n".join(lines).rstrip("\n") + "\n")
     print(f"wrote {REPORT_PATH.relative_to(REPO)}")
 
 
