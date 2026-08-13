@@ -30,6 +30,48 @@ def test_number_normalization():
     assert check_claim("order amount $899.99 by user u_42", hay)["supported"]
 
 
+def test_invented_short_count_does_not_match_digits_inside_other_values():
+    hay = packet_haystack(PACKET)
+    for invented in (7, 13):
+        check = check_claim(f"there were {invented} linked accounts", hay)
+        assert check["classification"] == "unsupported"
+        assert check["missing"] == [str(invented)]
+
+
+def test_digits_inside_longer_number_do_not_match():
+    hay = packet_haystack({"account": {"tenure_days": 412}})
+    assert check_claim("there were 12 prior orders", hay)["classification"] == "unsupported"
+
+
+def test_legitimate_rounding_passes():
+    packet = {"account": {"avg_amount_prior": 101.11857}}
+    check = check_claim("average amount was $101.12", packet_haystack(packet))
+    assert check["classification"] == "verbatim"
+
+
+def test_visible_list_row_count_is_derived():
+    packet = {
+        "last_orders": [
+            {"order_id": "o_101", "status": "approved"},
+            {"order_id": "o_102", "status": "approved"},
+            {"order_id": "o_103", "status": "declined"},
+        ]
+    }
+    check = check_claim(
+        "last_orders contains 2 approved orders: o_101 and o_102",
+        packet_haystack(packet),
+        packet=packet,
+    )
+    assert check["classification"] == "derived"
+    assert check["missing"] == []
+
+
+def test_uppercase_entity_id_is_checked():
+    packet = {"device_id": "DEV_42"}
+    assert check_claim("device DEV_42", packet_haystack(packet))["supported"]
+    assert not check_claim("device DEV_43", packet_haystack(packet))["supported"]
+
+
 def test_token_extraction_masks_timestamps():
     toks = claim_tokens("at 2026-02-11 03:12:00 exactly")
     assert "2026-02-11 03:12:00" in toks

@@ -1,40 +1,44 @@
-"""Mechanical hallucination check: every concrete token a memo cites must exist
-in the case packet the model was shown.
+"""Mechanical grounding check over concrete tokens in ``signals_observed``.
 
-A "concrete token" is anything that looks like data rather than prose:
-timestamps, money amounts, bare numbers, and entity ids (``d_123``, ``u_4``,
-order/device/card identifiers). A claim with at least one concrete token that
-does NOT appear in the packet is unsupported; the memo-level hallucination flag
-is "any unsupported claim". This is deliberately strict — an LLM memo earns
-trust by quoting the packet, not by paraphrasing plausibly (FP-1 §2.2).
+The verifier checks numeric, entity-id, timestamp, and money tokens against the
+packet shown to the model.  It uses token boundaries, accepts legitimate numeric
+rounding, and recognizes a narrow class of derived list counts/sums.  It does
+not establish semantic truth: a real packet token can still be used in a false
+relationship, and token-free prose is outside this mechanical check.
 
-Citation validity: cited rule ids must exist (R01–R12) and are additionally
-marked "fired" if present in the packet's fired-rule list.
+Citation validity is separate: cited rule ids must exist (R01-R12), and a valid
+rule is additionally marked ``fired`` when it appears in the packet alert.
 """
 
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from typing import Any
 
 VALID_RULE_IDS = {f"R{i:02d}" for i in range(1, 13)}
 
 _TOKEN_PATTERNS = [
-    re.compile(r"\b\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?\b"),  # timestamps
-    re.compile(r"\$\s?\d[\d,]*(?:\.\d+)?"),  # money
-    re.compile(r"\b[a-z]{1,8}_\d+\b"),  # entity ids like d_123, u_88
-    re.compile(r"\b\d+(?:\.\d+)?\b"),  # bare numbers (incl. counts)
+    re.compile(r"\b\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?\b"),
+    re.compile(r"\$\s?\d[\d,]*(?:\.\d+)?"),
+    re.compile(r"\b[A-Za-z]{1,8}_\d+\b"),
+    re.compile(r"\b\d+(?:\.\d+)?\b"),
 ]
+_NUMBER_RE = re.compile(r"^\$?\s?\d[\d,]*(?:\.\d+)?$")
+_LIST_ALIASES = {
+    "last_orders": ("last_orders", "last orders", "orders"),
+    "account_events_90d": ("account_events_90d", "account events", "events"),
+}
 
 
 def _flatten(obj: Any, out: list[str]) -> None:
     if isinstance(obj, dict):
-        for k, v in obj.items():
-            out.append(str(k))
-            _flatten(v, out)
+        for key, value in obj.items():
+            out.append(str(key))
+            _flatten(value, out)
     elif isinstance(obj, list):
-        for v in obj:
-            _flatten(v, out)
+        for value in obj:
+            _flatten(value, out)
     elif obj is not None:
         out.append(str(obj))
 
@@ -45,96 +49,188 @@ def packet_haystack(packet: dict[str, Any]) -> str:
     return "\x00".join(parts)
 
 
-def _normalize_number(tok: str) -> str:
-    t = tok.replace("$", "").replace(",", "").strip()
-    if re.fullmatch(r"\d+\.0+", t):
-        t = t.split(".")[0]
-    return t
+def _normalize_number(token: str) -> str:
+    normalized = token.replace("$", "").replace(",", "").strip()
+    if re.fullmatch(r"\d+\.0+", normalized):
+        normalized = normalized.split(".")[0]
+    return normalized
 
 
 def claim_tokens(claim: str) -> list[str]:
-    """Extract concrete tokens; bare numbers inside timestamps/ids/money are not
-    double-counted (longest patterns run first and mask their span)."""
+    """Extract concrete tokens without double-counting timestamp/id components."""
     masked = claim
     tokens: list[str] = []
-    for pat in _TOKEN_PATTERNS:
-        for m in pat.finditer(masked):
-            tokens.append(m.group())
-        masked = pat.sub(" ", masked)
+    for pattern in _TOKEN_PATTERNS:
+        for match in pattern.finditer(masked):
+            tokens.append(match.group())
+        masked = pattern.sub(" ", masked)
     return tokens
 
 
-def _numeric_match(tok: str, numbers: list[float]) -> bool:
-    """A numeric token matches if some packet number rounds to it at the
-    token's own precision — models legitimately round (101.11857 → "101.12");
-    they may NOT invent or compute new values (sums/averages stay unsupported)."""
-    t = _normalize_number(tok)
+def _numeric_match(token: str, numbers: Iterable[float]) -> bool:
+    """Accept packet numbers rounded to the precision used by the claim."""
+    normalized = _normalize_number(token)
     try:
-        val = float(t)
+        value = float(normalized)
     except ValueError:
         return False
-    dp = len(t.split(".")[1]) if "." in t else 0
-    return any(abs(round(n, dp) - val) < 10 ** -(dp + 6) for n in numbers)
+    decimal_places = len(normalized.split(".")[1]) if "." in normalized else 0
+    return any(
+        abs(round(number, decimal_places) - value) < 10 ** -(decimal_places + 6)
+        for number in numbers
+    )
 
 
 def _packet_numbers(haystack: str) -> list[float]:
-    nums = []
-    for m in re.finditer(r"-?\d+(?:\.\d+)?", haystack):
+    numbers = []
+    for match in re.finditer(r"-?\d+(?:\.\d+)?", haystack):
         try:
-            nums.append(float(m.group()))
+            numbers.append(float(match.group()))
         except ValueError:  # pragma: no cover
             pass
-    return nums
+    return numbers
 
 
-def check_claim(claim: str, haystack: str, numbers: list[float] | None = None
-                ) -> dict[str, Any]:
-    toks = claim_tokens(claim)
+def _token_present(token: str, haystack: str) -> bool:
+    normalized = _normalize_number(token)
+    if not normalized:
+        return True
+    boundary = re.compile(rf"(?<![0-9.]){re.escape(normalized)}(?![0-9.])", re.IGNORECASE)
+    return boundary.search(haystack) is not None
+
+
+def _iter_packet_lists(obj: Any, path: tuple[str, ...] = ()) -> Iterable[tuple[str, list[Any]]]:
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            yield from _iter_packet_lists(value, (*path, str(key)))
+    elif isinstance(obj, list):
+        yield ".".join(path), obj
+        for index, value in enumerate(obj):
+            yield from _iter_packet_lists(value, (*path, str(index)))
+
+
+def _list_is_referenced(claim: str, path: str) -> bool:
+    claim_lower = claim.lower()
+    name = path.rsplit(".", 1)[-1]
+    aliases = _LIST_ALIASES.get(name, (name, name.replace("_", " ")))
+    return any(re.search(rf"\b{re.escape(alias)}\b", claim_lower) for alias in aliases)
+
+
+def _derived_numbers(claim: str, packet: dict[str, Any]) -> list[float]:
+    """Return count/sum candidates from packet lists explicitly anchored in a claim."""
+    candidates: list[float] = []
+    claim_lower = claim.lower()
+    for path, rows in _iter_packet_lists(packet):
+        if not rows or not _list_is_referenced(claim, path):
+            continue
+        candidates.append(float(len(rows)))
+        if not all(isinstance(row, dict) for row in rows):
+            numeric_values = [float(value) for value in rows if isinstance(value, int | float)]
+            if numeric_values:
+                candidates.append(sum(numeric_values))
+            continue
+
+        keys = {str(key) for row in rows for key in row}
+        for key in keys:
+            values = [row.get(key) for row in rows]
+            numeric_values = [
+                float(value)
+                for value in values
+                if isinstance(value, int | float) and not isinstance(value, bool)
+            ]
+            if numeric_values and (key.lower() in claim_lower or "total" in claim_lower):
+                candidates.append(sum(numeric_values))
+
+            # A value named in the claim can anchor a filtered row count, e.g.
+            # "4 approved orders in last_orders".
+            for value in {str(value).lower() for value in values if value is not None}:
+                if value and re.search(rf"(?<!\w){re.escape(value)}(?!\w)", claim_lower):
+                    candidates.append(float(sum(str(item).lower() == value for item in values)))
+    return candidates
+
+
+def check_claim(
+    claim: str,
+    haystack: str,
+    numbers: list[float] | None = None,
+    *,
+    packet: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    tokens = claim_tokens(claim)
     numbers = numbers if numbers is not None else _packet_numbers(haystack)
-    missing = []
-    for tok in toks:
-        norm = _normalize_number(tok)
-        if not norm or norm in haystack:
+    missing: list[str] = []
+    for token in tokens:
+        if _token_present(token, haystack) or _numeric_match(token, numbers):
             continue
-        if _numeric_match(tok, numbers):
-            continue
-        missing.append(tok)
-    return {"claim": claim, "tokens": toks, "missing": missing, "supported": not missing}
+        missing.append(token)
+
+    classification = "verbatim"
+    derived_tokens: list[str] = []
+    if missing and packet is not None:
+        candidates = _derived_numbers(claim, packet)
+        if candidates and all(_NUMBER_RE.fullmatch(token.strip()) for token in missing):
+            if all(_numeric_match(token, candidates) for token in missing):
+                derived_tokens = missing.copy()
+                missing = []
+                classification = "derived"
+    if missing:
+        classification = "unsupported"
+    return {
+        "claim": claim,
+        "tokens": tokens,
+        "missing": missing,
+        "derived_tokens": derived_tokens,
+        "classification": classification,
+        "supported": classification != "unsupported",
+    }
 
 
 def verify_memo(memo: dict[str, Any], packet: dict[str, Any]) -> dict[str, Any]:
-    hay = packet_haystack(packet)
-    nums = _packet_numbers(hay)
-    checks = [check_claim(c, hay, nums) for c in memo.get("signals_observed", [])]
+    haystack = packet_haystack(packet)
+    numbers = _packet_numbers(haystack)
+    checks = [
+        check_claim(claim, haystack, numbers, packet=packet)
+        for claim in memo.get("signals_observed", [])
+    ]
     fired = {
-        str(r.get("id"))
-        for r in (packet.get("alert", {}).get("fired_rules") or [])
-        if isinstance(r, dict)
+        str(rule.get("id"))
+        for rule in (packet.get("alert", {}).get("fired_rules") or [])
+        if isinstance(rule, dict)
     }
     citations = []
-    for cit in memo.get("policy_citations", []):
-        ids = re.findall(r"\bR\d{2}\b", str(cit))
-        for rid in ids or [None]:
+    for citation in memo.get("policy_citations", []):
+        ids = re.findall(r"\bR\d{2}\b", str(citation))
+        for rule_id in ids or [None]:
             citations.append(
                 {
-                    "citation": cit,
-                    "rule_id": rid,
-                    "valid": rid in VALID_RULE_IDS if rid else True,  # sections FP-1 §x ok
-                    "fired": rid in fired if rid else None,
+                    "citation": citation,
+                    "rule_id": rule_id,
+                    "valid": rule_id in VALID_RULE_IDS if rule_id else True,
+                    "fired": rule_id in fired if rule_id else None,
                 }
             )
-    unsupported = [c for c in checks if not c["supported"]]
-    invalid_citations = [c for c in citations if not c["valid"]]
+    unsupported = [check for check in checks if check["classification"] == "unsupported"]
+    derived = [check for check in checks if check["classification"] == "derived"]
+    invalid_citations = [citation for citation in citations if not citation["valid"]]
+    checked = len(checks)
     return {
-        "n_claims": len(checks),
+        "n_claims": checked,
+        "n_checked_fields": checked,
+        "n_verbatim_claims": checked - len(derived) - len(unsupported),
+        "n_derived_claims": len(derived),
         "n_unsupported_claims": len(unsupported),
+        "unsupported_claim_rate": len(unsupported) / checked if checked else None,
         "unsupported": unsupported,
-        "hallucinated": bool(unsupported),
+        "derived": derived,
+        "has_unsupported_claim": bool(unsupported),
+        "hallucinated": bool(unsupported),  # compatibility for memo consumers
         "citations": citations,
         "n_invalid_citations": len(invalid_citations),
         "citation_fired_rate": (
-            sum(1 for c in citations if c["fired"]) / len([c for c in citations if c["rule_id"]])
-            if any(c["rule_id"] for c in citations)
+            sum(1 for citation in citations if citation["fired"])
+            / len([citation for citation in citations if citation["rule_id"]])
+            if any(citation["rule_id"] for citation in citations)
             else None
         ),
+        "scope": "signals_observed concrete numeric/id/timestamp/money tokens; not semantic truth",
     }

@@ -12,19 +12,19 @@ get these exact numbers).
 | action accuracy | `recommended_action` ∈ the policy-derived acceptable-action set for the true pattern (`select_cases.py TRUTH_ACTIONS`; single-action wherever FP-1 is unambiguous — see the corrections section) |
 | decline precision / recall | positive class = `decline_block` only; escalate does NOT count as a decline. Precision protects legitimate customers (insults), recall protects loss. |
 | pattern id rate | top hypothesis (highest likelihood; ties → first listed) matches true pattern |
-| hallucination rate (memo) | share of memos with ≥1 unsupported claim: a `signals_observed` entry containing a concrete token (timestamp, amount, id, number) absent from the packet (`verifier.py`, strict by design) |
-| hallucination rate (claim) | unsupported claims / all claims |
+| non-verbatim concrete-token rate | share of memos/fields where a numeric, id, timestamp, or money token in `signals_observed` is not present at a token boundary in the packet; includes derived and unsupported fields |
+| unsupported concrete-token rate | share of memos/fields still unsupported after visible packet-list counts and sums are classified as derived; this is a token check, not semantic-truth verification |
 | citation validity | cited rule ids exist in FP-1; `citation_fired_rate` = share of cited rules that actually fired on the alert |
-| consistency | 3 runs on 50 cases with a neutral numbered no-op line injected into the packet; all-3-agree rate on `recommended_action`. (Byte-identical prompts at temp 0 would be answered from the response cache, so consistency is measured under neutral perturbation — that is the honest version of the metric.) |
+| consistency | target: 3 runs on 50 cases with a neutral numbered no-op line injected into the packet; report `consistency_n` as the number with all three probes cached and valid, plus all-3-agree rate on `recommended_action` |
 | latency | wall-clock per call; cost columns omitted (CLI backends lack reliable token accounting) |
 
-A 30-case manual spot-check protocol accompanies the mechanical verifier each version:
-read the raw memos for the flagged-unsupported claims and record whether the verifier's
-strictness produced false alarms (e.g. legitimate derived arithmetic like "9 + 1 orders").
+A future manual spot-check can sample flagged and clean memos to measure false alarms
+and false passes. No annotation set is committed, so no human-verified grounding metric
+is reported here.
 
 ## Harness corrections logged during v1 (applied to all versions/arms equally)
 
-Reading the v1 misses raw exposed two defects in the *referee*, not the model:
+The replay exposed three defects in the evaluator:
 
 1. **Ground-truth actions contradicted the policy.** The original single-action mapping
    scored `synthetic_ring → decline_block` as the only correct answer, while FP-1 §5
@@ -41,8 +41,14 @@ Reading the v1 misses raw exposed two defects in the *referee*, not the model:
    rounds to it at the token's own precision. Genuinely *computed* values (sums,
    ratios not present in the packet) remain unsupported — e.g. a memo totaling four
    orders into "$2,421.00" is still flagged, by design.
+3. **Substring matching passed digits inside longer values.** A short count such as
+   `7` could match `1370.55`. The current verifier uses numeric token boundaries and
+   classifies checked signal fields as verbatim, derived from a visible packet-list
+   count/sum, or unsupported. The scope is concrete tokens in `signals_observed`; it
+   does not verify the semantic relationship asserted by the prose.
 
-Both corrections are visible in git history; v1 numbers below are post-correction.
+The current tables use all three corrections. The superseded substring series is kept
+as a labeled row for auditability.
 
 ## memo_v1 — baseline
 
@@ -61,9 +67,11 @@ Results (post-correction):
 | action accuracy (in-policy set) | **61.0%** |
 | decline precision / recall | 93.1% / 47.4% |
 | pattern identification | 80.5% |
-| hallucination rate (memo / claim) | 10.0% / 1.05% |
+| non-verbatim concrete tokens (memo / checked field) | **45.0% / 5.21%** |
+| unsupported after derived-list classification (memo / checked field) | **33.5% / 3.35%** |
+| legacy substring “hallucination” metric — superseded (memo / claim) | 10.0% / 1.05% |
 | invalid citations | 0 memos |
-| consistency (3 perturbed runs, 50 cases) | 87.2% |
+| consistency (3 perturbed runs) | 87.2% (41/47 agree; 47 cases had all probes cached) |
 | schema failures | 0 |
 | latency p50 | 56.5 s |
 
@@ -78,8 +86,8 @@ full run):
   friction, so it isn't one.
 - **Decline recall is the weak dangerous-direction number** (~0.45 preliminary): the
   model correctly names stolen_card/ATO then still recommends holding.
-- **Residual hallucinations are self-computed aggregates** (order-total sums the packet
-  never stated). The instruction "quote a packet fact" did not stop arithmetic.
+- **Residual non-verbatim fields are often self-computed aggregates.** The derived
+  category separates valid visible-list arithmetic from unsupported numbers.
 
 ## memo_v2 — action-calibration + numbers discipline
 
@@ -93,7 +101,7 @@ decide; (2) NUMBERS DISCIPLINE — copy values verbatim, never compute, describe
 quantities qualitatively.
 
 Predicted effects: action accuracy and decline recall rise materially; benign accuracy
-(clear-rate on hard negatives) rises most; hallucination rate drops toward the
+(clear-rate on hard negatives) rises most; unsupported-token rate drops toward the
 claim-level floor; pattern-id rate unchanged (diagnosis was never the problem).
 
 Results:
@@ -103,21 +111,28 @@ Results:
 | action accuracy | **73.5%** | 59.8% | **76.7%** |
 | decline precision / recall | 96.8% / 52.6% | 100% / 37.5% | 93.3% / 70.0% |
 | pattern identification | 75.0% | 65.3% | 72.1% |
-| hallucination (memo) | **0.0%** | 0.0% | 0.0% |
-| consistency (perturbed) | 84.0% | — | — |
+| non-verbatim concrete tokens (memo) | **13.0%** | 1.5% | 1.2% |
+| unsupported after derived-list classification (memo) | **4.5%** | 1.5% | 1.2% |
+| legacy substring “hallucination” metric — superseded (memo) | 0.0% | 0.0% | 0.0% |
+| consistency (perturbed) | 84.0% (42/50) | — | — |
 | schema failure rate | 0.0% | 0.5% | 0.0% |
 | latency p50 | 58.3 s | 39.1 s | 27.7 s |
 
-¹ one Luna response was truncated JSON — scored as a schema failure, not dropped
-silently. ² the Terra run was cut short by a provider quota; reported on its
-contiguous 86-case prefix and labeled as such. Cost columns are omitted: CLI
+¹ one Luna response was truncated JSON. Valid-output action accuracy is 119/199
+(59.8%); counting that schema failure as wrong gives 119/200 (59.5%). ² the Terra run
+was cut short by a provider quota; its contiguous 86-case prefix reproduces offline with
+`python -m llm.eval.harness --offline --no-consistency --arms gpt-5.6-terra --n 86`.
+Cost columns are omitted: CLI
 backends don't expose reliable token accounting; latency is measured directly.
 
 
 Delta and verdict:
 
 sonnet v1 → v2 on identical cases: action accuracy **+12.5pp**, decline
-precision **+3.7pp**, decline recall **+5.2pp**, hallucinations **10% → 0%**.
+precision **+3.7pp**, decline recall **+5.2pp**.
+The superseded substring metric moved 10% → 0%; under token-boundary matching,
+non-verbatim memo fields moved **45% → 13%**, and unsupported memo fields after
+derived-list classification moved **33.5% → 4.5%**.
 Two honest regressions: pattern-id −5.5pp and consistency −3.2pp — the action
 procedure spends attention the free-form hypothesis step previously used, and a
 stricter decision boundary flips more actions under perturbation. Verdict: v2
@@ -129,9 +144,10 @@ conservative (perfect decline precision, weakest recall) — arm choice is a
 config switch (`llm.tasks.triage_memo.model`), and this table is how it should
 be made.
 
-## Manual spot-check protocol
+## Frozen-packet temporal note
 
-Alongside the mechanical verifier, each version gets a 30-case human read: sample 15
-flagged-unsupported and 15 clean memos, record verifier false alarms (legitimate
-derived arithmetic, rounding) and false passes (fluent claims built from real tokens
-that misstate the packet). The v1 read is what produced verifier correction #2 above.
+Future packet builds use alert-time predicates for linkage and installment state and an
+as-of category median. The 200 frozen v1 packets predate that fix and remain unchanged
+so the cached evaluation stays valid: 59/200 contain all-time linkage values, with a
+worst case of 39 versus 13 on alert 2655, and 3 packets include an installment paid
+after the alert. These limitations apply to every arm in the frozen comparison.
