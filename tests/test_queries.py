@@ -51,13 +51,14 @@ def test_query_executes_and_returns_rows(path: str) -> None:
     url = (f"mysql+pymysql://{db['user']}:{db['password']}@{db['host']}:"
            f"{db['port']}/{db['database']}")
     eng = sa.create_engine(url)
-    statements = _statements(Path(path).read_text())
+    # Comments out first (a ';' inside a comment is not a statement boundary),
+    # then double % for the driver: exec_driver_sql still hands pymysql an empty
+    # parameter tuple, which triggers %-interpolation over the raw SQL.
+    statements = _statements(_without_comments(Path(path).read_text()))
     with eng.connect() as c:
-        # exec_driver_sql: the files are plain MySQL (literal % in DATE_FORMAT),
-        # so they must bypass the DBAPI's parameter interpolation.
         for statement in statements[:-1]:
-            c.exec_driver_sql(statement)
-        result = c.exec_driver_sql(statements[-1])
+            c.exec_driver_sql(statement.replace("%", "%%"))
+        result = c.exec_driver_sql(statements[-1].replace("%", "%%"))
         df = pd.DataFrame(result.fetchall(), columns=list(result.keys()))
     if "Q11" in path:
         # queue-ops view may be empty until the rules engine has run

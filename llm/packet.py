@@ -88,15 +88,15 @@ def build_packet(
                      AS amount_over_category_median
            FROM (
              SELECT o2.amount,
-                    ROW_NUMBER() OVER (ORDER BY o2.amount) AS row_number,
-                    COUNT(*) OVER () AS row_count
+                    ROW_NUMBER() OVER (ORDER BY o2.amount) AS rn,
+                    COUNT(*) OVER () AS rc
              FROM orders o2
              JOIN merchants m2 ON m2.merchant_id = o2.merchant_id
              WHERE m2.category = :cat AND o2.status = 'approved' AND o2.ts <= :ts
            ) ranked
-           WHERE ranked.row_number IN (
-             FLOOR((ranked.row_count + 1) / 2),
-             FLOOR((ranked.row_count + 2) / 2)
+           WHERE ranked.rn IN (
+             FLOOR((ranked.rc + 1) / 2),
+             FLOOR((ranked.rc + 2) / 2)
            )""",
         amt=alert["amount"],
         cat=alert["merchant_category"],
