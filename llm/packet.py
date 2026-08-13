@@ -4,13 +4,15 @@ Hard rule (FP-1 §2.4): nothing here may read the ``labels`` table or
 ``stories.jsonl``. The packet carries observable facts plus fired-rule
 rationales; ``tests/test_packet.py`` walks the JSON to prove label fields are
 absent. Derived values the memo may cite (tenure days, ratios, linkage counts)
-are materialized as explicit fields so the hallucination verifier can match
+are materialized as explicit fields so the concrete-token verifier can match
 them verbatim.
 """
 
 from __future__ import annotations
 
 import json
+from contextlib import nullcontext
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -19,6 +21,7 @@ import sqlalchemy as sa
 from llm.client import load_config
 
 FORBIDDEN_KEYS = {"label", "labels", "pattern_id", "story_id", "is_fraud"}
+REPO = Path(__file__).resolve().parent.parent
 
 
 def get_engine() -> sa.Engine:
@@ -27,16 +30,19 @@ def get_engine() -> sa.Engine:
     return sa.create_engine(url)
 
 
-def _rows(engine: sa.Engine, sql: str, **params: Any) -> list[dict[str, Any]]:
-    with engine.connect() as c:
-        df = pd.read_sql(sa.text(sql), c, params=params)
+def _rows(engine: sa.Engine | sa.Connection, sql: str, **params: Any) -> list[dict[str, Any]]:
+    connection = nullcontext(engine) if isinstance(engine, sa.Connection) else engine.connect()
+    with connection as connected:
+        df = pd.read_sql(sa.text(sql), connected, params=params)
     for col in df.columns:
         if pd.api.types.is_datetime64_any_dtype(df[col]):
             df[col] = df[col].astype(str)
     return json.loads(df.to_json(orient="records"))
 
 
-def build_packet(alert_id: int, engine: sa.Engine | None = None) -> dict[str, Any]:
+def build_packet(
+    alert_id: int, engine: sa.Engine | sa.Connection | None = None
+) -> dict[str, Any]:
     engine = engine or get_engine()
 
     alert = _rows(
@@ -78,23 +84,38 @@ def build_packet(alert_id: int, engine: sa.Engine | None = None) -> dict[str, An
 
     amount_ctx = _rows(
         engine,
-        """SELECT ROUND(:amt / NULLIF(med.cat_median, 0), 2) AS amount_over_category_median
-           FROM (SELECT AVG(amount) AS cat_median FROM orders o2
-                 JOIN merchants m2 ON m2.merchant_id = o2.merchant_id
-                 WHERE m2.category = :cat AND o2.status = 'approved') med""",
+        """SELECT ROUND(:amt / NULLIF(AVG(ranked.amount), 0), 2)
+                     AS amount_over_category_median
+           FROM (
+             SELECT o2.amount,
+                    ROW_NUMBER() OVER (ORDER BY o2.amount) AS row_number,
+                    COUNT(*) OVER () AS row_count
+             FROM orders o2
+             JOIN merchants m2 ON m2.merchant_id = o2.merchant_id
+             WHERE m2.category = :cat AND o2.status = 'approved' AND o2.ts <= :ts
+           ) ranked
+           WHERE ranked.row_number IN (
+             FLOOR((ranked.row_count + 1) / 2),
+             FLOOR((ranked.row_count + 2) / 2)
+           )""",
         amt=alert["amount"],
         cat=alert["merchant_category"],
+        ts=order_ts,
     )[0]
 
     repayment = _rows(
         engine,
         """SELECT COUNT(*) AS installments_due,
-                  SUM(i.outcome = 'paid') AS paid,
-                  SUM(i.outcome = 'late') AS late,
-                  SUM(i.outcome IN ('failed','written_off')) AS failed_or_written_off
+                  SUM(i.paid_ts <= :ts AND i.paid_ts <= i.due_ts) AS paid,
+                  SUM(i.paid_ts <= :ts AND i.paid_ts > i.due_ts) AS late,
+                  SUM(i.paid_ts IS NULL AND EXISTS (
+                    SELECT 1 FROM payments px
+                    WHERE px.installment_id = i.installment_id
+                      AND px.result = 'fail' AND px.ts <= :ts
+                  )) AS failed_or_written_off
            FROM installments i JOIN plans p ON p.plan_id = i.plan_id
            JOIN orders o ON o.order_id = p.order_id
-           WHERE o.user_id = :uid AND i.due_ts < :ts""",
+           WHERE o.user_id = :uid AND i.due_ts <= :ts""",
         uid=uid,
         ts=order_ts,
     )[0]
@@ -123,13 +144,16 @@ def build_packet(alert_id: int, engine: sa.Engine | None = None) -> dict[str, An
         engine,
         """SELECT
              (SELECT COUNT(DISTINCT o2.user_id) FROM orders o2
-              WHERE o2.device_id = :dev AND o2.user_id <> :uid) AS other_accounts_on_device,
+              WHERE o2.device_id = :dev AND o2.user_id <> :uid
+                AND o2.ts BETWEEN DATE_SUB(:ts, INTERVAL 30 DAY) AND :ts)
+                 AS other_accounts_on_device,
              (SELECT COUNT(DISTINCT o3.user_id) FROM orders o3
-              WHERE o3.ship_address_id = :addr AND o3.user_id <> :uid)
+              WHERE o3.ship_address_id = :addr AND o3.user_id <> :uid AND o3.ts <= :ts)
                  AS other_accounts_on_ship_address,
              (SELECT COUNT(*) - 1 FROM users u2
               WHERE u2.email_domain = :dom AND SUBSTRING_INDEX(REPLACE(u2.email, '.', ''), '+', 1)
-                    = SUBSTRING_INDEX(REPLACE(:email, '.', ''), '+', 1))
+                    = SUBSTRING_INDEX(REPLACE(:email, '.', ''), '+', 1)
+                AND u2.signup_ts <= :ts)
                  AS other_accounts_same_email_root""",
         dev=alert["device_id"],
         addr=alert["ship_address_id"],
@@ -152,7 +176,7 @@ def build_packet(alert_id: int, engine: sa.Engine | None = None) -> dict[str, An
 
     vendor: dict[str, Any] = {}
     try:
-        scores = pd.read_csv("vendor/fixtures/scores.csv")
+        scores = pd.read_csv(REPO / "vendor" / "fixtures" / "scores.csv")
         for kind, val in (("ip", alert["ip"]), ("email", account["email"])):
             hit = scores[(scores["kind"] == kind) & (scores["value"] == val)]
             if len(hit):
