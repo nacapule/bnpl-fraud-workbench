@@ -29,6 +29,7 @@ import pandas as pd
 import yaml
 
 matplotlib.use("Agg")
+matplotlib.rcParams["svg.hashsalt"] = "bnpl-queue-416"
 import matplotlib.pyplot as plt  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
@@ -64,6 +65,20 @@ class Analyst:
             if candidate < end:
                 return candidate
         raise RuntimeError("no shift found in 15 days")
+
+
+def build_analysts(cfg: dict) -> list[Analyst]:
+    """Fresh ``Analyst`` objects from a config's ``queue.analysts`` entries."""
+    return [
+        Analyst(
+            item["name"],
+            item["shift_days"],
+            float(item["shift_start"].split(":")[0])
+            + float(item["shift_start"].split(":")[1]) / 60,
+            item["productive_hours"],
+        )
+        for item in cfg["queue"]["analysts"]
+    ]
 
 
 def business_hours_between(t0: datetime, t1: datetime, analysts: list[Analyst]) -> float:
@@ -154,11 +169,7 @@ def load_inputs() -> tuple[pd.DataFrame, dict, dict]:
 
 def run_policy(alerts: pd.DataFrame, cfg: dict, policy: str, rng: np.random.Generator
                ) -> dict:
-    analysts = [
-        Analyst(x["name"], x["shift_days"], float(x["shift_start"].split(":")[0])
-                + float(x["shift_start"].split(":")[1]) / 60, x["productive_hours"])
-        for x in cfg["queue"]["analysts"]
-    ]
+    analysts = build_analysts(cfg)
     mean_min = cfg["queue"]["service_time_arithmetic_mean_min"]
     sigma = cfg["queue"]["service_time_sigma"]
     ship_lag = timedelta(hours=cfg["queue"]["fulfillment_lag_hours"])
@@ -209,11 +220,7 @@ def run_policy(alerts: pd.DataFrame, cfg: dict, policy: str, rng: np.random.Gene
         if pending and i < n:
             t = min(t, arrival[i])
 
-    analysts_fresh = [
-        Analyst(x["name"], x["shift_days"], float(x["shift_start"].split(":")[0])
-                + float(x["shift_start"].split(":")[1]) / 60, x["productive_hours"])
-        for x in cfg["queue"]["analysts"]
-    ]
+    analysts_fresh = build_analysts(cfg)
     ttd = []
     blocked_usd = 0.0
     blocked_n = 0
@@ -248,16 +255,7 @@ def main() -> None:
     for pol in policies:
         results.append(run_policy(alerts.copy(), cfg, pol, np.random.default_rng(rng_seed)))
 
-    coverage_analysts = [
-        Analyst(
-            item["name"],
-            item["shift_days"],
-            float(item["shift_start"].split(":")[0])
-            + float(item["shift_start"].split(":")[1]) / 60,
-            item["productive_hours"],
-        )
-        for item in cfg["queue"]["analysts"]
-    ]
+    coverage_analysts = build_analysts(cfg)
     coverage_hours = business_hours_between(
         alerts.ts.min().to_pydatetime(),
         alerts.ts.max().to_pydatetime(),
@@ -324,7 +322,7 @@ def main() -> None:
     ax.legend()
     fig.autofmt_xdate()
     fig.tight_layout()
-    fig.savefig(REPO / "reports" / "queue_backlog.svg")
+    fig.savefig(REPO / "reports" / "queue_backlog.svg", metadata={"Date": None})
 
     for r in results:
         r.pop("backlog_curve")
