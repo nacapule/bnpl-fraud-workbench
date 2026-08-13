@@ -9,6 +9,7 @@ import pandas as pd
 import pytest
 
 from rules.definitions import RULES
+from rules.engine import run_rules
 
 RULE = {r.id: r for r in RULES}
 
@@ -85,7 +86,22 @@ def test_band_math() -> None:
 
 def test_monotonicity_of_bands() -> None:
     """Raising the decline band can never increase auto-declines."""
-    rng = np.random.default_rng(0)
-    scores = pd.Series(rng.integers(0, 150, 500))
-    declines = [int((scores >= band).sum()) for band in (70, 80, 90, 100, 110)]
+    synthetic = pd.concat(
+        [
+            frame(),
+            frame(email_disposable=True),
+            frame(prior_inr_cbs=2),
+            frame(cred_change_hours=2.0, device_new=True, n_user_24h=6),
+            frame(
+                cred_change_hours=2.0,
+                device_new=True,
+                n_user_24h=6,
+                email_disposable=True,
+            ),
+            frame(cred_change_hours=2.0, device_new=True, n_user_24h=6, prior_inr_cbs=2),
+        ],
+        ignore_index=True,
+    )
+    scored = run_rules(synthetic)
+    declines = [int((scored["score"] >= band).sum()) for band in (70, 80, 90, 100, 110)]
     assert declines == sorted(declines, reverse=True)

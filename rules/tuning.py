@@ -1,5 +1,5 @@
-"""Threshold tuning: sweep the review/decline bands on the fit window
-(months 1–9), report every candidate on the holdout (months 10–12), pick the
+"""Threshold tuning: sweep the review/decline bands before ``holdout_start``,
+report every candidate on the holdout, and pick the
 net-$-maximizing point subject to review capacity.
 
 The ONE rules-side component allowed to read labels (offline calibration,
@@ -83,8 +83,7 @@ def main() -> None:
     ap["is_fraud"] = ap.pattern_id.notna()
     ap["loss"] = (ap.amount - ap.order_id.map(collected_by_order(d))).clip(lower=0)
 
-    start = ap.ts.min()
-    fit_end = start + pd.DateOffset(months=cfg["model"]["train_months"])
+    fit_end = pd.Timestamp(cfg["holdout_start"])
     fit = ap[ap.ts < fit_end].copy()
     hold = ap[ap.ts >= fit_end].copy()
     fit_days = max((fit.ts.max() - fit.ts.min()).days, 1)
@@ -96,7 +95,16 @@ def main() -> None:
         for db_ in range(70, 120, 10):
             fit_grid.append(evaluate_point(fit, rb, db_, costs, capacity, fit_days))
     feasible = [g for g in fit_grid if not g["over_capacity"]]
-    best_fit = max(feasible or fit_grid, key=lambda g: g["net_usd"])
+    best_fit = max(
+        feasible or fit_grid,
+        key=lambda g: (g["net_usd"], -g["review_band"], -g["decline_band"]),
+    )
+    tied_decline_bands = sorted(
+        point["decline_band"]
+        for point in (feasible or fit_grid)
+        if point["review_band"] == best_fit["review_band"]
+        and point["net_usd"] == best_fit["net_usd"]
+    )
 
     # Report the whole grid on the holdout for the frontier plot/table; the
     # chosen point is the one selected on fit.
@@ -114,7 +122,7 @@ def main() -> None:
     cols = ["review_band", "decline_band", "alerts_per_day", "precision",
             "recall_overall", "caught_usd", "n_insults", "net_usd"]
     lines = [
-        "# Rule threshold tuning — selected on months 1–9, reported on months 10–12\n",
+        f"# Rule threshold tuning — selected before {cfg['holdout_start']}, reported after\n",
         (f"Cost model: review ${costs['review_cost_usd']:.2f}/case; false decline = "
          f"{costs['false_decline_margin_pct'] * 100:.0f}% margin + "
          f"${costs['false_decline_ltv_usd']:.0f} LTV proxy "
@@ -127,6 +135,13 @@ def main() -> None:
         mark = " **⬅ chosen**" if g is chosen else over
         lines.append("| " + " | ".join(str(g[c]) for c in cols) + " |" + mark)
     lines += [
+        "",
+        (
+            "Fit-window decline-band tie: "
+            + ", ".join(str(band) for band in tied_decline_bands)
+            + f" share net ${best_fit['net_usd']:,.0f}; "
+            + f"{best_fit['decline_band']} is the lowest tied value and is selected."
+        ),
         "",
         f"**Chosen operating point: review ≥ {chosen['review_band']}, "
         f"auto-decline ≥ {chosen['decline_band']}.** "

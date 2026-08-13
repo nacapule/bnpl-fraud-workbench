@@ -2,6 +2,7 @@
 # Single source of truth for seeds, volumes, costs, thresholds, and model routing.
 
 seed: 416
+holdout_start: "2026-04-01"
 
 simulator:
   start_date: "2025-07-01"
@@ -44,14 +45,13 @@ queue:
     # Two offset 5-day shifts give 7-day coverage — standard fraud-ops staffing.
     - {name: A1, shift_days: [0, 1, 2, 3, 4], shift_start: "08:00", productive_hours: 6.5}  # Mon-Fri
     - {name: A2, shift_days: [2, 3, 4, 5, 6], shift_start: "11:00", productive_hours: 6.5}  # Wed-Sun
-  service_time_mean_min: 7.0
+  service_time_arithmetic_mean_min: 7.0
   service_time_sigma: 0.6
   fulfillment_lag_hours: 12
   sla_target_hours: 4          # business hours to decision
   sla_target_attainment: 0.90
 
 model:
-  train_months: 9              # chronological: months 1-9 train, 10-12 holdout
   review_capacity_per_day: 40  # precision@capacity uses this
 
 # ---------------------------------------------------------------------------
@@ -84,7 +84,7 @@ llm_eval:
   consistency_runs: 3
 
 vendor:
-  # Live lookups optional; sanitized fixtures committed in vendor/fixtures.
+  # vendor scores generated locally by `make vendor`, deliberately untracked.
   # Sized for the IPQS free tier (1,000 lookups/mo, 35/day): 17 cases x
   # (email + ip) = 34 lookups, one day's allowance.
   ipqs_sample_flagged: 12

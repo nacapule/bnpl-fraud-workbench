@@ -5,6 +5,7 @@ Run after training with ``python -m model.evaluate``.
 
 from __future__ import annotations
 
+import json
 import math
 import os
 import tempfile
@@ -215,7 +216,8 @@ def _hybrid_table(
     )
     note = (
         "Hybrid takes up to half of capacity from ranked rules alerts and fills the remainder "
-        "from the model ranking without duplicate reviews."
+        "from the model ranking without duplicate reviews. Rules exhaust their alert supply "
+        "below the configured review capacity."
     )
     return pd.DataFrame(rows), note
 
@@ -276,8 +278,9 @@ def main() -> None:
     labels = holdout["label"].to_numpy(dtype=int)
     scores = {name: model.predict_proba(x_holdout)[:, 1] for name, model in models.items()}
 
-    holdout_days = 30 * (
-        int(config["simulator"]["months"]) - int(config["model"]["train_months"])
+    holdout_days = max(
+        (features["ts"].max() - pd.Timestamp(config["holdout_start"])).days,
+        1,
     )
     capacity = min(
         len(holdout),
@@ -357,6 +360,32 @@ def main() -> None:
     elapsed = time.perf_counter() - started
     reviews_per_day = int(config["model"]["review_capacity_per_day"])
     review_cost = float(config["costs"]["review_cost_usd"])
+    model_summary = {
+        "holdout_start": config["holdout_start"],
+        "holdout_end": str(holdout["ts"].max()),
+        "holdout_days": holdout_days,
+        "orders": len(holdout),
+        "fraud_orders": int(labels.sum()),
+        "base_rate": round(float(labels.mean()), 6),
+        "capacity": capacity,
+        "best_model": best_name,
+        "models": {
+            name: {
+                "pr_auc": round(float(pr_auc[name]), 4),
+                "precision_at_capacity": round(
+                    float(holdout.loc[holdout["order_id"].isin(selections[name]), "label"].mean()),
+                    4,
+                ),
+            }
+            for name in scores
+        },
+        "recall_by_pattern": {
+            str(row["Pattern"]): {
+                name: round(float(str(row[name]).rstrip("%")) / 100, 4) for name in scores
+            }
+            for row in pattern_rows
+        },
+    }
     report = f"""# Fraud model evaluation
 
 Chronological holdout: {holdout['ts'].min()} through {holdout['ts'].max()}.
@@ -378,7 +407,10 @@ positive class, while precision@capacity reflects the actual review constraint.
 ## Calibration deciles
 
 Each bin contains one score-decile of holdout orders; predicted probability is compared with
-the observed fraud rate.
+the observed fraud rate. Because training uses `class_weight='balanced'`, the reported
+probabilities are inflated by design. PR-AUC and precision@capacity are rank metrics and do not
+depend on probability calibration; the cost-optimal threshold is chosen by a score sweep, not by
+reading the score as a probability.
 
 {chr(10).join(calibration_sections)}
 
@@ -388,7 +420,7 @@ the observed fraud rate.
 
 ![Recall by fraud pattern](model_recall_by_pattern.svg)
 
-## Cost-optimal thresholds
+## Holdout oracle frontier (threshold chosen on this holdout)
 
 {_markdown_table(cost_table)}
 
@@ -396,7 +428,7 @@ Total cost counts realized principal not collected on missed fraud, ${review_cos
 per alert, and the configured margin-plus-LTV insult cost on false positives. A caught fraud
 avoids its realized loss exposure; successful down and installment payments reduce that exposure.
 
-## Equal-capacity fraud-dollar comparison
+## Fraud-dollar comparison at review capacity
 
 The higher-PR-AUC model ({best_name}) supplies the model ranking.
 
@@ -404,10 +436,23 @@ The higher-PR-AUC model ({best_name}) supplies the model ranking.
 
 {hybrid_note}
 
-## Runtime
+## Limitations of this holdout
 
-Evaluation, including CSV load, point-in-time feature construction, scoring, plots, and report:
-{elapsed:.2f} seconds.
+- Separability is partly structural: `ship_addr_is_new` is true for 45.5% of fraud
+  orders versus 0.1% of benign orders because benign addresses use
+  `added_ts = signup_ts` and benign signups skew old. `account_age_days` carries the
+  same structure, and the rules result of 0 false auto-declines follows from it.
+- The benign R03 geo-mismatch base rate is inflated because simulated home-IP country
+  is independent of KYC country for about 25% of users. Workload and CASE-05 suppression
+  counts measure that simulated population and will change after the planned geo fix.
+- P-SYNTH and P-MERCH have zero holdout orders; their episodes end before month 10.
+  Holdout metrics cover five of seven injected patterns.
+- Never-pay labels include a 30% benign-looking branch (150 accounts) that pays one
+  installment, stricter than the written policy definition.
+
+```json
+{json.dumps(model_summary, sort_keys=True)}
+```
 """
     (REPORT_DIR / "model.md").write_text(report)
 
@@ -426,10 +471,11 @@ Evaluation, including CSV load, point-in-time feature construction, scoring, plo
         )
         + f" ({capacity:,} reviews).",
         f"- Recall by pattern: {recall_summary}.",
-        f"- Full evaluation runtime: {elapsed:.2f} seconds.",
+        "- Runtime is machine-dependent and is not part of the committed metrics.",
     ]
     (REPO / "model" / "README-notes.md").write_text("\n".join(notes_lines) + "\n")
     print(report)
+    print(f"evaluation runtime: {elapsed:.2f} seconds")
 
 
 if __name__ == "__main__":

@@ -3,9 +3,10 @@ score, band, and write alerts (MySQL table + data/alerts.csv).
 
 Run: python -m rules.engine
 
-Point-in-time discipline: every enrichment column is computed from rows with
-timestamp <= the order's timestamp. The ``labels`` table is never read here
-(FP-1 §2.4) — only ``rules.tuning`` may read it, offline.
+Point-in-time discipline applies except for two known final-world enrichments:
+category P95 uses all approved orders, and email-root counts use the final users
+table. Both are slated for the simulator/rules revision. The ``labels`` table is
+never read here (FP-1 §2.4) — only ``rules.tuning`` may read it, offline.
 """
 
 from __future__ import annotations

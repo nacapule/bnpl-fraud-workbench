@@ -35,14 +35,13 @@ def chronological_split(
     features: pd.DataFrame,
     config: dict,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Months 1--N train, remaining simulator months holdout.
+    """Split at the configured holdout start.
 
     There is intentionally no shuffle: deployment predicts later orders from
     earlier behavior, and a shuffled split would leak future population and
     fraud-pattern conditions into training.
     """
-    start = pd.Timestamp(config["simulator"]["start_date"])
-    cutoff = start + pd.Timedelta(days=30 * int(config["model"]["train_months"]))
+    cutoff = pd.Timestamp(config["holdout_start"])
     train = features[features["ts"] < cutoff].copy()
     holdout = features[features["ts"] >= cutoff].copy()
     if train.empty or holdout.empty:

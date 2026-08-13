@@ -87,8 +87,11 @@ def test_feature_build_is_deterministic(tiny_world: dict[str, pd.DataFrame]) -> 
 
 def test_chronological_split_has_no_overlap(tiny_world: dict[str, pd.DataFrame]) -> None:
     features = build_features(**tiny_world)
-    train, holdout = chronological_split(features, load_config())
+    config = load_config()
+    train, holdout = chronological_split(features, config)
     assert train["ts"].max() < holdout["ts"].min()
+    assert train["ts"].max() < pd.Timestamp(config["holdout_start"])
+    assert holdout["ts"].min() >= pd.Timestamp(config["holdout_start"])
 
 
 def test_tiny_world_logistic_smoke(tiny_world: dict[str, pd.DataFrame]) -> None:

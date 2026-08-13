@@ -1,4 +1,4 @@
-# Rule threshold tuning — selected on months 1–9, reported on months 10–12
+# Rule threshold tuning — selected before 2026-04-01, reported after
 
 Cost model: review $2.50/case; false decline = 5% margin + $15 LTV proxy (config `costs`, assumptions documented in README).
 
@@ -39,6 +39,8 @@ Cost model: review $2.50/case; false decline = 5% margin + $15 LTV proxy (config
 | 50 | 70 | 1.4 | 0.93 | 0.339 | 9902.0 | 8 | 9369.0 |
 | 55 | 70 | 1.4 | 0.93 | 0.339 | 9902.0 | 8 | 9369.0 |
 | 60 | 70 | 1.4 | 0.93 | 0.339 | 9902.0 | 8 | 9369.0 |
+
+Fit-window decline-band tie: 90, 100, 110 share net $414,321; 90 is the lowest tied value and is selected.
 
 **Chosen operating point: review ≥ 30, auto-decline ≥ 90.** It maximizes net $ (32,550.0) under the ≤40 alerts/day capacity constraint: 24.9/day at precision 9%, catching $37,847 of holdout fraud exposure with 0 auto-declined legitimate orders. Raising the review band further trades linearly less review cost for disproportionate recall loss on ATO and stolen-card patterns; lowering it overruns the review team. The classic fraud triangle — loss caught vs review cost vs insult rate — made explicit.
 
