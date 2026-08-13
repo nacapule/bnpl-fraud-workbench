@@ -160,6 +160,7 @@ def build_packet(
         uid=uid,
         dom=account["email_domain"],
         email=account["email"],
+        ts=order_ts,
     )[0]
 
     card = _rows(
