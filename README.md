@@ -116,6 +116,16 @@ change carries its before/after metric table. Model routing is
 config-driven per task ([`config.yaml`](config.yaml) `llm.tasks`) with env/CLI
 overrides.
 
+**Uncertainty and stress** ([`analysis/uncertainty.py`](analysis/uncertainty.py),
+[`queue_sim/sweep.py`](queue_sim/sweep.py)) — every published rate carries a Wilson 95%
+interval beside its raw numerator and denominator, the v1→v2 prompt change is tested on
+its discordant pairs rather than as a bare difference, holdout PR-AUC carries a bootstrap
+band, and the rules operating point is shown moving across the tuning grid
+([`reports/uncertainty.md`](reports/uncertainty.md)). The queue is swept over arrival
+multipliers ×1–×8 and rosters of one to four analysts, so the SLA target and the
+fraud-dollar curve have break points instead of one comfortable number
+([`reports/queue_frontier.md`](reports/queue_frontier.md)).
+
 **Vendor enrichment** ([`vendor/`](vendor)) — optional IPQualityScore email/IP scoring
 feeding rule R12: `make vendor` (synthetic stand-in scores, clearly labeled) or
 `make vendor-live` with `IPQS_API_KEY`. Kept out of `make demo` so the headline numbers
@@ -135,9 +145,10 @@ vendor signals.
 ## Repository practices
 
 The simulator uses a single seeded RNG; two runs are byte-identical in tests.
-Ruff-clean, 98 tests (13 require MySQL). CI installs and lints, generates and loads a 5%
-world, runs rules/tuning, model train/evaluate, queue simulation, and the tests, then
-restores the full-scale CSVs for case selection and the offline LLM replay. Runtime
+Ruff-clean, 124 tests (13 require MySQL). CI installs and lints, generates and loads a 5%
+world, runs rules/tuning, model train/evaluate, queue simulation and staffing sweep, and
+the uncertainty pass, then restores the full-scale CSVs for the tests, case selection, and
+the offline LLM replay. Runtime
 evaluation uses no API keys; dependency installation and image checkout require network.
 
 ## Limitations & honesty

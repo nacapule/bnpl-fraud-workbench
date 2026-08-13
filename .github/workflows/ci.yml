@@ -58,6 +58,11 @@ jobs:
           .venv/bin/python -m model.train
           .venv/bin/python -m model.evaluate
           .venv/bin/python -m queue_sim.simulate
+      - name: Staffing frontier + uncertainty (scaled)
+        working-directory: /tmp/scaled
+        run: |
+          .venv/bin/python -m queue_sim.sweep
+          .venv/bin/python -m analysis.uncertainty
 
   tests-full:
     # Regenerates the full-scale world (deterministic, seed 416), loads it, and
