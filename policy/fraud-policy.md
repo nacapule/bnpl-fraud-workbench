@@ -5,8 +5,8 @@ simulated BNPL platform · **Review cadence:** quarterly, or after any rule/thre
 
 This is the internal policy that governs how alerts are investigated and actioned in this
 workbench. Analyst memos, the Claude triage layer, and the written case files all cite it
-by section and rule id (e.g. FP-1 §4, R03). It is written for a pay-in-4
-product: the platform pays the merchant up front and collects 25% at checkout plus three
+by section and rule id (e.g. FP-1 §4, R03). It is written for a pay-in-4 product: the
+platform pays the merchant up front and collects 25% at checkout plus three
 biweekly installments, so the platform holds both the fraud risk and the credit risk of
 every approved order.
 
@@ -40,9 +40,10 @@ Actioned under this policy with account-level remedies (§5), not order declines
    the underlying observable facts (rows, timestamps, linkage counts). "Score was high" is
    not a finding.
 2. Facts must come from the case packet or from queries an analyst ran; memos quote them
-   verbatim. A claim that cannot be traced to a packet field or query result is treated as
-   unsupported and voids the memo (this is enforced mechanically for LLM-drafted memos by
-   the eval verifier).
+   verbatim. For LLM-drafted memos, the eval verifier performs a token-boundary check over
+   concrete numeric, id, timestamp, and money tokens in `signals_observed`, with a narrow
+   derived-list classification. This is a mechanical grounding check, not semantic-truth
+   verification.
 3. Alternative benign explanations (§6) must be considered and explicitly rejected in any
    memo recommending `decline_block`. A memo that never weighs the benign hypothesis is
    incomplete.
@@ -81,7 +82,7 @@ analyst queue, decline band → auto-decline pending review.
 | **R06** disposable email domain, or plus-addressed duplicate of an existing account | Identity cost reduction is a precondition of scaled abuse | Synthetic, promo |
 | **R07** decline burst then success on the same card/device | The card-testing signature: validate stolen credentials cheaply, then spend | Stolen |
 | **R08** ship-to address shared by ≥ 3 unlinked accounts | Goods have to land somewhere; drops collapse rings | Synthetic |
-| **R09** ≥ 2 prior INR chargebacks on delivered orders | Repeat INR with healthy repayment is the friendly-fraud shape | INR abuse |
+| **R09** ≥ 2 prior INR chargebacks | Repeat INR disputes are the implemented account-level abuse signal | INR abuse |
 | **R10** promo redemption inside a device/address cluster ≥ 3 | Promo economics attract multi-accounting | Promo |
 | **R11** impossible geo-velocity between consecutive events | Two locations faster than travel allows means two actors or proxying | ATO, stolen |
 | **R12** vendor email/IP risk score ≥ threshold | Independent external signal on identity infrastructure (leased IPs, abuse-listed ranges, throwaway mailboxes) | Stolen, synthetic |
