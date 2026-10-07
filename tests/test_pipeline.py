@@ -1115,6 +1115,37 @@ def test_evaluate_refuses_incomplete_or_repeated_outcomes() -> None:
         evaluate(rows, cells=(BASE, BASE))
 
 
+def test_a_run_keeps_only_a_few_worlds_in_memory(tmp_path: Path, monkeypatch) -> None:
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
+    assert isinstance(run.memory, pipeline.RunMemory)
+    built: list = []
+
+    def build(tables):
+        built.append(tables["name"])
+        return pd.DataFrame({"world": [tables["name"]]})
+
+    monkeypatch.setattr(pipeline, "entry", lambda stage, module, name: build)
+    monkeypatch.setattr(pipeline.Run, "tables", lambda self, ref: {"name": ref.name})
+    refs = [pipeline.WorldRef(seed, "baseline") for seed in (1, 2, 3)]
+    for ref in refs:
+        pipeline.context_of(run, ref)
+    assert list(run.memory["context"]) == refs[1:]  # the oldest world was let go
+    pipeline.context_of(run, refs[1])  # a use keeps it
+    first = pipeline.context_of(run, refs[0])  # rebuilt from its files, the same
+    assert built == ["1-baseline", "2-baseline", "3-baseline", "1-baseline"]
+    assert list(first["world"]) == ["1-baseline"]
+    assert list(run.memory["context"]) == [refs[1], refs[0]]
+    # what is not per world stays, however much there is
+    for seed in range(10):
+        run.memory.setdefault("tuned", {})[seed] = {}
+        run.memory.setdefault("incumbent", {})[pipeline.WorldRef(seed, "baseline")] = {}
+    assert len(run.memory["tuned"]) == len(run.memory["incumbent"]) == 10
+    for name in pipeline.WORLD_CACHES:  # the replay's own caches are bounded the same way
+        assert isinstance(run.memory.setdefault(name, {}), pipeline.WorldCache)
+    run.memory.clear()
+    assert isinstance(run.memory.setdefault("benches", {}), pipeline.WorldCache)
+
+
 def test_the_detection_metrics_of_different_worlds_pool_over_seeds() -> None:
     from model.evaluate import detection_metrics
 

@@ -48,6 +48,7 @@ import shutil
 import subprocess
 import sys
 import time
+from collections import OrderedDict
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -153,6 +154,43 @@ PROFILES = {
 }
 
 
+# Per-world caches a run keeps in its process (the tables read from disk, the as-of
+# context, and the replay's per-world bench): only the most recently used worlds, so a
+# run's memory does not grow with its number of worlds. An evicted world is rebuilt from
+# its files when it is needed again, identically.
+WORLD_CACHES = ("tables", "context", "benches")
+WORLDS_KEPT = 2
+
+
+class WorldCache(OrderedDict):
+    """A mapping that keeps its ``limit`` most recently used entries."""
+
+    def __init__(self, limit: int) -> None:
+        super().__init__()
+        self.limit = limit
+
+    def __getitem__(self, key: Any) -> Any:
+        value = super().__getitem__(key)
+        self.move_to_end(key)
+        return value
+
+    def __setitem__(self, key: Any, value: Any) -> None:
+        super().__setitem__(key, value)
+        self.move_to_end(key)
+        while len(self) > self.limit:
+            self.popitem(last=False)
+
+
+class RunMemory(dict):
+    """What a run keeps in its process: everything, except that the per-world caches
+    (:data:`WORLD_CACHES`) are :class:`WorldCache` objects holding a few worlds."""
+
+    def setdefault(self, key: Any, default: Any = None) -> Any:
+        if key in WORLD_CACHES and key not in self:
+            default = WorldCache(WORLDS_KEPT)
+        return super().setdefault(key, default)
+
+
 @dataclass
 class Run:
     """One pipeline run: its directory, worlds and where results go."""
@@ -170,7 +208,7 @@ class Run:
     workers: int | None = None  # replay worker processes (queue_sim.stage.workers)
     tuning_history: str | None = None  # None: the protocol's, else the tuning default
     profile: str = ""  # the profile it was made from (the final one stamps its worlds)
-    memory: dict[str, Any] = field(default_factory=dict)
+    memory: dict[str, Any] = field(default_factory=RunMemory)
 
     @property
     def worlds(self) -> list[WorldRef]:
