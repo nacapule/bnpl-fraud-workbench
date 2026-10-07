@@ -45,12 +45,21 @@ loss) and a legitimate order can end up labelled (a customer who disputes their
 own order as unauthorized and wins).
 
 Construction details carry no information about the pattern. Every actor takes
-the hour of each action from one time-of-day profile (an evening peak). An IP
-address is drawn from blocks that depend only on its country, and a customer's
-home country decides the country of their home and mobile IPs; only trips
-abroad (or a fraudster's own location) produce another country. Entity and
-event ids are assigned after the whole world is sorted by time, with exact ties
-broken by random draws, so an id says when something happened and nothing else.
+the hour of each action from one time-of-day profile (an evening peak), drawn
+inside the interval the action must fall in (after the signup, before the
+burst), never drawn freely and moved to the interval's edge. An IP address is
+drawn from blocks that depend only on its country, and a customer's home
+country decides the country of their home and mobile IPs; only trips abroad
+(or a fraudster's own location) produce another country. Fraud accounts price,
+connect and use promotions the way customers do: order amounts have the same
+dispersion around the category median, 35% of their orders come over mobile
+data, and their first orders take FIRST10 and later ones seasonal codes at the
+customers' rates. The departures from that are behaviour and are stated in the
+fraud table (resale merchants, larger tickets, card failures, desktops,
+promotion farms' FIRST10, one session's IP for a takeover or a card-testing
+run). Entity and event ids are assigned after the whole world is sorted by
+time, with exact ties broken by random draws, so an id says when something
+happened and nothing else.
 
 Randomness comes from independent streams, one per component and actor
 (`numpy.random.SeedSequence(seed, spawn_key=(component, index))`). A world is
@@ -71,6 +80,7 @@ CI. Every value is in `config/world.yaml`.
 | First order of a new account | 65% within minutes of signup, 25% within days (mean 10), 10% never | Most pay-in-4 accounts are opened at a merchant's checkout, so legitimate new accounts order immediately, exactly as new fraud accounts do. |
 | Large first order | 15% of new customers, 1.8 to 3 times the category median | Legitimate front-loaded first orders exist (R04's benign case). |
 | Repeat orders | Poisson, gamma-distributed rates (shape 0.8), holiday peak 1.6 times, weekends 1.15 times | Most customers order rarely and a few often. |
+| Order amounts | lognormal around the merchant category's median (sigma 0.65), $12 to $4,000, for every actor; patterns scale the median (fraud table) | One price process, so a residual price spread never marks an actor. |
 | Customer lifetime | exponential, mean 900 days; 10% of older accounts dormant | Accounts stop shopping; dormant accounts exist. |
 | New phone | 0.35 a year; the old phone stays linked up to 3 days | Phones are replaced about every three years. |
 | Password reset after a new phone | 35% of new phones, within a day | A new phone often means a forgotten password (R01's benign case). |
@@ -99,16 +109,16 @@ CI. Every value is in `config/world.yaml`.
 ### Fraud patterns
 
 Each pattern's episodes start evenly over the order horizon: the horizon is cut
-into as many equal slices as there are episodes, and each episode starts on a
-random day within its slice at a profile hour. Every evaluation window
+into as many equal slices as there are episodes, and each episode starts at a
+time drawn from the time-of-day profile within its slice. Every evaluation window
 therefore receives fresh episodes of every pattern, and episodes are many and
 small rather than a few large ones. Episode counts are per 100,000 target
 orders.
 
 | Pattern | Episodes | What the actors do | Typical outcome |
 | --- | --- | --- | --- |
-| Account takeover (`P-ATO`) | 100 | A fraudster logs into an established customer's account (75% at least 90 days old, always with an earlier order) from a new device and an IP in the victim's country (60%) or abroad, usually resets or changes the password or the email (75%), enters a drop address at checkout (80%) and places 1 to 3 orders, mostly at resale merchants, with the stored card (a stolen card 15% of the time). | The owner reports the orders (65%), disputes them with the card issuer (20%) or never notices and pays (15%). |
-| Stolen card (`P-STOLEN`) | 95 | A new account with a stolen card, often from abroad; 35% first test 3 to 6 stolen cards in minutes (processor declines); 1 to 3 orders. A quarter are sleeper accounts opened 60 to 300 days earlier, kept warm with logins and sometimes a small repaid order, then used with a newly added stolen card. | The cardholder disputes (75%, lost 90% of the time); installments fail. |
+| Account takeover (`P-ATO`) | 100 | A fraudster logs into an established customer's account (75% at least 90 days old, the rest 14 to 89 days, always with an earlier order) from a new device and one IP for the session, in the victim's country (60%) or abroad, usually resets or changes the password or the email (75%), enters a drop address at checkout (80%) and places 1 to 3 orders, mostly at resale merchants, with the stored card (a stolen card 15% of the time). | The owner reports the orders 1 to 21 days after the last one (65%), disputes each with the card issuer 7 to 40 days after it (20%, lost 85% of the time) or never notices (15%). Installments on the card are collected until the owner reports or disputes, and fail from then on. |
+| Stolen card (`P-STOLEN`) | 95 | A new account (60% from a phone) with a stolen card, from an IP abroad 40% of the time; 35% first test 3 to 6 stolen cards in minutes from one IP (processor declines); 1 to 3 orders. A quarter are sleeper accounts opened 60 to 300 days earlier, kept warm with logins and sometimes a small repaid order, then used with a newly added stolen card. | The cardholder disputes the charge 5 to 40 days after it (75%, lost 90% of the time) or only has the card blocked 2 to 30 days after it; installments are collected until then and fail afterwards. |
 | Synthetic ring (`P-SYNTH`) | 18 | 3 to 5 synthetic identities (born 1986 to 2002, thin files) opened over weeks; 45% share 1 or 2 devices, 30% share drop addresses and 25% share neither; 40% use spellings of one email address. Each repays one small warm-up order, then all place 1 or 2 large orders at resale merchants within 72 hours and never pay. | Never-pay through the shared device, address or email, or unlabelled credit loss when nothing links them. |
 | Never-pay (`P-NEVERPAY`) | 75 | First-party: single orders (45%), bursts of 2 to 4 plans within 6 days (30%) and linked groups of 2 to 4 accounts sharing a device, an address or an email (25%). Nothing is paid after checkout. | Bursts and groups meet the never-pay marker; single orders read as credit loss. |
 | Promotion farm (`P-PROMO`) | 40 | 3 to 6 new accounts over 3 weeks, each using FIRST10 once; 50% share devices, 25% email spellings, 25% only an address. 70% repay. | Promotion abuse when linked by device or email; address-only farms stay unlabelled, like households. |
@@ -130,7 +140,8 @@ the test window at the base arrival rate again (twice the inflow), and these
 campaign customers use FIRST10 on 80% of first orders. The fraud-mix shift adds
 as many account takeovers again from the test window and activates 25 aged
 sleeper accounts with stolen cards; those accounts are opened before the test
-window in every family and stay dormant in the other two.
+window in every family, log in now and then to the end of the horizon, and are
+used only in this family.
 
 ### Truth and labels
 

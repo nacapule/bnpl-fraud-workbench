@@ -170,6 +170,7 @@ fraud:
     cvv_fail: 0.10
     disputed: 0.75
     dispute_days: [5, 40]
+    blocked_days: [2, 30]          # cardholders who do not dispute have the card blocked
     dispute_lost: 0.90
   P-SYNTH:
     episodes_per_100k_orders: 18

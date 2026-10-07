@@ -58,9 +58,20 @@ class Outcomes:
         hours = float(np.exp(a.rng.normal(np.log(median), self.p.fulfilment_sigma)))
         return o.t + int(max(0.25, hours) * HOUR)
 
-    def fulfil(self, a: Actor, o: Order, *, deliver: bool = True,
-               at: int | None = None) -> None:
-        shipped = self.ship_time(a, o) if at is None else at
+    def vanishing(self, o: Order) -> bool:
+        """Whether the order was placed while its merchant was busting out."""
+        start = self.b.merchants[o.merchant]["bustout_from"]
+        return start is not None and o.t >= start
+
+    def fulfil(self, a: Actor, o: Order, *, deliver: bool = True) -> None:
+        """The merchant reports shipment; the carrier confirms delivery unless ``deliver``
+        is false. A merchant busting out reports shipments before it disappears and
+        delivers nothing, whoever the buyer is."""
+        shipped = self.ship_time(a, o)
+        if self.vanishing(o):
+            closed = self.b.merchants[o.merchant]["closed"]
+            shipped = max(o.t + 600, min(shipped, closed - HOUR))
+            deliver = False
         self.b.ship(a, o, shipped)
         if deliver:
             days = float(np.exp(a.rng.normal(np.log(self.p.delivery_median_days),
@@ -69,18 +80,20 @@ class Outcomes:
 
     # ------------------------------------------------------- repayment
     def collect(self, a: Actor, o: Order, plan: str = "paid", *, late_p: float = 0.0,
-                reversal_p: float = 0.0, stop_seq: int = 1) -> None:
+                reversal_p: float = 0.0, stop_seq: int = 1, stop_at: int | None = None) -> None:
         """Collect installments 1..n. ``plan``: ``paid`` (every installment paid,
         some late), ``zero_effort`` (nothing after the checkout payment) or
-        ``partial`` (installments from ``stop_seq`` on are never paid). Unpaid
-        installments fail on their due date and on one retry; the plan is written
-        off when a balance remains."""
+        ``partial`` (installments from ``stop_seq`` on are never paid). Installments
+        due at or after ``stop_at`` (a card blocked, a payer who stops) are never
+        paid either. Unpaid installments fail on their due date and on one retry;
+        the plan is written off when a balance remains."""
         b, rng = self.b, a.rng
         lo, hi = self.p.retry_days
         writeoff = b.writeoff_time(o)
         for seq in range(1, len(o.schedule)):
             due = o.due(seq)
-            if plan == "zero_effort" or (plan == "partial" and seq >= stop_seq):
+            if plan == "zero_effort" or (plan == "partial" and seq >= stop_seq) \
+                    or (stop_at is not None and due >= stop_at):
                 b.pay(a, o, seq, due, success=False)
                 b.pay(a, o, seq, due + lo * DAY, success=False, attempt_no=2)
                 continue

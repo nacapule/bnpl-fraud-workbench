@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import bisect
 import heapq
+import itertools
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -105,8 +106,8 @@ class Customers:
                 signup = h.created + int(rng.exponential(c["member_join_mean_days"]) * DAY)
             if signup >= self.order_end:
                 continue
-            signup = self.clock.at_profile_hour(rng, signup) if k else signup
-            signup = max(signup, h.created)
+            if k:
+                signup = self.clock.around(rng, signup, after=h.created)
             first, family = pop.person_name(rng)
             if last is not None and rng.random() < 0.6:
                 family = last
@@ -211,17 +212,20 @@ class Customers:
                pop.card_network(rng), pop.last4(rng))
 
         actions: list[tuple[int, int, str, Any]] = []  # (time, seq, kind, payload)
+        counter = itertools.count()
+
+        def push(t: int, kind: str, payload: Any = None) -> None:
+            heapq.heappush(actions, (t, next(counter), kind, payload))
 
         def schedule(kind: str, rate_per_year: float, lo: int, hi: int) -> None:
             t = lo
             while rate_per_year > 0:
                 t += int(rng.exponential(YEAR / rate_per_year))
-                when = clock.at_profile_hour(rng, t)
-                if when <= lo:
-                    when += DAY
-                if t >= hi or when >= hi:
+                if t >= hi:
                     break
-                actions.append((when, len(actions), kind, None))
+                when = clock.around(rng, t, after=lo)
+                if when < hi:
+                    push(when, kind)
 
         schedule("new_phone", c["new_phone_per_year"], m.signup, end)
         schedule("card_added", c["card_added_per_year"], m.signup, end)
@@ -230,11 +234,8 @@ class Customers:
         schedule("email_change", c["email_change_per_year"], m.signup, end)
         schedule("phone_change", c["phone_change_per_year"], m.signup, end)
         schedule("login", c["logins_per_year"], max(m.signup, start), min(m.active_until, end))
-        if rng.random() < c["extra_device_share"]:
-            t = m.signup + int(rng.uniform(0, max(DAY, end - m.signup)))
-            when = clock.at_profile_hour(rng, t)
-            actions.append((when if when > m.signup else when + DAY, len(actions),
-                            "extra_device", None))
+        if rng.random() < c["extra_device_share"] and end - m.signup > DAY:
+            push(clock.between(rng, m.signup + 1, end), "extra_device")
         trips: list[tuple[int, int, str]] = []
         t = max(m.signup, start)
         while True:
@@ -248,8 +249,7 @@ class Customers:
         if trips:
             m.tags.add("traveller")
         for t in self._order_times(m, rng):
-            actions.append((int(t), len(actions), "order", None))
-        heapq.heapify(actions)
+            push(int(t), "order")
 
         state = {"phone": phone_link, "reset_at": None, "churn_after": None}
         while actions:
@@ -263,8 +263,7 @@ class Customers:
                 b.unlink(old, t + int(rng.uniform(0, 3) * DAY))
                 state["phone"] = link
                 if rng.random() < c["reset_after_new_phone"] and t >= start:
-                    reset = t + int(rng.uniform(5 * MINUTE, DAY))
-                    heapq.heappush(actions, (reset, -1, "reset", new))
+                    push(t + int(rng.uniform(5 * MINUTE, DAY)), "reset", new)
             elif kind == "reset":
                 if payload in b.devices_at(m.user, t):
                     self._event(a, m, h, t, "password_reset", payload, trips)
@@ -290,7 +289,9 @@ class Customers:
             elif kind == "order":
                 if state["churn_after"] is not None and t > state["churn_after"]:
                     continue
-                self._shop(h, m, t, state, trips)
+                self._shop(h, m, t, state, trips, push)
+            elif kind == "retry":
+                self._retry(h, m, t, state, trips, payload)
 
     def _order_times(self, m: Member, rng: np.random.Generator) -> list[int]:
         clock, start, end = self.clock, self.clock.start, self.order_end
@@ -302,9 +303,10 @@ class Customers:
         else:
             if m.forced_first is not None or m.first_order == "at_signup":
                 first = m.signup + session_gap(rng, 8)
-            else:
-                first = clock.after(rng, m.signup, 0.02,
-                                    rng.exponential(self.c["first_order"]["soon_mean_days"]) + 0.05)
+            else:  # days later, at a profile time around an exponential delay
+                earliest = m.signup + 30 * MINUTE
+                delay = int(rng.exponential(self.c["first_order"]["soon_mean_days"]) * DAY)
+                first = clock.around(rng, max(earliest, m.signup + delay), after=earliest)
             if not start <= first < end:
                 return times
             times.append(first)
@@ -335,7 +337,7 @@ class Customers:
 
     # ------------------------------------------------------------ orders
     def _shop(self, h: Household, m: Member, t: int, state: dict[str, Any],
-              trips: list[tuple[int, int, str]]) -> None:
+              trips: list[tuple[int, int, str]], push) -> None:
         b, a, rng, c = self.b, h.actor, h.actor.rng, self.c
         devices = b.devices_at(m.user, t)
         homes = b.addresses_at(m.user, t, "home")
@@ -380,7 +382,7 @@ class Customers:
             mimic.add("shared_device")
         if state["reset_at"] is not None and 0 <= t - state["reset_at"] < 3 * DAY:
             mimic.add("new_phone_reset")
-        promo = self._promotion(rng, m, t, first)
+        promo = self.promotion(rng, m.user, t, m.promo_take)
         state["shopped"] = True
         b.login_before(a, m.user, t, device, ip, ip_country, c["login_before_order"])
         avs = "N" if rng.random() < self.pay["avs_fail"] else "Y"
@@ -392,23 +394,45 @@ class Customers:
         o.mimic |= mimic
         if declined:
             o.mimic.add("processor_decline")
-            if rng.random() >= c["retry_after_decline"]:
-                return
-            t2 = t + session_gap(rng, 6)
-            if t2 >= self.order_end or device not in b.devices_at(m.user, t2):
-                return
-            others = [x for x in b.cards_at(m.user, t2) if x != card] or b.cards_at(m.user, t2)
-            if not others or address not in b.addresses_at(m.user, t2):
-                return
-            o = b.order(a, m.user, merchant, t2, amount, device=device, card=others[-1],
-                        address=address, ip=ip, ip_country=ip_country,
-                        promo=self._promotion(rng, m, t2, first))
-            o.mimic |= mimic
+            if rng.random() < c["retry_after_decline"]:
+                push(t + session_gap(rng, 6), "retry",
+                     {"merchant": merchant, "amount": amount, "device": device, "card": card,
+                      "address": address, "first": first, "mimic": mimic})
+            return
         self.settle(a, m, o, state, first)
 
-    def _promotion(self, rng: np.random.Generator, m: Member, t: int, first: bool) -> int | None:
-        if first:
-            take = self.c["first_purchase_take"] if m.promo_take is None else m.promo_take
+    def _retry(self, h: Household, m: Member, t: int, state: dict[str, Any],
+               trips: list[tuple[int, int, str]], spec: dict[str, Any]) -> None:
+        """The same purchase tried again minutes after a processor decline, with what
+        the account holds at the retry."""
+        b, a, rng = self.b, h.actor, h.actor.rng
+        devices = b.devices_at(m.user, t)
+        cards = b.cards_at(m.user, t)
+        if not devices or not cards or not b.merchant_open(spec["merchant"], t):
+            return
+        device = spec["device"] if spec["device"] in devices else devices[-1]
+        others = [x for x in cards if x != spec["card"]] or cards
+        address = spec["address"]
+        if address not in b.addresses_at(m.user, t):
+            homes = b.addresses_at(m.user, t, "home")
+            if not homes:
+                return
+            address = homes[0]
+        ip, ip_country, _ = self._where(h, t, trips, rng)
+        o = b.order(a, m.user, spec["merchant"], t, spec["amount"], device=device,
+                    card=others[-1], address=address, ip=ip, ip_country=ip_country,
+                    avs="N" if rng.random() < self.pay["avs_fail"] else "Y",
+                    cvv="N" if rng.random() < self.pay["cvv_fail"] else "M",
+                    promo=self.promotion(rng, m.user, t, m.promo_take))
+        o.mimic |= spec["mimic"]
+        self.settle(a, m, o, state, spec["first"])
+
+    def promotion(self, rng: np.random.Generator, user: int, t: int,
+                  first_take: float | None = None) -> int | None:
+        """The ordinary use of promotions, for any account: the first-purchase offer on
+        an account's first approved order, otherwise a seasonal code while one runs."""
+        if not self.b.approved_before(user, t):
+            take = self.c["first_purchase_take"] if first_take is None else first_take
             promo = self.promotions["FIRST10"]
             p = self.b.promotions[promo]
             if p["from"] <= t < p["to"] and rng.random() < take:
@@ -437,14 +461,10 @@ class Customers:
             if rng.random() < p["stop_ordering_after_default"]:
                 state["churn_after"] = o.t
         merchant = self.b.merchants[o.merchant]
-        bustout = merchant["bustout_from"] is not None and o.t >= merchant["bustout_from"]
+        bustout = out.vanishing(o)
         lost = not bustout and rng.random() < d["lost_parcel"]
         unscanned = not bustout and not lost and rng.random() < d["unscanned_delivery"]
-        if bustout:
-            shipped = min(out.ship_time(a, o), merchant["closed"] - 3600)
-            out.fulfil(a, o, deliver=False, at=max(shipped, o.t + 600))
-        else:
-            out.fulfil(a, o, deliver=not (lost or unscanned))
+        out.fulfil(a, o, deliver=not (lost or unscanned))
         if lost:
             o.mimic.add("genuine_non_delivery")
         out.collect(a, o, plan, late_p=p["late_p_prone"] if m.late_prone else p["late_p"],

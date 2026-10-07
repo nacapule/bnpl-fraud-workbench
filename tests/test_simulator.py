@@ -17,11 +17,16 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from core import world
+from core import config, world
 from core.protocol import load_protocol
 from simulator import population
+from simulator.builder import DAY, Actor, Order
+from simulator.fraud import Fraud
 from simulator.generate import FAMILIES, build_world, generate_world
+from simulator.legit import Customers, Member
+from simulator.outcomes import OutcomeParams, Outcomes
 from simulator.support import check_support, support_table
+from simulator.timing import Clock
 
 SEED = 416
 SCALE = 0.04
@@ -391,6 +396,114 @@ def test_merchant_bustouts_close_with_disputes_after(base) -> None:
     assert (disputes["known_at"] > disputes["closed_at"]).sum() > 0
     labels = base["labels"]
     assert (labels["basis"] == "merchant_bustout").any()
+
+
+# ------------------------------------------- one behaviour model for every actor
+def _clock() -> Clock:
+    return Clock(pd.Timestamp("2024-04-01"), pd.Timestamp("2025-09-01"), 1.6, 1.15)
+
+
+def test_times_are_drawn_inside_their_interval_never_clipped_to_it() -> None:
+    clock, rng = _clock(), np.random.default_rng(7)
+    lo = clock.start + 5 * DAY + 3_333
+    hi = lo + 40 * DAY + 777
+    starts = clock.stratified_starts(rng, 160, lo, hi)
+    width = (hi - lo) / 160
+    assert not {lo + int(k * width) for k in range(161)} & set(starts)
+    assert all(lo + int(k * width) <= t < lo + int((k + 1) * width)
+               for k, t in enumerate(starts))
+    draws = np.array([clock.between(rng, lo, lo + 7_200) for _ in range(5_000)])
+    assert draws.min() >= lo and draws.max() < lo + 7_200
+    assert (draws == lo).mean() < 0.002
+    shop = clock.seasonal_times(rng, 5_000, lo, lo + DAY // 3)
+    assert shop.min() >= lo and shop.max() < lo + DAY // 3
+    assert (shop == lo).mean() < 0.002 and (shop == lo + DAY // 3 - 1).mean() < 0.002
+
+
+def test_first_orders_days_after_signup_keep_the_configured_mean() -> None:
+    cfg = config.load("world")["customers"]
+    customers = Customers.__new__(Customers)
+    clock = _clock()
+    customers.clock, customers.order_end, customers.c, customers.mu = clock, clock.end, cfg, 0.0
+    rng = np.random.default_rng(11)
+    signup = clock.start + 30 * DAY
+    member = Member(1, signup, signup, "soon", 0.0, False, False, "Ana", "Ruiz")
+    delays = [(customers._order_times(member, rng)[0] - signup) / DAY for _ in range(20_000)]
+    assert abs(np.mean(delays) - cfg["first_order"]["soon_mean_days"]) < 0.3
+
+
+def test_takeover_victims_come_from_the_tenured_pool_at_the_stated_share() -> None:
+    class Accounts:  # every account usable, as far as the victim choice is concerned
+        def approved_before(self, user, t): return True
+        def cards_at(self, user, t): return [1]
+        def devices_at(self, user, t): return [1]
+        def addresses_at(self, user, t, role=None): return [1]
+
+    p = config.load("world")["fraud"]["P-ATO"]
+    fraud = Fraud.__new__(Fraud)
+    t = 1_000 * DAY
+    # half the eligible accounts are tenured, half younger
+    fraud._victim_index = sorted(
+        [(t - int((p["tenure_days"] + 1 + k % 300) * DAY), k, 2 * t) for k in range(500)]
+        + [(t - int((15 + k % (p["tenure_days"] - 20)) * DAY), 500 + k, 2 * t)
+           for k in range(500)])
+    fraud.b, fraud.f = Accounts(), {"P-ATO": p}
+    tenured = []
+    for k in range(4_000):
+        fraud.victims = set()
+        user = fraud._victim(Actor.of(5, 99, k), t)
+        tenured.append(user < 500)
+    assert abs(np.mean(tenured) - p["tenured_share"]) < 0.03
+
+
+def test_a_vanishing_merchant_delivers_to_no_buyer() -> None:
+    class Shipments:
+        merchants = {1: {"median": 12.0, "bustout_from": 900 * DAY, "closed": 910 * DAY}}
+
+        def __init__(self) -> None:
+            self.shipped: list[int] = []
+            self.delivered: list[int] = []
+
+        def ship(self, a, o, t): self.shipped.append(t)
+        def deliver(self, a, o, t): self.delivered.append(t)
+
+    shipments = Shipments()
+    out = Outcomes(shipments, _clock(), OutcomeParams.from_config(config.load("world")))
+    for k, placed in enumerate((880, 905, 909.5)):
+        order = Order.__new__(Order)
+        order.merchant, order.t = 1, int(placed * DAY)
+        out.fulfil(Actor.of(5, 98, k), order)  # the default path every fraud pattern takes
+    assert len(shipments.shipped) == 3 and len(shipments.delivered) == 1
+    assert max(shipments.shipped[1:]) < 910 * DAY
+
+
+def test_collections_on_a_victims_card_succeed_until_the_owner_notices(base) -> None:
+    orders = _orders(base)
+    third_party = orders.loc[orders["pattern_id"].isin(["P-ATO", "P-STOLEN"]), "order_id"]
+    reports = base["victim_reports"].groupby("order_id")["occurred_at"].min()
+    unauthorized = base["dispute_openings"]
+    unauthorized = unauthorized[unauthorized["reason"] == "unauthorized"]
+    notice = pd.concat([reports, unauthorized.groupby("order_id")["occurred_at"].min()])
+    notice = notice.groupby(level=0).min()
+    notice = notice[notice.index.isin(third_party)]
+    pays = base["payment_attempts"].merge(base["plans"][["plan_id", "order_id"]], on="plan_id")
+    pays = pays[pays["order_id"].isin(notice.index) & (pays["seq"] > 0)]
+    before = pays[pays["occurred_at"] < pays["order_id"].map(notice)]
+    assert len(notice) >= 5 and len(before) > 0
+    assert (before["result"] == "success").all()
+
+
+def test_fraud_accounts_use_promotions_and_networks_as_customers_do(base) -> None:
+    orders = _orders(base)
+    approved = orders[orders["processor_result"] == "approved"].sort_values("occurred_at")
+    first = approved.drop_duplicates("user_id")
+    first10 = base["promotions"].loc[base["promotions"]["code"] == "FIRST10", "promo_id"]
+    opened = ["P-STOLEN", "P-SYNTH", "P-NEVERPAY", "P-INR-ABUSE"]  # accounts fraud opened
+    others = first[first["pattern_id"].isin(opened)]
+    assert len(others) >= 15 and others["promo_id"].isin(first10).mean() > 0.1
+    repeat = approved[approved["pattern_id"].isin(["P-INR-ABUSE", "P-NEVERPAY", "P-SYNTH"])]
+    ips = repeat.groupby("user_id")["ip"].nunique()[repeat.groupby("user_id").size() >= 3]
+    assert len(ips) >= 3 and (ips > 1).mean() > 0.3
 
 
 # -------------------------------------------------- support (full worlds)

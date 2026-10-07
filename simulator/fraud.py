@@ -1,10 +1,11 @@
 """Fraud patterns as parameter sets over the shared primitives.
 
 Each pattern's episodes start evenly over the order horizon (one in each equal
-slice of time, at a random day within it), so every evaluation window receives
+slice of time, at a profile time within it), so every evaluation window receives
 its share of fresh episodes. Within an episode, every action takes its hour
 from the same time-of-day profile as everyone else's, its IP from the same
-country blocks and its email from the same generator. Fraudsters act through
+country blocks, its price from the same dispersion, its promotions from the
+same process and its email from the same generator. Fraudsters act through
 the same primitives as customers: an order needs a device linked to the
 account, an address and a card on it, all existing at that moment.
 
@@ -58,6 +59,7 @@ class Fraud:
         self.start, self.end = clock.start, customers.order_end
         self.volume = cfg["volume"]["target_orders"] * scale / 100_000
         self.login_before_order = cfg["customers"]["login_before_order"]
+        self.mobile_ip_share = cfg["customers"]["mobile_ip_share"]
         self.victims: set[int] = set()
         self.sleeper_pool: list[tuple[Actor, int, Identity]] = []
         self._victim_index: list[tuple[int, int, int]] | None = None
@@ -108,24 +110,32 @@ class Fraud:
                multiplier: tuple[float, float] = (1.0, 1.0), avs_fail: float | None = None,
                cvv_fail: float | None = None, approved: bool = True, promo: int | None = None,
                card: int | None = None, address: int | None = None, merchant: int | None = None,
-               amount: int | None = None) -> Order:
+               amount: int | None = None, session_ip: bool = False) -> Order:
+        """An order through the shared primitive, with the ordinary price dispersion,
+        network (mobile data now and then, unless the actor keeps one session's IP) and
+        promotion use; ``promo`` overrides the promotion."""
         rng = a.rng
         if merchant is None:
             merchant = self.market.choose(rng, t, categories)
         if amount is None:
             category = self.b.merchants[merchant]["category"]
-            amount = pop.order_amount_cents(rng, category, rng.uniform(*multiplier), sigma=0.4)
+            amount = pop.order_amount_cents(rng, category, rng.uniform(*multiplier))
         avs_fail = self.pay["avs_fail"] if avs_fail is None else avs_fail
         cvv_fail = self.pay["cvv_fail"] if cvv_fail is None else cvv_fail
-        self.b.login_before(a, who.user, t, who.device, who.ip, who.ip_country,
+        ip = who.ip
+        if not session_ip and rng.random() < self.mobile_ip_share:
+            ip = pop.ip_address(rng, who.ip_country)
+        if promo is None and approved:
+            promo = self.customers.promotion(rng, who.user, t)
+        self.b.login_before(a, who.user, t, who.device, ip, who.ip_country,
                             self.login_before_order)
         o = self.b.order(a, who.user, merchant, t, amount, device=who.device,
                          card=who.card if card is None else card,
                          address=who.address if address is None else address,
-                         ip=who.ip, ip_country=who.ip_country,
+                         ip=ip, ip_country=who.ip_country,
                          avs="N" if rng.random() < avs_fail else "Y",
                          cvv="N" if rng.random() < cvv_fail else "M",
-                         approved=approved, promo=promo)
+                         approved=approved, promo=promo if approved else None)
         o.pattern, o.episode, o.intent = pattern, episode, intent
         return o
 
@@ -147,20 +157,21 @@ class Fraud:
                        for h in self.customers.base for m in h.members]
             self._victim_index = sorted(members)
         index = self._victim_index
-        n = bisect.bisect_right(index, (t - 14 * DAY, 2**62, 0))
-        b, rng = self.b, a.rng
-        tenured = bisect.bisect_right(index, (t - self.f["P-ATO"]["tenure_days"] * DAY, 2**62, 0))
-        for _ in range(400):
-            limit = tenured if (tenured and rng.random() < self.f["P-ATO"]["tenured_share"]) else n
-            if limit == 0:
-                return None
-            _, user, until = index[int(rng.integers(0, limit))]
-            if user in self.victims or until < t:
-                continue
-            if not b.approved_before(user, t) or not b.cards_at(user, t) \
-                    or not b.devices_at(user, t) or not b.addresses_at(user, t, "home"):
-                continue
-            return user
+        b, rng, p = self.b, a.rng, self.f["P-ATO"]
+        eligible = bisect.bisect_right(index, (t - 14 * DAY, 2**62, 0))
+        tenured = bisect.bisect_right(index, (t - p["tenure_days"] * DAY, 2**62, 0))
+        pools = [(0, tenured), (tenured, eligible)]  # disjoint: tenured, then younger
+        if rng.random() >= p["tenured_share"]:
+            pools.reverse()
+        for lo, hi in pools:  # the chosen pool first, the other only as a fallback
+            for _ in range(400 if hi > lo else 0):
+                _, user, until = index[int(rng.integers(lo, hi))]
+                if user in self.victims or until < t:
+                    continue
+                if not b.approved_before(user, t) or not b.cards_at(user, t) \
+                        or not b.devices_at(user, t) or not b.addresses_at(user, t, "home"):
+                    continue
+                return user
         return None
 
     def account_takeover(self, a: Actor, t: int) -> None:
@@ -213,21 +224,26 @@ class Fraud:
                             categories=pop.RESALE_CATEGORIES if rng.random() < p["resale"]
                             else None, multiplier=tuple(p["amount_multiplier"]),
                             avs_fail=p["avs_fail"] if stolen_card else None,
-                            cvv_fail=p["cvv_fail"] if stolen_card else None)
+                            cvv_fail=p["cvv_fail"] if stolen_card else None, session_ip=True)
             orders.append(o)
         if not orders:
             return
+        # The owner notices and reports, or disputes the charges with the card issuer,
+        # or never notices; collections on the card succeed until then.
         noticed = pop.pick(rng, tuple(p["noticed"].items()))
         report_at = self.clock.after(rng, orders[-1].t, *p["report_days"])
         for o in orders:
             self.out.fulfil(a, o)
-            self.out.collect(a, o, "paid" if noticed == "unnoticed" else "zero_effort")
             if noticed == "report":
+                self.out.collect(a, o, "paid", stop_at=report_at)
                 b.victim_report(a, o, report_at)
             elif noticed == "dispute":
+                filed = self.clock.after(rng, o.t, *p["dispute_days"])
+                self.out.collect(a, o, "paid", stop_at=filed)
                 outcome = "lost" if rng.random() < p["dispute_lost"] else "won"
-                self.out.dispute(a, o, "unauthorized",
-                                 self.clock.after(rng, o.t, *p["dispute_days"]), outcome)
+                self.out.dispute(a, o, "unauthorized", filed, outcome)
+            else:
+                self.out.collect(a, o, "paid")
         if noticed == "report":
             secured = report_at + session_gap(rng, 10)
             b.unlink(dev_link, secured)
@@ -264,7 +280,8 @@ class Fraud:
                               pop.card_network(rng), pop.last4(rng))
                 self._order(a, who, when, pattern="P-STOLEN", episode=ep, card=card,
                             categories=("beauty", "accessories", "toys", "health"),
-                            multiplier=(0.3, 0.6), avs_fail=0.5, cvv_fail=0.5, approved=False)
+                            multiplier=(0.3, 0.6), avs_fail=0.5, cvv_fail=0.5, approved=False,
+                            session_ip=True)
                 when += session_gap(rng, 2)
             who.card = b.card(a, who.user, when, pop.pick(rng, pop.STOLEN_CARD_ISSUERS),
                               pop.card_network(rng), pop.last4(rng))
@@ -282,26 +299,32 @@ class Fraud:
                 categories=pop.RESALE_CATEGORIES if rng.random() < p["resale"] else None,
                 multiplier=tuple(p["amount_multiplier"]), avs_fail=p["avs_fail"],
                 cvv_fail=p["cvv_fail"]))
+        # The cardholder notices: disputes the charge, or only has the card blocked.
+        # Collections on the stolen card succeed until then.
         for o in orders:
             self.out.fulfil(a, o)
-            self.out.collect(a, o, "zero_effort")
             if rng.random() < p["disputed"]:
+                filed = self.clock.after(rng, o.t, *p["dispute_days"])
+                self.out.collect(a, o, "paid", stop_at=filed)
                 outcome = "lost" if rng.random() < p["dispute_lost"] else "won"
-                self.out.dispute(a, o, "unauthorized",
-                                 self.clock.after(rng, o.t, *p["dispute_days"]), outcome)
+                self.out.dispute(a, o, "unauthorized", filed, outcome)
+            else:
+                self.out.collect(a, o, "paid",
+                                 stop_at=self.clock.after(rng, o.t, *p["blocked_days"]))
 
     def sleeper(self, a: Actor, activation: int, *, created: int | None = None,
-                activate: bool = True) -> tuple[Identity, int]:
-        """An account opened months ahead under a stolen identity, aged, then used."""
+                activate: bool = True, warm_until: int | None = None) -> tuple[Identity, int]:
+        """An account opened months ahead under a stolen identity, aged with occasional
+        logins (until ``warm_until``, by default the activation), then used."""
         b, rng, p = self.b, a.rng, self.f["P-STOLEN"]
         if created is None:
             created = activation - int(rng.uniform(*p["sleeper_age_days"]) * DAY)
-        created = self.clock.at_profile_hour(rng, created)
+        created = self.clock.around(rng, created)
         ep = b.episode(a, "P-STOLEN", created)
         who = self._identity(a, created, actor="fraudster", episode=ep, tags=("sleeper",),
                              disposable_p=0.0, foreign_ip_p=0.0)
         who.ip = pop.ip_address(rng, b.accounts[who.user][3])
-        self._keep_warm(a, who, created, activation)
+        self._keep_warm(a, who, created, activation if warm_until is None else warm_until)
         if rng.random() < p["sleeper_warm_up"]:
             t = self.clock.after(rng, created, 5, 40)
             if self._in_horizon(t) and t < activation:
@@ -346,8 +369,7 @@ class Fraud:
         ring_ips = [pop.ip_address(rng, country) for _ in range(int(rng.integers(1, 4)))]
         members = []
         for k in range(size):
-            t = opened + int(rng.uniform(0, max(1.0, (burst - opened) / DAY - 20)) * DAY)
-            t = self.clock.at_profile_hour(rng, t)
+            t = self.clock.between(rng, opened + 60, max(opened + DAY, burst - 20 * DAY))
             who = self._identity(
                 a, t, actor="synthetic_identity", episode=ep, tags=("ring_member",),
                 disposable_p=p["disposable_email"], foreign_ip_p=0.0, country=country,
@@ -369,8 +391,7 @@ class Fraud:
                 self.out.fulfil(a, o)
                 self.out.collect(a, o, "paid")
         for who in members:
-            t = burst + int(rng.uniform(0, p["burst_hours"]) * HOUR)
-            t = self.clock.at_profile_hour(rng, t) if t - burst > 6 * HOUR else t
+            t = self.clock.between(rng, burst, burst + int(p["burst_hours"] * HOUR))
             for k in range(int(rng.integers(*p["burst_orders"]))):
                 when = t + k * session_gap(rng, 30)
                 if not self._in_horizon(when) or when < b.signup(who.user):
@@ -472,7 +493,7 @@ class Fraud:
     # ===================================================== item-not-received abuse
     def inr_abuse(self, a: Actor, t: int) -> None:
         b, rng, p = self.b, a.rng, self.f["P-INR-ABUSE"]
-        opened = self.clock.at_profile_hour(rng, t - int(rng.uniform(*p["tenure_days"]) * DAY))
+        opened = self.clock.around(rng, t - int(rng.uniform(*p["tenure_days"]) * DAY))
         ep = b.episode(a, "P-INR-ABUSE", opened)
         who = self._identity(a, opened, actor="fraudster", episode=ep, tags=("inr_abuse",),
                              disposable_p=0.0, foreign_ip_p=0.0)
@@ -508,7 +529,7 @@ class Fraud:
         bust_days = rng.uniform(*p["bustout_days"])
         ramp_days = rng.uniform(*p["ramp_days"])
         bust_from = closed - int(bust_days * DAY)
-        onboard = self.clock.at_profile_hour(rng, bust_from - int(ramp_days * DAY))
+        onboard = self.clock.around(rng, bust_from - int(ramp_days * DAY))
         category = pop.RESALE_CATEGORIES[int(rng.integers(0, len(pop.RESALE_CATEGORIES)))]
         merchant = b.merchant(a, onboard, self.market.name(rng), category,
                               int(rng.choice([2, 3], p=[0.4, 0.6])),
@@ -532,10 +553,11 @@ class Fraud:
                 continue
             k += 1
             buyer = Actor.of(self.seed, MERCH_BUYERS, buyers_from + k)
-            h = Household(buyers_from + k, buyer, self.clock.at_profile_hour(buyer.rng, t),
+            created = self.clock.around(buyer.rng, t, after=onboard)
+            if created >= last_order:
+                continue
+            h = Household(buyers_from + k, buyer, created,
                           pop.pick(buyer.rng, pop.HOME_COUNTRIES))
-            if h.created >= last_order or h.created < onboard:
-                h.created = t
             ticket = 1.0 + (p["ticket_lift"] - 1.0) * share
             self.customers.skeleton(h, 1, existing=False)
             for m in h.members:
@@ -564,16 +586,14 @@ class Fraud:
             self.never_pay(a, t)
         for a, t in self._schedule(PROMO, self.count("P-PROMO"), lo, hi - 7 * DAY):
             self.promo_farm(a, t)
-        p = self.f["P-INR-ABUSE"]
-        for a, t in self._schedule(INR, self.count("P-INR-ABUSE"), lo + 30 * DAY,
-                                   hi - int(p["active_days"] * DAY)):
+        for a, t in self._schedule(INR, self.count("P-INR-ABUSE"), lo + 30 * DAY, hi - DAY):
             self.inr_abuse(a, t)
 
     def sleeper_reserve(self, n: int, created_lo: int, created_hi: int) -> None:
-        """Aged sleeper accounts opened before the test window in every family; only
-        the fraud-mix family activates them."""
+        """Aged sleeper accounts opened before the test window in every family and kept
+        warm to the end of the horizon; only the fraud-mix family activates them."""
         for a, t in self._schedule(SLEEPER_POOL, n, created_lo, created_hi):
-            who, ep = self.sleeper(a, created_hi, created=t, activate=False)
+            who, ep = self.sleeper(a, created_hi, created=t, activate=False, warm_until=self.end)
             self.sleeper_pool.append((a, ep, who))
 
     def activate_sleepers(self, lo: int, hi: int) -> None:
