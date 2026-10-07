@@ -7,23 +7,33 @@ its identity whatever the score bands. Selection is the one place on the memo si
 that reads simulation truth, and only to stratify and to report a diagnostic; the
 packets never carry it.
 
+* Phases: development cases come from the test windows of the development seeds'
+  baseline worlds; final cases from the test windows of at least three final seeds
+  (:data:`PHASES`). A world outside its phase's seeds or families is refused.
 * Strata: every fraud pattern among the review decisions, and the legitimate orders by
   their benign mimic or behaviour profile (legitimate new customers, households,
   travellers, movers, hardship, ...), each a stratum of its own.
-* Balance: an equal share per stratum (a challenge set), with a sampling weight per case
-  so rates can be reweighted to the natural mix of review decisions.
-* Independence: at most two cases per episode and per account; development and final
-  cohorts share no account and no episode, and final cases come from at least three
-  final seeds.
+* Independence: cases linked through an account or an episode form one group (the
+  cluster for intervals), and at most two cases per group are eligible; development
+  and final cohorts share no account and no episode.
+* Balance and weights: selection has two phases with known probabilities. First, at
+  most two cases are drawn at random from each linked group; then an equal share per
+  stratum (a challenge set) is drawn at random from those. A case's weight is the
+  inverse of its inclusion probability (its group's size over the cases drawn from it,
+  times its stratum's drawn cases over its quota), so weighted rates estimate the rate
+  over all eligible review decisions. A pool that cannot fill the requested size is
+  refused.
 
 :func:`write_benchmark` then fixes the benchmark: packets, the referee's view of each,
-the definition with every hash (policy, prompt, scoring code) and the arms.
+the definition with every hash (policy, prompt, scoring code, packets, views) and the
+arms.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import shutil
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
@@ -38,12 +48,19 @@ from core.evidence import POLICY, CheckResult
 from core.protocol import load_protocol
 from core.world import read_world
 from llm import client, memo, referee
+from llm.eval import harness
 from llm.eval.harness import BENCHMARKS, code_sha256, sha256_file
 from llm.packet import assert_no_forbidden, build_packets
 
 _SIZES = load("llm")["benchmark"]
 MAX_PER_CLUSTER = int(_SIZES["max_cases_per_cluster"])
 MIN_FINAL_SEEDS = int(_SIZES["min_final_seeds"])
+# Where each phase's cases come from: protocol seeds, world families (None: any), window.
+PHASES: dict[str, dict[str, Any]] = {
+    "development": {"seeds": "development_seeds", "families": ("baseline",),
+                    "window": "test"},
+    "final": {"seeds": "final_seeds", "families": None, "window": "test"},
+}
 
 
 def case_id(seed: int, family: str, order_id: int, decision_at: Any) -> str:
@@ -77,8 +94,29 @@ def candidates(seed: int, family: str, decisions: pd.DataFrame,
     frame["account_key"] = [f"{seed}:{u}" for u in frame["user_id"]]
     frame["episode_key"] = [f"{seed}:{int(e)}" if pd.notna(e) else None
                             for e in frame["episode_id"]]
-    frame["cluster"] = frame["episode_key"].fillna("account:" + frame["account_key"])
     return frame
+
+
+def linked_groups(frame: pd.DataFrame) -> list[str]:
+    """Each row's group: rows sharing an account or an episode, directly or through
+    other rows, are one group, named after its first account key."""
+    parent: dict[str, str] = {}
+
+    def root(node: str) -> str:
+        while parent.setdefault(node, node) != node:
+            parent[node] = parent[parent[node]]
+            node = parent[node]
+        return node
+
+    for account, episode in zip(frame["account_key"], frame["episode_key"], strict=True):
+        if pd.notna(episode):
+            first, second = root(f"account {account}"), root(f"episode {episode}")
+            if first != second:
+                parent[max(first, second)] = min(first, second)
+    names: dict[str, str] = {}
+    for account in sorted(frame["account_key"]):
+        names.setdefault(root(f"account {account}"), f"group {account}")
+    return [names[root(f"account {account}")] for account in frame["account_key"]]
 
 
 def _allocation(sizes: Mapping[str, int], total: int) -> dict[str, int]:
@@ -102,38 +140,43 @@ def _allocation(sizes: Mapping[str, int], total: int) -> dict[str, int]:
 def select(pool: pd.DataFrame, total: int, *, rng_seed: int,
            exclude_accounts: Iterable[str] = (), exclude_episodes: Iterable[str] = ()
            ) -> pd.DataFrame:
-    """A stratified sample of ``total`` cases from ``pool`` (rows of :func:`candidates`).
+    """A stratified sample of exactly ``total`` cases from ``pool`` (rows of
+    :func:`candidates`), with ``cluster`` (the linked group), ``inclusion`` (the
+    probability the design gave the case) and ``weight`` (its inverse).
 
-    At most :data:`MAX_PER_CLUSTER` cases per account and per episode; excluded
-    accounts and episodes (another cohort's) never appear. Each case gets
-    ``weight``: its stratum's share of the eligible pool over its share of the sample.
+    Excluded accounts and episodes (another cohort's) are removed first. Phase one
+    draws at most :data:`MAX_PER_CLUSTER` cases at random from every linked group;
+    phase two draws each stratum's equal share at random from phase one's cases.
+    Raises ValueError when the pool cannot fill ``total``.
     """
     excluded_accounts, excluded_episodes = set(exclude_accounts), set(exclude_episodes)
     eligible = pool[~pool["account_key"].isin(excluded_accounts)
-                    & ~pool["episode_key"].isin(excluded_episodes)]
+                    & ~pool["episode_key"].isin(excluded_episodes)].copy()
+    eligible["cluster"] = linked_groups(eligible)
     rng = np.random.default_rng(rng_seed)
-    shuffled = eligible.iloc[rng.permutation(len(eligible))].sort_values(
-        "stratum", kind="stable")
-    per_account: dict[str, int] = {}
-    per_episode: dict[str, int] = {}
-    usable = []
-    for row in shuffled.itertuples():
-        episode = row.episode_key if pd.notna(row.episode_key) else None
-        if per_account.get(row.account_key, 0) >= MAX_PER_CLUSTER:
-            continue
-        if episode and per_episode.get(episode, 0) >= MAX_PER_CLUSTER:
-            continue
-        usable.append(row.Index)
-        per_account[row.account_key] = per_account.get(row.account_key, 0) + 1
-        if episode:
-            per_episode[episode] = per_episode.get(episode, 0) + 1
-    usable_frame = eligible.loc[usable]
-    quota = _allocation(usable_frame["stratum"].value_counts().to_dict(), total)
-    chosen = pd.concat([usable_frame[usable_frame["stratum"] == stratum].head(count)
+    group_size = eligible["cluster"].value_counts()
+    taken: dict[str, int] = {}
+    first_phase = []
+    for position in rng.permutation(len(eligible)):
+        row = eligible.index[position]
+        group = eligible.at[row, "cluster"]
+        if taken.get(group, 0) < MAX_PER_CLUSTER:
+            first_phase.append(row)
+            taken[group] = taken.get(group, 0) + 1
+    drawn = eligible.loc[first_phase]
+    drawn = drawn.iloc[rng.permutation(len(drawn))]  # an independent order for phase two
+    available = drawn["stratum"].value_counts().to_dict()
+    quota = _allocation(available, total)
+    if sum(quota.values()) < total:
+        raise ValueError(f"the pool yields {sum(quota.values())} of the {total} cases "
+                         "asked for under the cluster caps")
+    chosen = pd.concat([drawn[drawn["stratum"] == stratum].head(count)
                         for stratum, count in sorted(quota.items()) if count > 0])
-    population = eligible["stratum"].value_counts(normalize=True)
-    sample = chosen["stratum"].value_counts(normalize=True)
-    chosen = chosen.assign(weight=chosen["stratum"].map(population / sample).round(6))
+    groups = chosen["cluster"]
+    first = groups.map(lambda group: min(MAX_PER_CLUSTER, group_size[group])
+                       / group_size[group])
+    second = chosen["stratum"].map(lambda stratum: quota[stratum] / available[stratum])
+    chosen = chosen.assign(inclusion=first * second, weight=1.0 / (first * second))
     return chosen.sort_values("case_id").reset_index(drop=True)
 
 
@@ -179,11 +222,12 @@ def write_benchmark(directory: Path, *, benchmark_id: str, phase: str,
     if set(packets) != set(cases["case_id"]):
         raise ValueError("every case needs exactly one packet")
     (directory / "packets").mkdir(parents=True, exist_ok=True)
-    views = {}
+    views, packet_hashes = {}, {}
     for case in sorted(packets):
         assert_no_forbidden(packets[case])
-        (directory / "packets" / f"{case}.json").write_text(
-            json.dumps(packets[case], indent=1, ensure_ascii=False) + "\n")
+        path = directory / "packets" / f"{case}.json"
+        path.write_text(json.dumps(packets[case], indent=1, ensure_ascii=False) + "\n")
+        packet_hashes[case] = sha256_file(path)
         views[case] = referee.view(packets[case]).as_dict()
     (directory / "referee.json").write_text(json.dumps(views, indent=1, sort_keys=True) + "\n")
     definition = {
@@ -193,12 +237,15 @@ def write_benchmark(directory: Path, *, benchmark_id: str, phase: str,
         "prompt": {"version": prompt_version,
                    "sha256": client.sha256_text(memo.system_prompt(prompt_version))},
         "code_sha256": code_sha256(),
+        "referee_sha256": sha256_file(directory / "referee.json"),
         "arms": {name: dict(arm) for name, arm in sorted(arms.items())},
         "cases": [
             {"case_id": row.case_id, "seed": int(row.seed), "family": row.family,
              "account": row.account_key,
              "episode": None if pd.isna(row.episode_key) else row.episode_key,
              "stratum": row.stratum, "cluster": row.cluster, "weight": float(row.weight),
+             "inclusion": float(getattr(row, "inclusion", 1.0 / float(row.weight))),
+             "packet_sha256": packet_hashes[row.case_id],
              "latent": {"class": row.latent_class,
                         "pattern": None if pd.isna(row.pattern_id) else row.pattern_id}}
             for row in cases.sort_values("case_id").itertuples()
@@ -230,36 +277,50 @@ def _read_decisions(world_dir: Path) -> pd.DataFrame:
     raise FileNotFoundError(f"no review decisions in {world_dir}")
 
 
-def build(benchmark_id: str, phase: str, world_dirs: Sequence[Path], *, n_cases: int,
-          window: str, rng_seed: int, development: str | None = None,
-          n_probes: int = 0) -> dict[str, Any]:
-    """Select and write a benchmark from worlds whose directories hold the tables, the
-    manifest and the incumbent's review decisions (with their context rows)."""
-    protocol = load_protocol()
+def build(benchmark_id: str, phase: str, world_dirs: Sequence[Path], *, rng_seed: int,
+          development: str | None = None) -> dict[str, Any]:
+    """Select and write a benchmark of the phase's configured size (and, for the final
+    phase, its invariance probes) from worlds whose directories hold the tables, the
+    manifest and the incumbent's review decisions (with their context rows). Worlds
+    outside the phase's seeds or families are refused, and so is a definition that
+    does not have the configured shape (:func:`harness.check_shape`)."""
+    if phase not in PHASES:
+        raise ValueError(f"unknown phase {phase!r}")
+    rules, protocol = PHASES[phase], load_protocol()
+    sizes = harness.SIZES
+    allowed_seeds = set(getattr(protocol, rules["seeds"]))
     pools, worlds = [], {}
     for world_dir in world_dirs:
         manifest = json.loads((world_dir / "manifest.json").read_text())
         seed, family = int(manifest["seed"]), str(manifest["family"])
+        if seed not in allowed_seeds:
+            raise ValueError(f"seed {seed} is not a {phase} seed")
+        if rules["families"] is not None and family not in rules["families"]:
+            raise ValueError(f"{phase} cases come from {rules['families']} worlds, not {family}")
         tables = read_world(world_dir)
         decisions = _read_decisions(world_dir)
         placed = decisions[["order_id"]].merge(
             tables["order_attempts"][["order_id", "known_at"]], on="order_id", how="left")
-        in_window = protocol.window_of(pd.to_datetime(placed["known_at"])).eq(window)
-        decisions = decisions[in_window.to_numpy()].reset_index(drop=True)
+        in_window = protocol.window_of(pd.to_datetime(placed["known_at"])).eq(rules["window"])
+        decisions = decisions[in_window.fillna(False).to_numpy(dtype=bool)].reset_index(
+            drop=True)
         pools.append(candidates(seed, family, decisions, tables))
         worlds[(seed, family)] = (tables, decisions)
     pool = pd.concat(pools, ignore_index=True)
     exclude: dict[str, set[str]] = {"accounts": set(), "episodes": set()}
-    if development:
-        earlier = json.loads((BENCHMARKS / development / "benchmark.json").read_text())
-        exclude = {"accounts": {case["account"] for case in earlier["cases"]},
-                   "episodes": {case["episode"] for case in earlier["cases"]
-                                if case["episode"]}}
-    chosen = select(pool, n_cases, rng_seed=rng_seed, exclude_accounts=exclude["accounts"],
-                    exclude_episodes=exclude["episodes"])
     if phase == "final":
         if development is None:
             raise ValueError("a final cohort is checked against its development cohort")
+        earlier = json.loads((BENCHMARKS / development / "benchmark.json").read_text())
+        if earlier["phase"] != "development":
+            raise ValueError(f"{development} is not a development benchmark")
+        exclude = {"accounts": {case["account"] for case in earlier["cases"]},
+                   "episodes": {case["episode"] for case in earlier["cases"]
+                                if case["episode"]}}
+    n_cases = int(sizes["development_cases" if phase == "development" else "final_cases"])
+    chosen = select(pool, n_cases, rng_seed=rng_seed, exclude_accounts=exclude["accounts"],
+                    exclude_episodes=exclude["episodes"])
+    if phase == "final":
         earlier_frame = pd.DataFrame({"account_key": sorted(exclude["accounts"]),
                                       "episode_key": None})
         check_cohorts(earlier_frame, chosen, protocol.final_seeds)
@@ -277,29 +338,37 @@ def build(benchmark_id: str, phase: str, world_dirs: Sequence[Path], *, n_cases:
         for r in rows.itertuples():
             packets[r.case_id] = built[(int(r.order_id), pd.Timestamp(r.decision_at))]
     arms = load("llm")["arms"]
-    probes = ({kind: probe_cases(chosen, n_probes, rng_seed=rng_seed)
-               for kind in _SIZES["probe_kinds"]} if n_probes else {})
-    return write_benchmark(BENCHMARKS / benchmark_id, benchmark_id=benchmark_id, phase=phase,
-                           cases=chosen, packets=packets, arms=arms, probes=probes)
+    probes = ({kind: probe_cases(chosen, int(sizes["probe_cases"]), rng_seed=rng_seed)
+               for kind in sizes["probe_kinds"]} if phase == "final" else {})
+    staging = BENCHMARKS / f".{benchmark_id}.staging"
+    if staging.exists():
+        shutil.rmtree(staging)
+    definition = write_benchmark(staging, benchmark_id=benchmark_id, phase=phase,
+                                 cases=chosen, packets=packets, arms=arms, probes=probes)
+    try:
+        harness.check_shape(definition, sizes, protocol)
+    except harness.ShapeError:
+        shutil.rmtree(staging)
+        raise
+    target = BENCHMARKS / benchmark_id
+    if target.exists():
+        shutil.rmtree(staging)
+        raise FileExistsError(f"benchmark {benchmark_id} already exists")
+    staging.rename(target)
+    return definition
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Select and write a memo benchmark.")
     parser.add_argument("--id", required=True)
-    parser.add_argument("--phase", choices=("development", "final"), required=True)
+    parser.add_argument("--phase", choices=sorted(PHASES), required=True)
     parser.add_argument("--world", type=Path, action="append", required=True,
                         help="a world directory holding review_decisions.csv or .pkl")
-    parser.add_argument("--window", default="test")
-    parser.add_argument("--cases", type=int)
-    parser.add_argument("--probes", type=int, default=0)
     parser.add_argument("--development", help="the development benchmark's id (final phase)")
     parser.add_argument("--rng-seed", type=int, default=20261006)
     args = parser.parse_args(argv)
-    n_cases = args.cases or int(_SIZES["development_cases" if args.phase == "development"
-                                       else "final_cases"])
-    definition = build(args.id, args.phase, args.world, n_cases=n_cases, window=args.window,
-                       rng_seed=args.rng_seed, development=args.development,
-                       n_probes=args.probes)
+    definition = build(args.id, args.phase, args.world, rng_seed=args.rng_seed,
+                       development=args.development)
     strata = pd.Series([case["stratum"] for case in definition["cases"]]).value_counts()
     print(f"{args.id}: {len(definition['cases'])} cases")
     print(strata.to_string())
