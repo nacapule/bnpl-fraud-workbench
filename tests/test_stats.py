@@ -196,6 +196,33 @@ def test_cluster_bootstrap_covers_the_truth_where_a_row_bootstrap_does_not() -> 
     assert covered["rows"] / replications <= 0.6
 
 
+def test_cluster_labels_are_compared_as_they_are() -> None:
+    """1 and "1" are two clusters; tuples are labels too."""
+    values = np.array([0.0, 1.0])
+    interval = cluster_bootstrap([1, "1"], lambda rows: values[rows].mean(), resamples=4000,
+                                 seed=3, level=0.8)
+    assert (interval.low, interval.high) == (0.0, 1.0)
+    pairs = cluster_bootstrap([(1, "a"), (1, "a"), (2, "b"), (2, "b")],
+                              lambda rows: np.array([1.0, 1.0, 0.0, 0.0])[rows].mean(),
+                              resamples=4000, seed=3, level=0.8)
+    assert (pairs.low, pairs.high) == (0.0, 1.0)
+
+
+def test_cluster_bootstrap_does_not_depend_on_row_order() -> None:
+    rng = np.random.default_rng(5)
+    clusters = rng.integers(0, 12, size=120)
+    values = rng.normal(size=120)
+    order = rng.permutation(120)
+
+    def interval(labels, data):
+        return cluster_bootstrap(labels, lambda rows: float(data[rows].mean()), resamples=500,
+                                 seed=2)
+
+    first = interval(clusters, values)
+    second = interval(clusters[order], values[order])
+    assert first.low == pytest.approx(second.low) and first.high == pytest.approx(second.high)
+
+
 def test_cluster_bootstrap_rejects_undefined_statistics() -> None:
     with pytest.raises(ValueError, match="finite"):
         cluster_bootstrap([1, 2, 3], lambda rows: float("nan"), resamples=10)

@@ -244,6 +244,24 @@ def paired_outcomes(
     )
 
 
+def _cluster_codes(clusters: Sequence[Hashable] | np.ndarray) -> np.ndarray:
+    """One integer code per row, the same for equal labels and independent of row order.
+
+    Labels are compared as Python objects (``1`` and ``"1"`` are different
+    clusters; tuples are allowed); codes follow the labels' sorted order.
+    """
+    labels = clusters.tolist() if isinstance(clusters, np.ndarray) else list(clusters)
+    if not labels:
+        raise ValueError("clusters must be a non-empty sequence")
+    try:
+        distinct = set(labels)
+    except TypeError as error:
+        raise ValueError("cluster labels must be hashable") from error
+    ordered = sorted(distinct, key=lambda label: (type(label).__name__, repr(label)))
+    code = {label: index for index, label in enumerate(ordered)}
+    return np.fromiter((code[label] for label in labels), dtype=np.int64, count=len(labels))
+
+
 def cluster_bootstrap(
     clusters: Sequence[Hashable] | np.ndarray,
     statistic: Callable[[np.ndarray], float],
@@ -262,14 +280,11 @@ def cluster_bootstrap(
     undefined on a resample (for example with no positive rows) must handle
     that itself. The result depends only on the inputs and ``seed``.
     """
-    labels = np.asarray(clusters)
-    if labels.ndim != 1 or len(labels) == 0:
-        raise ValueError("clusters must be a non-empty one-dimensional sequence")
+    codes = _cluster_codes(clusters)
     resamples = _count(resamples, "resamples")
     if resamples < 2:
         raise ValueError("resamples must be at least 2")
     level = _level(level)
-    _, codes = np.unique(labels, return_inverse=True)
     order = np.argsort(codes, kind="stable")
     sizes = np.bincount(codes)
     offsets = np.concatenate(([0], np.cumsum(sizes)[:-1]))
