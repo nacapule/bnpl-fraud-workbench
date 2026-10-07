@@ -115,8 +115,9 @@ class SoFar(Protocol):
         """Accounts whose orders it declined at checkout, held or voided, or that it blocked."""
         ...
 
-    def fates(self) -> pd.DataFrame:
-        """core.actions fates of the orders checked out before the moment, as decided then."""
+    def fates(self, users: np.ndarray | None = None) -> pd.DataFrame:
+        """core.actions fates of the orders checked out before the moment, as decided then
+        (only the orders of ``users`` when given)."""
         ...
 
     def blocks(self) -> pd.DataFrame:
@@ -214,13 +215,12 @@ class PolicyHistory:
         if not mask.any():
             return world_rows
         self.rebuilt = mask
-        fates, blocks = so_far.fates(), so_far.blocks()
-        users = np.unique(world_rows.loc[mask, "user_id"].to_numpy(np.int64))
+        users = None
         if self.neighbours is not None:  # what core.asof.outcome_columns reads for them
-            users = self.neighbours.around(users)
-            fates = fates.loc[fates["user_id"].isin(users)]
-        view = _policy_view(self.world.tables, users if self.neighbours is not None else None,
-                            at)
+            users = self.neighbours.around(
+                np.unique(world_rows.loc[mask, "user_id"].to_numpy(np.int64)))
+        fates, blocks = so_far.fates(users), so_far.blocks()
+        view = _policy_view(self.world.tables, users, at)
         realized = actions.realize(view, fates, self.world.terms, memo=self._memo)
         state = actions.policy_state(fates, blocks)
         kwargs = {} if self.neighbours is None else {"neighbours": self.neighbours}
@@ -238,6 +238,17 @@ _ACCOUNT_TABLES = ("accounts", "account_events", "device_links", "address_links"
                    "order_attempts")
 
 
+def _accounts_view(tables: Mapping[str, pd.DataFrame],
+                   users: np.ndarray | None) -> dict[str, pd.DataFrame]:
+    """The world with only ``users``' account rows and attempts (all when None)."""
+    out = dict(tables)
+    if users is not None:
+        for name in _ACCOUNT_TABLES:
+            frame = tables[name]
+            out[name] = frame.loc[np.isin(frame["user_id"].to_numpy(np.int64), users)]
+    return out
+
+
 def _policy_view(tables: Mapping[str, pd.DataFrame], users: np.ndarray | None,
                  at: pd.Timestamp) -> dict[str, pd.DataFrame]:
     """The world's rows the policy's history at ``at`` is built from.
@@ -247,11 +258,7 @@ def _policy_view(tables: Mapping[str, pd.DataFrame], users: np.ndarray | None,
     shipments, payments, disputes, reports, cash) only for orders checked out before
     ``at``; the attempts themselves whole.
     """
-    out = dict(tables)
-    if users is not None:
-        for name in _ACCOUNT_TABLES:
-            frame = tables[name]
-            out[name] = frame.loc[np.isin(frame["user_id"].to_numpy(np.int64), users)]
+    out = _accounts_view(tables, users)
     attempts = out["order_attempts"]
     early = attempts.loc[attempts["known_at"] < at, "order_id"].to_numpy(np.int64)
     plans = tables["plans"]
@@ -362,6 +369,7 @@ def replay(
     hold_s = int(round(settings.hold_max_hours * 3600))
     sim = _Simulation(world, policy, roster, reviewer, verification, settings, linked,
                       hold_s, t0, horizon)
+    sim.neighbours = getattr(history, "neighbours", None)  # core.asof.Neighbours, if any
     for record in orders.itertuples(index=False):
         ship = None if pd.isna(record.shipped_at) else int(to_seconds(record.shipped_at))
         sim.orders[int(record.order_id)] = _Order(int(record.order_id), int(record.user_id),
@@ -440,8 +448,8 @@ class _SoFar:
         cut = int(to_seconds(self.at))
         return np.array(sorted(u for u, t in self.sim.changed.items() if t < cut), dtype=np.int64)
 
-    def fates(self) -> pd.DataFrame:
-        return self.sim.fates(before=self.at)
+    def fates(self, users: np.ndarray | None = None) -> pd.DataFrame:
+        return self.sim.fates(before=self.at, users=users)
 
     def blocks(self) -> pd.DataFrame:
         return self.sim.blocks_frame(before=self.at)
@@ -468,6 +476,7 @@ class _Simulation:
         self.wake_at: list[int | None] = [None] * len(names)
         self.service: dict[int, int] = {}
         self.changed: dict[int, int] = {}  # user -> first time the policy acted on it
+        self.neighbours: Any = None
 
     def touch(self, user: int, at: int) -> None:
         if user not in self.changed or self.changed[user] > at:
@@ -635,7 +644,10 @@ class _Simulation:
     def linked_users(self, o: _Order, at: int) -> list[int]:
         if self.linked is None:
             raise RuntimeError("escalation needs core.asof.linked_accounts")
-        found = self.linked(self.world.tables, pd.DataFrame({
+        tables = self.world.tables
+        if self.neighbours is not None:  # linked accounts share a device or an address
+            tables = _accounts_view(tables, self.neighbours.around(np.array([o.user_id])))
+        found = self.linked(tables, pd.DataFrame({
             "order_id": [o.order_id], "decision_at": np.array([at], dtype="datetime64[s]")}))
         return sorted({int(u) for u in found["user_id"]} - {o.user_id})
 
@@ -645,11 +657,14 @@ class _Simulation:
             self.blocked[user] = (at, cause, order)
 
     # -- results
-    def fates(self, before: pd.Timestamp | None = None) -> pd.DataFrame:
+    def fates(self, before: pd.Timestamp | None = None,
+              users: np.ndarray | None = None) -> pd.DataFrame:
         cut = None if before is None else int(to_seconds(before))
+        wanted = None if users is None else {int(u) for u in users}
         rows = []
         for o in self.orders.values():
-            if cut is not None and o.checkout >= cut:
+            if (cut is not None and o.checkout >= cut) or (
+                    wanted is not None and o.user_id not in wanted):
                 continue
             rows.append({
                 "order_id": o.order_id, "user_id": o.user_id,

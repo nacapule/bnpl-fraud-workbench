@@ -141,8 +141,10 @@ class SoFar:
         changed = self.fates_["route"].ne("approve") | self.fates_["hold_at"].notna()
         return np.unique(self.fates_.loc[changed, "user_id"].to_numpy(np.int64))
 
-    def fates(self) -> pd.DataFrame:
-        return self.fates_
+    def fates(self, users: np.ndarray | None = None) -> pd.DataFrame:
+        if users is None:
+            return self.fates_
+        return self.fates_.loc[self.fates_["user_id"].isin(users)].reset_index(drop=True)
 
     def blocks(self) -> pd.DataFrame:
         return self.blocks_

@@ -419,14 +419,7 @@ def policy_cash(
             parts.append(events.loc[events["occurred_at"] <= at])
 
     if len(released):
-        subset = _order_subset(tables, released["order_id"])
-        moved = _realize_rows(subset, released, observed_until)
-        derived = ledger.derive_cash_events(moved, terms)
-        ids = world_cash.set_index(["kind", "ref_event_id"])["event_id"]
-        derived["event_id"] = pd.array(
-            ids.reindex(pd.MultiIndex.from_frame(derived[["kind", "ref_event_id"]])).to_numpy(),
-            dtype="Int64")
-        parts.append(derived)
+        parts += _released_cash(tables, released, terms, observed_until, memo)
     cash = pd.concat([part for part in parts if len(part)] or [world_cash.iloc[0:0]],
                      ignore_index=True)
     refunds = cash["kind"].eq("refund") & cash["event_id"].isna()
@@ -434,6 +427,40 @@ def policy_cash(
         cash["event_id"] = pd.array(cash["event_id"], dtype="Int64")
         cash.loc[refunds, "event_id"] = -cash.loc[refunds, "ref_event_id"].to_numpy()
     return cash.reset_index(drop=True)
+
+
+def _released_cash(
+    tables: Mapping[str, pd.DataFrame],
+    released: pd.DataFrame,
+    terms: ledger.ProductTerms,
+    observed_until: pd.Timestamp | None,
+    memo: dict[Any, pd.DataFrame] | None,
+) -> list[pd.DataFrame]:
+    """The cash of orders released from a hold, derived from their moved events.
+
+    With ``memo``, each order's cash is kept by its fate and reused; only orders whose
+    attempt ``tables`` hold are kept (their rows are whole in every view the replay
+    builds)."""
+    keys = [("released", int(order), checkout, held, at, observed_until)
+            for order, checkout, held, at in released[
+                ["order_id", "checkout_at", "hold_at", "released_at"]].itertuples(index=False)]
+    missing = [k for k in keys if memo is None or k not in memo]
+    if not missing:
+        return [memo[k] for k in keys]
+    orders = released.loc[released["order_id"].isin({k[1] for k in missing})]
+    moved = _realize_rows(_order_subset(tables, orders["order_id"]), orders, observed_until)
+    derived = ledger.derive_cash_events(moved, terms)
+    ids = tables["cash_events"].set_index(["kind", "ref_event_id"])["event_id"]
+    derived["event_id"] = pd.array(
+        ids.reindex(pd.MultiIndex.from_frame(derived[["kind", "ref_event_id"]])).to_numpy(),
+        dtype="Int64")
+    if memo is None:
+        return [derived]
+    known = set(tables["order_attempts"]["order_id"])
+    by_order = dict(tuple(derived.groupby("order_id", sort=False)))
+    fresh = {k: by_order.get(k[1], derived.iloc[0:0]) for k in missing}
+    memo.update({k: part for k, part in fresh.items() if k[1] in known})
+    return [fresh[k] if k in fresh else memo[k] for k in keys]
 
 
 def _order_subset(tables: Mapping[str, pd.DataFrame], orders: pd.Series) -> dict[str, pd.DataFrame]:
