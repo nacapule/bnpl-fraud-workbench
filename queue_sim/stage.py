@@ -60,10 +60,19 @@ class Staffing:
     level: str
     layout: str
     analysts_per_shift: Mapping[str, int]
+    review_minutes_per_shift: Mapping[str, int] | None = None  # None: the roster's setting
+
+    @classmethod
+    def from_config(cls, level: str, layout: str, entry: Mapping[str, Any]) -> Staffing:
+        """One ``capacity.levels`` or ``capacity.redesigned`` entry."""
+        minutes = entry.get("review_minutes_per_shift")
+        return cls(level, layout, dict(entry["analysts_per_shift"]),
+                   None if minutes is None else dict(minutes))
 
     def roster(self, policy_cfg: Mapping[str, Any]) -> Roster:
         return Roster.from_config(policy_cfg, layout=self.layout,
-                                  analysts_per_shift=self.analysts_per_shift)
+                                  analysts_per_shift=self.analysts_per_shift,
+                                  review_minutes_per_shift=self.review_minutes_per_shift)
 
 
 def staffing(policy_cfg: Mapping[str, Any] | None = None) -> list[Staffing]:
@@ -74,14 +83,13 @@ def staffing(policy_cfg: Mapping[str, Any] | None = None) -> list[Staffing]:
     policy_cfg = config.load("policy") if policy_cfg is None else policy_cfg
     current = policy_cfg["roster"]["layout"]
     levels = policy_cfg["capacity"].get("levels") or {}
-    variants = [Staffing(level, current, counts) for level, counts in levels.items()
-                if counts is not None]
+    variants = [Staffing.from_config(level, current, entry) for level, entry in levels.items()
+                if entry is not None]
     if not variants:
         variants = [Staffing("configured", current, policy_cfg["roster"]["analysts_per_shift"])]
     redesigned = policy_cfg["capacity"].get("redesigned")
     if redesigned:
-        variants.append(Staffing("base", redesigned["layout"],
-                                 redesigned["analysts_per_shift"]))
+        variants.append(Staffing.from_config("base", redesigned["layout"], redesigned))
     return variants
 
 
