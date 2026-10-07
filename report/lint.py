@@ -66,7 +66,9 @@ IDENTIFIERS = (
     rf"(?>\bQ\d{{2}}){END}",  # SQL investigation queries
     rf"(?>\bCASE-\d{{2}}){END}",  # case files
 )
-FOOTNOTE_MARKER = re.compile(r"\[\^([^\]\s]+)\]")
+# A footnote reference, unless escaped, an image, or part of a link (a link's text,
+# or followed by its target or label), where its label shows as typed.
+FOOTNOTE_MARKER = re.compile(r"(?<![\\\]!])\[\^([^\]\s]+)\](?![(\[])")
 FOOTNOTE_DEFINITION = re.compile(r"\[\^([^\]\s]+)\]:")
 NUMBER = re.compile(r"\d[\d,.]*")
 
@@ -140,6 +142,7 @@ TEXT_ELEMENTS = re.compile(
 TAG_START = re.compile(r"</?[A-Za-z]")
 QUOTES = re.compile(r"(?: {0,3}>[ ]?)* {0,3}")  # quote marks a paragraph line can open
 SETEXT = re.compile(r" {0,3}(?:=+|-+)[ \t]*")
+TABLE_DELIMITER = re.compile(r"[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|?[ \t]*")
 ORDERED_ITEM = re.compile(r"((?:[ \t]*>[ ]?)*([ \t]*))(\d{1,9})([.)])([ \t]+|$)")
 
 
@@ -418,14 +421,14 @@ def _raw_lines(lines: list[str], fenced: list[bool]) -> list[bool]:
 
 def _definitions(lines: list[str], skip: list[bool], breaks: list[bool]) -> list[bool]:
     """Link reference definitions on one line, where a paragraph starts. Definitions
-    followed by a setext underline are left as text: CommonMark 0.29 may read them as
-    the heading's text."""
+    followed by a setext underline or a table's delimiter row are left as text: some
+    readers take them as the heading's or the table's text."""
     defined = [False] * len(lines)
     for index, line in enumerate(lines):
         starts = breaks[index] or (index > 0 and defined[index - 1])
         defined[index] = starts and not skip[index] and bool(REFERENCE_DEFINITION.fullmatch(line))
     for index, line in enumerate(lines):
-        if SETEXT.fullmatch(line):
+        if SETEXT.fullmatch(line) or TABLE_DELIMITER.fullmatch(line):
             above = index - 1
             while above >= 0 and defined[above]:
                 defined[above], above = False, above - 1

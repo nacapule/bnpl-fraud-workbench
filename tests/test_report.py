@@ -382,6 +382,11 @@ SHOWN = "Hybrid earned more at 84%."
     "| a | b |\n|---|---|\n| [Hybrid earned | more](at-84) |\n",
     "See [^84] for more.\n",
     "See [^84] for more.\n\n```\n[^84]: Example\n```\n",  # a definition in code
+    "See [^84](appendix.md) for more.\n\n[^84]: Detail.\n",  # a link's text
+    "See \\[^84] for more.\n\n[^84]: Detail.\n",  # escaped
+    "See ![^84] for more.\n\n[^84]: Detail.\n",
+    "See [^84][ref] for more.\n\n[^84]: Detail.\n\n[ref]: /x\n",
+    "See [x][^84] for more.\n\n[^84]: Detail.\n",
     # reference definitions: only valid ones, where a paragraph starts
     "[note]: Loss was 84% of GMV, more than incumbent rules.\n",
     '[ref]: https://example.com/report) "Loss was more at 84%."\n',
@@ -400,6 +405,8 @@ SHOWN = "Hybrid earned more at 84%."
     "<pre>\n\n[ref]: x '" + SHOWN + "'\n</pre>\n",
     "[ref]: /url '" + SHOWN + "'\n---\n",
     "[a]: /a '" + SHOWN + "'\n[b]: /b\n===\n",
+    "[ref]: /url '" + SHOWN + "'\n|---|\n",  # perhaps a table's header
+    "[ref]: /url '" + SHOWN + "'\n| --- | :-: |\n",
     "Context {{ x\n}}\n[ref]: /url '" + SHOWN + "'\n",
     "Context\n\u00a0\n[ref]: /url '" + SHOWN + "'\n",  # not a blank line
     # list numbers: only where an item certainly starts
