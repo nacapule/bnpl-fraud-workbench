@@ -77,8 +77,8 @@ def _q10_centroids() -> dict[str, tuple[float, float]]:
     return {cc: (float(lat), float(lon)) for cc, lat, lon in pairs}
 
 
-def test_q10_centroids_are_the_rule_engines() -> None:
-    from rules.engine import CENTROIDS
+def test_q10_centroids_are_the_as_of_contexts() -> None:
+    from core.asof import CENTROIDS
 
     assert _q10_centroids() == CENTROIDS
 
@@ -828,7 +828,7 @@ def test_q09_mini_world(db) -> None:
 
 # ------------------------------------------------------- Q10 geo velocity
 def _haversine_km(a: str, b: str) -> float:
-    from rules.engine import CENTROIDS
+    from core.asof import CENTROIDS
 
     (lat1, lon1), (lat2, lon2) = CENTROIDS[a], CENTROIDS[b]
     p1, p2 = math.radians(lat1), math.radians(lat2)
