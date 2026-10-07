@@ -171,9 +171,9 @@ class Stories:
         with self.db.cursor() as cursor:
             cursor.execute(f"INSERT INTO {table} ({columns}) VALUES ({marks})", tuple(row.values()))
 
-    def event(self, table: str, at: str, **row) -> int:
+    def event(self, table: str, at: str, known: str | None = None, **row) -> int:
         self.next_event += 1
-        self.insert(table, event_id=self.next_event, occurred_at=at, known_at=at, **row)
+        self.insert(table, event_id=self.next_event, occurred_at=at, known_at=known or at, **row)
         return self.next_event
 
     def account(self, uid: int, created: str, email: str | None = None) -> None:
@@ -389,6 +389,39 @@ def partial_repayment_story(s: Stories) -> None:
             amount_cents=5000, reason="card_reversal")
 
 
+def late_payment_story(s: Stories) -> None:
+    # A November first plan whose second installment payment is reported only
+    # on 2025-03-01, after its reversal (2025-02-10) is already known.
+    s.customer(1051, "2024-11-01 11:00:00")
+    s.attempt(9061, 1051, "2024-11-20 10:00:00", 20000)
+    s.insert("plans", plan_id=1051, order_id=9061, created_at="2024-11-20 10:00:00",
+             principal_cents=20000, down_payment_cents=5000, n_installments=3)
+    for seq, due in enumerate(("2024-11-20", "2024-12-04", "2024-12-18", "2025-01-01")):
+        s.insert("installment_schedule", plan_id=1051, seq=seq, due_at=f"{due} 10:00:00",
+                 amount_cents=5000)
+    for seq, at, known, result in ((0, "2024-11-20", None, "success"),
+                                   (1, "2024-12-04", None, "success"),
+                                   (2, "2024-12-18", "2025-03-01 10:00:00", "success"),
+                                   (3, "2025-01-01", None, "failed")):
+        event_id = s.event("payment_attempts", f"{at} 10:00:00", known, plan_id=1051, seq=seq,
+                           attempt_no=1, amount_cents=5000, result=result)
+        if seq == 2:
+            s.event("payment_reversals", "2025-02-10 10:00:00", payment_event_id=event_id,
+                    plan_id=1051, amount_cents=5000, reason="bank_return")
+
+
+def emptied_email_story(s: Stories) -> None:
+    # Two accounts hold one Gmail mailbox; a third changes to it and away again
+    # in the same second, so it never holds it. All three use FIRST10.
+    for n, (uid, email) in enumerate(((1070, "shared.box@gmail.com"),
+                                      (1071, "u1071@example.com"),
+                                      (1072, "sharedbox+c@gmail.com"))):
+        s.customer(uid, f"2025-04-19 09:{n:02d}:00", email)
+        s.attempt(9072 + n, uid, f"2025-04-21 1{n}:00:00", 6000, promo=FIRST10)
+    for email in ("shared.box+b@gmail.com", "b.other@example.com"):
+        s.account_event(1071, "email_change", "2025-04-20 12:00:00", device=1071, email=email)
+
+
 def late_delivery_story(s: Stories) -> None:
     # Two item-not-received claims, both rejected; the carrier confirms the
     # second delivery only after the claim was opened.
@@ -430,7 +463,11 @@ def alerts_story(s: Stories) -> None:
 
 
 ALL_STORIES = (velocity_story, card_testing_story, geo_story, takeover_story,
-               promotion_story, partial_repayment_story, late_delivery_story, alerts_story)
+               promotion_story, partial_repayment_story, late_payment_story,
+               emptied_email_story, late_delivery_story, alerts_story)
+# cutoffs at which the stories above have to answer in a particular way
+STORY_CUTOFFS = ("2025-02-15 00:00:00", "2025-04-20 12:00:00", "2025-05-18 00:00:00",
+                 "2025-05-21 00:00:00")
 
 
 # ------------------------------------------------------- Q01 velocity
@@ -598,6 +635,16 @@ def test_q04_counts_payments_less_reversals(db) -> None:
         ("2024-11", "b_100_300", 1, "0.000", "0.000", "1.000"), *MINI_COHORTS]
 
 
+@mysql
+def test_q04_counts_a_reversal_only_once_its_payment_is_known(db) -> None:
+    late_payment_story(Stories(db))
+    partial = [("2024-11", "b_100_300", 1, "0.000", "1.000", "0.000")]
+    # first installment paid, second not yet reported: partial, whatever the
+    # reversal of the unreported payment says
+    assert _cohorts(run(db, "Q04", "2025-02-15 00:00:00", min_cohort=1)) == partial
+    assert _cohorts(run(db, "Q04", "2025-03-01 10:00:00", min_cohort=1)) == partial
+
+
 # ------------------------------------------------------- Q05 takeover chain
 @mysql
 def test_q05_mini_world(db) -> None:
@@ -707,6 +754,12 @@ def test_q07_links_by_device_or_email_held_at_the_same_time_not_by_address(db) -
         (9056, 3, "email", 1), (9057, 3, "email", 0), (9058, 3, "email", 0)]
 
 
+@mysql
+def test_q07_an_email_dropped_in_the_same_second_links_nobody(db) -> None:
+    emptied_email_story(Stories(db))
+    assert [r for r in run(db, "Q07") if r["user_id"] in (1070, 1071, 1072)] == []
+
+
 # ------------------------------------------------------- Q08 card testing
 @mysql
 def test_q08_mini_world(db) -> None:
@@ -750,6 +803,10 @@ def test_q09_counts_a_delivery_only_once_the_carrier_confirms_it(db) -> None:
              r["claims_rejected_on_delivered"], r["claims_pending"])
             for r in run(db, "Q09", "2025-05-18 00:00:00")]
     assert rows == [(USER["hal"], 2, 2, 2, 0), (1060, 2, 1, 0, 2)]
+    # both deliveries confirmed, both claims still open: none rejected yet
+    assert [(r["user_id"], r["claims_on_delivered"], r["claims_rejected_on_delivered"],
+             r["claims_pending"]) for r in run(db, "Q09", "2025-05-21 00:00:00")
+            if r["user_id"] == 1060] == [(1060, 2, 0, 2)]
     assert [(r["user_id"], r["claims_on_delivered"], r["claims_rejected_on_delivered"])
             for r in run(db, "Q09", "2025-06-01 10:00:00")] == [(USER["hal"], 2, 2), (1060, 2, 2)]
 
@@ -959,7 +1016,8 @@ def _instants(db) -> list[str]:
         cursor.execute(f"SELECT DISTINCT t FROM ({' UNION '.join(parts)}) x ORDER BY t")
         times = [row["t"] for row in cursor.fetchall()]
     picked = times[::5]
-    return sorted({str(t) for t in picked} | {str(t - pd.Timedelta(seconds=1)) for t in picked})
+    return sorted({str(t) for t in picked} | {str(t - pd.Timedelta(seconds=1)) for t in picked}
+                  | set(STORY_CUTOFFS))
 
 
 @mysql

@@ -60,12 +60,17 @@ pairs AS (
   SELECT a.user_id, b.user_id AS other_id, 'device' AS via
   FROM device_holdings a
   JOIN device_holdings b ON b.device_id = a.device_id AND b.user_id <> a.user_id
-  WHERE a.since < COALESCE(b.until, '9999-12-31') AND b.since < COALESCE(a.until, '9999-12-31')
+  -- linked at the same time: the intervals intersect
+  WHERE GREATEST(a.since, b.since) < LEAST(COALESCE(a.until, '9999-12-31'),
+                                           COALESCE(b.until, '9999-12-31'))
   UNION
   SELECT a.user_id, b.user_id, 'email'
   FROM email_holdings a
   JOIN email_holdings b ON b.email_root = a.email_root AND b.user_id <> a.user_id
-  WHERE a.since < COALESCE(b.until, '9999-12-31') AND b.since < COALESCE(a.until, '9999-12-31')
+  -- held at the same time: the intervals intersect (an address taken and
+  -- dropped in the same second was never held)
+  WHERE GREATEST(a.since, b.since) < LEAST(COALESCE(a.until, '9999-12-31'),
+                                           COALESCE(b.until, '9999-12-31'))
 ),
 linked AS (
   SELECT u.order_id, p.other_id, MAX(p.via = 'device') AS by_device, MAX(p.via = 'email') AS by_email

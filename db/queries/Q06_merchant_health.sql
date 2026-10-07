@@ -39,7 +39,8 @@ reversed AS (
   SELECT a.plan_id, a.seq, SUM(r.amount_cents) AS cents
   FROM payment_reversals r
   JOIN payment_attempts a ON a.event_id = r.payment_event_id
-  WHERE a.seq >= 1 AND r.known_at <= @as_of
+  -- a reversal counts once the payment it reverses is known too
+  WHERE a.seq >= 1 AND a.result = 'success' AND a.known_at <= @as_of AND r.known_at <= @as_of
   GROUP BY a.plan_id, a.seq
 ),
 failed_attempts AS (

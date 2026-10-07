@@ -29,7 +29,8 @@ user_claims AS (
   SELECT user_id,
          COUNT(*) AS inr_disputes_opened,
          CAST(SUM(delivered) AS SIGNED) AS claims_on_delivered,
-         CAST(SUM(delivered AND outcome = 'won') AS SIGNED) AS claims_rejected_on_delivered,
+         CAST(SUM(CASE WHEN delivered AND outcome = 'won' THEN 1 ELSE 0 END) AS SIGNED)
+           AS claims_rejected_on_delivered,
          CAST(SUM(outcome IS NULL) AS SIGNED) AS claims_pending,
          SUM(amount_cents) AS disputed_cents,
          MIN(opened_at) AS first_opened_at, MAX(opened_at) AS last_opened_at
@@ -47,7 +48,8 @@ reversed AS (
   SELECT a.plan_id, a.seq, SUM(r.amount_cents) AS cents
   FROM payment_reversals r
   JOIN payment_attempts a ON a.event_id = r.payment_event_id
-  WHERE a.seq >= 1 AND r.known_at <= @as_of
+  -- a reversal counts once the payment it reverses is known too
+  WHERE a.seq >= 1 AND a.result = 'success' AND a.known_at <= @as_of AND r.known_at <= @as_of
   GROUP BY a.plan_id, a.seq
 ),
 repayment AS (
