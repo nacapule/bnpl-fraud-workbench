@@ -501,6 +501,8 @@ def coerce(name: str, frame: pd.DataFrame) -> pd.DataFrame:
                 if column.type in INTEGER_TYPES and _has_fraction(values):
                     raise ValueError("fractional values in an integer column")
                 values = values.astype(column.dtype)
+                if values.dtype.kind == "f" and np.isinf(values.to_numpy(dtype=float)).any():
+                    raise ValueError("infinite values")
         except (ValueError, TypeError, OverflowError) as error:
             raise SchemaError(f"{name}.{column.name}: {error}") from error
         out[column.name] = values

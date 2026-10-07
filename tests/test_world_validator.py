@@ -245,6 +245,10 @@ def infinite_decimal_id(t) -> None:
     orders.loc[0, "merchant_id"] = Decimal("Infinity")
 
 
+def infinite_float(t) -> None:
+    t["merchants"].loc[0, "fulfilment_median_hours"] = float("-inf")
+
+
 def fractional_id_as_text(t) -> None:
     orders = t["order_attempts"]
     orders["merchant_id"] = orders["merchant_id"].astype(str)
@@ -296,6 +300,7 @@ OTHER_RULES = [
     ("schema", fractional_id_as_text),
     ("schema", infinite_cents_as_objects),
     ("schema", infinite_decimal_id),
+    ("schema", infinite_float),
     ("delivery_before_fulfilment", delivery_before_shipment),
     ("schedule_mismatch", schedule_does_not_sum),
     ("label_before_order", label_before_order),
