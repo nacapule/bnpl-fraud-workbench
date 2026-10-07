@@ -146,6 +146,8 @@ def render_value(body: str, sources: Sources) -> str:
             raise KeyError(f"no claim {claim_id!r} in report/claims.yaml")
         return claims_module.sentence(sources.claims[claim_id], sources.summary, sources.wording)
     expression, name, args = _split(body)
+    if name == "p" and (refused := claims_module.selected_reason(expression, sources.summary)):
+        raise FormatError(refused)
     return formats.apply(name, _resolve(expression, sources), args)
 
 

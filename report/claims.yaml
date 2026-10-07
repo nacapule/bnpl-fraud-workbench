@@ -67,6 +67,8 @@ wording:
     baseline: "the baseline world"
     acquisition_surge: "the acquisition surge"
     fraud_mix_shift: "the fraud-mix shift"
+    lag_half: "the world where orders ship in half the time"
+    lag_double: "the world where orders take twice as long to ship"
   capacities:  # a capacity level, the redesigned layout, or a variant of the base replay
     low: "low review capacity"
     base: "base review capacity"

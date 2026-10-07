@@ -41,7 +41,8 @@ world_horizon:
   observed_end: 2025-12-30
 
 # Families share every event before their start, so each seed is fitted and
-# tuned once and tested on three futures. Parameters: config/world.yaml families.
+# tuned once and tested on several futures. Parameters: config/world.yaml
+# families. The fulfilment-lag families are sensitivities (see sensitivity).
 families:
   baseline:
     starts: null
@@ -52,6 +53,12 @@ families:
   fraud_mix_shift:
     starts: 2025-06-01
     description: aged stolen-card sleeper accounts and a larger account-takeover share
+  lag_half:
+    starts: 2025-06-01
+    description: every order from the test window ships in half its drawn time (a sensitivity)
+  lag_double:
+    starts: 2025-06-01
+    description: every order from the test window ships in twice its drawn time (a sensitivity)
 
 seeds:
   canonical: 416             # loaded into MySQL for the SQL library, packets and cases
@@ -87,12 +94,19 @@ tuning:
   report: best in the searched grid and the frontier; a flat result is published as flat
   rule: TO_COMPLETE_AT_FREEZE
 
+# Capacity is analyst time allotted to the fraud queue: one analyst on every
+# covered shift (coverage hours: the layout) with a fixed allotment of review
+# minutes per shift; review minutes per 1,000 orders are reported as realized.
+# Thresholds are tuned at the base and held fixed at low and high.
 capacity:
-  parameters: [coverage_hours, review_minutes_per_1000_orders]
-  base: TO_COMPLETE_AT_FREEZE   # incumbent's fit-window offered minutes on the development worlds / 0.8, whole analysts per shift
-  levels: {low: TO_COMPLETE_AT_FREEZE, base: TO_COMPLETE_AT_FREEZE, high: TO_COMPLETE_AT_FREEZE}
-  redesigned_layout: TO_COMPLETE_AT_FREEZE   # same total minutes, covering the evening arrival peak
-  analyst_loaded_hourly_usd: TO_COMPLETE_AT_FREEZE
+  parameters: [coverage_hours, review_minutes_per_shift]
+  base: >-
+    33 minutes per shift on one analyst per covered shift: the incumbent's
+    fit-window offered minutes, mean 4,593.1 over development worlds 416, 1041
+    and 2718, / 0.8 / 174 shift instances = 33.0
+  levels: {low: 17, base: 33, high: 50}   # minutes per shift: 0.515 and 1.515 times the base; low binds on every development world
+  redesigned_layout: evening, 33 minutes on each shift (the same shift instances, so the same total minutes)
+  analyst_loaded_hourly_usd: 35
 
 metrics:   # per family, across final seeds, paired by seed; counts beside dollars
   - net_contribution_vs_approve_all
@@ -110,15 +124,77 @@ metrics:   # per family, across final seeds, paired by seed; counts beside dolla
   - average_precision           # supporting row
   - brier_score                 # supporting row
 
+# The recommendation rule is applied by core/recommendation.py in the evaluate
+# stage: in the primary cell, and separately in every operating cell (the flip
+# table). "Legitimate" is the adjudicated label at the end of observation (no
+# fraud determination: no_finding or credit_loss); each order counts once per
+# measure.
 reporting:
   per_seed: differences with mean, min-max and sign count (for example 9/10)
-  recommendation_rule: TO_COMPLETE_AT_FREEZE
-  friction_guardrail: TO_COMPLETE_AT_FREEZE
+  recommendation_rule:
+    primary_cell: >-
+      baseline family, base allotment, current layout, policy-specific history,
+      evidence-based reviewer, standard verification
+    diagnostics: >-
+      the frozen-history and perfect-reviewer replays, reported beside the
+      tables and never part of the rule or the flip table
+    eligibility:   # means over the final seeds in the cell; per-seed range reported
+      # declined at checkout, blocked, declined after review, or cancelled after an unanswered hold
+      lost_legitimate_per_10000: {mean_at_most: 100, any_seed_at_most: 200}
+      # held: asked to verify
+      held_legitimate_per_10000: {mean_at_most: 300, any_seed_at_most: 600}
+      # at every priority P0-P3, of the orders entering the review queue in the
+      # test window (an order never decided is a miss); approve-all has no queue
+      service_share_at_least: 0.90
+      service_min_pooled_entries: 50   # fewer entries pooled over seeds: reported, not assessed
+      incumbent_fails: >-
+        a criterion the incumbent fails in the cell becomes "no worse than the
+        incumbent", and the operating review opens by saying today's rules miss
+        the target
+    hurdle:
+      # mean paired improvement over the incumbent, per 1,000 attempted orders
+      mean_improvement_usd_per_1000_orders: 100
+      # strictly positive paired differences needed, by seeds paired (zero is
+      # not positive); with fewer seeds than listed, every seed
+      positive_seeds: {10: 9, 9: 8, 8: 8}
+    choice: >-
+      among eligible challengers that clear the hurdle, the highest mean
+      improvement; otherwise the incumbent stays, and the best challenger's
+      mean, range and sign count are printed
+    ties: [fewer lost legitimate customers, fewer review minutes, the simpler policy]
+    simpler_order: [approve_all, incumbent_rules, tree_depth3, logistic, boosting, hybrid, expected_loss]
+    net_contribution: >-
+      ledger net after the friction cost, less the analyst allotment at
+      capacity.analyst_loaded_hourly_usd per allotted hour, unused minutes
+      included; a policy with no review route releases the allotment and is
+      charged nothing
+    flips: >-
+      the full rule in every operating cell (each family, each allotment level,
+      the evening layout, weak verification, each LTV proxy, each fulfilment
+      lag), never combined; the flip table names the reason, and the verdict
+      reads "holds in N of M cells"
+    p_value: >-
+      none for the selected policy: it is chosen among six challengers, and the
+      sign bar is a consistency rule across simulated worlds, not a
+      significance test
+  friction_guardrail: >-
+    the eligibility caps of the recommendation rule (lost and held legitimate
+    customers); none inside tuning
 
+# Thresholds, models and queue rules are those chosen in the primary cell on
+# each seed: no sensitivity re-tunes, and sensitivities are never combined.
 sensitivity:
-  reviewer_verification_rates: TO_COMPLETE_AT_FREEZE
-  ltv_proxy_usd: TO_COMPLETE_AT_FREEZE
-  fulfilment_lag: TO_COMPLETE_AT_FREEZE
+  reviewer_verification_rates: >-
+    config/policy.yaml reviewer.verification_weak, a replay variant at the base
+    allotment
+  # The friction cost recomputed from the same replays for all seven policies;
+  # the expected-loss policy keeps the configured LTV inside its decision.
+  ltv_proxy_usd: [5, 45]
+  fulfilment_lag:
+    # config/world.yaml fulfilment_lag_factor from the test window on; these
+    # families are generated for the final seeds and replayed at the base
+    # allotment only
+    families: {lag_half: 0.5, lag_double: 2.0}
 
 # The final driver refuses to generate a final-seed world unless this marker
 # exists, every listed file matches its recorded SHA-256, the marker and the
@@ -134,4 +210,5 @@ freeze:
     - policy/fraud-policy.md
     - core/actions.py
     - core/evidence.py
+    - core/recommendation.py
     # plus the LLM referee module once it exists

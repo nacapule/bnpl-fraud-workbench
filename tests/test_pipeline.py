@@ -16,7 +16,14 @@ import pytest
 import pipeline
 from core import protocol as proto
 from core import world as world_module
-from core.results import Metric, VersionMismatch, read_result, read_summary
+from core.results import (
+    Metric,
+    StageResult,
+    VersionMismatch,
+    read_result,
+    read_summary,
+    write_result,
+)
 
 REPO = Path(__file__).resolve().parents[1]
 MINI_WORLD = REPO / "tests" / "fixtures" / "mini_world"
@@ -39,13 +46,20 @@ def test_profiles_choose_seeds_and_where_results_go(tmp_path: Path) -> None:
     protocol = proto.load_protocol()
     dev = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path)
     assert dev.seeds == protocol.development_seeds
-    assert set(dev.families) == set(protocol.family_starts)
+    lag = set(protocol.base_only_families)
+    assert lag == {"lag_half", "lag_double"}
+    assert dev.base_only_families == protocol.base_only_families
+    assert set(dev.families) == set(protocol.family_starts) - lag  # lag families: final only
     assert dev.database_world == pipeline.WorldRef(protocol.canonical_seed, "baseline")
     assert dev.results_dir == tmp_path / "dev" / "results"
     assert dev.docs_dir == tmp_path / "dev" / "docs"
 
     final = pipeline.make_run(pipeline.PROFILES["final"], runs=tmp_path)
     assert final.seeds == protocol.final_seeds
+    assert set(final.families) == set(protocol.family_starts)
+    named = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path,
+                              families=["baseline", "lag_half"])
+    assert named.families == ("baseline", "lag_half")
     assert final.results_dir == pipeline.RESULTS and final.docs_dir == REPO
     assert pipeline.WorldRef(protocol.canonical_seed, "baseline") in final.all_worlds
     assert protocol.canonical_seed in final.fit_seeds
@@ -722,10 +736,14 @@ def outcome(seed: int, policy: str, net: int, *, family: str = "baseline", cell=
         "seed": seed, "family": family, "policy": policy,
         **dict(zip(pipeline.CELL_COLUMNS, cell, strict=True)),
         "evaluated": True, "policy_version": f"{policy}-v1",
-        "net_cents": net, "loss_cents": 5_000, "gmv_cents": 1_000_000,
-        "legitimate_held": held, "legitimate_declined": 0, "legitimate_orders": legit,
+        "orders": 20_000, "net_cents": net, "loss_cents": 5_000, "gmv_cents": 1_000_000,
+        "legitimate_held": held, "legitimate_declined": 0, "legitimate_cancelled": 0,
+        "legitimate_orders": legit, "friction_cost_cents": 0,
         "review_minutes_used": used, "available_minutes": available,
+        "review_band": int(policy != "approve_all"),
         "decided_after_shipping": 2, "wait_p90_minutes": 30,
+        **{f"{column}_{p}": 0 for column in ("reviews", "sla_met")
+           for p in ("p0", "p1", "p2", "p3")},
     }
 
 
@@ -809,6 +827,84 @@ def test_the_expected_cells_are_the_replays_staffing_and_variants() -> None:
     assert cells[:len(stage.VARIANTS)] == tuple((base.level, base.layout, *variant)
                                                for variant in stage.VARIANTS)
     assert len(cells) == len(stage.VARIANTS) + len(staffing) - 1
+
+
+WEAK = ("base", "current", "policy", "evidence", "verification_weak")
+PERFECT = ("base", "current", "policy", "perfect", "verification")
+LOW = ("low", "current", "policy", "evidence", "verification")
+EVENING = ("base", "evening", "policy", "evidence", "verification")
+
+
+def test_the_rule_is_applied_in_the_primary_cell_and_each_sensitivity_alone() -> None:
+    cells = (BASE, FROZEN, PERFECT, WEAK, LOW, EVENING,
+             ("low", "evening", "policy", "evidence", "verification"),  # two at once
+             ("low", "current", "policy", "evidence", "verification_weak"))
+    where = pipeline.operating_cells(("baseline", "lag_half", "acquisition_surge"), cells,
+                                     "current", (500, 4_500))
+    assert [(c.name, c.varies, c.family, c.capacity, c.ltv_cents) for c in where] == [
+        ("primary", "primary", "baseline", "base", None),
+        ("acquisition_surge", "family", "acquisition_surge", "base", None),
+        ("lag_half", "family", "lag_half", "base", None),
+        ("base_weak_verification", "verification", "baseline", "base_weak_verification", None),
+        ("low", "allotment", "baseline", "low", None),
+        ("redesigned_layout", "layout", "baseline", "redesigned_layout", None),
+        ("ltv_5_usd", "ltv", "baseline", "base", 500),
+        ("ltv_45_usd", "ltv", "baseline", "base", 4_500),
+    ]
+    assert where[0].where == dict(zip(pipeline.CELL_COLUMNS, BASE, strict=True))
+    with pytest.raises(pipeline.PipelineError, match="baseline"):
+        pipeline.operating_cells(("acquisition_surge",), cells, "current")
+    with pytest.raises(pipeline.PipelineError, match="no base cell"):
+        pipeline.operating_cells(("baseline",), (LOW, FROZEN), "current")
+
+
+def test_a_lag_family_is_evaluated_at_the_main_cell_alone() -> None:
+    rows = outcomes() + outcomes(FROZEN)
+    lag = [r | {"family": "lag_half"} for r in outcomes()]
+    metrics, table = pipeline.evaluate_outcomes(
+        rows + lag, (1, 2, 3), ("baseline", "lag_half"), POLICIES, (BASE, FROZEN), "current",
+        base_only=("lag_half",))
+    assert "evaluate.net_contribution.lag_half.base.hybrid" in metrics
+    assert "evaluate.net_contribution.lag_half.base_frozen_history.hybrid" not in metrics
+    assert "evaluate.net_contribution.baseline.base_frozen_history.hybrid" in metrics
+    with pytest.raises(pipeline.PipelineError, match="unexpected"):  # replayed in every cell
+        pipeline.evaluate_outcomes(
+            rows + lag + [r | {"family": "lag_half"} for r in outcomes(FROZEN)], (1, 2, 3),
+            ("baseline", "lag_half"), POLICIES, (BASE, FROZEN), "current",
+            base_only=("lag_half",))
+    with pytest.raises(pipeline.PipelineError, match="missing"):
+        pipeline.evaluate_outcomes(rows + lag, (1, 2, 3), ("baseline", "lag_half"), POLICIES,
+                                   (BASE, FROZEN), "current")
+
+
+def test_the_evaluate_stage_publishes_the_recommendation_and_its_flips(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(pipeline, "expected_cells", lambda policy_cfg: (BASE, FROZEN, WEAK))
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
+    policies = tuple(run.protocol.raw["policies"])
+    net = {"approve_all": 0, "incumbent_rules": 1_000_000, "hybrid": 1_500_000}
+    rows = [outcome(0, policy, net.get(policy, 900_000), cell=cell)
+            for cell in (BASE, FROZEN, WEAK) for policy in policies]
+    write_result(StageResult(stage="replay", versions={}, inputs={}, metrics={},
+                             tables={"replay.outcomes": rows}), run.results_dir)
+    output = pipeline.stage_evaluate(run)
+    StageResult(stage="evaluate", versions={}, inputs={}, metrics=output.metrics,
+                tables=output.tables, notes=output.notes)  # fits a result file
+    flips = output.tables["evaluate.flips"]
+    assert [r["cell"] for r in flips] == ["primary", "base_weak_verification", "ltv_5_usd",
+                                          "ltv_45_usd"]
+    assert {r["recommended"] for r in flips} == {"hybrid"}
+    assert output.metrics["evaluate.recommendation.holds"].value == 1
+    assert any("1 seed, fewer than the 8" in note for note in output.notes)
+    assert any("no p-value" in note for note in output.notes)
+    assert "evaluate.net_contribution.vs_incumbent_rules.baseline.base.hybrid" in output.metrics
+    run.protocol = proto.parse_protocol(
+        {**run.protocol.raw, "reporting": {"recommendation_rule": proto.PLACEHOLDER}})
+    with pytest.raises(pipeline.PipelineError, match="evaluate: the protocol's recommendation"):
+        pipeline.stage_evaluate(run)
+    with pytest.raises(pipeline.PipelineError, match="recommendation rule is incomplete"):
+        pipeline.preflight(pipeline.PROFILES["dev"], run)
 
 
 def test_a_policy_with_no_feasible_point_is_not_evaluated_on_that_seed() -> None:

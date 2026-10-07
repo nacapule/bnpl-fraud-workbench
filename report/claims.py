@@ -30,6 +30,12 @@ The tests, each on a paired difference (a key with a ``vs_<reference>`` segment)
     happened for the policy and not the reference) and ``only_reference`` in
     the second.
 
+No test is published of a policy the recommendation rule selected (in the cell it
+was selected in): it was chosen among the challengers, so a p-value would overstate
+the evidence. The rule's own result (``evaluate.flips``, ``evaluate.recommendation``)
+states it instead; :func:`selected_reason` refuses such a claim, and the renderer's
+``p`` format.
+
 ``no_detected_difference`` (the test is not significant: the data cannot tell,
 which is not evidence of equality) and ``equivalent`` (every seed's difference,
 or the whole interval, lies within ``±margin``, in the metric's own unit; not
@@ -51,7 +57,7 @@ from typing import Any
 
 import yaml
 
-from core.results import Metric, metric
+from core.results import Metric, metric, table
 from core.stats import mcnemar_exact, sign_test
 from report import formats
 from report.formats import FormatError, Value
@@ -72,6 +78,27 @@ class ClaimError(ValueError):
 def is_contrast(key: str) -> bool:
     """A paired difference against a reference: a key with a ``vs_<reference>`` segment."""
     return any(part.startswith("vs_") for part in key.split("."))
+
+
+def selected_reason(key: str, summary: Mapping[str, Any]) -> str | None:
+    """Why no test of ``key`` may be published, or ``None``: the key's family, capacity
+    and policy (its last three plain segments) are a cell where the recommendation
+    rule selected that policy (``evaluate.flips``), whatever the metric."""
+    try:
+        flips = table(summary, "evaluate.flips")
+    except KeyError:
+        return None
+    plain = [part for part in key.split(".") if not part.startswith("vs_")]
+    if len(plain) < 4 or plain[0] != "evaluate":
+        return None
+    family, capacity, policy = plain[-3:]
+    for row in flips:
+        if (row.get("family"), row.get("capacity"), row.get("recommended")) == \
+                (family, capacity, policy):
+            return (f"{policy} was selected by the recommendation rule among the challengers "
+                    f"({family}, {capacity}), so no test or p-value of it is published; "
+                    f"state the rule's result instead")
+    return None
 
 
 @dataclass(frozen=True)
@@ -353,6 +380,9 @@ def sentence(claim: Claim, summary: Mapping[str, Any], wording: Wording) -> str:
     support it, so a stale claim stops the render.
     """
     check = claim.check(wording)
+    for key in check.keys or (check.key,):
+        if refused := selected_reason(key, summary):
+            raise ClaimError(refused)
     try:
         reason = support(check, summary)
     except KeyError as error:

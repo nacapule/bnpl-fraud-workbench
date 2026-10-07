@@ -1,9 +1,9 @@
 """The study's pipeline: one linear run from world generation to rendered documents.
 
-    python pipeline.py run --profile dev            # development seeds, every family
+    python pipeline.py run --profile dev            # development seeds, all but the lag families
     python pipeline.py run --profile ci             # one small world, end to end
     python pipeline.py run --profile canonical      # seed 416 at full size, loaded into MySQL
-    python pipeline.py run --profile final          # final seeds; refused until the freeze
+    python pipeline.py run --profile final          # final seeds, all families; needs the freeze
     python pipeline.py run --world DIR              # an existing world instead of generating one
     python pipeline.py stages                       # list the stages
 
@@ -61,6 +61,7 @@ if str(REPO) not in sys.path:
 
 from core import config as config_module  # noqa: E402
 from core import protocol as protocol_module  # noqa: E402
+from core import recommendation  # noqa: E402
 from core import world as world_module  # noqa: E402
 from core.config import db_settings, mysql_reachable  # noqa: E402
 from core.results import (  # noqa: E402
@@ -135,7 +136,9 @@ class WorldRef:
 class Profile:
     name: str
     seeds: str  # "development", "final" or "canonical": which protocol seeds
-    families: tuple[str, ...] | None  # None: every family in the protocol
+    # None: every family in the protocol (the final profile) or every family but the
+    # fulfilment-lag sensitivities (the others)
+    families: tuple[str, ...] | None
     scale: float
     publish: bool  # writes the committed results/ and documents
 
@@ -170,6 +173,12 @@ class Run:
     def worlds(self) -> list[WorldRef]:
         """The evaluation worlds: every seed in every family."""
         return [WorldRef(seed, family) for seed in self.seeds for family in self.families]
+
+    @property
+    def base_only_families(self) -> tuple[str, ...]:
+        """Sensitivity families the replay runs at the base allotment only (current
+        layout, main variant): the protocol's fulfilment-lag families."""
+        return self.protocol.base_only_families
 
     @property
     def fit_seeds(self) -> tuple[int, ...]:
@@ -256,7 +265,9 @@ def make_run(profile: Profile, *, name: str | None = None, seeds: list[int] | No
             "canonical": (protocol.canonical_seed,),
         }[profile.seeds]
         chosen_seeds = tuple(seeds) if seeds else tuple(default_seeds)
-        chosen_families = tuple(families or profile.families or protocol.family_starts)
+        every = tuple(family for family in protocol.family_starts
+                      if profile.name == "final" or family not in protocol.base_only_families)
+        chosen_families = tuple(families or profile.families or every)
         unknown = sorted(set(chosen_families) - set(protocol.family_starts))
         if unknown:
             raise PipelineError(f"unknown families {unknown}")
@@ -881,11 +892,58 @@ def expected_cells(policy_cfg: Mapping[str, Any]) -> tuple[tuple[str, ...], ...]
     return tuple(cells)
 
 
+def main_cell(cells: tuple[tuple[str, ...], ...], current_layout: str) -> tuple[str, ...]:
+    """The replay's main cell: the base level (or the configured roster) on the current
+    layout with the main variant."""
+    for cell in cells:
+        if cell[0] in ("base", "configured") and cell[1] == current_layout \
+                and cell[2:] == MAIN_VARIANT:
+            return cell
+    raise PipelineError("evaluate: the replay has no base cell on the current layout")
+
+
+def operating_cells(families: tuple[str, ...], cells: tuple[tuple[str, ...], ...],
+                    current_layout: str, ltv_cents: tuple[int, ...] = ()
+                    ) -> list[recommendation.OperatingCell]:
+    """Where the recommendation rule is applied: the primary cell (baseline family, main
+    cell), then each sensitivity alone: every other family at the main cell; every cell
+    that differs from it in exactly one of capacity level, layout and verification
+    (frozen-history and perfect-reviewer replays are diagnostics, never here); and each
+    LTV proxy in the protocol at the main cell."""
+    if BASELINE not in families:
+        raise PipelineError("evaluate: the recommendation needs the baseline family")
+    main = main_cell(cells, current_layout)
+
+    def at(name: str, varies: str, family: str, cell: tuple[str, ...],
+           ltv: int | None = None) -> recommendation.OperatingCell:
+        return recommendation.OperatingCell(
+            name, varies, family, capacity_name(cell, current_layout),
+            dict(zip(CELL_COLUMNS, cell, strict=True)), ltv)
+
+    out = [at("primary", "primary", BASELINE, main)]
+    out += [at(family, "family", family, main) for family in sorted(families)
+            if family != BASELINE]
+    for cell in cells:
+        level, layout, history, reviewer, verification = cell
+        if (history, reviewer) != MAIN_VARIANT[:2]:
+            continue  # a diagnostic replay
+        differs = [what for what, changed in (("allotment", level != main[0]),
+                                              ("layout", layout != main[1]),
+                                              ("verification", verification != main[4]))
+                   if changed]
+        if len(differs) == 1:  # sensitivities are never combined
+            out.append(at(capacity_name(cell, current_layout), differs[0], BASELINE, cell))
+    out += [at(recommendation.ltv_name(cents), "ltv", BASELINE, main, cents)
+            for cents in ltv_cents]
+    return out
+
+
 def _check_grid(evaluated: pd.DataFrame, skipped: pd.DataFrame, seeds: tuple[int, ...],
                 families: tuple[str, ...], policies: tuple[str, ...],
-                cells: tuple[tuple[str, ...], ...]) -> None:
-    """Every family, policy and cell on exactly the run's seeds, once each; a policy
-    with no feasible point on a seed has one not-evaluated row there instead."""
+                cells: Mapping[str, tuple[tuple[str, ...], ...]]) -> None:
+    """Every family, policy and the family's cells on exactly the run's seeds, once
+    each; a policy with no feasible point on a seed has one not-evaluated row there
+    instead."""
     found = set(zip(evaluated["family"], *(evaluated[c] for c in CELL_COLUMNS),
                     evaluated["policy"], evaluated["seed"].astype(int), strict=True))
     unfit = set(zip(skipped["family"], skipped["policy"], skipped["seed"].astype(int),
@@ -894,8 +952,8 @@ def _check_grid(evaluated: pd.DataFrame, skipped: pd.DataFrame, seeds: tuple[int
         raise PipelineError(f"evaluate: approve-all must always be evaluated, first {bad[0]}")
     expected = {
         (family, *cell, policy, seed)
-        for family in families for cell in cells for policy in policies for seed in seeds
-        if (family, policy, seed) not in unfit
+        for family in families for cell in cells[family] for policy in policies
+        for seed in seeds if (family, policy, seed) not in unfit
     }
     if missing := sorted(expected - found):
         raise PipelineError(f"evaluate: {len(missing)} outcome rows missing, first {missing[0]}")
@@ -909,7 +967,8 @@ def _check_grid(evaluated: pd.DataFrame, skipped: pd.DataFrame, seeds: tuple[int
 def evaluate_outcomes(outcomes: list[dict[str, Any]], seeds: tuple[int, ...],
                       families: tuple[str, ...], policies: tuple[str, ...],
                       cells: tuple[tuple[str, ...], ...], current_layout: str,
-                      window: str = "test") -> tuple[dict[str, Metric], list[dict[str, Any]]]:
+                      window: str = "test", base_only: tuple[str, ...] = ()
+                      ) -> tuple[dict[str, Metric], list[dict[str, Any]]]:
     """Per-seed paired metrics from the replay's outcome rows.
 
     For each family, cell (capacity level, layout, history, reviewer, verification;
@@ -917,7 +976,8 @@ def evaluate_outcomes(outcomes: list[dict[str, Any]], seeds: tuple[int, ...],
     per-seed spread, and the per-seed paired difference against approve-all and
     against the incumbent rules (both must be among ``policies``), within the cell.
     Differences of shares and rates are in basis points. The rows must cover every
-    family, policy and cell on exactly the run's seeds, once each. A policy with no
+    family, policy and cell on exactly the run's seeds, once each; a family in
+    ``base_only`` has the main cell alone (:func:`main_cell`). A policy with no
     feasible operating point on a seed (a row with ``evaluated`` false) is not
     evaluated there: its metrics, and the comparisons that need it, carry no value
     and name the seeds.
@@ -930,6 +990,8 @@ def evaluate_outcomes(outcomes: list[dict[str, Any]], seeds: tuple[int, ...],
     names = {cell: capacity_name(cell, current_layout) for cell in cells}
     if len(set(names.values())) != len(names) or len(names) != len(cells):
         raise PipelineError(f"evaluate: cells repeat or share a name: {sorted(names.values())}")
+    main = main_cell(cells, current_layout)
+    family_cells = {family: (main,) if family in base_only else cells for family in families}
     frame = pd.DataFrame(outcomes)
     if "evaluated" not in frame.columns:
         raise PipelineError("evaluate: the replay's outcome rows lack columns ['evaluated']")
@@ -943,14 +1005,14 @@ def evaluate_outcomes(outcomes: list[dict[str, Any]], seeds: tuple[int, ...],
         raise PipelineError(f"evaluate: the replay's outcome rows lack columns {missing}")
     if evaluated.duplicated(keys).any() or skipped.duplicated(["seed", "family", "policy"]).any():
         raise PipelineError("evaluate: repeated outcome rows for a seed, family, cell, policy")
-    _check_grid(evaluated, skipped, seeds, families, policies, cells)
+    _check_grid(evaluated, skipped, seeds, families, policies, family_cells)
     unfit: dict[tuple[str, str], list[int]] = {}
     for row in skipped.itertuples(index=False):
         unfit.setdefault((row.family, row.policy), []).append(int(row.seed))
     metrics: dict[str, Metric] = {}
     table_rows: list[dict[str, Any]] = []
     for family in sorted(families):
-        for cell in cells:
+        for cell in family_cells[family]:
             capacity = names[cell]
             in_cell = evaluated["family"].eq(family)
             for column, value in zip(CELL_COLUMNS, cell, strict=True):
@@ -1034,9 +1096,20 @@ def _summary_rows(metrics: dict[str, Metric], family: str, capacity: str,
     return rows
 
 
+def recommendation_rule(run: Run, policy_cfg: Mapping[str, Any] | None = None
+                        ) -> recommendation.Rule:
+    """The protocol's recommendation rule, with the costs from ``config/policy.yaml``."""
+    policy_cfg = config_module.load("policy") if policy_cfg is None else policy_cfg
+    try:
+        return recommendation.Rule.from_protocol(run.protocol.raw, policy_cfg)
+    except recommendation.RuleError as error:
+        raise PipelineError(f"evaluate: {error}") from error
+
+
 def stage_evaluate(run: Run) -> StageOutput:
     """Pair the replay's outcomes by seed: each policy against approve-all and the incumbent,
-    within each capacity level, shift layout and replay variant."""
+    within each capacity level, shift layout and replay variant; then the protocol's
+    recommendation rule in the primary cell and in each sensitivity alone."""
     replay_file = run.results_dir / "replay.json"
     if not replay_file.exists():
         raise PipelineError("evaluate: run the replay stage first")
@@ -1044,10 +1117,35 @@ def stage_evaluate(run: Run) -> StageOutput:
     if outcomes is None:
         raise PipelineError("evaluate: the replay result has no replay.outcomes table")
     policy_cfg = config_module.load("policy")
-    metrics, rows = evaluate_outcomes(outcomes, run.seeds, run.families,
-                                      tuple(run.protocol.raw["policies"]),
-                                      expected_cells(policy_cfg), policy_cfg["roster"]["layout"])
-    return StageOutput(metrics=metrics, tables={"evaluate.policies": rows})
+    current, cells = policy_cfg["roster"]["layout"], expected_cells(policy_cfg)
+    policies = tuple(run.protocol.raw["policies"])
+    metrics, rows = evaluate_outcomes(outcomes, run.seeds, run.families, policies, cells,
+                                      current, base_only=run.base_only_families)
+    rule = recommendation_rule(run, policy_cfg)
+    where = operating_cells(run.families, cells, current, rule.ltv_sensitivity_cents)
+    try:
+        results = recommendation.apply_rule(
+            [row for row in outcomes if row["evaluated"] is True], where, rule, policies)
+        rule_metrics, tables = recommendation.outputs(results, rule)
+    except recommendation.RuleError as error:
+        raise PipelineError(f"evaluate: {error}") from error
+    if shared := sorted(set(metrics) & set(rule_metrics)):
+        raise PipelineError(f"evaluate: two metrics named {shared[0]}")
+    primary = results[0]
+    notes = [f"recommendation rule (experiments/protocol.yaml reporting.recommendation_rule) "
+             f"in {len(where)} operating cells; no p-value is computed for the selected "
+             f"policy, which is chosen among the challengers"]
+    if primary.incumbent_misses:
+        notes.append("today's rules miss the target in the primary cell on "
+                     + ", ".join(primary.incumbent_misses)
+                     + ": those criteria become no worse than the incumbent")
+    minimum = min(rule.positive_seeds)
+    if len(run.seeds) < minimum:
+        notes.append(f"{len(run.seeds)} seed{'s' * (len(run.seeds) != 1)}, fewer than the "
+                     f"{minimum} the rule's sign bar is written for: a challenger needs every "
+                     "paired seed positive")
+    return StageOutput(metrics={**metrics, **rule_metrics},
+                       tables={"evaluate.policies": rows, **tables}, notes=notes)
 
 
 def stage_llm(run: Run) -> StageOutput:
@@ -1093,8 +1191,9 @@ STAGES = (
           lambda run: _database_world(run) + _repo_inputs("db/policy_tables.sql")
           + ["results/tune.json"]),
     Stage("evaluate", stage_evaluate, ("world", "features", "policy", "protocol", "tuning"),
-          "paired comparisons across seeds",
-          lambda run: ["results/replay.json", *_repo_inputs("config/policy.yaml")]),
+          "paired comparisons across seeds and the recommendation rule",
+          lambda run: ["results/replay.json", *_repo_inputs("config/policy.yaml",
+                                                            "experiments/protocol.yaml")]),
     Stage("llm", stage_llm, ("benchmark", "policy"), "offline LLM benchmark replay"),
 )
 STAGE_NAMES = tuple(stage.name for stage in STAGES)
@@ -1327,6 +1426,7 @@ def preflight(profile: Profile, run: Run) -> None:
     for ref in run.all_worlds:
         protocol_module.check_seed(ref.seed)
     tuning_history(run)
+    recommendation_rule(run)
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -67,6 +67,58 @@ def test_broken_protocols_are_rejected(raw: dict, path: tuple, value, message: s
         proto.parse_protocol(broken)
 
 
+def test_the_fulfilment_lag_families_are_sensitivities_from_the_test_window(raw: dict) -> None:
+    p = proto.parse_protocol(raw)
+    assert p.base_only_families == ("lag_half", "lag_double")
+    assert all(p.family_starts[f] == p.windows["test"].start for f in p.base_only_families)
+    assert raw["sensitivity"]["fulfilment_lag"]["families"] == {"lag_half": 0.5,
+                                                                 "lag_double": 2.0}
+    open_entry = copy.deepcopy(raw)
+    open_entry["sensitivity"]["fulfilment_lag"] = proto.PLACEHOLDER
+    assert proto.parse_protocol(open_entry).base_only_families == ()
+    for families, message in (({"lag_triple": 3.0}, "is not a family"),
+                              ({"baseline": 0.5}, "must start at the test window"),
+                              ({"lag_half": 0}, "positive number"),
+                              ({}, "must map each family")):
+        broken = copy.deepcopy(raw)
+        broken["sensitivity"]["fulfilment_lag"]["families"] = families
+        with pytest.raises(proto.ProtocolError, match=message):
+            proto.parse_protocol(broken)
+
+
+def test_the_protocol_families_are_the_generators(raw: dict) -> None:
+    from core import config
+    from simulator import generate
+
+    p = proto.parse_protocol(raw)
+    assert set(p.family_starts) == set(generate.FAMILIES)
+    assert set(p.base_only_families) == set(generate.LAG_FAMILIES)
+    world = config.load("world")["families"]
+    for name, factor in raw["sensitivity"]["fulfilment_lag"]["families"].items():
+        assert world[name]["fulfilment_lag_factor"] == factor
+
+
+def test_the_recommendation_rule_and_its_code_are_frozen(raw: dict) -> None:
+    assert "core/recommendation.py" in raw["freeze"]["files"]
+    assert proto.PLACEHOLDER not in yaml.safe_dump(raw["reporting"])
+
+
+def test_the_protocol_states_the_configured_capacity(raw: dict) -> None:
+    from core import config
+
+    capacity = config.load("policy")["capacity"]
+    if not capacity.get("levels"):
+        pytest.skip("the capacity levels are not configured yet")
+    stated = raw["capacity"]["levels"]
+    assert set(stated) == set(capacity["levels"])
+    for name, entry in capacity["levels"].items():  # one analyst, the stated minutes, per shift
+        assert set(entry["review_minutes_per_shift"].values()) == {stated[name]}
+        assert set(entry["analysts_per_shift"].values()) == {1}
+    redesigned = capacity["redesigned"]
+    assert raw["capacity"]["redesigned_layout"].startswith(f"{redesigned['layout']}, ")
+    assert set(redesigned["review_minutes_per_shift"].values()) == {stated["base"]}
+
+
 def test_final_seeds_must_not_overlap_development(raw: dict) -> None:
     broken = copy.deepcopy(raw)
     broken["seeds"]["final"][0] = 1041

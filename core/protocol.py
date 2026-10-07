@@ -72,6 +72,8 @@ class Protocol:
     order_start: pd.Timestamp
     order_end: pd.Timestamp
     observed_end: pd.Timestamp  # exclusive
+    # Sensitivity families replayed at the base allotment only (``sensitivity.fulfilment_lag``)
+    base_only_families: tuple[str, ...] = ()
 
     @property
     def observed_until(self) -> pd.Timestamp:
@@ -106,6 +108,23 @@ def _placeholders(node: Any, path: str = "") -> Iterable[str]:
         yield path
 
 
+def _base_only(raw: dict[str, Any]) -> tuple[str, ...]:
+    """The fulfilment-lag families (``sensitivity.fulfilment_lag.families``: name to
+    lag factor), or none while the entry is a placeholder."""
+    entry = (raw.get("sensitivity") or {}).get("fulfilment_lag", PLACEHOLDER)
+    if entry == PLACEHOLDER:
+        return ()
+    families = entry.get("families") if isinstance(entry, dict) else None
+    if not isinstance(families, dict) or not families:
+        raise ProtocolError("sensitivity.fulfilment_lag.families must map each family to its "
+                            "lag factor")
+    for name, factor in families.items():
+        if isinstance(factor, bool) or not isinstance(factor, int | float) or not factor > 0:
+            raise ProtocolError(f"sensitivity.fulfilment_lag: {name}'s lag factor must be a "
+                                f"positive number, got {factor!r}")
+    return tuple(families)
+
+
 def parse_protocol(raw: dict[str, Any]) -> Protocol:
     """Build a :class:`Protocol` from the parsed YAML and check its rules."""
     try:
@@ -129,6 +148,7 @@ def parse_protocol(raw: dict[str, Any]) -> Protocol:
             order_start=_ts(horizon["order_start"]),
             order_end=_ts(horizon["order_end"]),
             observed_end=_ts(horizon["observed_end"]),
+            base_only_families=_base_only(raw),
         )
     except KeyError as error:
         raise ProtocolError(f"protocol is missing {error}") from error
@@ -174,6 +194,11 @@ def _check(p: Protocol) -> None:
     for family, starts in p.family_starts.items():
         if starts is not None and starts != p.windows["test"].start:
             problems.append(f"family {family} must start at the test window")
+    for family in p.base_only_families:
+        if family not in p.family_starts:
+            problems.append(f"sensitivity family {family} is not a family")
+        elif p.family_starts[family] is None:
+            problems.append(f"sensitivity family {family} must start at the test window")
     minimum = int(p.raw["seeds"].get("minimum_final", 8))
     if len(set(p.final_seeds)) != len(p.final_seeds) or len(p.final_seeds) < minimum:
         problems.append(f"need at least {minimum} distinct final seeds")

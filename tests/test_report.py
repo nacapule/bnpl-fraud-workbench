@@ -24,6 +24,7 @@ from report.render import (
     out_of_sync,
     render,
     render_all,
+    render_value,
 )
 
 NET_SEEDS = [150_000, 90_000, 200_000, -20_000, 130_000, 110_000, 95_000, 140_000, 120_000,
@@ -45,6 +46,10 @@ def count(value: int) -> Metric:
 
 
 def summary() -> dict:
+    return assemble_summary([_replay_stage()])
+
+
+def _fixture_metrics() -> dict:
     one_seed = {1: 1_000_000, **{seed: 0 for seed in range(2, 11)}}
     metrics = {
         "llm.accuracy.v1": rate(60, 200),
@@ -81,7 +86,12 @@ def summary() -> dict:
                                           window="test", seeds=SeedSpread(
                                               {seed: 2 for seed in range(1, 11)})),
     }
-    stage = StageResult(
+    return metrics
+
+
+def _replay_stage(metrics: dict | None = None) -> StageResult:
+    metrics = _fixture_metrics() if metrics is None else metrics
+    return StageResult(
         stage="replay",
         versions={"world": "w1"},
         inputs={},
@@ -93,7 +103,6 @@ def summary() -> dict:
              "evaluated": False, "held_bps": 12.5, "seeds": 10, "used_share_vs_rules_bps": 2500},
         ]},
     )
-    return assemble_summary([stage])
 
 
 @pytest.fixture
@@ -681,6 +690,39 @@ def test_each_test_and_direction_says_what_it_shows() -> None:
     assert written(policy="v2", reference="v1", metric="right", test="mcnemar", key=None,
                    keys=pair) == ("Prompt v2 got more cases right than prompt v1 (32 against 5 "
                                   "discordant cases, exact McNemar test, p < 0.001).")
+
+
+def _with_selection(recommended: str | None) -> dict:
+    """The fixture summary plus an evaluate stage whose rule selected ``recommended`` in
+    the surge family at high capacity."""
+    gain = cents(123_456, dict(enumerate(NET_SEEDS, start=1)))
+    stage = StageResult(
+        stage="evaluate", versions={"world": "w1"}, inputs={},
+        metrics={"evaluate.rule_net_per_1000_orders.vs_incumbent.surge.high.hybrid": gain},
+        tables={"evaluate.flips": [
+            {"cell": "primary", "family": "baseline", "capacity": "base",
+             "recommended": None},
+            {"cell": "surge", "family": "surge", "capacity": "high",
+             "recommended": recommended}]})
+    return assemble_summary([_replay_stage(), stage])
+
+
+def test_no_test_or_p_value_is_published_for_the_selected_policy() -> None:
+    selected = _with_selection("hybrid")
+    record = claim(key=None, family="surge", capacity="high")
+    with pytest.raises(claims_module.ClaimError, match="selected by the recommendation rule"):
+        claims_module.sentence(record, selected, WORDING)
+    sources = Sources(summary=selected)
+    for key in ("evaluate.net.vs_incumbent.surge.high.hybrid",
+                "evaluate.rule_net_per_1000_orders.vs_incumbent.surge.high.hybrid"):
+        with pytest.raises(FormatError, match="no test or p-value"):
+            render_value(f"{key} | p", sources)
+        assert render_value(f"{key} | signs", sources) == "positive on 9/10 seeds"
+    # another policy, or a cell where the rule kept the incumbent, is tested as before
+    unselected = _with_selection(None)
+    assert claims_module.sentence(record, unselected, WORDING).endswith("p = 0.021).")
+    assert render_value("evaluate.net.vs_incumbent.surge.high.hybrid | p",
+                        Sources(summary=unselected)) == "p = 0.021"
 
 
 def test_a_claim_the_results_no_longer_support_cannot_be_written() -> None:
