@@ -1,10 +1,11 @@
 """Unmatched-token check: concrete tokens in memo text, looked up in the packet.
 
 A memo's text is scanned for concrete tokens: timestamps, money amounts, entity
-ids (a short letter prefix, an underscore and digits, such as ``a_2899019``) and
-plain numbers. A token is matched when the packet shown to the model contains it:
+ids (a short letter prefix, an underscore and digits, such as ``a_2899019``, or a
+packet placeholder such as ``D1`` or ``D-7QX``) and plain numbers. A token is
+matched when the packet shown to the model contains it:
 
-* an entity id only as a whole identifier, with no letter, digit or underscore
+* an entity id only as a whole identifier, with no letter, digit, underscore or hyphen
   on either side, so ``DEV_42`` does not match ``OTHERDEV_42X``;
 * a number at numeric token boundaries (``7`` does not match ``1370.55``), or
   when some packet number rounds to it at the precision the text uses
@@ -52,12 +53,16 @@ _POLICY_REFERENCE = re.compile(
 )
 _MONEY = re.compile(rf"(?:{_SIGN})?\$\s?[{_MINUS}]?\d[\d,]*(?:\.\d+)?")
 _IDENTIFIER = re.compile(r"(?<![A-Za-z0-9_])[A-Za-z]{1,8}_\d+(?![A-Za-z0-9_])")
+# Packet placeholders for entities: a prefix letter and a number (``O1``, ``D1``), or a
+# prefix letter, a hyphen and three letters or digits (``D-7QX``) in a renamed probe.
+_PLACEHOLDER = re.compile(r"(?<![A-Za-z0-9_-])[OUMDCA](?:\d+|-[A-Z0-9]{3})(?![A-Za-z0-9_-])")
 _NUMBER = re.compile(rf"(?:{_SIGN})?\b\d+(?:\.\d+)?\b")
 _NEGATIVE = re.compile(rf"{_SIGN}\d+(?:\.\d+)?")
 _PATTERNS = (
     ("timestamp", _TIMESTAMP),
     ("money", _MONEY),
     ("id", _IDENTIFIER),
+    ("id", _PLACEHOLDER),
     ("number", _NUMBER),
 )
 
@@ -147,7 +152,7 @@ def _boundary(kind: str, normalized: str, archived: bool) -> re.Pattern[str]:
     if archived:
         pattern = rf"(?<![0-9.]){escaped}(?![0-9.])"
     elif kind == "id":
-        pattern = rf"(?<![A-Za-z0-9_]){escaped}(?![A-Za-z0-9_])"
+        pattern = rf"(?<![A-Za-z0-9_-]){escaped}(?![A-Za-z0-9_-])"
     elif normalized.startswith("-"):
         pattern = rf"{_NOT_BEFORE_SIGN}{escaped}(?![0-9.])"
     else:

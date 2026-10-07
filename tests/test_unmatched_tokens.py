@@ -161,6 +161,31 @@ def test_summarize_counts_texts():
     assert summarize(checks) == {"n_texts": 4, "n_with_tokens": 3, "n_derived": 1, "n_unmatched": 1}
 
 
+FP2_PACKET = {"order": {"order": "O1", "account": "U1", "device": "D1"},
+              "context": {"accounts_on_device_30d": 3}}
+
+
+@pytest.mark.parametrize("text", ["Device D-ZZZ is shared.", "Device D2 is shared.",
+                                  "Account U-7QX ordered."])
+def test_an_invented_placeholder_id_is_unmatched(text):
+    check = check_text(text, FP2_PACKET)
+    assert check.classification == "unmatched" and len(check.missing) == 1
+
+
+@pytest.mark.parametrize("text,packet", [
+    ("Device D1 is shared by 3 accounts.", FP2_PACKET),
+    ("Device D-7QX was seen.", {"order": {"device": "D-7QX"}}),
+])
+def test_a_placeholder_id_in_the_packet_matches(text, packet):
+    assert check_text(text, packet).classification == "verbatim"
+
+
+def test_a_placeholder_matches_only_as_a_whole_identifier():
+    assert check_text("Device D-7QX was seen.",
+                      {"order": {"device": "OD-7QXY"}}).classification == "unmatched"
+    assert archived_check_texts(["Device D-ZZZ"], FP2_PACKET)[0].classification == "verbatim"
+
+
 def test_the_archived_check_keeps_the_archived_behaviour():
     # Used only to reproduce the archived numbers.
     old = archived_check_texts(
