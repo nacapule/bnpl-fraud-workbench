@@ -99,7 +99,8 @@ errors).
 **5.2** Families present (§6.2) require `contact` for Account access and `id_check` for
 Card, Velocity and Linkage. Run both when both are required.
 
-**5.3** Check outcomes under §6.6(b), applied as each check completes:
+**5.3** Check outcomes, applied as each check completes. (b) applies whenever §6.6(a)
+does not; (a) and (c) apply while §6.6(b) does:
 
 - (a) Every required check `passed`: standard `clear`; `hold`, `decline`, `escalate` and
   `needs_check` prohibited.
@@ -167,8 +168,9 @@ explanations or context:
 Evaluate at review and again when each check completes, with the evidence known then,
 and use the first applicable row. Each row, and each outcome in §5.3, places every
 disposition in exactly one set; **Standard** is the review procedure's action. Row (a)
-overrides any check result. In row (b), once a check has failed or every required check
-has passed, §5.3(b) or §5.3(a) gives the sets instead.
+overrides any check result. Otherwise a failed check gives the sets of §5.3(b), even if
+no adverse family is present any longer; and in row (b), once every required check has
+passed, §5.3(a) gives them.
 
 | | Evidence | Standard | Also permitted | Prohibited |
 |---|---|---|---|---|
