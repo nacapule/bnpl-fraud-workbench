@@ -166,6 +166,9 @@ def test_benign_explanations_are_cited_but_never_count() -> None:
     r04 = evidence.classify(row(is_first_attempt_user=1, amount_over_category_p95=3.0,
                                 account_age_days=1.0), ())
     assert {c.clause for c in r04.benign} == set()  # R04 itself covers it
+    unknown_first = evidence.classify(row(is_first_attempt_user=None, account_age_days=1.0,
+                                          amount_over_category_p95=2.0), ())
+    assert {c.clause for c in unknown_first.benign} == set()  # R04 may hold: not shown benign
     history = evidence.classify(row(installments_due_user=3), ())
     assert {c.clause for c in history.benign} == {"§6.5(f)"}
     assert permitted(row(installments_due_user=3, ip_country_not_home=1)).standard == {"clear"}

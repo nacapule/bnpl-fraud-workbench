@@ -309,7 +309,7 @@ BENIGN_EXPLANATIONS: tuple[Predicate, ...] = (
     Predicate("§6.5(c)", ("is_first_attempt_user", "amount_over_category_p95",
                           "account_age_days"),
               lambda c: ((c["is_first_attempt_user"] == 1) | (c["amount_over_category_p95"] > 1))
-              & ((c["is_first_attempt_user"] != 1) | (c["amount_over_category_p95"] <= 1)
+              & ((c["is_first_attempt_user"] == 0) | (c["amount_over_category_p95"] <= 1)
                  | (c["account_age_days"] >= _T["R04"]["account_age_days"]))),
     # repayment history on other plans, good or bad (§6.3(b) is the only exception)
     Predicate("§6.5(f)", ("installments_due_user", "never_pay_determined_user"),
