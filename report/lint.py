@@ -64,10 +64,10 @@ LINK_TARGET = re.compile(r"\]\([^)]*\)")
 # A link reference definition: only its target is blanked; footnotes keep their text.
 REFERENCE_TARGET = re.compile(r"^(\s*\[(?!\^)[^\]]+\]:)(\s*\S+.*)$", re.MULTILINE)
 FOOTNOTE_MARKER = re.compile(r"\[\^[^\]\s]+\]")
-LIST_MARKER = re.compile(r"^(\s*)\d+[.)](?=\s)", re.MULTILINE)
 NUMBER = re.compile(r"\d[\d,.]*")
-LIST_ITEM = re.compile(r"^(\s*)(?:[-*+]|\d+[.)])(\s+)")
-QUOTE = re.compile(r"^ {0,3}> ?")
+LIST_MARK = re.compile(r"[-+*]|(\d{1,9})[.)]")
+THEMATIC_BREAK = re.compile(r" {0,3}([-*_])(?:[ \t]*\1){2,}[ \t]*$")
+HEADING = re.compile(r" {0,3}#{1,6}(?:[ \t]|$)")
 # A fence opens with three or more backticks (whose info string holds no
 # backtick: ```make final``` is inline code) or three or more tildes.
 FENCE_OPEN = re.compile(r"^(?:(`{3,})(?![^\n]*`)|(~{3,}))")
@@ -116,13 +116,12 @@ def _blank(match: re.Match[str]) -> str:
 def literal_text(template: str, allowed_phrases: Iterable[str] = ()) -> str:
     """The template's own words: placeholders, code, comments, links and identifiers blanked."""
     text = template
-    text = _blank_fences(COMMENT.sub(_blank, text))
+    text = _visible_blocks(COMMENT.sub(_blank, text))
     # A placeholder keeps its closing brace, so a sentence after it still starts one.
     text = PLACEHOLDER.sub(lambda match: _blank(match)[:-1] + "}", text)
     for pattern in (INLINE_CODE, LINK_TARGET, FOOTNOTE_MARKER):
         text = pattern.sub(_blank, text)
     text = REFERENCE_TARGET.sub(lambda m: m.group(1) + " " * len(m.group(2)), text)
-    text = LIST_MARKER.sub(lambda m: m.group(1) + " " * (len(m.group(0)) - len(m.group(1))), text)
     for phrase in allowed_phrases:
         text = re.sub(re.escape(phrase), _blank, text)
     for identifier in IDENTIFIERS:
@@ -139,20 +138,8 @@ def number_findings(name: str, template: str, allowed_phrases: Iterable[str] = (
     return findings
 
 
-def _indent(line: str) -> int:
-    expanded = line.replace("\t", "    ")
-    return len(expanded) - len(expanded.lstrip(" "))
-
-
-def _unquote(line: str) -> tuple[int, str, int]:
-    """A line without its block-quote marks: (depth, the rest, indent of the first mark)."""
-    depth, quote_indent = 0, 0
-    while marker := QUOTE.match(line):
-        if depth == 0:
-            quote_indent = _indent(marker.group(0))
-        line = line[marker.end():]
-        depth += 1
-    return depth, line, quote_indent
+def _spaces(text: str) -> int:
+    return len(text) - len(text.lstrip(" "))
 
 
 def _fence(content: str) -> str | None:
@@ -164,83 +151,93 @@ def _closes(fence: str, stripped: str) -> bool:
     return stripped.startswith(fence) and set(stripped) == {fence[0]}
 
 
-def _strip_quotes(line: str, most: int) -> tuple[int, str]:
-    """``line`` without up to ``most`` block-quote marks: (marks removed, the rest)."""
-    removed = 0
-    while removed < most and (marker := QUOTE.match(line)):
-        line = line[marker.end():]
-        removed += 1
-    return removed, line
+def _new_container(rest: str, paragraph: bool) -> tuple[str, int] | None:
+    """A block quote or list item opening at the start of ``rest``: (kind, the
+    columns its mark takes, up to where its content starts), or None."""
+    indent = _spaces(rest)
+    if indent > 3:
+        return None
+    if rest[indent:indent + 1] == ">":
+        return "quote", indent + (2 if rest[indent + 1:indent + 2] == " " else 1)
+    mark = LIST_MARK.match(rest, indent)
+    if mark is None or THEMATIC_BREAK.match(rest):
+        return None
+    after = rest[mark.end():]
+    if after and after[0] != " ":
+        return None
+    empty = not after.strip()
+    if paragraph and (empty or (mark.group(1) is not None and mark.group(1) != "1")):
+        return None  # cannot interrupt a paragraph
+    gap = _spaces(after)
+    return "item", mark.end() + (1 if empty or gap > 4 else gap)
 
 
-def _blank_fences(text: str) -> str:
-    """Fenced and indented code blanked wherever it sits, for the lints.
+def _visible_blocks(text: str) -> str:
+    """The text with container marks, fenced code and indented code blanked.
 
-    Each line's container marks (block quotes and list items, in any order) are
-    read first. An open fence's lines are its content, inside exactly the quote
-    marks it opened in; it ends at its closer (indented at most three columns
-    past its container's content) or where its container ends (fewer quote marks,
-    or a line indented less than the list item's content). An opener indented
-    four columns or more past its container, and the lines after a blank line
-    indented that far, are indented code.
+    Block quotes and list items are matched line by line as CommonMark does: each
+    open container in turn (a quote by its ``>``, a list item by its content
+    indentation), then new ones; a line that does not match them all continues a
+    paragraph lazily or closes them. Fences open and close at most three columns
+    into their container's content and end with their container; lines four
+    columns in that do not continue a paragraph are indented code. Lines keep
+    their length, so positions and line numbers hold.
     """
     out: list[str] = []
-    fence: tuple[str, int, int] | None = None  # marker, quote depth, content column
-    lists: list[int] = []  # content columns of the open list items
-    blank, code = True, False
-    for line in text.split("\n"):
-        if fence is not None:
-            marker, depth, column = fence
-            quotes, rest = _strip_quotes(line, depth)
-            ended = quotes < depth or (column and rest.strip() and _indent(rest) < column)
-            if not ended:
-                if _indent(rest) <= column + 3 and _closes(marker, rest.strip()):
-                    fence, blank = None, True
-                out.append(" " * len(line))
+    containers: list[tuple[str, int]] = []  # ("quote", 0) or ("item", content columns)
+    fence: tuple[str, int] | None = None  # marker, how many containers it sits in
+    paragraph = False
+    for raw in text.expandtabs(4).split("\n"):
+        pos, matched = 0, 0
+        for kind, width in containers:
+            rest = raw[pos:]
+            if kind == "quote":
+                if _spaces(rest) > 3 or rest[_spaces(rest):_spaces(rest) + 1] != ">":
+                    break
+                pos += _spaces(rest) + 1 + (1 if rest[_spaces(rest) + 1:_spaces(rest) + 2] == " "
+                                            else 0)
+            elif rest.strip():
+                if _spaces(rest) < width:
+                    break
+                pos += width
+            matched += 1
+        rest = raw[pos:]
+        if matched < len(containers):
+            lazy = (paragraph and fence is None and rest.strip()
+                    and _new_container(rest, False) is None and not _fence(rest.strip())
+                    and not THEMATIC_BREAK.match(rest) and not HEADING.match(rest))
+            if lazy:
+                out.append(" " * pos + rest)  # a paragraph continued without its marks
                 continue
-            fence = None
-        depth, rest, _ = _unquote(line)
+            containers = containers[:matched]
+            paragraph = False
+            if fence is not None and fence[1] > matched:
+                fence = None
+        if fence is not None:
+            if _spaces(rest) <= 3 and _closes(fence[0], rest.strip()):
+                fence = None
+            out.append(" " * len(raw))
+            continue
+        while (opened := _new_container(rest, paragraph)) is not None:
+            kind, width = opened
+            containers.append((kind, 0 if kind == "quote" else width))
+            pos += min(width, len(rest))
+            rest = raw[pos:]
+            paragraph = False
         if not rest.strip():
-            blank = True
-            out.append(line)
+            paragraph = False
+            out.append(" " * len(raw))
             continue
-        indent = _indent(rest)
-        item = LIST_ITEM.match(rest)
-        if blank or item:  # a new block belongs to the items it is indented under
-            while lists and lists[-1] > indent:
-                lists.pop()
-        base = lists[-1] if lists else 0
-        if not item and indent >= base + 4 and (blank or code):
-            blank, code = False, True  # indented code
-            out.append(" " * len(line))
+        indent = _spaces(rest)
+        if indent >= 4 and not paragraph:  # indented code
+            out.append(" " * len(raw))
             continue
-        code = False
-        content, offset, quoted = rest, 0, False
-        while True:  # every container mark on the line: "- - text", "- > text"
-            if item := LIST_ITEM.match(content):
-                offset += len(item.group(0).replace("\t", "    "))
-                lists.append(offset)
-                content = content[item.end():]
-            elif offset and (marker := QUOTE.match(content)):
-                depth, quoted, offset = depth + 1, True, 0
-                content = content[marker.end():]
-            else:
-                break
-        blank = False
-        if quoted:
-            base = 0  # columns now count from the quote's content
-        elif lists and (offset or indent >= lists[-1]):
-            base = lists[-1]
-        else:
-            base = 0
-        opened = _fence(content.strip())
-        # A fence opens at most three columns into its container's content.
-        prefixed = bool(offset or quoted)
-        if opened and (_indent(content) if prefixed else indent - base) <= 3:
-            fence = (opened, depth, base)
-            out.append(" " * len(line))
-        else:
-            out.append(line)
+        if indent <= 3 and (marker := _fence(rest.strip())):
+            fence, paragraph = (marker, len(containers)), False
+            out.append(" " * len(raw))
+            continue
+        paragraph = not (THEMATIC_BREAK.match(rest) or HEADING.match(rest))
+        out.append(" " * pos + rest)
     return "\n".join(out)
 
 

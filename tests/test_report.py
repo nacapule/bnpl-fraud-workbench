@@ -302,10 +302,26 @@ def test_inline_code_with_three_backticks_does_not_open_a_fence() -> None:
     "    ```text\n    example 12\n    ```\n\nLoss was 84% of GMV.\n",  # indented code, no fence
     "- > ```text\n  > example 12\n  > ```\n  >\n  > Loss was 84% of GMV.\n",  # a quote in an item
     "- Item.\n\n        code 12\n\nLoss was 84% of GMV.\n",  # indented code in an item
+    "- > > ```text\n  > > example 12\n  > > ```\n  > >\n  > > Loss was 84% of GMV.\n",
 ])
 def test_a_fence_ends_with_its_closer_or_its_container(template: str) -> None:
     """Fence content is read as content first; a fence never outlives its container."""
     assert [f.text for f in lint.number_findings("README.md", template)] == ["84"]
+
+
+@pytest.mark.parametrize("template", [
+    "- > Context.\n  >\n  > Method.\n\n    Loss was 84% of GMV.\n",  # a list paragraph
+    "-\n    First paragraph.\n\n    Loss was 84% of GMV.\n",  # an item opened by a bare mark
+    "> Context\nLoss was 84% of GMV.\n",  # a quoted paragraph continued without its mark
+    "1. First.\n2. Loss was 84% of GMV.\n",  # the next item, not a continuation
+    "- Item.\n\n  Loss was 84% of GMV.\n",
+    "| a | b |\n|---|---|\n| Loss was 84% of GMV. | x |\n",
+])
+def test_visible_text_is_never_taken_for_code(template: str) -> None:
+    """Container marks are read as CommonMark reads them, so prose stays prose."""
+    assert [f.text for f in lint.number_findings("README.md", template)] == ["84"]
+    assert [f.text.split(" in ")[0] for f in lint.directional_findings(
+        "README.md", template.replace("Loss was", "Loss was more,"), ["more"])] == ["'more'"]
 
 
 def test_identifiers_code_links_and_list_markers_are_not_numbers() -> None:
