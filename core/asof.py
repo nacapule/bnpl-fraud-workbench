@@ -381,7 +381,12 @@ class PolicyState:
     replay's output, in the world schema: an auto-declined order keeps its
     attempt and nothing after it; a held order's shipment and schedule move to
     after its release; a voided or cancelled order loses the events after the
-    void and gains its refunds) together with this state:
+    void and gains its refunds) together with this state. What was known before
+    an action stands in the realized tables, so that an action changes no
+    earlier decision: a release moves only what follows the pause (the shipment,
+    its delivery and installments not yet due), never an event known before the
+    hold; a voided or cancelled plan keeps its plan and schedule, which the
+    columns stop counting from the void. The state:
 
     * ``approved``: order_id, approved_at, when the order went through (checkout,
       or the release of a hold placed before shipment);
