@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 import types
@@ -150,6 +151,60 @@ def test_a_world_changed_after_it_was_written_is_refused(tmp_path: Path) -> None
     assert pipeline.input_hash(run, "world:0-baseline") is None
 
 
+def test_a_changed_world_is_refused_before_the_database_is_touched(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """The load replaces the database's tables, so it must check the world first."""
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
+    pipeline.execute(run, pipeline.select(until="validate"), log=lambda _: None)
+    path = run.world_dir(run.worlds[0]) / "accounts.csv"
+    lines = path.read_text().split("\n")
+    assert lines[1].endswith(",1971")
+    lines[1] = lines[1][:-len("1971")] + "1972"  # a contract-valid edit, manifest untouched
+    path.write_text("\n".join(lines))
+    loaded = []
+    monkeypatch.setattr(pipeline, "_require_mysql", lambda: None)
+    monkeypatch.setattr(pipeline, "_load_world_module", lambda: types.SimpleNamespace(
+        load_tables=lambda tables: loaded.append(tables) or {"accounts": 1},
+        load_world=lambda directory: loaded.append(directory) or {"accounts": 1}))
+    run.memory.clear()
+    with pytest.raises(pipeline.PipelineError, match="load: input world:0-baseline"):
+        pipeline.execute(run, pipeline.select("load", "load"), log=lambda _: None)
+    assert loaded == []  # refused before the loader ran
+
+
+def test_a_stage_whose_inputs_change_while_it_runs_is_refused(
+    tmp_path: Path, monkeypatch
+) -> None:
+    def evaluate(run: pipeline.Run) -> pipeline.StageOutput:
+        replay = run.results_dir / "replay.json"
+        replay.write_text(replay.read_text().replace("7", "8"))
+        return pipeline.StageOutput()
+
+    _fake_stages(monkeypatch, overrides={"evaluate": evaluate},
+                 inputs={"evaluate": ["results/replay.json"]})
+    run = _dev_run(tmp_path)
+    with pytest.raises(pipeline.PipelineError, match="evaluate: inputs changed while it ran"):
+        pipeline.execute(run, list(pipeline.STAGES), log=lambda _: None)
+
+
+def test_a_given_world_written_another_way_is_stored_in_canonical_form(tmp_path: Path) -> None:
+    """Rows in another order are the same world; changed rows are not."""
+    source = tmp_path / "source"
+    shutil.copytree(MINI_WORLD, source)
+    path = source / "order_attempts.csv"
+    header, *rows = path.read_text().rstrip("\n").split("\n")
+    path.write_text("\n".join([header, *reversed(rows)]) + "\n")
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path / "runs", world=source)
+    pipeline.execute(run, pipeline.select(until="validate"), log=lambda _: None)
+    stored = run.world_dir(run.worlds[0]) / "order_attempts.csv"
+    assert stored.read_bytes() == (MINI_WORLD / "order_attempts.csv").read_bytes()
+    path.write_text("\n".join([header, *rows[1:]]) + "\n")  # a row fewer
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path / "other", world=source)
+    with pytest.raises(pipeline.PipelineError, match="does not match its manifest"):
+        pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)
+
+
 def _given_world(tmp_path: Path) -> tuple[pipeline.Run, Path]:
     run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
     pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)
@@ -167,7 +222,7 @@ def test_validation_rejects_a_world_that_no_longer_matches_its_manifest(tmp_path
     tables = world_module.read_world(directory)
     _order_before_signup(tables)
     world_module.write_world({"order_attempts": tables["order_attempts"]}, directory)
-    with pytest.raises(pipeline.PipelineError, match="differ from its manifest"):
+    with pytest.raises(pipeline.PipelineError, match="differs from its manifest"):
         pipeline.execute(run, pipeline.select("validate", "validate"), log=lambda _: None)
 
 
@@ -187,8 +242,9 @@ def test_validation_rejects_a_world_that_breaks_chronology(tmp_path: Path) -> No
 
 
 # ---------------------------------------------------------------- whole runs with stand-in stages
-def _fake_stages(monkeypatch, *, value: int = 7, overrides: dict | None = None) -> None:
-    overrides = overrides or {}
+def _fake_stages(monkeypatch, *, value: int = 7, overrides: dict | None = None,
+                 inputs: dict | None = None) -> None:
+    overrides, inputs = overrides or {}, inputs or {}
 
     def make(name: str):
         def function(run: pipeline.Run) -> pipeline.StageOutput:
@@ -203,11 +259,14 @@ def _fake_stages(monkeypatch, *, value: int = 7, overrides: dict | None = None) 
                          "tables": {"x": value}}))
             metric = Metric(value=value, unit="count", population=f"{name} things",
                             window="test")
-            return pipeline.StageOutput(metrics={f"{name}.things": metric},
-                                        inputs=["config/policy.yaml"])
+            return pipeline.StageOutput(metrics={f"{name}.things": metric})
         return function
 
-    stages = tuple(pipeline.Stage(stage.name, make(stage.name), stage.versions, stage.description)
+    def reads(name: str):
+        return lambda run: list(inputs.get(name, ["config/policy.yaml"]))
+
+    stages = tuple(pipeline.Stage(stage.name, make(stage.name), stage.versions, stage.description,
+                                  reads(stage.name))
                    for stage in pipeline.STAGES)
     monkeypatch.setattr(pipeline, "STAGES", stages)
 
@@ -262,13 +321,15 @@ def test_a_stale_evaluation_cannot_join_a_fresh_replay(tmp_path: Path, monkeypat
     def evaluate(run: pipeline.Run) -> pipeline.StageOutput:
         replayed = read_result(run.results_dir / "replay.json").metrics["replay.things"].value
         item = Metric(value=replayed, unit="count", population="evaluated", window="test")
-        return pipeline.StageOutput(metrics={"evaluate.things": item},
-                                    inputs=["results/replay.json"])
+        return pipeline.StageOutput(metrics={"evaluate.things": item})
 
-    _fake_stages(monkeypatch, overrides={"replay": replay_with(10), "evaluate": evaluate})
+    reads = {"evaluate": ["results/replay.json"]}
+    _fake_stages(monkeypatch, overrides={"replay": replay_with(10), "evaluate": evaluate},
+                 inputs=reads)
     run = _dev_run(tmp_path)
     pipeline.execute(run, list(pipeline.STAGES), log=lambda _: None)
-    _fake_stages(monkeypatch, overrides={"replay": replay_with(20), "evaluate": evaluate})
+    _fake_stages(monkeypatch, overrides={"replay": replay_with(20), "evaluate": evaluate},
+                 inputs=reads)
     pipeline.execute(run, pipeline.select("replay", "replay"), log=lambda _: None)
     with pytest.raises(pipeline.PipelineError, match="evaluate: results/replay.json changed"):
         pipeline.execute(run, pipeline.select("llm", "llm"), log=lambda _: None)

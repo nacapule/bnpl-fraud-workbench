@@ -269,27 +269,35 @@ def make_run(profile: Profile, *, name: str | None = None, seeds: list[int] | No
 class StageOutput:
     """What a stage hands back: published metrics and tables, plus lineage.
 
-    ``inputs`` names what the stage read: a repository path
-    (``config/policy.yaml``), a world (``world:416-baseline``, identified by its
-    manifest without the code commit) or an earlier stage's result
-    (``results/replay.json``). Their hashes go into the result file and are
-    checked again before the summary (:func:`input_hash`). ``outputs`` lists
-    files or directories the stage wrote, hashed into the run's lineage only.
+    ``outputs`` lists files or directories the stage wrote, hashed into the
+    run's lineage only. What a stage reads is declared by the stage itself
+    (:class:`Stage`), so it is checked before the stage runs.
     """
 
     metrics: dict[str, Metric] = field(default_factory=dict)
     tables: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
     notes: list[str] = field(default_factory=list)
-    inputs: list[str] = field(default_factory=list)
     outputs: list[Path] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
 class Stage:
+    """A pipeline stage.
+
+    ``inputs`` names what the stage reads: a repository path
+    (``config/policy.yaml``), a world (``world:416-baseline``: its manifest
+    without the code commit, and every table file matching it) or an earlier
+    stage's result (``results/replay.json``). They are hashed before the stage
+    runs (a missing or changed world stops it), checked unchanged after it,
+    recorded in its result file, and checked again before the summary
+    (:func:`input_hash`).
+    """
+
     name: str
     function: Callable[[Run], StageOutput]
     versions: tuple[str, ...]
     description: str
+    inputs: Callable[[Run], list[str]] = field(default=lambda run: [])
 
 
 def entry(stage: str, module: str, name: str) -> Callable[..., Any]:
@@ -346,7 +354,7 @@ def world_identity(run: Run, ref: WorldRef) -> str | None:
 
 
 def input_hash(run: Run, name: str) -> str | None:
-    """The current SHA-256 of a stage input named as in :class:`StageOutput`; None if gone."""
+    """The current SHA-256 of a stage input named as in :class:`Stage`; None if gone or changed."""
     if name.startswith("world:"):
         return world_identity(run, WorldRef.parse(name[len("world:"):]))
     if name.startswith("results/"):
@@ -381,7 +389,16 @@ def stage_world(run: Run) -> StageOutput:
         if (manifest.get("seed"), manifest.get("family")) != (ref.seed, ref.family):
             raise PipelineError(f"world {ref.name}: the manifest names another seed or family")
         if world_identity(run, ref) is None:
-            raise PipelineError(f"world {ref.name}: its files do not match its manifest")
+            # Valid tables written another way: check them against the manifest's
+            # hashes of their canonical form, then store that form.
+            try:
+                tables = world_module.read_world(target, manifest["tables"])
+                world_module.verify_manifest(tables, manifest)
+            except (OSError, ValueError, KeyError) as error:
+                raise PipelineError(f"world {ref.name}: {error}") from error
+            world_module.write_world(tables, target)
+            if world_identity(run, ref) is None:
+                raise PipelineError(f"world {ref.name}: its files do not match its manifest")
         tables = world_module.read_world(target, ["order_attempts", "labels", "accounts"])
         orders = tables["order_attempts"]
         rows.append({
@@ -396,7 +413,6 @@ def stage_world(run: Run) -> StageOutput:
     return StageOutput(
         metrics={"world.worlds": _count(len(worlds), "worlds generated for the run")},
         tables={"world.worlds": rows},
-        inputs=_repo_inputs("config/world.yaml", "experiments/protocol.yaml"),
         outputs=[run.world_dir(ref) for ref in worlds],
     )
 
@@ -413,7 +429,6 @@ def stage_validate(run: Run) -> StageOutput:
     return StageOutput(
         metrics={"validate.worlds_valid": _count(len(rows), "worlds that passed validation")},
         tables={"validate.worlds": rows},
-        inputs=_world_inputs(run.all_worlds),
     )
 
 
@@ -439,13 +454,12 @@ def stage_load(run: Run) -> StageOutput:
     if ref is None:
         return StageOutput(notes=["no world is loaded into MySQL in this run"])
     _require_mysql()
-    counts = _load_world_module().load_world(run.world_dir(ref))
+    counts = _load_world_module().load_tables(run.tables(ref))  # verified against the manifest
     return StageOutput(
         metrics={"load.rows": _count(sum(counts.values()),
                                      f"rows loaded into MySQL, world {ref.name}")},
         tables={"load.tables": [{"table": name, "rows": int(rows)}
                                 for name, rows in sorted(counts.items())]},
-        inputs=_world_inputs([ref]),
     )
 
 
@@ -465,8 +479,7 @@ def stage_context(run: Run) -> StageOutput:
         frame = context_of(run, ref)
         rows.append({"seed": ref.seed, "family": ref.family, "rows": len(frame),
                      "columns": len(frame.columns)})
-    return StageOutput(tables={"context.worlds": rows},
-                       inputs=_world_inputs(run.all_worlds) + _repo_inputs("core/asof.py"))
+    return StageOutput(tables={"context.worlds": rows})
 
 
 def pool_over_seeds(per_seed: Mapping[int, Metric], what: str,
@@ -523,8 +536,7 @@ def stage_fit(run: Run) -> StageOutput:
         outputs.append(out_dir)
     metrics = {f"fit.{key}": pool_over_seeds(items, key, run.seeds)
                for key, items in per_key.items()}
-    return StageOutput(metrics=metrics, outputs=outputs,
-                       inputs=_world_inputs([WorldRef(s, BASELINE) for s in run.fit_seeds]))
+    return StageOutput(metrics=metrics, outputs=outputs)
 
 
 def stage_tune(run: Run) -> StageOutput:
@@ -578,7 +590,6 @@ def stage_alerts(run: Run) -> StageOutput:
     written = write_alerts(frame)
     return StageOutput(
         metrics={"alerts.rows": _count(written, f"routing decisions, world {ref.name}")},
-        inputs=_repo_inputs("db/policy_tables.sql"),
     )
 
 
@@ -811,8 +822,7 @@ def stage_evaluate(run: Run) -> StageOutput:
     metrics, rows = evaluate_outcomes(outcomes, run.seeds, run.families,
                                       tuple(run.protocol.raw["policies"]),
                                       expected_capacities(run.protocol))
-    return StageOutput(metrics=metrics, tables={"evaluate.policies": rows},
-                       inputs=["results/replay.json"])
+    return StageOutput(metrics=metrics, tables={"evaluate.policies": rows})
 
 
 def stage_llm(run: Run) -> StageOutput:
@@ -824,20 +834,36 @@ def stage_llm(run: Run) -> StageOutput:
     return StageOutput(metrics=dict(output))
 
 
+def _all_worlds(run: Run) -> list[str]:
+    return _world_inputs(run.all_worlds)
+
+
+def _database_world(run: Run) -> list[str]:
+    return [] if run.database_world is None else _world_inputs([run.database_world])
+
+
 STAGES = (
-    Stage("world", stage_world, ("world", "protocol"), "generate every world of the run"),
-    Stage("validate", stage_validate, ("world",), "check worlds against the contract"),
-    Stage("load", stage_load, ("world",), "load the database world into MySQL"),
-    Stage("context", stage_context, ("world", "features"), "build the as-of context"),
+    Stage("world", stage_world, ("world", "protocol"), "generate every world of the run",
+          lambda run: _repo_inputs("config/world.yaml", "experiments/protocol.yaml")),
+    Stage("validate", stage_validate, ("world",), "check worlds against the contract",
+          _all_worlds),
+    Stage("load", stage_load, ("world",), "load the database world into MySQL",
+          _database_world),
+    Stage("context", stage_context, ("world", "features"), "build the as-of context",
+          lambda run: _all_worlds(run) + _repo_inputs("core/asof.py")),
     Stage("fit", stage_fit, ("world", "features", "protocol", "models"),
-          "fit classifiers per seed"),
+          "fit classifiers per seed",
+          lambda run: _world_inputs([WorldRef(seed, BASELINE) for seed in run.fit_seeds])),
     Stage("tune", stage_tune, ("world", "features", "policy", "protocol", "models"),
-          "choose thresholds on validation"),
+          "choose thresholds on validation",
+          lambda run: _all_worlds(run) + _repo_inputs("config/policy.yaml")),
     Stage("replay", stage_replay, ("world", "features", "policy", "protocol", "models"),
-          "replay every policy on every world"),
-    Stage("alerts", stage_alerts, ("world", "policy", "models"), "routing decisions into MySQL"),
+          "replay every policy on every world",
+          lambda run: _all_worlds(run) + _repo_inputs("config/policy.yaml")),
+    Stage("alerts", stage_alerts, ("world", "policy", "models"), "routing decisions into MySQL",
+          lambda run: _database_world(run) + _repo_inputs("db/policy_tables.sql")),
     Stage("evaluate", stage_evaluate, ("world", "features", "policy", "protocol"),
-          "paired comparisons across seeds"),
+          "paired comparisons across seeds", lambda run: ["results/replay.json"]),
     Stage("llm", stage_llm, ("benchmark", "policy"), "offline LLM benchmark replay"),
 )
 STAGE_NAMES = tuple(stage.name for stage in STAGES)
@@ -969,11 +995,15 @@ def select(start: str | None = None, until: str | None = None) -> list[Stage]:
 def run_stage(run: Run, stage: Stage, lineage: Lineage) -> Path:
     started = dt.datetime.now(dt.UTC)
     clock = time.monotonic()
+    before = {name: _required_input(run, stage.name, name) for name in stage.inputs(run)}
     output = stage.function(run)
+    after = {name: input_hash(run, name) for name in before}
+    if changed := sorted(name for name in before if after[name] != before[name]):
+        raise PipelineError(f"{stage.name}: inputs changed while it ran: {changed}")
     result = StageResult(
         stage=stage.name,
         versions=versions(run, stage.versions),
-        inputs={name: _required_input(run, stage.name, name) for name in output.inputs},
+        inputs=before,
         metrics=output.metrics,
         tables=output.tables,
         notes=output.notes,
@@ -994,7 +1024,8 @@ def run_stage(run: Run, stage: Stage, lineage: Lineage) -> Path:
 def _required_input(run: Run, stage: str, name: str) -> str:
     digest = input_hash(run, name)
     if digest is None:
-        raise PipelineError(f"{stage}: input {name} does not exist")
+        raise PipelineError(f"{stage}: input {name} is missing or differs from its manifest; "
+                            "rerun the stage that writes it")
     return digest
 
 
