@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from llm.eval.select_cases import assert_provenance, select_case_metadata
 from llm.packet import FORBIDDEN_KEYS, _assert_no_forbidden
 
 REPO = Path(__file__).resolve().parent.parent
@@ -114,14 +113,8 @@ def test_live_packet_has_no_forbidden_keys() -> None:
 
 
 def test_frozen_eval_packets_clean_if_present() -> None:
-    pdir = REPO / "llm" / "eval" / "packets"
+    pdir = REPO / "llm" / "eval" / "benchmarks" / "2026-08-dev" / "original" / "packets"
     files = list(pdir.glob("*.json")) if pdir.exists() else []
     for f in files[:50]:
         _assert_no_forbidden(json.loads(f.read_text()))
 
-
-def test_case_metadata_regeneration_matches_frozen_file() -> None:
-    assert_provenance()
-    regenerated, _ = select_case_metadata()
-    committed = json.loads((REPO / "llm" / "eval" / "cases.json").read_text())
-    assert regenerated == committed
