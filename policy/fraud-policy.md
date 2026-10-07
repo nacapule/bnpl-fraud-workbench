@@ -69,8 +69,8 @@ Only `decline` and `escalate` block accounts, only under §6.
 
 **4.3** `needs_check` is a memo recommendation, not an action: the evidence does not
 decide the order, and the memo names the §5.1 check that would. The analyst carries it
-out as a `hold` with that check. It is correct under §6.6(b) while no check has failed
-and a required check has not yet run, and wrong otherwise.
+out as a `hold` with that check. It is permitted only where §6.6(b) permits it, while a
+required check has not yet run.
 
 | Action | Order | Customer | Analyst time |
 |---|---|---|---|
@@ -99,10 +99,16 @@ errors).
 **5.2** Families present (§6.2) require `contact` for Account access and `id_check` for
 Card, Velocity and Linkage. Run both when both are required.
 
-**5.3** (a) All required checks `passed`: `clear`. (b) Any check `failed`: `escalate` if
-Linkage is present, otherwise `decline`; cite the failure. (c) No response within
-48 hours: before shipment, cancel and refund without blocking accounts; after shipment,
-nothing changes. After shipment, (b) still applies and the loss stands.
+**5.3** Check outcomes under §6.6(b), applied as each check completes:
+
+- (a) Every required check `passed`: standard `clear`; `hold`, `decline`, `escalate` and
+  `needs_check` prohibited.
+- (b) A check `failed`, which decides at once, also after shipment (the loss stands):
+  standard `escalate` if Linkage is present, otherwise `decline`; `decline` also
+  permitted if Linkage is present; `clear`, `hold` and `needs_check` prohibited, and
+  `escalate` if Linkage is absent. Cite the failure.
+- (c) No response within 48 hours: before shipment, cancel and refund without blocking
+  accounts; after shipment, nothing changes. Until then the sets of §6.6(b) apply.
 
 ## 6. Evidence standards
 
@@ -159,15 +165,15 @@ explanations or context:
 
 **6.6** A family is present when one of its conditions holds without a §6.4 exception.
 Evaluate at review and again when each check completes, with the evidence known then,
-and use the first applicable row; **Standard** is the review procedure's action. Row (a)
-overrides any check result. Otherwise a failed check decides at once (§5.3(b)); when
-every required check has passed, §5.3(a) applies; until then the hold continues until
-the checks complete or 48 hours pass (§5.3(c)).
+and use the first applicable row. Each row, and each outcome in §5.3, places every
+disposition in exactly one set; **Standard** is the review procedure's action. Row (a)
+overrides any check result. In row (b), once a check has failed or every required check
+has passed, §5.3(b) or §5.3(a) gives the sets instead.
 
 | | Evidence | Standard | Also permitted | Prohibited |
 |---|---|---|---|---|
-| (a) | an earlier outcome settles it (§6.3) | `decline`; `escalate` if Linkage is present | none | `clear`, `hold`, `needs_check` |
-| (b) | one or more adverse families | `hold` with the §5.2 checks | `decline` when two or more families are present | `clear` before every required check passes; `decline` with one family, or `escalate`, before a check fails |
+| (a) | an earlier outcome settles it (§6.3) | `escalate` if Linkage is present, otherwise `decline` | `decline` if Linkage is present | `clear`, `hold`, `needs_check`; `escalate` if Linkage is absent |
+| (b) | one or more adverse families | `hold` with the §5.2 checks | `needs_check` while a required check has not run; `decline` when two or more families are present and no check has passed | `clear`; `escalate`; `needs_check` once every required check has run; `decline` with one family or after a check has passed |
 | (c) | no adverse family | `clear` | none | `hold`, `decline`, `escalate`, `needs_check` |
 
 `escalate` requires Linkage because it blocks linked accounts. R06(b) supports Linkage
@@ -236,8 +242,9 @@ made (§3.1), never by its outcome.
 Memos are advisory. They trigger no order action alone and set no queue priority. Each states
 facts tied individually to packet fields; competing hypotheses, including the most plausible
 benign one (§6.5); applicable clauses; a disposition (`clear`, `hold`, `decline`,
-`escalate` or `needs_check`) permitted by §6.6; and the cheapest next check that would
-most change the decision, or none when the evidence decides.
+`escalate` or `needs_check`) that is standard or permitted under §6.6, or under §5.3 once
+a check has decided; and the cheapest next check that would most change the decision, or
+none when the evidence decides.
 
 ## 11. Assumptions
 
