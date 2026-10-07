@@ -126,6 +126,7 @@ def test_shuffled_probe_reorders_facts_without_changing_them() -> None:
     json.dumps(VALID).replace('"12"', "Infinity"),
     json.dumps(VALID).replace('"12"', "-Infinity"),
     "[" * 100000 + "]" * 100000,
+    json.dumps(VALID).replace("context.installments_paid_user", "context.\\ud800"),
 ])
 def test_non_standard_or_pathological_json_is_a_failure(text: str) -> None:
     parsed, problems = memo.parse(text)

@@ -151,6 +151,24 @@ def _not_json(name: str) -> Any:
     raise ValueError(f"{name} is not a JSON value")
 
 
+def _encodable(value: Any) -> bool:
+    """Every string in ``value`` is valid Unicode (no unpaired surrogate)."""
+    stack = [value]
+    while stack:
+        item = stack.pop()
+        if isinstance(item, str):
+            try:
+                item.encode("utf-8")
+            except UnicodeEncodeError:
+                return False
+        elif isinstance(item, dict):
+            stack.extend(item.keys())
+            stack.extend(item.values())
+        elif isinstance(item, list):
+            stack.extend(item)
+    return True
+
+
 def parse(text: str) -> tuple[dict[str, Any] | None, list[str]]:
     """The memo in a response, or the problems that make it a failure.
 
@@ -167,5 +185,7 @@ def parse(text: str) -> tuple[dict[str, Any] | None, list[str]]:
         return None, [f"not one JSON object: {error.msg} at {error.pos}"]
     except (ValueError, RecursionError) as error:
         return None, [f"not valid JSON: {error}"]
+    if not _encodable(memo):
+        return None, ["text with an unpaired surrogate escape"]
     problems = validate(memo)
     return (memo if not problems else None), problems
