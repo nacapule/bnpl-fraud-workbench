@@ -122,7 +122,9 @@ def _overlap_start(start1: int, end1: int | None, start2: int, end2: int | None)
 
 def never_pay_determinations(tables, went_through, stops) -> dict[int, int]:
     """order_id -> when its never-pay determination is known, by core.world.adjudicate's
-    rule on these tables with the orders that went through as the approved ones. A plan
+    rule on these tables with the orders that went through as the approved ones, each from
+    when it went through (``went_through``: order_id -> that time), so an order released
+    from a hold shares its shipping address from the release. A plan
     the policy stopped (``stops``: order_id -> when it was voided or cancelled) owes
     nothing after that, so it defaults, and marks others, only if its default came
     strictly before the stop. Only the never-pay rule's inputs are passed, so every
@@ -142,7 +144,10 @@ def never_pay_determinations(tables, went_through, stops) -> dict[int, int]:
         **tables,
         "plans": plans[owed],
         "order_attempts": orders.assign(
-            processor_result=np.where(approved, "approved", "declined")),
+            processor_result=np.where(approved, "approved", "declined"),
+            occurred_at=[pd.Timestamp(went_through[o], unit="s") if o in went_through else at
+                         for o, at in zip(orders["order_id"], orders["occurred_at"],
+                                          strict=True)]),
         "promotions": tables["promotions"].assign(first_purchase_only=False),
         **{name: world.empty(name)
            for name in ("dispute_openings", "dispute_resolutions", "victim_reports")},

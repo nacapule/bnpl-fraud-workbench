@@ -338,3 +338,44 @@ def test_never_pay_is_seen_when_victim_reports_label_the_orders_first() -> None:
     row = context_of(b).loc[112]
     assert row["victim_reports_user"] == 2
     assert row["never_pay_determined_user"] == 1
+
+
+def test_an_order_released_from_a_hold_shares_its_address_from_the_release() -> None:
+    """Accounts 1, 2 and 3 each default on one plan at day 44; 2 and 3 ship to one
+    address. On day 45 account 1 orders to that address too, and the policy holds the
+    order until day 47. Until the release account 1 shares nothing, so its plan is not
+    yet never-pay: a decision in between sees what a policy that has not released the
+    order yet sees, and the determination comes with the release."""
+    b = household()
+    b.order(130, 2, T0)
+    b.order(131, 3, T0, address=2)
+    b.order(132, 1, T0)
+    for order_id in (130, 131, 132):
+        b.plan(order_id)
+    checkout, release = T0 + pd.Timedelta(days=45), T0 + pd.Timedelta(days=47)
+    b.order(133, 1, checkout, address=2)
+    tables = b.tables()
+    at_checkout = asof.PolicyState.approve_all(tables)
+
+    def state(at: pd.Timestamp) -> asof.PolicyState:
+        """What the policy has done by ``at``."""
+        released = release <= at
+        approved = at_checkout.approved
+        approved = approved[approved["order_id"] != 133]
+        if released:
+            approved = pd.concat([approved, pd.DataFrame(
+                {"order_id": [133], "approved_at": [release]})], ignore_index=True)
+        held = pd.DataFrame({"order_id": [133], "held_at": [checkout],
+                             "released_at": [release if released else pd.NaT],
+                             "outcome": ["cleared" if released else None],
+                             "before_shipment": [True]})
+        return dataclasses.replace(
+            at_checkout, approved=approved.astype({"approved_at": "datetime64[s]"}),
+            held=held.astype({"held_at": "datetime64[s]", "released_at": "datetime64[s]"}))
+
+    waiting, after = checkout + pd.Timedelta(hours=1), release + pd.Timedelta(days=1)
+    decisions = pd.DataFrame({"order_id": [133, 133], "decision_at": [waiting, after]})
+    final = asof.outcome_columns(tables, state(after), decisions)
+    then = asof.outcome_columns(tables, state(waiting), decisions.iloc[:1])
+    assert final["never_pay_determined_user"].tolist() == [0, 1]
+    pd.testing.assert_frame_equal(final.iloc[:1], then)

@@ -1048,8 +1048,9 @@ def outcome_columns(
 
     # never-pay determinations on the account's earlier plans (core.world.adjudicate's rule)
     stopped = np.minimum(s["voided"], s["cancelled"])
-    determined = _never_pay(tables, a_order[went_through], stopped[went_through],
-                            other["order_id"].unique(), d.decision_sec.max())
+    determined = _never_pay(tables, a_order[went_through], s["approved"][went_through],
+                            stopped[went_through], other["order_id"].unique(),
+                            d.decision_sec.max())
     known = other.merge(determined, on="order_id")
     c["never_pay_determined_user"] = _per(known[known["determined"] < known["cut"]], n) > 0
 
@@ -1197,12 +1198,16 @@ def _disputes(tables: Mapping[str, pd.DataFrame],
 
 
 def _never_pay(tables: Mapping[str, pd.DataFrame], went_through: np.ndarray,
-               stopped: np.ndarray, asked: np.ndarray, latest_sec: int) -> pd.DataFrame:
+               approved: np.ndarray, stopped: np.ndarray, asked: np.ndarray,
+               latest_sec: int) -> pd.DataFrame:
     """order_id, determined (key): never-pay determinations (fraud policy §8.3) among the
-    ``asked`` orders, judging the orders that went through as approved; ``stopped`` is
-    when each was voided or cancelled (key, or the maximum). Labels are never read.
+    ``asked`` orders, judging the orders that went through as approved; ``approved`` is
+    when each went through and ``stopped`` when it was voided or cancelled (keys, the
+    maximum when never). Labels are never read.
 
-    The rule is core.world.adjudicate's, run on these tables with two changes. A
+    The rule is core.world.adjudicate's, run on these tables with three changes. An
+    order counts from when the policy let it through, so a shipping address an order
+    released from a hold goes to is shared from the release, not the attempt. A
     voided or cancelled plan owes nothing after it stops, so it defaults (and supplies
     a marker) only when its default came before that. And the labelling function
     keeps one determination per order, the first known, so the evidence of every
@@ -1229,8 +1234,11 @@ def _never_pay(tables: Mapping[str, pd.DataFrame], went_through: np.ndarray,
             observed, mine, rules["default_grace_days"]).empty:
         return none
     orders = tables["order_attempts"].copy()
-    orders["processor_result"] = np.where(orders["order_id"].isin(went_through), "approved",
-                                          "declined")
+    through = _take(pd.Series(approved >> SUB_BITS, index=went_through),
+                    orders["order_id"].to_numpy(np.int64), -1)
+    orders["processor_result"] = np.where(through >= 0, "approved", "declined")
+    orders["occurred_at"] = np.where(through >= 0, through.astype("datetime64[s]"),
+                                     orders["occurred_at"].to_numpy("datetime64[s]"))
     withheld = {name: world.empty(name) for name in (
         "dispute_openings", "dispute_resolutions", "victim_reports")}
     labels = world.adjudicate(
