@@ -51,11 +51,20 @@ class OutcomeParams:
 class Outcomes:
     def __init__(self, b: Builder, clock: Clock, params: OutcomeParams) -> None:
         self.b, self.clock, self.p = b, clock, params
+        self.lag_from: int | None = None
+        self.lag_factor = 1.0
+
+    def scale_lag(self, start: int, factor: float) -> None:
+        """Multiply the drawn fulfilment lag of every order placed at or after ``start``
+        by ``factor`` (a sensitivity family); the draws themselves are unchanged."""
+        self.lag_from, self.lag_factor = start, factor
 
     # ------------------------------------------------------- fulfilment
     def ship_time(self, a: Actor, o: Order) -> int:
         median = self.b.merchants[o.merchant]["median"]
         hours = float(np.exp(a.rng.normal(np.log(median), self.p.fulfilment_sigma)))
+        if self.lag_from is not None and o.t >= self.lag_from:
+            hours *= self.lag_factor
         return o.t + int(max(0.25, hours) * HOUR)
 
     def vanishing(self, o: Order) -> bool:

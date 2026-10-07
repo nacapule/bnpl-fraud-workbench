@@ -255,6 +255,10 @@ families:
     takeover_multiplier: 2.0         # account takeovers from the start date
     sleeper_accounts: 25             # aged stolen-card accounts, opened before the start in
                                      # every family, used only in this one
+  lag_half:                          # sensitivity of the review-versus-shipment race, not a
+    fulfilment_lag_factor: 0.5       # realism claim: orders from the start date ship in half
+  lag_double:                        # ... or twice the drawn time to shipment
+    fulfilment_lag_factor: 2.0
 
 # MySQL endpoint the world is loaded into. Override per run with BNPL_DB_HOST,
 # BNPL_DB_PORT, BNPL_DB_USER, BNPL_DB_PASSWORD and BNPL_DB_NAME.

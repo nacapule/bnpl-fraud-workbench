@@ -136,15 +136,28 @@ fraud, so neither is a checkout target.
 
 ### Families
 
-The three families share every event known before the test window
-(2025-06-01) for a seed: families add actors from their own random streams and
-never change the base world's. The acquisition surge adds new households from
+The families share every event known before the test window
+(2025-06-01) for a seed: they act only from the test window on, adding actors
+from their own random streams or rescaling later orders' shipments (below), and
+never change the base world's earlier history. The acquisition surge adds new households from
 the test window at the base arrival rate again (twice the inflow), and these
 campaign customers use FIRST10 on 80% of first orders. The fraud-mix shift adds
 as many account takeovers again from the test window and activates 25 aged
 sleeper accounts with stolen cards; those accounts are opened before the test
 window in every family, log in now and then to the end of the horizon, and are
 used only in this family.
+
+Two further families are a sensitivity check on the race between review and
+shipment, not a claim about how merchants behave: `lag_half` and `lag_double`
+multiply each order's drawn time to shipment by 0.5 or 2 for orders placed from
+the test window on (before the 15-minute floor), with the same random draws as
+the baseline. Everything anchored on the shipment or the delivery moves with it
+(delivery, settlement and promotion funding, claims filed after delivery, a
+vanishing merchant's last shipments before it closes, and the labels that
+follow). What is anchored on the checkout stays as in the baseline: the
+installment schedule and collections, card blocks, takeover reports and
+unauthorized disputes, claims for parcels that never arrive (10 to 25 days after
+the order) and bust-out claims (after the closure).
 
 ### Truth and labels
 

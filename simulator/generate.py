@@ -33,7 +33,8 @@ from simulator.outcomes import OutcomeParams, Outcomes
 from simulator.timing import Clock, seconds
 
 REPO = Path(__file__).resolve().parent.parent
-FAMILIES = ("baseline", "acquisition_surge", "fraud_mix_shift")
+FAMILIES = ("baseline", "acquisition_surge", "fraud_mix_shift", "lag_half", "lag_double")
+LAG_FAMILIES = ("lag_half", "lag_double")  # fulfilment-lag sensitivity from the test window
 
 # Random-stream components (SeedSequence spawn keys); never renumber them.
 MERCHANTS, ARRIVALS, HOUSEHOLDS, PROMOTIONS = 1, 2, 3, 4
@@ -66,6 +67,8 @@ def build_world(seed: int, family: str, *, scale: float = 1.0,
                     cfg)
     promotions = _promotions(b, Actor.of(seed, PROMOTIONS, 0), cfg["promotions"])
     outcomes = Outcomes(b, clock, OutcomeParams.from_config(cfg))
+    if family in LAG_FAMILIES:
+        outcomes.scale_lag(test_start, cfg["families"][family]["fulfilment_lag_factor"])
     customers = Customers(b, clock, market, outcomes, cfg, promotions, order_end)
     fraud = Fraud(b, clock, market, outcomes, customers, cfg, seed, promotions, scale)
 

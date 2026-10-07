@@ -182,7 +182,7 @@ def history_before(tables: Tables, at: pd.Timestamp) -> dict[str, bytes]:
 
 def test_families_share_every_event_before_the_test_window(worlds) -> None:
     baseline = history_before(worlds["baseline"], TEST_START)
-    for family in ("acquisition_surge", "fraud_mix_shift"):
+    for family in FAMILIES[1:]:
         other = history_before(worlds[family], TEST_START)
         assert other.keys() == baseline.keys()
         differ = [name for name in baseline if other[name] != baseline[name]]
@@ -198,7 +198,8 @@ def test_families_differ_from_the_test_window_on(worlds) -> None:
         late = orders[(orders["occurred_at"] >= TEST_START) & (orders["pattern_id"] == pattern)]
         return late["episode_id"].nunique()
 
-    base, surge, shift = (worlds[f] for f in FAMILIES)
+    base, surge, shift = (worlds[f] for f in ("baseline", "acquisition_surge",
+                                                "fraud_mix_shift"))
     assert accounts_after(surge) > 1.5 * accounts_after(base)
     assert episodes_after(shift, "P-ATO") > episodes_after(base, "P-ATO")
     assert episodes_after(shift, "P-STOLEN") > episodes_after(base, "P-STOLEN")
@@ -208,6 +209,53 @@ def test_families_differ_from_the_test_window_on(worlds) -> None:
     age = sleepers.groupby("user_id").apply(
         lambda g: (g["occurred_at"].min() - g["created_at"].iloc[0]).days)
     assert (age >= 45).sum() > 0  # aged accounts activated in the test window
+
+
+def _without_event_ids(frame: pd.DataFrame) -> pd.DataFrame:
+    """Event ids follow the whole world's time order, so they move when shipments
+    move; everything else about an event must not."""
+    frame = frame.drop(columns=[c for c in ("event_id", "payment_event_id") if c in frame])
+    return frame.sort_values(list(frame.columns)).reset_index(drop=True)
+
+
+def _lags(tables: Tables) -> pd.DataFrame:
+    orders = tables["order_attempts"][["order_id", "merchant_id", "occurred_at"]]
+    shipped = tables["fulfilments"][["order_id", "occurred_at"]].rename(
+        columns={"occurred_at": "shipped"})
+    delivered = tables["deliveries"][["order_id", "occurred_at"]].rename(
+        columns={"occurred_at": "delivered"})
+    out = orders.merge(shipped, on="order_id").merge(delivered, on="order_id", how="left")
+    out["lag"] = (out["shipped"] - out["occurred_at"]).dt.total_seconds()
+    out["transit"] = (out["delivered"] - out["shipped"]).dt.total_seconds()
+    return out.set_index("order_id")
+
+
+@pytest.mark.parametrize(("family", "factor"), [("lag_half", 0.5), ("lag_double", 2.0)])
+def test_lag_families_rescale_shipment_lags_from_the_test_window_only(worlds, family,
+                                                                      factor) -> None:
+    base, other = worlds["baseline"], worlds[family]
+    # the same draws: every checkout and every collection attempt is the baseline's
+    for name in ("accounts", "plans", "installment_schedule"):
+        pd.testing.assert_frame_equal(base[name], other[name])
+    for name in ("order_attempts", "payment_attempts", "account_events"):
+        pd.testing.assert_frame_equal(_without_event_ids(base[name]),
+                                      _without_event_ids(other[name]))
+    a, b = _lags(base), _lags(other)
+    assert a.index.equals(b.index)
+    early = a["occurred_at"] < TEST_START
+    pd.testing.assert_series_equal(a.loc[early, "lag"], b.loc[early, "lag"])
+    closing = base["merchants"].loc[base["merchants"]["closed_at"].notna(), "merchant_id"]
+    late = ~early & ~a["merchant_id"].isin(closing) & (a["lag"] * min(1, factor) >= 900)
+    assert late.sum() > 500
+    assert ((b.loc[late, "lag"] - factor * a.loc[late, "lag"]).abs() <= 1 + factor).all()
+    assert (b.loc[~a["merchant_id"].isin(closing), "lag"] >= 900).all()  # floor after factor
+    pd.testing.assert_series_equal(a["transit"], b["transit"])  # delivery follows shipment
+
+
+def test_lag_families_leave_support_unchanged(worlds) -> None:
+    table = support_table(worlds["baseline"], PROTOCOL)
+    for family in ("lag_half", "lag_double"):
+        pd.testing.assert_frame_equal(support_table(worlds[family], PROTOCOL), table)
 
 
 # --------------------------------------------- construction shortcuts
