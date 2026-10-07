@@ -243,7 +243,8 @@ COLUMNS: tuple[AsofColumn, ...] = (
          "account_events", "ever", None, "rules", "ml"),
     # ---- outcomes under the policy (rebuilt per policy)
     _col("approved_orders_user_24h", OC, "int64",
-         "Orders by the account the policy let through and has not voided.",
+         "Orders by the account the policy let through and has not voided, cancelled or "
+         "paused with a hold before shipment, counted from their latest approval.",
          "policy-approved orders", "24h before the decision", False, "rules", "ml"),
     _col("approved_orders_user_ever", OC, "int64", "As above, without a window.",
          "policy-approved orders", "ever", False, *ALL),
@@ -386,7 +387,9 @@ class PolicyState:
       or the release of a hold placed before shipment);
     * ``held``: order_id, held_at, released_at (NaT while the hold is pending),
       outcome (``cleared``, ``cancelled`` or ``declined``; null while pending),
-      before_shipment. A hold placed before shipment pauses the order: until its
+      before_shipment. A held order went through at its checkout (a hold comes from
+      reviewing an order the policy let through), whatever ``approved`` says. A
+      hold placed before shipment pauses the order: from the hold until its
       release the order is neither approved nor voided, and the realized tables
       move its shipment and later schedule after the release (or cancel it and
       refund the checkout payment). A hold placed after shipment pauses nothing:
@@ -1002,14 +1005,16 @@ def outcome_columns(
     mine = pd.DataFrame({"position": np.arange(n), "user_id": user, "current": current,
                          "cut": d.cut, "decision_sec": d.decision_sec}).merge(
         pd.DataFrame({"user_id": a_user[went_through], "order_id": a_order[went_through],
-                      "approved": s["approved"][went_through],
-                      "voided": s["voided"][went_through],
+                      **{name: s[name][went_through]
+                         for name in ("approved", "paused", "resumed", "stopped")},
                       "promo": attempts["promo_id"].notna().to_numpy()[went_through]}),
         on="user_id")
     mine = mine[mine["order_id"] != mine["current"]]
-    live = mine[(mine["approved"] < mine["cut"]) & (mine["voided"] >= mine["cut"])]
+    live = mine[_live(mine)]
     c["approved_orders_user_ever"] = _per(live, n)
-    recent = (live["approved"].to_numpy(np.int64) >> SUB_BITS) >= live["decision_sec"] - _DAY
+    # approved last at its release if released by then, else at checkout
+    since = np.where(live["resumed"] < live["cut"], live["resumed"], live["approved"])
+    recent = (since >> SUB_BITS) >= live["decision_sec"] - _DAY
     c["approved_orders_user_24h"] = _per(live[recent], n)
     c["promo_redemptions_user"] = _per(live[live["promo"]], n)
     c.update(_repayment(tables, keys, live, n))
@@ -1053,9 +1058,8 @@ def outcome_columns(
     c["unauthorized_disputes_on_card"] = _per(on_card, n)
 
     # never-pay determinations on the account's earlier plans (core.world.adjudicate's rule)
-    stopped = np.minimum(s["voided"], s["cancelled"])
     determined = _never_pay(tables, a_order[went_through], s["approved"][went_through],
-                            stopped[went_through], other["order_id"].unique(),
+                            s["stopped"][went_through], other["order_id"].unique(),
                             d.decision_sec.max())
     known = other.merge(determined, on="order_id")
     c["never_pay_determined_user"] = _per(known[known["determined"] < known["cut"]], n) > 0
@@ -1065,8 +1069,7 @@ def outcome_columns(
     # the current order and the account under the policy
     shipped = _first_key(tables["fulfilments"]["order_id"], keys["fulfilments"])
     c["shipped_at_decision"] = _take(shipped, current, _NEVER) < d.cut
-    stopped = np.minimum(s["voided"], s["cancelled"])[d.row]
-    c["cancelled_at_decision"] = stopped < d.cut
+    c["cancelled_at_decision"] = s["stopped"][d.row] < d.cut
     blocked = s["blocked"]
     c["account_blocked"] = _take(blocked, user, _NEVER) < d.cut
     query, other_user = _linked(tables, keys, d)
@@ -1090,8 +1093,10 @@ def _first_key(ids: pd.Series, keys: np.ndarray) -> pd.Series:
 
 def _state_keys(state: PolicyState, attempts: pd.DataFrame,
                 a_key: np.ndarray) -> dict[str, np.ndarray | pd.Series]:
-    """Per attempt row: when the order went through, was voided or cancelled (keys,
-    _NEVER when not); per account: when it was blocked."""
+    """Per attempt row, as keys (_NEVER when not): when the order first went through
+    (``approved``), when a hold placed before shipment paused it (``paused``) and
+    released it (``resumed``), and when it was voided or cancelled (``stopped``); per
+    account: when it was blocked. A held order went through at its checkout."""
     position = pd.Index(attempts["order_id"].to_numpy(np.int64))
     order_sec = _seconds(attempts["known_at"])
 
@@ -1111,19 +1116,36 @@ def _state_keys(state: PolicyState, attempts: pd.DataFrame,
     at_checkout = present & (approved_sec == _pick(order_sec, row))
     approved_key = np.where(at_checkout, _pick(a_key, row), _derived_key(approved_sec))
     held = state.held
+    held_row = position.get_indexer(held["order_id"].to_numpy(np.int64))
+    first = per_order(pd.concat([approved["order_id"], held["order_id"]]), np.concatenate(
+        [approved_key, _pick(a_key, held_row, _NEVER)]))
     # a hold placed after shipment pauses nothing, so its end never cancels the order
-    cancelled = held[held["outcome"].isin(["cancelled", "declined"])
-                     & held["released_at"].notna() & held["before_shipment"].astype(bool)]
+    before = held[held["before_shipment"].astype(bool)]
+    cleared = before[(before["outcome"] == "cleared") & before["released_at"].notna()]
+    cancelled = before[before["outcome"].isin(["cancelled", "declined"])
+                       & before["released_at"].notna()]
     blocked = state.blocked
     blocked_key = pd.Series(_derived_key(_seconds(blocked["at"])),
                             index=blocked["user_id"].to_numpy(np.int64))
     return {
-        "approved": per_order(approved["order_id"], approved_key),
-        "voided": per_order(state.voided["order_id"], _derived_key(_seconds(state.voided["at"]))),
-        "cancelled": per_order(cancelled["order_id"],
-                               _derived_key(_seconds(cancelled["released_at"]))),
+        "approved": first,
+        "paused": per_order(before["order_id"], _derived_key(_seconds(before["held_at"]))),
+        "resumed": per_order(cleared["order_id"], _derived_key(_seconds(cleared["released_at"]))),
+        "stopped": np.minimum(
+            per_order(state.voided["order_id"], _derived_key(_seconds(state.voided["at"]))),
+            per_order(cancelled["order_id"], _derived_key(_seconds(cancelled["released_at"])))),
         "blocked": blocked_key.groupby(level=0).min(),
     }
+
+
+def _live(frame: pd.DataFrame) -> np.ndarray:
+    """Rows (with approved, paused, resumed, stopped and cut keys) whose order the policy
+    had let through by the cut and had neither paused nor voided or cancelled then."""
+    cut = frame["cut"].to_numpy(np.int64)
+    paused = (frame["paused"].to_numpy(np.int64) < cut) & (frame["resumed"].to_numpy(np.int64)
+                                                          >= cut)
+    return ((frame["approved"].to_numpy(np.int64) < cut) & ~paused
+            & (frame["stopped"].to_numpy(np.int64) >= cut))
 
 
 def _repayment(tables: Mapping[str, pd.DataFrame], keys: Mapping[str, np.ndarray],
@@ -1261,7 +1283,8 @@ def _linked_promo_uses(tables: Mapping[str, pd.DataFrame], attempts: pd.DataFram
                        ) -> np.ndarray:
     """R10's input: accounts sharing a device or email with this one (this one included)
     that used the current order's first-purchase promotion on an order that went
-    through and was not voided by the decision; 0 without such a promotion."""
+    through and was neither paused nor voided at the decision; 0 without such a
+    promotion."""
     promotions = tables["promotions"]
     first_purchase = set(promotions.loc[promotions["first_purchase_only"].astype(bool),
                                         "promo_id"].astype(np.int64))
@@ -1280,9 +1303,10 @@ def _linked_promo_uses(tables: Mapping[str, pd.DataFrame], attempts: pd.DataFram
     used = attempts["promo_id"].notna().to_numpy() & (s["approved"] < _NEVER)
     others = pd.DataFrame({"other_id": attempts["user_id"].to_numpy(np.int64)[used],
                            "promo": attempts["promo_id"].to_numpy()[used].astype(np.int64),
-                           "approved": s["approved"][used], "voided": s["voided"][used]})
+                           **{name: s[name][used]
+                              for name in ("approved", "paused", "resumed", "stopped")}})
     asked = asked.merge(others, on=["other_id", "promo"])
-    asked = asked[(asked["approved"] < asked["cut"]) & (asked["voided"] >= asked["cut"])]
+    asked = asked[_live(asked)]
     counted = asked.drop_duplicates(["position", "other_id"])
     out += np.bincount(counted["position"].to_numpy(np.int64), minlength=len(out))
     return out

@@ -197,6 +197,8 @@ class Oracle:
         self.approved_at: dict[int, int] = {}
         self.voided_at = defaultdict(list)
         self.cancelled_at = defaultdict(list)
+        self.paused_at = defaultdict(list)
+        self.resumed_at = defaultdict(list)
         self.blocked_at = defaultdict(list)
         if state is None:
             for a in self.attempts:
@@ -210,9 +212,18 @@ class Oracle:
             for row in _records(state.voided):
                 self.voided_at[row.order_id].append(row.at)
             for row in _records(state.held):
-                # a hold before shipment that ends in a cancellation or a decline
-                if (row.before_shipment and row.outcome in ("cancelled", "declined")
-                        and row.released_at is not None):
+                if row.order_id not in self.orders:
+                    continue
+                # a held order went through at its checkout
+                checkout = self.orders[row.order_id].known_at
+                self.approved_at[row.order_id] = min(
+                    self.approved_at.get(row.order_id, checkout), checkout)
+                if not row.before_shipment:
+                    continue  # a hold after shipment pauses nothing
+                self.paused_at[row.order_id].append(row.held_at)
+                if row.released_at is not None and row.outcome == "cleared":
+                    self.resumed_at[row.order_id].append(row.released_at)
+                elif row.released_at is not None and row.outcome in ("cancelled", "declined"):
                     self.cancelled_at[row.order_id].append(row.released_at)
             for row in _records(state.blocked):
                 self.blocked_at[row.user_id].append(row.at)
@@ -404,10 +415,24 @@ class Oracle:
             return False
         return v.event(a) if at == a.known_at else v.derived(at)  # at checkout: in place
 
+    def resumed(self, a, v: View) -> int | None:
+        """When a hold before shipment released the order, if the decision knows it."""
+        return next((x for x in self.resumed_at[a.order_id] if v.derived(x)), None)
+
     def live(self, a, v: View) -> bool:
-        """Let through as far as the decision knows, and not voided."""
-        return self.let_through(a, v) and not any(
-            v.derived(x) for x in self.voided_at[a.order_id])
+        """Let through as far as the decision knows, not paused by a hold placed before
+        shipment that has not been released, and neither voided nor cancelled."""
+        paused = any(v.derived(x) for x in self.paused_at[a.order_id]) and (
+            self.resumed(a, v) is None)
+        stopped = any(v.derived(x) for x in self.voided_at[a.order_id]
+                      + self.cancelled_at[a.order_id])
+        return self.let_through(a, v) and not paused and not stopped
+
+    def approved_last(self, a, v: View) -> int:
+        """When the order was last approved as the decision knows: at the release of
+        its hold, or at checkout."""
+        released = self.resumed(a, v)
+        return self.approved_at[a.order_id] if released is None else released
 
     def outcomes(self, o, v: View) -> dict:
         user = o.user_id
@@ -415,7 +440,7 @@ class Oracle:
         live = [a for a in others if self.live(a, v)]
         through = [a for a in others if self.let_through(a, v)]
         c = {"approved_orders_user_ever": len(live),
-             "approved_orders_user_24h": sum(self.approved_at[a.order_id] >= v.at - DAY
+             "approved_orders_user_24h": sum(self.approved_last(a, v) >= v.at - DAY
                                              for a in live),
              "promo_redemptions_user": sum(a.promo_id is not None for a in live)}
 

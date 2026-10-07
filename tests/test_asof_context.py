@@ -234,44 +234,51 @@ def test_rows_do_not_change_when_the_world_is_cut_inside_a_second(seed: int) -> 
                     (int(second), int(pivot["rank"]), int(pivot["event_id"])))
 
 
-def _state_by(state: asof.PolicyState, second: int) -> asof.PolicyState:
-    """What the policy had done by the end of ``second``: later approvals, voids, holds and
-    blocks dropped, and a hold released later still pending."""
-    def by(frame: pd.DataFrame, column: str) -> pd.DataFrame:
-        return frame[seconds(frame[column]) <= second].reset_index(drop=True)
-
-    held = by(state.held, "held_at")
-    pending = seconds(held["released_at"]) > second
-    held.loc[pending, "released_at"] = pd.NaT
-    held.loc[pending, "outcome"] = None
-    return asof.PolicyState(approved=by(state.approved, "approved_at"),
-                            voided=by(state.voided, "at"), blocked=by(state.blocked, "at"),
-                            held=held)
+def _state_at(tables, acts: dict[int, Act], blocks, second: int) -> asof.PolicyState:
+    """The policy's state as it stood at the end of ``second``, rebuilt from the acts
+    done by then: a hold or void not yet placed leaves the order as approved at
+    checkout, a hold not yet ended is pending, and later blocks have not happened."""
+    checkout = dict(zip(tables["order_attempts"]["order_id"],
+                        seconds(tables["order_attempts"]["known_at"]), strict=True))
+    done = {}
+    for order_id, act in acts.items():
+        start = checkout[order_id]
+        if act.kind in ("hold", "void") and start + act.at > second:
+            continue  # not yet: approved at checkout
+        if act.kind == "hold" and (act.release is None or start + act.release > second):
+            act = Act("hold", act.at)  # pending
+        done[order_id] = act
+    return realize(tables, done, [b for b in blocks if b[1] <= second])[1]
 
 
 @pytest.mark.parametrize("seed", POLICY_SEEDS)
 def test_policy_rows_do_not_change_when_the_policy_is_cut_at_a_time(seed: int) -> None:
     """Under a random policy, outcome columns at decisions up to a time equal those from
-    the realized tables and the policy's state as they stood then, cut just before and
-    at holds' releases and voids and at random decision times."""
+    the realized tables and the policy's state as they stood then (rebuilt from the
+    acts done by then), cut just before and at holds, releases and voids and at random
+    decision times."""
     tables = random_world(seed)
     acts = random_acts(tables, seed)
-    realized, state = realize(tables, acts, random_blocks(tables, seed))
+    blocks = random_blocks(tables, seed)
+    realized, state = realize(tables, acts, blocks)
     decisions = pd.concat([_checkouts(realized), later_decisions(realized, seed, 200, acts)],
                           ignore_index=True)
     full = asof.outcome_columns(realized, state, decisions)
     rng = random.Random(seed)
+    held = sorted(set(seconds(state.held["held_at"])))
     released = sorted(set(seconds(state.held["released_at"].dropna())))
     voids = sorted(set(seconds(state.voided["at"])))
     decided = seconds(decisions["decision_at"])
-    cuts = {int(s) + step for s in (*rng.sample(released, 4), *rng.sample(voids, 3))
+    cuts = {int(s) + step for s in (*rng.sample(held, 4), *rng.sample(released, 4),
+                                    *rng.sample(voids, 3))
             for step in (-1, 0)}
     cuts |= set(rng.sample(sorted(set(decided[decided > decided.min()].tolist())), 4))
     for cut in sorted(cuts):
         seen = decided <= cut
         assert seen.sum() > 20
         rows = asof.outcome_columns(known_by(realized, pd.Timestamp(cut, unit="s")),
-                                    _state_by(state, cut), decisions[seen].reset_index(drop=True))
+                                    _state_at(tables, acts, blocks, cut),
+                                    decisions[seen].reset_index(drop=True))
         pd.testing.assert_frame_equal(rows, full[seen].reset_index(drop=True),
                                       check_exact=True, obj=f"policy {seed} cut at {cut}")
 
