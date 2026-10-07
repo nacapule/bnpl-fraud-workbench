@@ -1,0 +1,335 @@
+"""As-of order context: the one definition of history, linkage, repayment state and exposure.
+
+Rules, ML features, the reviewer, packets and the referee read this context; no
+module outside ``core/`` computes history, linkage, repayment state or exposure
+(``tests/test_history_in_core.py``). It is built from observable tables only and
+never reads labels or latent truth.
+
+Decision point. A context row describes one order attempt at one decision time
+``decision_at`` (checkout by default: the attempt's own ``known_at``; a later
+review time for packets). It sees an event only if the event precedes the
+decision in the world's total order ``(known_at, kind rank, event_id)``; at
+checkout that means everything ordered before the attempt itself. Entities are
+visible from their creation time. "Current" below means the attempt being
+decided; a column that includes it says so.
+
+Two kinds of column (the replay depends on the difference):
+
+* ``attempt``-derived columns describe what customers and fraudsters tried
+  (velocity, linkage, tenure, credential changes, attempts). Real systems log
+  declined attempts, so these are computed once per world and shared by every
+  policy.
+* ``outcome``-derived columns describe what happened because orders were let
+  through (approvals, installments due and paid, payments, disputes, promotion
+  redemptions, blocks). A policy that declined an order must not later see that
+  order's repayments or disputes, so these are rebuilt from each policy's own
+  state by :func:`outcome_columns`; the world-level frame holds their
+  approve-all values. Up to one replay day of staleness in them is allowed and
+  stated.
+
+Intentionally different business definitions are separate columns (for example
+``attempts_user_24h`` vs ``approved_orders_user_24h``, ``accounts_on_address_30d``
+vs ``accounts_on_address_ever``). :data:`COLUMNS` is the specification; the
+implementation must match it column for column, and its tests include prefix
+invariance (truncating the world at any ``known_at``, including equal
+timestamps, leaves earlier rows unchanged) and a label-mutation test.
+
+Email identity has one rule, :func:`normalize_email`: lower-case; remove a
+``+tag`` from the local part for every provider; remove dots from the local
+part only for Gmail (``gmail.com``, ``googlemail.com``, folded to ``gmail.com``);
+never strip digits.
+
+Implemented here: the specification, :class:`PolicyState` and
+:func:`normalize_email`. The builders raise ``NotImplementedError`` until the
+context is implemented from the point-in-time kernels in ``model/features.py``
+(``_asof_event_count``, ``_hours_since_event``, ``_rolling_distinct_accounts``,
+``_installment_history``), which then move here.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+
+import pandas as pd
+
+ATTEMPT = "attempt"
+OUTCOME = "outcome"
+
+# Observable inputs the context may read; labels and latent tables are never inputs.
+INPUT_TABLES = (
+    "accounts", "merchants", "devices", "device_links", "addresses", "address_links", "cards",
+    "promotions", "plans", "installment_schedule", "account_events", "order_attempts",
+    "payment_attempts", "fulfilments", "deliveries", "payment_reversals", "dispute_openings",
+    "dispute_resolutions", "victim_reports", "plan_writeoffs", "cash_events",
+)
+GMAIL_DOMAINS = {"gmail.com", "googlemail.com"}
+DISPOSABLE_DOMAINS = {"guerrillamail.com", "mailinator.com", "tempmailo.com"}
+COMMON_DOMAINS = {"gmail.com", "hotmail.com", "icloud.com", "outlook.com", "proton.me",
+                  "yahoo.com"}
+
+
+@dataclass(frozen=True)
+class AsofColumn:
+    name: str
+    kind: str  # ATTEMPT or OUTCOME
+    dtype: str
+    definition: str
+    eligibility: str  # which events count
+    window: str  # e.g. "24h before the decision", "ever", "at the decision"
+    includes_current: bool | None  # None where the question does not arise
+    used_by: tuple[str, ...]  # rules, ml, reviewer, packets, referee, replay
+
+
+def _col(name: str, kind: str, dtype: str, definition: str, eligibility: str, window: str,
+         current: bool | None, *used_by: str) -> AsofColumn:
+    return AsofColumn(name, kind, dtype, definition, eligibility, window, current, used_by)
+
+
+A, OC = ATTEMPT, OUTCOME
+ALL = ("rules", "ml", "reviewer", "packets", "referee")
+
+COLUMNS: tuple[AsofColumn, ...] = (
+    # ---- the attempt itself and static context
+    _col("amount_cents", A, "int64", "Merchant's price of the current attempt.",
+         "current attempt", "at the decision", True, *ALL),
+    _col("order_exposure_cents", A, "int64",
+         "Cash at risk if approved: merchant settlement plus promotion funding minus the "
+         "down payment (core.ledger terms).", "current attempt", "at the decision", True,
+         "rules", "ml", "replay"),
+    _col("account_age_days", A, "float64", "Days from account creation to the decision.",
+         "the account", "at the decision", None, *ALL),
+    _col("merchant_age_days", A, "float64", "Days from merchant onboarding to the decision.",
+         "the merchant", "at the decision", None, "reviewer", "packets", "referee"),
+    _col("merchant_fulfilment_median_hours", A, "float64",
+         "The merchant's stated median hours from approval to shipment.", "the merchant",
+         "static", None, "reviewer", "packets", "referee", "replay"),
+    _col("avs_mismatch", A, "int8", "Address verification failed (avs_result = N).",
+         "current attempt", "at the decision", True, *ALL),
+    _col("cvv_mismatch", A, "int8", "Card verification failed (cvv_result = N).",
+         "current attempt", "at the decision", True, *ALL),
+    _col("bin_ip_country_mismatch", A, "int8", "Card BIN country differs from the IP country.",
+         "current attempt", "at the decision", True, *ALL),
+    _col("ip_country_not_home", A, "int8",
+         "IP country differs from the account's home country.", "current attempt",
+         "at the decision", True, *ALL),
+    _col("night_order", A, "int8", "Checkout between 00:00 and 05:59 platform time.",
+         "current attempt", "at the decision", True, "rules", "ml"),
+    _col("email_domain_class", A, "int8",
+         "0 common provider, 1 other, 2 disposable (lists in this module).", "the account",
+         "at the decision", None, *ALL),
+    _col("email_root_other_accounts", A, "int64",
+         "Other accounts whose normalized email equals this account's (normalize_email).",
+         "accounts created at or before the decision", "ever", False, *ALL),
+    _col("amount_over_category_median", A, "float64",
+         "Amount over the median amount of earlier processor-approved attempts in the "
+         "merchant's category.", "processor-approved attempts in the category",
+         "ever, before the decision", False, *ALL),
+    _col("amount_over_category_p95", A, "float64",
+         "Amount over the 95th percentile of the same set.",
+         "processor-approved attempts in the category", "ever, before the decision", False,
+         "rules", "ml"),
+    # ---- velocity
+    _col("attempts_user_1h", A, "int64", "Order attempts by the account.",
+         "attempts of any processor result", "1h before the decision", True, "rules", "ml"),
+    _col("attempts_user_24h", A, "int64", "Order attempts by the account.",
+         "attempts of any processor result", "24h before the decision", True, *ALL),
+    _col("attempts_user_7d", A, "int64", "Order attempts by the account.",
+         "attempts of any processor result", "7 days before the decision", True, "rules",
+         "ml"),
+    _col("amount_attempted_user_24h", A, "int64", "Sum of attempted amounts by the account.",
+         "attempts of any processor result", "24h before the decision", True, "rules", "ml"),
+    _col("amount_attempted_user_7d", A, "int64", "Sum of attempted amounts by the account.",
+         "attempts of any processor result", "7 days before the decision", True, "ml"),
+    _col("attempts_device_24h", A, "int64", "Order attempts on the device, any account.",
+         "attempts of any processor result", "24h before the decision", True, "rules", "ml"),
+    _col("processor_declines_card_24h", A, "int64",
+         "Processor-declined attempts with the same card.", "processor declines",
+         "24h before the decision", False, *ALL),
+    _col("processor_declines_device_24h", A, "int64",
+         "Processor-declined attempts on the same device, any account.", "processor declines",
+         "24h before the decision", False, *ALL),
+    _col("is_first_attempt_user", A, "int8", "No earlier order attempt by the account.",
+         "attempts of any processor result", "ever", False, *ALL),
+    _col("geo_kmh_from_previous_attempt", A, "float64",
+         "Implied km/h between the IP countries of the account's previous attempt and this "
+         "one (0 when the same country or more than 12h apart).",
+         "the account's previous attempt", "12h before the decision", False, "rules", "ml",
+         "packets"),
+    # ---- devices, addresses and cards on the account
+    _col("device_link_age_hours", A, "float64",
+         "Hours since the device was first used on this account.", "device_links",
+         "at the decision", None, *ALL),
+    _col("distinct_devices_user_30d", A, "int64",
+         "Distinct devices in the account's attempts and account events.",
+         "attempts and account events", "30 days before the decision", True, "ml", "packets"),
+    _col("card_link_age_hours", A, "float64", "Hours since the card was added to the account.",
+         "cards", "at the decision", None, *ALL),
+    _col("card_first_use_age_hours", A, "float64",
+         "Hours since the account's first attempt with this card (0 for the first use).",
+         "the account's attempts", "ever", True, "reviewer", "packets", "referee"),
+    _col("ship_address_link_age_hours", A, "float64",
+         "Hours since the account linked the shipping address.", "address_links",
+         "at the decision", None, *ALL),
+    _col("ship_address_first_use_age_hours", A, "float64",
+         "Hours since the account's first attempt shipping to this address (0 for the first).",
+         "the account's attempts", "ever", True, "reviewer", "packets", "referee"),
+    _col("ship_to_home", A, "int8",
+         "The shipping address is the account's active home address.", "address_links",
+         "at the decision", None, *ALL),
+    _col("home_address_age_days", A, "float64",
+         "Days since the account's current home address was registered on it.",
+         "address_links (role home, active)", "at the decision", None, "reviewer", "packets",
+         "referee"),
+    _col("distinct_ship_addresses_user_ever", A, "int64",
+         "Distinct shipping addresses in the account's attempts.", "the account's attempts",
+         "ever", True, "ml"),
+    # ---- linkage
+    _col("accounts_on_device_30d", A, "int64",
+         "Distinct accounts with an attempt or account event on the device.",
+         "attempts and account events", "30 days before the decision", True, *ALL),
+    _col("accounts_on_address_30d", A, "int64",
+         "Distinct accounts with an attempt shipping to the address.", "attempts",
+         "30 days before the decision", True, *ALL),
+    _col("accounts_on_address_ever", A, "int64",
+         "Distinct accounts with an attempt shipping to, or a link to, the address.",
+         "attempts and address_links", "ever", True, "ml", "packets"),
+    # ---- credential changes
+    _col("hours_since_password_change", A, "float64",
+         "Hours since the last password change (10,000 when none).",
+         "account_events kind password_change", "ever", None, *ALL),
+    _col("hours_since_password_reset", A, "float64",
+         "Hours since the last password reset (10,000 when none).",
+         "account_events kind password_reset", "ever", None, *ALL),
+    _col("hours_since_email_change", A, "float64",
+         "Hours since the last email change (10,000 when none).",
+         "account_events kind email_change", "ever", None, *ALL),
+    _col("hours_since_phone_change", A, "float64",
+         "Hours since the last phone change (10,000 when none).",
+         "account_events kind phone_change", "ever", None, *ALL),
+    _col("hours_since_credential_change", A, "float64",
+         "Minimum of the password change, password reset and email change columns.",
+         "account_events", "ever", None, "rules", "ml"),
+    # ---- outcomes under the policy (rebuilt per policy)
+    _col("approved_orders_user_24h", OC, "int64",
+         "Orders by the account the policy let through and has not voided.",
+         "policy-approved orders", "24h before the decision", False, "rules", "ml"),
+    _col("approved_orders_user_ever", OC, "int64", "As above, without a window.",
+         "policy-approved orders", "ever", False, *ALL),
+    _col("installments_due_user", OC, "int64",
+         "Installments (seq >= 1) due before the decision on the account's live plans.",
+         "plans of policy-approved orders", "ever, due before the decision", False, *ALL),
+    _col("installments_paid_user", OC, "int64",
+         "Of those, paid by a successful attempt known before the decision and not reversed "
+         "by then.", "plans of policy-approved orders", "ever", False, *ALL),
+    _col("installments_failed_user", OC, "int64",
+         "Of those, with a failed attempt known before the decision and no standing payment.",
+         "plans of policy-approved orders", "ever", False, *ALL),
+    _col("installments_paid_share_user", OC, "float64",
+         "installments_paid_user / installments_due_user (0 when none due).",
+         "plans of policy-approved orders", "ever", False, *ALL),
+    _col("open_balance_user_cents", OC, "int64",
+         "Exposure: principal of the account's live plans minus standing payments, excluding "
+         "written-off plans.", "plans of policy-approved orders", "at the decision", False,
+         *ALL),
+    _col("unauthorized_disputes_on_card", OC, "int64",
+         "Unauthorized-use disputes known before the decision on orders paid with this card.",
+         "disputes on policy-approved orders", "ever", False, *ALL),
+    _col("inr_disputes_opened_user", OC, "int64",
+         "Item-not-received disputes opened by the account, known before the decision.",
+         "disputes on policy-approved orders", "ever", False, *ALL),
+    _col("inr_claims_rejected_user", OC, "int64",
+         "Item-not-received disputes resolved against the account, known before the decision.",
+         "disputes on policy-approved orders", "ever", False, *ALL),
+    _col("never_pay_determined_user", OC, "int8",
+         "A never-pay determination on one of the account's earlier plans was known before "
+         "the decision; computed from payments with core.world.adjudicate's rule, never by "
+         "reading labels.", "plans of policy-approved orders", "ever", False, *ALL),
+    _col("promo_redemptions_user", OC, "int64", "Promotions used on the account's orders.",
+         "policy-approved orders", "ever, before the decision", False, "rules", "ml"),
+    _col("promo_uses_linked_accounts", OC, "int64",
+         "Accounts linked to this one by device or address that used the same first-purchase "
+         "promotion, including this account's use.", "policy-approved orders",
+         "ever, before the decision", True, *ALL),
+    _col("shipped_at_decision", OC, "int8",
+         "The order's fulfilment is known at the decision (always 0 at checkout).",
+         "the current order under the policy", "at the decision", True, "reviewer", "packets",
+         "referee", "replay"),
+    _col("cancelled_at_decision", OC, "int8",
+         "The policy voided or cancelled the order before the decision.",
+         "the current order under the policy", "at the decision", True, "reviewer", "packets",
+         "referee", "replay"),
+    _col("account_blocked", OC, "int8", "The policy blocked the account before the decision.",
+         "policy blocks", "at the decision", None, "replay", "reviewer"),
+    _col("linked_account_blocked_30d", OC, "int8",
+         "An account linked by device or address in the last 30 days was blocked by the "
+         "policy before the decision.", "policy blocks", "30 days before the decision", None,
+         "replay", "reviewer"),
+)
+COLUMN_NAMES = tuple(column.name for column in COLUMNS)
+ATTEMPT_COLUMNS = tuple(c.name for c in COLUMNS if c.kind == ATTEMPT)
+OUTCOME_COLUMNS = tuple(c.name for c in COLUMNS if c.kind == OUTCOME)
+KEY_COLUMNS = ("order_id", "user_id", "merchant_id", "decision_at")
+
+
+def normalize_email(email: str) -> str:
+    """The one email-identity rule (see the module docstring)."""
+    local, _, domain = email.strip().lower().rpartition("@")
+    if not local:
+        raise ValueError(f"not an email address: {email!r}")
+    local = local.split("+", 1)[0]
+    if domain in GMAIL_DOMAINS:
+        local = local.replace(".", "")
+        domain = "gmail.com"
+    return f"{local}@{domain}"
+
+
+@dataclass(frozen=True)
+class PolicyState:
+    """What one policy has done, for rebuilding outcome-derived columns.
+
+    ``approved``: order_id, approved_at (when the order went through; a hold
+    shifts it). ``voided``: order_id, at (void, cancellation or abandonment before
+    shipping). ``blocked``: user_id, at. Under approve-all every
+    processor-approved order is approved at its checkout and nothing is voided
+    or blocked.
+    """
+
+    approved: pd.DataFrame
+    voided: pd.DataFrame
+    blocked: pd.DataFrame
+
+    @classmethod
+    def approve_all(cls, tables: Mapping[str, pd.DataFrame]) -> PolicyState:
+        orders = tables["order_attempts"]
+        approved = orders.loc[orders["processor_result"] == "approved",
+                              ["order_id", "known_at"]].rename(columns={"known_at": "approved_at"})
+        return cls(
+            approved=approved.reset_index(drop=True),
+            voided=pd.DataFrame({"order_id": pd.Series(dtype="int64"),
+                                 "at": pd.Series(dtype="datetime64[s]")}),
+            blocked=pd.DataFrame({"user_id": pd.Series(dtype="int64"),
+                                  "at": pd.Series(dtype="datetime64[s]")}),
+        )
+
+
+def build_context(
+    tables: Mapping[str, pd.DataFrame],
+    decisions: pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    """The world-level context: one row per decision with KEY_COLUMNS + COLUMN_NAMES.
+
+    ``decisions`` has ``order_id`` and ``decision_at``; by default every order
+    attempt at checkout. Outcome-derived columns take their approve-all values.
+    Reads only :data:`INPUT_TABLES`.
+    """
+    raise NotImplementedError("the as-of context is built in core/asof.py from the kernels")
+
+
+def outcome_columns(
+    tables: Mapping[str, pd.DataFrame],
+    state: PolicyState,
+    decisions: pd.DataFrame,
+) -> pd.DataFrame:
+    """Outcome-derived columns (KEY_COLUMNS + OUTCOME_COLUMNS) under one policy's state."""
+    raise NotImplementedError("the as-of context is built in core/asof.py from the kernels")
