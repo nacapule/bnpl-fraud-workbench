@@ -282,15 +282,20 @@ def tune_shortlist(
     screen = tune(policy, scores, frozen, grid, routed_minutes=routed_minutes,
                   guardrail=guardrail, history="frozen")
     points, review_points, decline_points = _grid(policy, scores, grid)
-    by_version = {p.candidate.version: p for p in points}
+    first = {}  # each threshold pair at its first grid position
+    for point in points:
+        first.setdefault(point.candidate.version, point)
     ranked = _ranked(screen.frontier)
     picked: list[_Point] = []
     if screen.chosen is not None:
-        winner = by_version[screen.chosen.version]
+        # tied scores can put the winner at several grid positions: every one of them
+        # brings its neighbours
+        spots = [(p.review_index, p.decline_index) for p in points
+                 if p.candidate.version == screen.chosen.version]
         picked += [p for p in points
-                   if abs(p.review_index - winner.review_index) <= 1
-                   and abs(p.decline_index - winner.decline_index) <= 1]
-    picked += [by_version[v] for v in ranked["policy_version"].drop_duplicates().head(k)]
+                   if any(abs(p.review_index - i) <= 1 and abs(p.decline_index - j) <= 1
+                          for i, j in spots)]
+    picked += [first[v] for v in ranked["policy_version"].drop_duplicates().head(k)]
     shortlist = list({p.candidate.version: p for p in picked}.values())
     rows = _evaluate(shortlist, rebuilt) if shortlist else {}
     routed = dict(zip(screen.frontier["policy_version"],

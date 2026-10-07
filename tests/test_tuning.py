@@ -282,6 +282,32 @@ def test_the_shortlist_is_fixed_by_the_frozen_screen_and_the_choice_by_policy_hi
     assert "frozen approve-all" in tuned.rule and "best 5" in tuned.rule
 
 
+def test_a_winner_at_several_grid_positions_brings_every_positions_neighbours():
+    """Four orders in a hundred tie at the top score, so every positive rate cuts at 9:
+    the frozen winner (review and decline at 9) sits at review steps 1-5 and decline
+    steps 1-3. Its neighbours at the grid's low corner (review off, decline at 9) are
+    shortlisted, and policy history prefers one of them."""
+    scores = np.array([9.0] * 4 + [1.0] * 96)
+
+    def rows(net):
+        def evaluate(candidates):
+            return [{**ROW, "net_cents": net(c.review_threshold, c.decline_threshold),
+                     "reviews": 0 if c.review_threshold is None else 1}
+                    for c in candidates]
+        return evaluate
+
+    frozen_net = {(9.0, 9.0): 100, (None, 9.0): 50, (9.0, None): 40, (None, None): 30}
+    policy_net = {(9.0, 9.0): 100, (None, 9.0): 2_000, (9.0, None): 40, (None, None): 30}
+    tuned = tune_shortlist(scored_policy(None, None), {"review": scores, "decline": scores},
+                           rows(lambda r, d: frozen_net[(r, d)]),
+                           rows(lambda r, d: policy_net[(r, d)]),
+                           Grid((0.0, 0.01, 0.02, 0.05, 0.1, 0.2), (0.0, 0.01, 0.02, 0.05)),
+                           k=1)
+    assert (tuned.screened.review_threshold, tuned.screened.decline_threshold) == (9.0, 9.0)
+    assert len(tuned.shortlist) == 4  # every distinct pair neighbours some winner position
+    assert (tuned.chosen.review_threshold, tuned.chosen.decline_threshold) == (None, 9.0)
+
+
 def test_the_guardrail_keeps_points_with_too_much_friction_out_of_the_choice():
     """Holding legitimate customers earns more here, but past 30 per 10,000 the point is
     out: of the shortlist's best k and of the choice."""
