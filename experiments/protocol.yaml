@@ -305,7 +305,8 @@ cases:
 # (core.protocol.require_freeze). The list is what decides the published
 # numbers: the protocol, the configuration, the policy document, and the code
 # that generates worlds, builds the context, fits, routes, reviews, replays,
-# accounts, evaluates, chooses and referees, with the gate itself. A directory
+# accounts, evaluates, chooses and referees, with the gate itself and the
+# package versions they run with. A directory
 # entry (ending in /) freezes every file under it that git does not ignore, so
 # a file added there later is refused too; what later stages add (case files,
 # benchmarks, templates, the methods text) lives outside these entries. The
@@ -338,3 +339,4 @@ freeze:
     - model/
     - llm/referee.py
     - pipeline.py
+    - requirements.lock   # the final profile also refuses an installed environment that differs

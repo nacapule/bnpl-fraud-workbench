@@ -100,6 +100,55 @@ def test_the_final_run_is_refused_before_the_freeze(tmp_path: Path, unfrozen: Pa
     assert not (pipeline.RUNS / "refused-final-test").exists()
 
 
+def test_the_final_run_needs_the_locked_environment(tmp_path: Path, monkeypatch) -> None:
+    lock = tmp_path / "requirements.lock"
+    lock.write_text(
+        "# Exact versions (Python 3.14, macOS arm64 and Linux).\n"
+        "numpy==2.5.1\n"
+        "pandas==3.0.5\n"
+        'greenlet==3.5.6 ; platform_machine == "x86_64" or platform_machine == "aarch64"\n')
+    installed = {"numpy": "2.5.1", "pandas": "3.0.5"}
+
+    def version_of(name: str) -> str:
+        from importlib import metadata
+
+        if name not in installed:
+            raise metadata.PackageNotFoundError(name)
+        return installed[name]
+
+    mac = {"platform_machine": "arm64"}
+    assert pipeline.lock_mismatches(lock, environment=mac, python=(3, 14),
+                                    version_of=version_of) == []
+    # on Linux the greenlet pin applies, and its absence is a mismatch
+    linux = {"platform_machine": "x86_64"}
+    assert pipeline.lock_mismatches(lock, environment=linux, python=(3, 14),
+                                    version_of=version_of) == [
+        "greenlet not installed instead of 3.5.6"]
+    installed["greenlet"] = "3.5.6"
+    assert pipeline.lock_mismatches(lock, environment=linux, python=(3, 14),
+                                    version_of=version_of) == []
+    # every mismatch is listed, the Python minor version included
+    installed.update(numpy="2.4.0")
+    del installed["pandas"]
+    assert pipeline.lock_mismatches(lock, environment=mac, python=(3, 13),
+                                    version_of=version_of) == [
+        "Python 3.13 instead of the lock's 3.14", "numpy 2.4.0 instead of 2.5.1",
+        "pandas not installed instead of 3.0.5"]
+    lock.write_text("numpy>=2\n")
+    assert pipeline.lock_mismatches(lock, environment=mac, python=(3, 14),
+                                    version_of=version_of) == [
+        "requirements.lock names no Python version in its header",
+        "requirements.lock line 1 is not name==version: 'numpy>=2'"]
+    # the final profile refuses on any mismatch, after the freeze and tree checks pass
+    monkeypatch.setattr(proto, "require_freeze", lambda *args, **kwargs: {})
+    monkeypatch.setattr(pipeline, "code_identity", lambda root=pipeline.REPO: {
+        "commit": "0" * 40, "dirty": False})
+    monkeypatch.setattr(pipeline, "lock_mismatches", lambda: ["numpy 2.4.0 instead of 2.5.1"])
+    run = pipeline.make_run(pipeline.PROFILES["final"], runs=tmp_path)
+    with pytest.raises(pipeline.PipelineError, match="locked environment.*numpy 2.4.0"):
+        pipeline.preflight(pipeline.PROFILES["final"], run)
+
+
 def test_no_profile_generates_a_final_seed_before_the_freeze(tmp_path: Path,
                                                              unfrozen: Path) -> None:
     final_seed = proto.load_protocol().final_seeds[0]

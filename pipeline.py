@@ -82,6 +82,8 @@ RUNS = REPO / "runs"
 RESULTS = REPO / "results"
 RUN_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 POLICY_TABLES_SQL = REPO / "db" / "policy_tables.sql"
+LOCK_FILE = REPO / "requirements.lock"  # the versions the final results are produced with
+LOCK_PYTHON = re.compile(r"\(Python (\d+)\.(\d+)\b")  # the lock header's Python version
 CI_SCALE = 0.1  # the CI world: about 15,700 orders, with every pattern present
 BASELINE = "baseline"
 REFERENCES = ("approve_all", "incumbent_rules")
@@ -1460,6 +1462,50 @@ def execute(run: Run, stages: list[Stage], *, log: Callable[[str], None] = print
             log(f"[render] wrote {path}")
 
 
+def lock_mismatches(path: Path = LOCK_FILE, *, environment: Mapping[str, str] | None = None,
+                    python: tuple[int, int] | None = None,
+                    version_of: Callable[[str], str] | None = None) -> list[str]:
+    """How the installed environment differs from ``requirements.lock``: the Python
+    minor version its header names, and every pinned package whose environment marker
+    holds here (``environment`` overrides marker variables) but whose installed version
+    differs or which is missing. Empty when they match."""
+    from importlib import metadata
+
+    from packaging.markers import Marker
+
+    version_of = version_of or metadata.version
+    python = python or (sys.version_info.major, sys.version_info.minor)
+    text = path.read_text()
+    problems = []
+    header = LOCK_PYTHON.search("\n".join(line for line in text.splitlines()
+                                          if line.startswith("#")))
+    if header is None:
+        problems.append(f"{path.name} names no Python version in its header")
+    elif (int(header.group(1)), int(header.group(2))) != tuple(python):
+        problems.append(f"Python {python[0]}.{python[1]} instead of the lock's "
+                        f"{header.group(1)}.{header.group(2)}")
+    for number, line in enumerate(text.splitlines(), start=1):
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        requirement, _, marker = line.partition(";")
+        name, separator, pinned = requirement.strip().partition("==")
+        if not separator or not name.strip() or not pinned.strip():
+            problems.append(f"{path.name} line {number} is not name==version: {line!r}")
+            continue
+        if marker.strip() and not Marker(marker.strip()).evaluate(
+                dict(environment) if environment else None):
+            continue  # pinned for another platform
+        try:
+            installed = version_of(name.strip())
+        except metadata.PackageNotFoundError:
+            installed = None
+        if installed != pinned.strip():
+            problems.append(f"{name.strip()} {installed or 'not installed'} instead of "
+                            f"{pinned.strip()}")
+    return problems
+
+
 def preflight(profile: Profile, run: Run) -> None:
     """Checks before anything is written."""
     if profile.name == "final":
@@ -1467,6 +1513,9 @@ def preflight(profile: Profile, run: Run) -> None:
         if code_identity()["dirty"] is not False:
             raise PipelineError("the final run needs a clean working tree with no untracked "
                                 "files (commit first)")
+        if mismatches := lock_mismatches():
+            raise PipelineError("the final run needs the locked environment "
+                                f"(requirements.lock): {'; '.join(mismatches)}")
     for ref in run.all_worlds:
         protocol_module.check_seed(ref.seed)
     tuning_history(run)

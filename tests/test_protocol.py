@@ -267,7 +267,7 @@ def test_the_frozen_list_is_what_decides_results_and_nothing_later_stages_add(
                    "core/ledger.py", "core/actions.py", "core/evidence.py", "core/asof.py",
                    "core/recommendation.py", "core/stats.py", "core/results.py",
                    "core/protocol.py", "queue_sim/replay.py", "rules/tuning.py",
-                   "model/train.py", "llm/referee.py", "pipeline.py"):
+                   "model/train.py", "llm/referee.py", "pipeline.py", "requirements.lock"):
         assert needed in files
     later = ("docs/", "report/", "cases/", "llm/eval/", "results/", "reports/", "README")
     assert not [name for name in files if name.startswith(later)]
