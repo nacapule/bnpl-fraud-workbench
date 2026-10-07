@@ -109,6 +109,26 @@ class StubScorer:
         return np.clip(self.score(rows), 0.0, 1.0)
 
 
+@dataclass
+class ColumnScorer:
+    """Scores a row by one of its context columns (for runs on the real context)."""
+
+    name: str = "amount"
+    version: str = "c1"
+    column: str = "amount_cents"
+
+    @property
+    def columns(self) -> tuple[str, ...]:
+        return (self.column,)
+
+    def score(self, rows: pd.DataFrame) -> np.ndarray:
+        return rows[self.column].to_numpy(dtype=float)
+
+    def probability(self, rows: pd.DataFrame) -> np.ndarray:
+        values = self.score(rows)
+        return values / (values.max() + 1.0) if len(values) else values
+
+
 def scored_policy(review: float | None = 1.0, decline: float | None = None) -> policies.Policy:
     return policies.single_scorer("scored", StubScorer()).with_thresholds(review, decline)
 

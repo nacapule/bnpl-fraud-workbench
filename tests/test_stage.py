@@ -15,7 +15,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import pytest
-from replay_support import StubContext, StubScorer, mini_tables
+from replay_support import ColumnScorer, StubContext, StubScorer, mini_tables
 
 from core import actions, asof, ledger
 from queue_sim import outcomes, stage
@@ -34,7 +34,8 @@ class Ref:
 class FakeRun:
     """What the stages read from the pipeline's run object."""
 
-    def __init__(self, tables: dict[str, pd.DataFrame], context: pd.DataFrame) -> None:
+    def __init__(self, tables: dict[str, pd.DataFrame], context: pd.DataFrame,
+                 scorer: type = StubScorer) -> None:
         self.ref = Ref(416, "baseline")
         self._tables = tables
         self.worlds = [self.ref]
@@ -45,8 +46,8 @@ class FakeRun:
                      "test": window(start=T("2025-03-01"), end=T("2025-06-15"))},
             observed_until=T("2025-06-30 23:59:59"),
             order_start=T("2024-12-01"), order_end=T("2025-06-15"))
-        scorers = {name: StubScorer(name=name) for name in ("rules", "tree", "logistic",
-                                                            "boosting")}
+        scorers = {name: scorer(name=name) for name in ("rules", "tree", "logistic",
+                                                        "boosting")}
         self.memory: dict[str, Any] = {"scorers": {416: scorers},
                                        "context": {self.ref: context}}
 
@@ -208,3 +209,26 @@ def test_a_released_hold_counts_the_order_from_its_release() -> None:
     frozen, rebuilt = _ana_order_10(release)
     assert rebuilt["approved_orders_user_ever"] == frozen["approved_orders_user_ever"] == 1
     assert rebuilt["installments_due_user"] == frozen["installments_due_user"] == 3
+
+
+@needs_context
+def test_worker_processes_give_the_same_rows_as_one_process() -> None:
+    tables = mini_tables()
+    context = asof.build_context(tables)
+    patch = pytest.MonkeyPatch()
+    patch.setattr(tuning.Grid, "from_config",
+                  classmethod(lambda cls, cfg=None: cls((0.0, 0.2), (0.0, 0.1))))
+    outputs = []
+    try:
+        for count in (1, 2):
+            run = FakeRun(tables, context, scorer=ColumnScorer)
+            run.workers = count
+            tuned = stage.tune(run)
+            replayed = stage.replay(run)
+            outputs.append((tuned.tables, replayed.tables))
+    finally:
+        patch.undo()
+    (tuned_one, replayed_one), (tuned_two, replayed_two) = outputs
+    assert tuned_one == tuned_two
+    assert replayed_one == replayed_two
+    assert len(replayed_one["replay.outcomes"]) == 7 * len(stage.VARIANTS)

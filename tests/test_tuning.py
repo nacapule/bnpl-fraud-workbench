@@ -105,24 +105,38 @@ def test_cut_points_are_scores_the_policy_attains() -> None:
     assert all(cut_point(scores, r) in set(scores[~np.isnan(scores)]) for r in (0.3, 0.7))
 
 
-def _tuning(tables, roster, grid):
+def _tuning(tables, roster, grid, *, routed=False):
     stub = StubContext(tables, scores={o: float(o) for o in tables["order_attempts"]["order_id"]})
     world = stub_world(tables, stub)
     attempts = world.orders(*WHOLE)
     scores = attempts["order_id"].astype(float).to_numpy()
+    replayed = []
 
-    def run(candidate):
-        result = replay(world, candidate, window=WHOLE, roster=roster, calendar=CALENDAR,
-                        reviewer=Reviewer(), verification=verification(),
-                        history=frozen(world, stub), settings=SETTINGS)
-        return result, outcomes.outcome_row(result, world, keys={}, ltv_cents=1500)
+    def evaluate(candidates):
+        rows = []
+        for candidate in candidates:
+            replayed.append(candidate.version)
+            result = replay(world, candidate, window=WHOLE, roster=roster, calendar=CALENDAR,
+                            reviewer=Reviewer(), verification=verification(),
+                            history=frozen(world, stub), settings=SETTINGS)
+            rows.append(outcomes.outcome_row(result, world, keys={}, ltv_cents=1500))
+        return rows
 
-    return tune(scored_policy(None, None), {"review": scores, "decline": scores}, run, grid)
+    extra = {}
+    if routed:  # ten minutes per order the checkout routing sends to review
+        extra = {"routed_minutes": lambda c: 10.0 * int(
+                     (c.route(world.context)["route"] == "review").sum()),
+                 "available_minutes": roster.available_minutes(
+                     int(WHOLE[0].timestamp()), int(WHOLE[1].timestamp()))}
+    tuned = tune(scored_policy(None, None), {"review": scores, "decline": scores}, evaluate,
+                 grid, **extra)
+    assert len(replayed) == len(set(replayed))  # each candidate replayed once
+    return tuned, replayed
 
 
 def test_tuning_reports_the_frontier_and_a_boundary_optimum() -> None:
     tables = mini_tables()
-    tuned = _tuning(tables, always_on_roster(), Grid((0.0, 0.25, 0.5), (0.0, 0.1, 0.2)))
+    tuned, _ = _tuning(tables, always_on_roster(), Grid((0.0, 0.25, 0.5), (0.0, 0.1, 0.2)))
     frontier = tuned.frontier
     assert len(frontier) == 9 and frontier["feasible"].all()
     best = frontier.sort_values("objective_cents", ascending=False).iloc[0]
@@ -137,14 +151,31 @@ def test_tuning_reports_the_frontier_and_a_boundary_optimum() -> None:
 def test_when_no_point_fits_the_capacity_nothing_is_chosen() -> None:
     tables = mini_tables()
     nobody = Roster((Shift("none", (0,), 0, 1),), {"none": 0})
-    tuned = _tuning(tables, nobody, Grid((0.25, 0.5), (0.1,)))
+    tuned, replayed = _tuning(tables, nobody, Grid((0.25, 0.5), (0.1,)))
     assert tuned.chosen is None and tuned.feasible_points == 0
-    assert not tuned.frontier["feasible"].any()
+    assert not tuned.frontier["feasible"].any() and len(replayed) == 2
+    # with the checkout routing known, points far over capacity are not replayed
+    tuned, replayed = _tuning(tables, nobody, Grid((0.25, 0.5), (0.1,)), routed=True)
+    assert tuned.chosen is None and replayed == []
+    assert not tuned.frontier["replayed"].any() and tuned.frontier["objective_cents"].isna().all()
+
+
+def test_only_points_far_over_capacity_are_skipped() -> None:
+    tables = mini_tables()
+    # one analyst, three minutes on Mondays: 84 minutes over the window; checkout routing
+    # offers 60 minutes at a 25% review rate and 140 at 50%
+    roster = Roster((Shift("mon", (0,), 9 * 60, 3),), {"mon": 1})
+    tuned, replayed = _tuning(tables, roster, Grid((0.0, 0.25, 0.5), (0.0,)), routed=True)
+    frontier = tuned.frontier.set_index("review_rate")
+    assert frontier["available_minutes"].iloc[0] == 84
+    assert frontier["review_minutes_routed"].tolist() == [0, 60, 140]
+    assert frontier["replayed"].tolist() == [True, True, False]  # 140 > 1.25 x 84
+    assert len(replayed) == 2
 
 
 def test_the_tuned_policy_is_the_one_the_replay_evaluates() -> None:
     tables = mini_tables()
-    tuned = _tuning(tables, always_on_roster(), Grid((0.0, 0.25), (0.0, 0.1)))
+    tuned, _ = _tuning(tables, always_on_roster(), Grid((0.0, 0.25), (0.0, 0.1)))
     chosen_row = tuned.frontier.loc[tuned.frontier["policy_version"] == tuned.chosen.version]
     assert len(chosen_row) == 1
     assert float(chosen_row["decline_threshold"].iloc[0]) == pytest.approx(

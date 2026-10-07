@@ -21,7 +21,10 @@ context is shared through ``run.memory["context"]`` as the pipeline caches it.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+import multiprocessing
+import os
+from collections.abc import Mapping, Sequence
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
@@ -34,8 +37,8 @@ from core.actions import CheckoutRoute
 from queue_sim import outcomes, policies
 from queue_sim.replay import FrozenHistory, PolicyHistory, ReplayResult, Settings, World
 from queue_sim.replay import replay as run_replay
-from queue_sim.reviewer import PerfectReviewer, Reviewer, Verification
-from queue_sim.roster import Roster, ServiceCalendar
+from queue_sim.reviewer import PerfectReviewer, Reviewer, Verification, service_seconds
+from queue_sim.roster import Roster, ServiceCalendar, to_seconds
 from rules import tuning
 
 BASELINE = "baseline"
@@ -127,8 +130,11 @@ class Bench:
                    FrozenHistory(world, neighbours=neighbours))
 
     def verification(self, rates: str = "verification") -> Verification:
-        return Verification.from_config(self.world.seed, self.latent_orders, self.policy_cfg,
-                                        rates=rates)
+        cache = self.__dict__.setdefault("_verification", {})
+        if rates not in cache:
+            cache[rates] = Verification.from_config(self.world.seed, self.latent_orders,
+                                                    self.policy_cfg, rates=rates)
+        return cache[rates]
 
     def run(self, policy: policies.Policy, window: tuple[pd.Timestamp, pd.Timestamp],
             staff: Staffing, *, history: str = "policy", reviewer: str = "evidence",
@@ -145,6 +151,19 @@ class Bench:
 
     def ltv_cents(self) -> int:
         return int(round(float(self.policy_cfg["costs"]["false_decline_ltv_usd"]) * 100))
+
+    def routed_minutes(self, policy: policies.Policy,
+                       window: tuple[pd.Timestamp, pd.Timestamp]) -> float:
+        """Review minutes the policy's checkout routing sends to the queue over ``window``
+        on the world-level context (before any block), with each order's review time."""
+        orders = self.world.orders(*window)
+        rows = self.world.context.set_index("order_id").reindex(orders["order_id"])
+        routed = policy.route(rows.reset_index(), known=self.world.scores)
+        ids = routed.loc[routed["route"] == CheckoutRoute.REVIEW.value, "order_id"]
+        settings = Settings.from_config(self.policy_cfg)
+        seconds = service_seconds(self.world.seed, ids.to_numpy(np.int64),
+                                  settings.service_mean_minutes, settings.service_sigma)
+        return float(seconds.sum()) / 60
 
     def checkout_scores(self, policy: policies.Policy,
                         window: tuple[pd.Timestamp, pd.Timestamp]) -> dict[str, np.ndarray]:
@@ -185,10 +204,128 @@ def policies_for(scorers: Mapping[str, Any], bench: Bench) -> dict[str, policies
     return policies.policy_set(scorers, bench.world.terms, bench.ltv_cents())
 
 
+# ------------------------------------------------------------------------- many replays
+
+
+@dataclass(frozen=True)
+class Task:
+    """One replay of a world: a policy (by name and thresholds), a staffing, a variant."""
+
+    policy: str
+    review_threshold: float | None
+    decline_threshold: float | None
+    window: tuple[pd.Timestamp, pd.Timestamp]
+    staff: Staffing
+    history: str = "policy"
+    reviewer: str = "evidence"
+    rates: str = "verification"
+    keys: tuple[tuple[str, Any], ...] = ()  # leading columns of the outcome row
+    detail: bool = False  # also the confusion tables and prevented loss by pattern
+
+    @classmethod
+    def of(cls, policy: policies.Policy, window: tuple[pd.Timestamp, pd.Timestamp],
+           staff: Staffing, **kwargs: Any) -> Task:
+        keys = kwargs.pop("keys", {})
+        return cls(policy.name, policy.review_threshold, policy.decline_threshold, window,
+                   staff, keys=tuple(dict(keys).items()), **kwargs)
+
+
+@dataclass
+class Worker:
+    """Replays of one world: its bench, the seed's untuned policies and the outcome truth."""
+
+    bench: Bench
+    policies: dict[str, policies.Policy]
+    classes: pd.DataFrame
+    latent_classes: pd.DataFrame
+
+    @classmethod
+    def of(cls, bench: Bench, scorers: Mapping[str, Any]) -> Worker:
+        latent = bench.latent_orders[["order_id", "pattern_id"]].assign(
+            pattern_id=lambda f: f["pattern_id"].fillna("legitimate"))
+        return cls(bench, policies_for(scorers, bench),
+                   outcomes.truth(bench.world.tables, bench.world.observed_until), latent)
+
+    def run(self, task: Task) -> dict[str, Any]:
+        policy = self.policies[task.policy].with_thresholds(task.review_threshold,
+                                                             task.decline_threshold)
+        result = self.bench.run(policy, task.window, task.staff, history=task.history,
+                                reviewer=task.reviewer, rates=task.rates)
+        out: dict[str, Any] = {"row": outcomes.outcome_row(
+            result, self.bench.world, keys={**dict(task.keys), "policy_version": policy.version},
+            ltv_cents=self.bench.ltv_cents(), classes=self.classes)}
+        if task.detail:
+            out["confusion"] = _records(outcomes.confusion(result, self.classes))
+            out["confusion_latent"] = _records(outcomes.confusion(
+                result, self.latent_classes, by="pattern_id"))
+            out["prevented"] = _records(outcomes.prevented_by_pattern(
+                result, self.bench.world, self.classes))
+        return out
+
+
+_WORKER: Worker | None = None
+
+
+def _start_worker(tables: Mapping[str, pd.DataFrame], context: pd.DataFrame,
+                  scorers: Mapping[str, Any], seed: int, observed_until: pd.Timestamp,
+                  policy_cfg: Mapping[str, Any]) -> None:
+    global _WORKER
+    bench = Bench.of(tables, context, seed=seed, observed_until=observed_until,
+                     policy_cfg=policy_cfg)
+    _WORKER = Worker.of(bench, scorers)
+
+
+def _run_task(task: Task) -> dict[str, Any]:
+    assert _WORKER is not None
+    return _WORKER.run(task)
+
+
+def workers(run: Any) -> int:
+    """Worker processes for replays: ``run.workers``, else ``BNPL_REPLAY_WORKERS``, else 1."""
+    count = getattr(run, "workers", None) or os.environ.get("BNPL_REPLAY_WORKERS") or 1
+    return max(int(count), 1)
+
+
+class Replays:
+    """Replays of one world, in this process or in a pool of worker processes.
+
+    Every draw is keyed by seed, stream and id, so a task's result does not depend on
+    the process that ran it; results come back in task order.
+    """
+
+    def __init__(self, run: Any, ref: Any, seed: int, count: int | None = None) -> None:
+        self.bench = _bench(run, ref)
+        self.scorers = run.memory["scorers"][seed]
+        self.count = workers(run) if count is None else count
+        self.local: Worker | None = None
+        self.pool: ProcessPoolExecutor | None = None
+
+    def __enter__(self) -> Replays:
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        if self.pool is not None:
+            self.pool.shutdown()
+
+    def run(self, tasks: Sequence[Task]) -> list[dict[str, Any]]:
+        if self.count <= 1 or len(tasks) <= 1:
+            if self.local is None:
+                self.local = Worker.of(self.bench, self.scorers)
+            return [self.local.run(task) for task in tasks]
+        if self.pool is None:
+            world = self.bench.world
+            self.pool = ProcessPoolExecutor(
+                max_workers=self.count, mp_context=multiprocessing.get_context("spawn"),
+                initializer=_start_worker,
+                initargs=(world.tables, world.context, self.scorers, world.seed,
+                          world.observed_until, self.bench.policy_cfg))
+        return list(self.pool.map(_run_task, tasks))
+
+
 # ------------------------------------------------------------------------- stages
 
 
-def tune(run: Any) -> StageOutput:
+def tune(run: Any, *, history: str = "policy") -> StageOutput:
     """Each seed's policies tuned on its baseline world's validation window (base level)."""
     policy_cfg = config.load("policy")
     grid = tuning.Grid.from_config(policy_cfg)
@@ -196,34 +333,40 @@ def tune(run: Any) -> StageOutput:
     window = _window(run.protocol, "validation")
     frontier_rows, chosen_rows = [], []
     for seed in sorted({ref.seed for ref in run.all_worlds}):
-        bench = _bench(run, _baseline(run, seed))
         found = run.memory.setdefault("tuned", {}).setdefault(seed, {})
-        for name, policy in policies_for(run.memory["scorers"][seed], bench).items():
-            if not policy.tunable:
-                found[name] = policy
-                continue
+        with Replays(run, _baseline(run, seed), seed) as replays:
+            bench = replays.bench
+            roster = staff.roster(policy_cfg)
+            available = roster.available_minutes(*(int(to_seconds(t)) for t in window))
+            for name, policy in policies_for(run.memory["scorers"][seed], bench).items():
+                if not policy.tunable:
+                    found[name] = policy
+                    continue
 
-            def evaluate(candidate: policies.Policy, bench: Bench = bench
-                         ) -> tuple[ReplayResult, dict[str, Any]]:
-                result = bench.run(candidate, window, staff)
-                return result, outcomes.outcome_row(result, bench.world, keys={},
-                                                    ltv_cents=bench.ltv_cents())
+                def evaluate(candidates: Sequence[policies.Policy],
+                             replays: Replays = replays) -> list[dict[str, Any]]:
+                    tasks = [Task.of(c, window, staff, history=history) for c in candidates]
+                    return [out["row"] for out in replays.run(tasks)]
 
-            tuned = tuning.tune(policy, bench.checkout_scores(policy, window), evaluate, grid)
-            found[name] = tuned.chosen
-            frontier_rows += [{"seed": seed, "policy": name, **row}
-                              for row in _records(tuned.frontier)]
-            chosen_rows.append({
-                "seed": seed, "policy": name, "feasible_points": tuned.feasible_points,
-                "points": len(tuned.frontier),
-                "chosen_version": None if tuned.chosen is None else tuned.chosen.version,
-                "review_threshold": None if tuned.chosen is None
-                else tuned.chosen.review_threshold,
-                "decline_threshold": None if tuned.chosen is None
-                else tuned.chosen.decline_threshold,
-                "review_on_boundary": tuned.on_boundary["review"],
-                "decline_on_boundary": tuned.on_boundary["decline"],
-            })
+                tuned = tuning.tune(
+                    policy, bench.checkout_scores(policy, window), evaluate, grid,
+                    routed_minutes=lambda c, bench=bench: bench.routed_minutes(c, window),
+                    available_minutes=available)
+                found[name] = tuned.chosen
+                frontier_rows += [{"seed": seed, "policy": name, "history": history, **row}
+                                  for row in _records(tuned.frontier)]
+                chosen_rows.append({
+                    "seed": seed, "policy": name, "history": history,
+                    "feasible_points": tuned.feasible_points, "points": len(tuned.frontier),
+                    "replayed_points": int(tuned.frontier["replayed"].sum()),
+                    "chosen_version": None if tuned.chosen is None else tuned.chosen.version,
+                    "review_threshold": None if tuned.chosen is None
+                    else tuned.chosen.review_threshold,
+                    "decline_threshold": None if tuned.chosen is None
+                    else tuned.chosen.decline_threshold,
+                    "review_on_boundary": tuned.on_boundary["review"],
+                    "decline_on_boundary": tuned.on_boundary["decline"],
+                })
     return StageOutput(tables={"tune.frontier": frontier_rows, "tune.chosen": chosen_rows},
                        notes=[f"tuning rule: {tuning.RULE}"])
 
@@ -240,41 +383,34 @@ def replay(run: Any) -> StageOutput:
     """Every tuned policy and approve-all on every evaluation world's test window."""
     policy_cfg = config.load("policy")
     window = _window(run.protocol, "test")
+    current = policy_cfg["roster"]["layout"]
     rows, confusion, latent, prevented = [], [], [], []
     for ref in run.worlds:
-        bench = _bench(run, ref)
         tuned = run.memory["tuned"][ref.seed]
-        classes = outcomes.truth(bench.world.tables, bench.world.observed_until)
-        latent_classes = bench.latent_orders[["order_id", "pattern_id"]].assign(
-            pattern_id=lambda f: f["pattern_id"].fillna("legitimate"))
+        tasks: list[Task] = []
         for name, policy in tuned.items():
             keys = {"seed": ref.seed, "family": ref.family, "policy": name}
             if policy is None:
                 rows.append({**keys, "capacity_level": "base", "evaluated": False})
                 continue
             for staff in staffing(policy_cfg):
-                variants = VARIANTS if (staff.level in ("base", "configured")
-                                        and staff.layout == policy_cfg["roster"]["layout"]) \
-                    else VARIANTS[:1]
-                for history, reviewer, rates in variants:
-                    result = bench.run(policy, window, staff, history=history,
-                                       reviewer=reviewer, rates=rates)
-                    row_keys = {**keys, "capacity_level": staff.level, "layout": staff.layout,
-                                "history": history, "reviewer": reviewer,
-                                "verification": rates, "policy_version": policy.version,
-                                "evaluated": True}
-                    rows.append(outcomes.outcome_row(result, bench.world, keys=row_keys,
-                                                     ltv_cents=bench.ltv_cents(),
-                                                     classes=classes))
-                    if (history, reviewer, rates) == VARIANTS[0] and staff.level in (
-                            "base", "configured") and staff.layout == policy_cfg["roster"][
-                            "layout"]:
-                        confusion += [{**keys, **r} for r in _records(
-                            outcomes.confusion(result, classes))]
-                        latent += [{**keys, **r} for r in _records(
-                            outcomes.confusion(result, latent_classes, by="pattern_id"))]
-                        prevented += [{**keys, **r} for r in _records(
-                            outcomes.prevented_by_pattern(result, bench.world, classes))]
+                main = staff.level in ("base", "configured") and staff.layout == current
+                for history, reviewer, rates in (VARIANTS if main else VARIANTS[:1]):
+                    tasks.append(Task.of(
+                        policy, window, staff, history=history, reviewer=reviewer,
+                        rates=rates, detail=main and (history, reviewer, rates) == VARIANTS[0],
+                        keys={**keys, "capacity_level": staff.level, "layout": staff.layout,
+                              "history": history, "reviewer": reviewer,
+                              "verification": rates, "evaluated": True}))
+        with Replays(run, ref, ref.seed) as replays:
+            results = replays.run(tasks)
+        for task, out in zip(tasks, results, strict=True):
+            rows.append(out["row"])
+            if task.detail:
+                keys = {"seed": ref.seed, "family": ref.family, "policy": task.policy}
+                confusion += [{**keys, **r} for r in out["confusion"]]
+                latent += [{**keys, **r} for r in out["confusion_latent"]]
+                prevented += [{**keys, **r} for r in out["prevented"]]
     return StageOutput(tables={"replay.outcomes": rows, "replay.confusion": confusion,
                                "replay.confusion_latent": latent,
                                "replay.prevented_by_pattern": prevented})

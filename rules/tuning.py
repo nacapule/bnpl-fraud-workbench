@@ -10,7 +10,10 @@ can attain, and taking the best feasible point by the rule in ``config/policy.ya
   context); rate 0 switches the route off, so "no review" and "no decline" are always
   in the grid;
 * feasible: the review minutes the point offers (every routed order's review time)
-  fit in the analyst minutes available over the window;
+  fit in the analyst minutes available over the window; a point whose checkout routing
+  alone (world-level context, before any block) offers more than
+  :data:`SKIP_MARGIN` times the available minutes is reported infeasible without a
+  replay (``replayed`` false);
 * best: the highest net contribution after the friction cost (the LTV proxy for each
   legitimate order declined or cancelled); ties go to fewer reviews, then fewer
   declines.
@@ -35,7 +38,6 @@ import pandas as pd
 
 from core import config
 from queue_sim.policies import Policy
-from queue_sim.replay import ReplayResult
 
 
 @dataclass(frozen=True)
@@ -76,49 +78,74 @@ class Tuned:
 
 RULE = ("best in the searched grid: highest net contribution after the friction cost "
         "among points whose offered review minutes fit the minutes available; ties to "
-        "fewer reviews, then fewer declines")
+        "fewer reviews, then fewer declines; points whose checkout routing alone offers "
+        "more than 1.25 times the available minutes are infeasible without a replay")
+SKIP_MARGIN = 1.25
+_METRICS = ("net_cents", "net_vs_approve_all_cents", "friction_cost_cents",
+            "prevented_loss_cents", "reviews", "review_minutes_offered", "legitimate_declined",
+            "legitimate_held", "decided_after_shipping")
 
 
 def tune(
     policy: Policy,
     scores: Mapping[str, np.ndarray],
-    run: Callable[[Policy], tuple[ReplayResult, Mapping[str, Any]]],
+    evaluate: Callable[[Sequence[Policy]], Sequence[Mapping[str, Any]]],
     grid: Grid,
+    *,
+    routed_minutes: Callable[[Policy], float] | None = None,
+    available_minutes: float | None = None,
 ) -> Tuned:
     """Search ``grid`` for ``policy``.
 
     ``scores`` holds the validation orders' checkout scores for the review and the
-    decline signal (keys ``review`` and ``decline``); ``run`` replays one candidate
-    and returns its result and outcome row (queue_sim.outcomes.outcome_row).
+    decline signal (keys ``review`` and ``decline``); ``evaluate`` replays a list of
+    candidates and returns their outcome rows (queue_sim.outcomes.outcome_row) in the
+    same order. With ``routed_minutes`` (a candidate's review minutes from checkout
+    routing alone) and ``available_minutes``, points far over capacity are not replayed.
     """
     review_points = _points("review", policy, scores, grid.review_rates)
     decline_points = _points("decline", policy, scores, grid.decline_rates)
-    rows = []
-    seen: dict[tuple[float | None, float | None], dict[str, Any]] = {}
+    points = []
     for (r_rate, r_cut) in review_points:
         for (d_rate, d_cut) in decline_points:
-            candidate = policy.with_thresholds(r_cut, d_cut)
-            key = (candidate.review_threshold, candidate.decline_threshold)
-            if key not in seen:
-                _, row = run(candidate)
-                seen[key] = dict(row)
-            row = seen[key]
-            rows.append({
-                "review_rate": r_rate, "decline_rate": d_rate,
-                "review_threshold": candidate.review_threshold,
-                "decline_threshold": candidate.decline_threshold,
-                "policy_version": candidate.version,
+            points.append((r_rate, d_rate, policy.with_thresholds(r_cut, d_cut)))
+    routed: dict[str, float] = {}
+    to_run: dict[str, Policy] = {}
+    for _, _, candidate in points:
+        if candidate.version in routed or candidate.version in to_run:
+            continue
+        if routed_minutes is not None and available_minutes is not None:
+            routed[candidate.version] = float(routed_minutes(candidate))
+            if routed[candidate.version] > SKIP_MARGIN * available_minutes:
+                continue
+        to_run[candidate.version] = candidate
+    rows = dict(zip(to_run, evaluate(list(to_run.values())), strict=True))
+
+    records = []
+    for r_rate, d_rate, candidate in points:
+        row = rows.get(candidate.version)
+        record: dict[str, Any] = {
+            "review_rate": r_rate, "decline_rate": d_rate,
+            "review_threshold": candidate.review_threshold,
+            "decline_threshold": candidate.decline_threshold,
+            "policy_version": candidate.version, "replayed": row is not None,
+            "review_minutes_routed": routed.get(candidate.version),
+        }
+        if row is None:
+            record.update({"objective_cents": None, "feasible": False,
+                           "available_minutes": available_minutes, "declines": None,
+                           **{k: None for k in _METRICS}})
+        else:
+            record.update({
                 "objective_cents": int(row["net_cents"]) - int(row["friction_cost_cents"]),
                 "feasible": int(row["review_minutes_offered"]) <= int(row["available_minutes"]),
-                **{k: row[k] for k in ("net_cents", "net_vs_approve_all_cents",
-                                       "friction_cost_cents", "prevented_loss_cents",
-                                       "reviews", "review_minutes_offered",
-                                       "available_minutes", "legitimate_declined",
-                                       "legitimate_held", "decided_after_shipping")},
+                "available_minutes": row["available_minutes"],
                 "declines": int(row["fraud_declined_checkout"])
                 + int(row["legitimate_declined_checkout"]),
+                **{k: row[k] for k in _METRICS},
             })
-    frontier = pd.DataFrame(rows)
+        records.append(record)
+    frontier = pd.DataFrame(records)
     feasible = frontier.loc[frontier["feasible"]]
     if feasible.empty:
         return Tuned(policy.name, None, frontier, {"review": False, "decline": False}, RULE)
