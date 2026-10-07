@@ -151,10 +151,18 @@ class Customers:
         rate = float(rng.gamma(c["order_rate_shape"], 1.0 / c["order_rate_shape"]))
         if kind == "none" or (existing and rng.random() < c["dormant_share"]):
             rate = 0.0
-        return Member(user, signup, signup + life, kind, rate,
-                      late_prone=rng.random() < self.pay["late_prone_share"],
-                      fragile=rng.random() < self.pay["fragile_share"],
-                      first_name=first, last_name=last)
+        m = Member(user, signup, signup + life, kind, rate,
+                   late_prone=rng.random() < self.pay["late_prone_share"],
+                   fragile=rng.random() < self.pay["fragile_share"],
+                   first_name=first, last_name=last)
+        m.tags.add("existing" if existing else "new_customer")
+        if rate == 0.0:
+            m.tags.add("dormant")
+        if m.late_prone:
+            m.tags.add("late_payer")
+        if m.fragile:
+            m.tags.add("fragile")
+        return m
 
     def exposure(self, m: Member) -> tuple[float, float]:
         """(certain first orders, seasonal exposure of the repeat-order process)."""
@@ -189,6 +197,7 @@ class Customers:
     def live(self, h: Household) -> None:
         for m in h.members:
             self._life(h, m)
+            self.b.tag(m.user, *m.tags)
 
     def _life(self, h: Household, m: Member) -> None:
         b, a, rng, c, clock = self.b, h.actor, h.actor.rng, self.c, self.clock
@@ -373,10 +382,7 @@ class Customers:
             mimic.add("new_phone_reset")
         promo = self._promotion(rng, m, t, first)
         state["shopped"] = True
-        if rng.random() < c["login_before_order"]:
-            login = t - int(rng.uniform(1, 10) * MINUTE)
-            if device in b.devices_at(m.user, login):
-                b.account_event(a, m.user, login, "login", device, ip, ip_country)
+        b.login_before(a, m.user, t, device, ip, ip_country, c["login_before_order"])
         avs = "N" if rng.random() < self.pay["avs_fail"] else "Y"
         cvv = "N" if rng.random() < self.pay["cvv_fail"] else "M"
         declined = rng.random() < self.pay["processor_decline"]

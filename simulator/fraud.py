@@ -57,6 +57,7 @@ class Fraud:
         self.promotions = promotions
         self.start, self.end = clock.start, customers.order_end
         self.volume = cfg["volume"]["target_orders"] * scale / 100_000
+        self.login_before_order = cfg["customers"]["login_before_order"]
         self.victims: set[int] = set()
         self.sleeper_pool: list[tuple[Actor, int, Identity]] = []
         self._victim_index: list[tuple[int, int, int]] | None = None
@@ -79,8 +80,9 @@ class Fraud:
                   disposable_p: float, foreign_ip_p: float, card_bin: str | None = None,
                   device: int | None = None, address: int | None = None,
                   email: str | None = None, country: str | None = None,
-                  dob: tuple[int, int] = (1960, 2004)) -> Identity:
-        """A new account with a device, a home address and a card, all at ``t``."""
+                  dob: tuple[int, int] = (1955, 2007), mobile_p: float = 1.0) -> Identity:
+        """A new account opened at ``t`` the way a customer opens one: a device and a
+        home address at signup, a card within the first minute."""
         b, rng = self.b, a.rng
         country = country or pop.pick(rng, pop.HOME_COUNTRIES)
         if email is None:
@@ -89,14 +91,15 @@ class Fraud:
         user = b.account(a, t, email, country, int(rng.integers(*dob)), actor=actor,
                          episode=episode, tags=tags)
         if device is None:
-            device = b.device(a, t, pop.device_ua(rng, mobile=rng.random() < 0.6),
+            device = b.device(a, t, pop.device_ua(rng, mobile=rng.random() < mobile_p),
                               pop.fingerprint(rng))
         b.link_device(user, device, t)
         if address is None:
             city, region = pop.home_city(rng, country)
             address = b.address(a, t, pop.line_hash(rng), city, region, country)
         b.link_address(user, address, t, "home")
-        card = b.card(a, user, t, card_bin or country, pop.card_network(rng), pop.last4(rng))
+        card = b.card(a, user, t + int(rng.uniform(0, 60)), card_bin or country,
+                      pop.card_network(rng), pop.last4(rng))
         ip, ip_country = self._ip(rng, country, foreign_ip_p)
         return Identity(user, device, address, card, ip, ip_country)
 
@@ -114,6 +117,8 @@ class Fraud:
             amount = pop.order_amount_cents(rng, category, rng.uniform(*multiplier), sigma=0.4)
         avs_fail = self.pay["avs_fail"] if avs_fail is None else avs_fail
         cvv_fail = self.pay["cvv_fail"] if cvv_fail is None else cvv_fail
+        self.b.login_before(a, who.user, t, who.device, who.ip, who.ip_country,
+                            self.login_before_order)
         o = self.b.order(a, who.user, merchant, t, amount, device=who.device,
                          card=who.card if card is None else card,
                          address=who.address if address is None else address,
@@ -183,13 +188,9 @@ class Fraud:
             when += session_gap(rng, 4)
         drop_link = None
         address = b.addresses_at(victim, when, "home")[0]
-        if rng.random() < p["drop_address"]:
-            city, region = pop.home_city(rng, country)
-            address = b.address(a, when, pop.line_hash(rng), city, region, country)
-            drop_link = b.link_address(victim, address, when, "shipping")
+        use_drop = rng.random() < p["drop_address"]
         card = b.cards_at(victim, when)[-1]
         stolen_card = rng.random() < p["new_card"]
-        home_drop = drop_link is None
         who = Identity(victim, device, address, card, ip, ip_country)
         orders = []
         n = pop.pick(rng, tuple(p["orders"].items()))
@@ -197,12 +198,17 @@ class Fraud:
             when += session_gap(rng, p["order_gap_minutes"]) if k else session_gap(rng, 6)
             if not self._in_horizon(when):
                 break
+            if who.card not in b.cards_at(victim, when) or (
+                    drop_link is None and not use_drop
+                    and who.address not in b.addresses_at(victim, when)):
+                break
+            if k == 0 and use_drop:  # the drop address is entered at checkout
+                city, region = pop.home_city(rng, country)
+                who.address = b.address(a, when, pop.line_hash(rng), city, region, country)
+                drop_link = b.link_address(victim, who.address, when, "shipping")
             if stolen_card and k == 0:
                 who.card = b.card(a, victim, when, pop.pick(rng, pop.STOLEN_CARD_ISSUERS),
                                   pop.card_network(rng), pop.last4(rng))
-            if who.card not in b.cards_at(victim, when) or (
-                    home_drop and who.address not in b.addresses_at(victim, when)):
-                break
             o = self._order(a, who, when, pattern="P-ATO", episode=ep,
                             categories=pop.RESALE_CATEGORIES if rng.random() < p["resale"]
                             else None, multiplier=tuple(p["amount_multiplier"]),
@@ -242,7 +248,8 @@ class Fraud:
             ep = b.episode(a, "P-STOLEN", t)
             who = self._identity(a, t, actor="fraudster", episode=ep, tags=("stolen_card",),
                                  disposable_p=p["disposable_email"], foreign_ip_p=p["foreign_ip"],
-                                 card_bin=pop.pick(rng, pop.STOLEN_CARD_ISSUERS))
+                                 card_bin=pop.pick(rng, pop.STOLEN_CARD_ISSUERS),
+                                 mobile_p=p["mobile_device"])
             when = t + session_gap(rng, 4)
         else:
             ep, who = episode, sleeper_identity
@@ -293,6 +300,8 @@ class Fraud:
         ep = b.episode(a, "P-STOLEN", created)
         who = self._identity(a, created, actor="fraudster", episode=ep, tags=("sleeper",),
                              disposable_p=0.0, foreign_ip_p=0.0)
+        who.ip = pop.ip_address(rng, b.accounts[who.user][3])
+        self._keep_warm(a, who, created, activation)
         if rng.random() < p["sleeper_warm_up"]:
             t = self.clock.after(rng, created, 5, 40)
             if self._in_horizon(t) and t < activation:
@@ -304,6 +313,16 @@ class Fraud:
         if activate:
             self.stolen_card(a, activation, sleeper_identity=who, episode=ep)
         return who, ep
+
+    def _keep_warm(self, a: Actor, who: Identity, lo: int, hi: int) -> None:
+        """Occasional logins on an account kept for months, as customers have."""
+        rng, rate = a.rng, self.f["P-STOLEN"]["logins_per_year"]
+        t = max(lo, self.start)
+        while True:
+            t = self.clock.after(rng, t, 0.1, 2 * 365 / rate)
+            if t >= min(hi, self.end):
+                break
+            self.b.account_event(a, who.user, t, "login", who.device, who.ip, who.ip_country)
 
     # ===================================================== synthetic rings
     def synthetic_ring(self, a: Actor, burst: int) -> None:
@@ -334,7 +353,8 @@ class Fraud:
                 disposable_p=p["disposable_email"], foreign_ip_p=0.0, country=country,
                 device=devices[k % len(devices)] if devices else None,
                 address=drops[k % len(drops)] if drops else None,
-                email=pop.email_variant(rng, root, k) if root else None, dob=(1986, 2003))
+                email=pop.email_variant(rng, root, k) if root else None, dob=(1986, 2003),
+                mobile_p=p["mobile_device"])
             members.append(who)
         for who in members:
             who.ip = ring_ips[int(rng.integers(0, len(ring_ips)))] if rng.random() < 0.7 \

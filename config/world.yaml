@@ -157,6 +157,8 @@ fraud:
     sleeper_share: 0.25
     sleeper_age_days: [60, 300]
     sleeper_warm_up: 0.40
+    logins_per_year: 4             # sleepers log in now and then while they age
+    mobile_device: 0.60            # third-party fraud also works from desktops
     disposable_email: 0.15
     foreign_ip: 0.40
     card_testing: 0.35
@@ -176,6 +178,7 @@ fraud:
     sharing: {device: 0.45, address: 0.30, none: 0.25}
     email_variants: 0.40           # spellings of one address
     disposable_email: 0.20
+    mobile_device: 0.60
     warm_up_orders: [1, 2]
     warm_up_multiplier: [0.4, 0.8]
     burst_hours: 72

@@ -255,6 +255,14 @@ class Builder:
             raise GenerationError(f"account event on device {device} not linked to {user}")
         self.account_events.append((a.tie(), t, t, user, kind, device, ip, ip_country, email))
 
+    def login_before(self, a: Actor, user: int, t: int, device: int, ip: str, ip_country: str,
+                     p: float) -> None:
+        """With probability ``p``, a login on the ordering device minutes before checkout."""
+        if a.rng.random() < p:
+            login = t - int(a.rng.uniform(60, 600))
+            if device in self.devices_at(user, login):
+                self.account_event(a, user, login, "login", device, ip, ip_country)
+
     def order(self, a: Actor, user: int, merchant: int, t: int, amount: int, *, device: int,
               card: int, address: int, ip: str, ip_country: str, avs: str = "Y",
               cvv: str = "M", approved: bool = True, promo: int | None = None) -> Order:
