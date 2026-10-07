@@ -17,10 +17,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from core import config, world
+from core import config, ledger, world
 from core.protocol import load_protocol
 from simulator import population
-from simulator.builder import DAY, Actor, Order
+from simulator.builder import DAY, Actor, Builder, Order
 from simulator.fraud import Fraud
 from simulator.generate import FAMILIES, build_world, generate_world
 from simulator.legit import Customers, Member
@@ -504,6 +504,46 @@ def test_fraud_accounts_use_promotions_and_networks_as_customers_do(base) -> Non
     repeat = approved[approved["pattern_id"].isin(["P-INR-ABUSE", "P-NEVERPAY", "P-SYNTH"])]
     ips = repeat.groupby("user_id")["ip"].nunique()[repeat.groupby("user_id").size() >= 3]
     assert len(ips) >= 3 and (ips > 1).mean() > 0.3
+
+
+class _Unsearchable(list):
+    """A world-wide list that may grow but must never be searched."""
+
+    def __iter__(self):
+        raise AssertionError("searched every row of the world")
+
+    def __getitem__(self, index):
+        raise AssertionError("searched every row of the world")
+
+    def __contains__(self, item):
+        raise AssertionError("searched every row of the world")
+
+
+def test_an_order_and_its_collections_never_search_the_whole_world() -> None:
+    cfg = config.load("world")
+    b = Builder(ledger.ProductTerms.from_config(cfg))
+    out = Outcomes(b, _clock(), OutcomeParams.from_config(cfg))
+    a, t = Actor.of(3, 97, 0), _clock().start + 40 * DAY
+    merchant = b.merchant(a, t - DAY, "Shop", "home", 1, 12.0)
+    user = b.account(a, t - DAY, "ana.ruiz@example.com", "US", 1980)
+    device = b.device(a, t - DAY, "ua", "fp")
+    b.link_device(user, device, t - DAY)
+    address = b.address(a, t - DAY, "h", "Austin", "TX", "US")
+    b.link_address(user, address, t - DAY, "home")
+    card = b.card(a, user, t - DAY, "US", "visa", "4242")
+    for k in range(50):  # earlier orders in the world
+        o = b.order(a, user, merchant, t + k * DAY, 5_000, device=device, card=card,
+                    address=address, ip="1.2.3.4", ip_country="US")
+        out.collect(a, o)
+    for name in ("orders", "payment_attempts", "fulfilments", "deliveries", "writeoffs",
+                 "openings", "resolutions", "reversals", "account_events"):
+        setattr(b, name, _Unsearchable(getattr(b, name)))
+    o = b.order(a, user, merchant, t + 60 * DAY, 9_000, device=device, card=card,
+                address=address, ip="1.2.3.4", ip_country="US")
+    out.fulfil(a, o)
+    out.collect(a, o, "partial", stop_seq=2)
+    out.dispute(a, o, "not_as_described", o.t + 5 * DAY, "won")
+    assert len(o.schedule) == 4 and len(b.payment_attempts) > 200
 
 
 # -------------------------------------------------- support (full worlds)
