@@ -1,17 +1,24 @@
 # Synthetic world: what the generator builds and the product it simulates.
-# Every value here is a modelling assumption; docs/methods.md states the reason
-# for each. Seeds, evaluation windows and families' start dates are
-# pre-registered in experiments/protocol.yaml, not here.
+# Every value here is a modelling assumption; docs/methods.md gives the reason
+# for each ("World assumptions"). Seeds, evaluation windows and the families'
+# start dates are pre-registered in experiments/protocol.yaml, not here.
+# Counts and rates are per world at scale 1 (simulator.generate --scale shrinks
+# a world for tests and CI).
 
-generator_version: "2.0.0-dev"
+generator_version: "2.0.0"
 
 # One platform-local clock: naive timestamps at one-second resolution.
 clock: platform-local, naive, seconds
 
 volume:
-  target_orders: 120000          # order attempts over the order horizon
-  target_fraud_share: 0.01       # about today's level; never tuned toward a result
+  target_orders: 160000          # order attempts over the horizon (about)
+  target_fraud_share: 0.01       # sets the legitimate share of target_orders; fraud volume
+                                 # comes from the episode rates below
   merchants: 150
+
+calendar:
+  holiday_lift: 1.6              # shopping intensity 15 Nov - 23 Dec
+  weekend_lift: 1.15
 
 # Pay-in-4 product terms, read by core/ledger.py.
 product:
@@ -32,8 +39,184 @@ product:
   recovery_rate_bps: 2000        # 20% of the written-off balance
   promotions_funded_by: platform
 
+merchants:
+  trading_since: "2020-06-01"    # ordinary merchants open between this date and the horizon
+  onboarding_share: 0.10         # ... or join during the horizon
+  fulfilment_median_sigma: 0.5   # spread of merchants' median hours to shipment
+
 fulfilment:
-  median_lag_hours: 12           # per-merchant attribute; per-order draws around it
+  median_lag_hours: 12           # median of the merchants' medians
+  order_lag_sigma: 0.6           # per-order lognormal spread around the merchant's median
+
+promotions:                      # platform-funded; FIRST10 is the standing first-purchase offer
+  - {code: FIRST10, discount_bps: 1000, first_purchase_only: true, from: "2023-06-01", to: "2026-01-01"}
+  - {code: SPRING5, discount_bps: 500, first_purchase_only: false, from: "2024-03-01", to: "2024-04-01"}
+  - {code: FALL15, discount_bps: 1500, first_purchase_only: false, from: "2024-10-01", to: "2024-11-01"}
+  - {code: HOLIDAY10, discount_bps: 1000, first_purchase_only: false, from: "2024-11-15", to: "2024-12-24"}
+  - {code: SPRING25, discount_bps: 500, first_purchase_only: false, from: "2025-03-01", to: "2025-04-01"}
+  - {code: SUMMER10, discount_bps: 1000, first_purchase_only: false, from: "2025-07-01", to: "2025-08-01"}
+
+customers:
+  households_per_1000_orders: 255  # households over the whole history, per 1,000 target orders
+  existing_household_share: 0.45   # opened before the order horizon (from existing_since)
+  existing_since: "2021-07-01"
+  household_size: {1: 0.86, 2: 0.10, 3: 0.04}
+  member_join_mean_days: 90        # later members of a new household join this long after, on average
+  shared_tablet_share: 0.30        # multi-account households that also share a tablet
+  lifetime_mean_days: 900          # time a customer keeps shopping (exponential)
+  dormant_share: 0.10              # accounts opened before the horizon that no longer shop
+  first_order:                     # new accounts: most sign up at their first checkout
+    at_signup: 0.65
+    soon: 0.25                     # within days (mean below); the rest never order
+    soon_mean_days: 10
+  order_rate_shape: 0.8            # gamma heterogeneity of customers' repeat-order rates
+  large_first_order_share: 0.15    # new customers whose first order is large
+  large_first_order_multiplier: [1.8, 3.0]
+  gift_share: 0.05                 # orders shipped elsewhere (half to another customer's home)
+  mobile_ip_share: 0.35            # actions on mobile data rather than home broadband
+  login_before_order: 0.35
+  logins_per_year: 4
+  new_phone_per_year: 0.35
+  reset_after_new_phone: 0.35      # new phones followed by a password reset within a day
+  extra_device_share: 0.30         # accounts that add a laptop at some point
+  card_added_per_year: 0.12
+  card_replaced_per_year: 0.20
+  password_change_per_year: 0.04
+  email_change_per_year: 0.01
+  phone_change_per_year: 0.05
+  move_rate_per_year: 0.07         # households moving home
+  trips_per_year: 0.40             # trips abroad
+  trip_days: [4, 16]
+  trip_neighbour_share: 0.35       # trips to the neighbouring country (US and Canada)
+  foreign_card_share: 0.03         # customers whose card was issued abroad
+  disposable_email_share: 0.02
+  first_purchase_take: 0.30        # first orders using FIRST10
+  seasonal_promo_take: 0.12        # other orders during a seasonal promotion
+  retry_after_decline: 0.5         # processor declines retried minutes later
+
+payments:
+  avs_fail: 0.040                  # legitimate orders; stated in the fraud policy (FP-2 6.5(a))
+  cvv_fail: 0.020
+  processor_decline: 0.012
+  late_prone_share: 0.15
+  late_p_prone: 0.30               # chance an installment's first collection fails
+  late_p: 0.03
+  fragile_share: 0.05
+  fragile_multiplier: 4.0
+  default_first_plan_new: 0.035    # a new customer's first plan
+  default_other: 0.012
+  zero_effort_share_first: 0.70    # defaults with nothing paid after checkout
+  zero_effort_share_other: 0.35
+  stop_ordering_after_default: 0.7
+  reversal: 0.003                  # collected installments that bounce
+
+outcomes:
+  delivery_median_days: 2.5
+  delivery_sigma: 0.4
+  retry_days: [3, 7]               # retries after a failed collection
+  second_retry_fail: 0.20
+  final_retry_success: 0.90
+  reversal_days: [2, 5]
+  reversal_retry_success: 0.75
+  dispute_notice_days: [1, 4]      # filed -> platform notified
+  dispute_decision_days: [20, 60]  # notified -> resolved
+
+legit_disputes:
+  lost_parcel: 0.005               # shipped, never delivered
+  lost_parcel_claim: 0.70
+  unscanned_delivery: 0.015        # delivered without a carrier confirmation; no claim
+  porch_claim: 0.002               # delivered, claimed missing
+  porch_claim_won: 0.80
+  not_as_described: 0.004
+  friendly_unauthorized: 0.0005    # customer disputes their own order as unauthorized
+  bustout_claim: 0.75              # customers of a vanished merchant who claim
+
+# Fraud patterns: episodes per 100,000 target orders, started evenly over the
+# order horizon. Within-episode parameters describe behaviour, never labels.
+fraud:
+  P-ATO:
+    episodes_per_100k_orders: 100
+    tenure_days: 90
+    tenured_share: 0.75            # victims with at least tenure_days
+    foreign_ip: 0.40
+    credential_change: {password_reset: 0.40, password_change: 0.15, email_change: 0.20, none: 0.25}
+    drop_address: 0.80
+    new_card: 0.15
+    orders: {1: 0.45, 2: 0.35, 3: 0.20}
+    order_gap_minutes: 40
+    resale: 0.75
+    amount_multiplier: [1.2, 2.0]
+    avs_fail: 0.25
+    cvv_fail: 0.10
+    noticed: {report: 0.65, dispute: 0.20, unnoticed: 0.15}
+    report_days: [1, 21]
+    dispute_days: [7, 40]
+    dispute_lost: 0.85
+  P-STOLEN:
+    episodes_per_100k_orders: 95
+    sleeper_share: 0.25
+    sleeper_age_days: [60, 300]
+    sleeper_warm_up: 0.40
+    disposable_email: 0.15
+    foreign_ip: 0.40
+    card_testing: 0.35
+    testing_attempts: [3, 7]
+    orders: {1: 0.35, 2: 0.40, 3: 0.25}
+    resale: 0.75
+    amount_multiplier: [1.1, 1.8]
+    avs_fail: 0.25
+    cvv_fail: 0.10
+    disputed: 0.75
+    dispute_days: [5, 40]
+    dispute_lost: 0.90
+  P-SYNTH:
+    episodes_per_100k_orders: 18
+    ring_size: [3, 6]
+    lead_days: [45, 110]           # from the first account to the coordinated burst
+    sharing: {device: 0.45, address: 0.30, none: 0.25}
+    email_variants: 0.40           # spellings of one address
+    disposable_email: 0.20
+    warm_up_orders: [1, 2]
+    warm_up_multiplier: [0.4, 0.8]
+    burst_hours: 72
+    burst_orders: [1, 3]
+    burst_multiplier: [1.5, 2.5]
+  P-NEVERPAY:
+    episodes_per_100k_orders: 75
+    modes: {single: 0.45, burst: 0.30, group: 0.25}
+    order_at_signup: 0.70
+    burst_orders: [2, 5]
+    burst_days: 6
+    group_size: [2, 5]
+    group_days: 14
+    group_sharing: {device: 0.50, address: 0.30, email: 0.20}
+    resale: 0.50
+    amount_multiplier: [1.0, 2.2]
+    disposable_email: 0.05
+  P-PROMO:
+    episodes_per_100k_orders: 40
+    cluster_size: [3, 7]
+    spread_days: 21
+    sharing: {device: 0.50, email: 0.25, address: 0.25}
+    amount_multiplier: [0.7, 1.3]
+    repays: 0.70
+    disposable_email: 0.10
+  P-INR-ABUSE:
+    episodes_per_100k_orders: 16
+    tenure_days: [20, 120]
+    orders: [3, 7]
+    active_days: 90
+    claims: {1: 0.25, 2: 0.50, 3: 0.25}
+    claim_days: [3, 15]            # after delivery
+    claim_rejected: 0.85           # resolved against the customer (delivery proven)
+  P-MERCH:
+    episodes_per_100k_orders: 5
+    ramp_days: [40, 75]
+    bustout_days: [8, 14]          # stops delivering this long before it disappears
+    buyers_per_day: [0.2, 0.8]     # new customers acquired at its checkout, ramping up
+    ticket_lift: 1.8
+    general_traffic_weight: 0.004  # popularity among existing customers (ordinary ~0.0067)
+    last_order_hours_before_close: 12
 
 # Determinations of the adjudicated label (core.world.adjudicate), from the fraud
 # policy. The label horizon is pre-registered in experiments/protocol.yaml.
@@ -44,15 +227,25 @@ labels:
   promo_linked_accounts: 3     # accounts sharing a device or email on one first-purchase promotion
   promo_quiet_days: 90         # ... none ordering again without a promotion for this long
 
-# Parameter changes each family applies from its start date (protocol.yaml).
+# Support the evaluation needs on the development seeds (experiments/protocol.yaml
+# world_size.support gives the minimums). Patterns a checkout decision can act on;
+# item-not-received abuse shows only at claim time and merchant bust-out is the
+# merchant's fraud, so neither is a checkout target.
+support:
+  checkout_patterns: [P-ATO, P-STOLEN, P-SYNTH, P-NEVERPAY, P-PROMO]
+
+# Changes each family applies from its start date (protocol.yaml). Families add
+# actors from their own random streams, so history before the start is identical.
 families:
   baseline: {}
   acquisition_surge:
-    new_customer_multiplier: 2.0
+    new_customer_multiplier: 2.0     # new households arriving from the start date
     first_purchase_promotion: FIRST10
+    first_purchase_take: 0.80        # the campaign's customers use the offer
   fraud_mix_shift:
-    sleeper_stolen_card_accounts: true
-    takeover_share_multiplier: 2.0
+    takeover_multiplier: 2.0         # account takeovers from the start date
+    sleeper_accounts: 25             # aged stolen-card accounts, opened before the start in
+                                     # every family, used only in this one
 
 # MySQL endpoint the world is loaded into. Override per run with BNPL_DB_HOST,
 # BNPL_DB_PORT, BNPL_DB_USER, BNPL_DB_PASSWORD and BNPL_DB_NAME.

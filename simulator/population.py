@@ -1,16 +1,14 @@
-"""Static population: users, devices, cards, addresses, merchants.
+"""Reference tables shared by every actor: categories, names, emails, countries, IPs.
 
-Everything is drawn from one seeded numpy Generator passed in by the caller;
-no global RNG state, no wall-clock reads — determinism is a tested property.
+Nothing here depends on whether an actor is legitimate or fraudulent. Emails,
+IP addresses and devices are drawn by the same functions for everyone; an IP
+address depends only on its country (F25), and a customer's home country
+decides the country of their home IP (F13).
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-
 import numpy as np
-import pandas as pd
 
 BENIGN_DOMAINS = [
     ("gmail.com", 0.40),
@@ -25,7 +23,7 @@ BENIGN_DOMAINS = [
 DISPOSABLE_DOMAINS = ["mailinator.com", "tempmailo.com", "guerrillamail.com"]
 
 CATEGORIES: list[tuple[str, float, int]] = [
-    # (name, lognormal median USD, merchant count weight)
+    # (name, median price in dollars, merchant count weight)
     ("electronics", 420.0, 18),
     ("jewelry", 380.0, 8),
     ("apparel", 85.0, 30),
@@ -39,9 +37,12 @@ CATEGORIES: list[tuple[str, float, int]] = [
     ("auto", 160.0, 6),
     ("health", 70.0, 10),
 ]
+CATEGORY_MEDIAN = {name: median for name, median, _ in CATEGORIES}
+RESALE_CATEGORIES = ("electronics", "jewelry", "gaming")  # easy to resell
 
-UA_FAMILIES = ["iOS", "Android", "Chrome", "Safari", "Firefox"]
-COUNTRIES_FOREIGN = ["GB", "DE", "FR", "ES", "BR", "IN", "NG", "RO", "VN", "CN", "RU", "ID"]
+MOBILE_UA = ("iOS", "Android")
+DESKTOP_UA = ("Chrome", "Safari", "Firefox", "Edge")
+CARD_NETWORKS = (("visa", 0.52), ("mc", 0.32), ("amex", 0.09), ("discover", 0.07))
 
 FIRST = """olivia liam emma noah amelia oliver sophia elijah isabella lucas mia mason
 charlotte ethan harper james evelyn ben luna henry camila alex gianna daniel aria michael
@@ -55,155 +56,140 @@ thompson white harris sanchez clark ramirez lewis robinson walker young allen ki
 wright scott torres nguyen hill flores green adams nelson baker hall rivera campbell
 mitchell carter roberts gomez phillips evans turner diaz parker cruz edwards collins""".split()
 
+# Countries the platform geolocates. Every IP country the world emits has a
+# centroid in rules/engine.py (R11) and db/queries/Q10.
+HOME_COUNTRIES = (("US", 0.85), ("CA", 0.15))
+CITIES = {
+    "US": [("Minneapolis", "MN"), ("Chicago", "IL"), ("Denver", "CO"), ("Austin", "TX"),
+           ("Houston", "TX"), ("Phoenix", "AZ"), ("Atlanta", "GA"), ("Seattle", "WA"),
+           ("Columbus", "OH"), ("Charlotte", "NC"), ("Portland", "OR"), ("Miami", "FL"),
+           ("Nashville", "TN"), ("Tulsa", "OK"), ("Boston", "MA"), ("San Diego", "CA")],
+    "CA": [("Toronto", "ON"), ("Vancouver", "BC"), ("Calgary", "AB"), ("Montreal", "QC"),
+           ("Ottawa", "ON"), ("Winnipeg", "MB")],
+}
+# Where legitimate customers travel, and where foreign fraud traffic comes from.
+TRAVEL_COUNTRIES = (("GB", 0.22), ("FR", 0.16), ("ES", 0.16), ("DE", 0.12), ("IN", 0.10),
+                    ("BR", 0.08), ("CN", 0.06), ("VN", 0.05), ("ID", 0.05))
+FOREIGN_FRAUD_COUNTRIES = (("RO", 0.18), ("NG", 0.16), ("VN", 0.12), ("RU", 0.12),
+                           ("BR", 0.10), ("IN", 0.10), ("CN", 0.08), ("ID", 0.06),
+                           ("GB", 0.05), ("DE", 0.03))
+STOLEN_CARD_ISSUERS = (("US", 0.62), ("CA", 0.10), ("GB", 0.10), ("DE", 0.05), ("FR", 0.05),
+                       ("BR", 0.04), ("ES", 0.04))
 
-@dataclass
-class Population:
-    users: pd.DataFrame
-    devices: pd.DataFrame
-    user_devices: pd.DataFrame
-    cards: pd.DataFrame
-    addresses: pd.DataFrame
-    merchants: pd.DataFrame
-    # convenience lookups used by behavior/patterns
-    user_primary_device: dict[int, int] = field(default_factory=dict)
-    user_primary_address: dict[int, int] = field(default_factory=dict)
-    user_primary_card: dict[int, int] = field(default_factory=dict)
+# IPv4 first octets per country. Every actor draws from the same blocks, so the
+# address range reveals the country and nothing else.
+IP_BLOCKS = {
+    "US": (24, 47, 50, 63, 64, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 96, 97, 98, 99,
+           104, 107, 108, 162, 166, 172, 173, 174, 184, 199, 204, 208),
+    "CA": (24, 64, 70, 99, 142, 174, 184, 199, 205, 206, 207),
+    "GB": (2, 25, 31, 51, 62, 77, 81, 86, 90, 92, 109, 151, 176, 212),
+    "DE": (5, 31, 37, 46, 78, 79, 80, 84, 87, 91, 93, 95, 178, 217),
+    "FR": (2, 5, 37, 46, 62, 77, 78, 80, 81, 82, 86, 88, 90, 109, 176, 212),
+    "ES": (2, 5, 31, 37, 46, 62, 77, 79, 80, 81, 83, 85, 88, 95, 176, 213),
+    "BR": (138, 143, 152, 167, 177, 179, 186, 187, 189, 191, 200, 201),
+    "IN": (1, 14, 27, 42, 49, 59, 103, 106, 115, 117, 122, 157, 182, 203),
+    "NG": (41, 102, 105, 129, 154, 160, 196, 197),
+    "RO": (5, 31, 37, 46, 79, 82, 86, 89, 92, 93, 109, 176, 188, 194),
+    "VN": (1, 14, 27, 42, 58, 103, 113, 115, 116, 117, 118, 123, 171, 183),
+    "CN": (1, 14, 27, 36, 39, 42, 58, 59, 60, 61, 101, 106, 110, 111, 112, 113, 114, 115),
+    "RU": (5, 31, 37, 46, 77, 78, 79, 80, 81, 83, 85, 87, 89, 91, 92, 93, 94, 95, 176, 178),
+    "ID": (27, 36, 39, 49, 103, 110, 112, 114, 116, 118, 120, 125, 139, 180, 182, 202),
+}
+GEO_COUNTRIES = tuple(IP_BLOCKS)
 
 
-def _emails(rng: np.random.Generator, n: int) -> tuple[list[str], list[str]]:
-    domains, weights = zip(*BENIGN_DOMAINS, strict=True)
-    w = np.array(weights) / sum(weights)
-    dom = rng.choice(domains, n, p=w)
-    first = rng.choice(FIRST, n)
-    last = rng.choice(LAST, n)
-    num = rng.integers(1, 9999, n)
-    plus = rng.random(n) < 0.01  # benign plus-addressing exists too
-    emails = []
-    for i in range(n):
-        local = f"{first[i]}.{last[i]}{num[i]}"
-        if plus[i]:
-            local += "+shop"
-        emails.append(f"{local}@{dom[i]}")
-    return emails, list(dom)
+def pick(rng: np.random.Generator, table: tuple[tuple[str, float], ...] | list) -> str:
+    """One value from a ``((value, weight), ...)`` table."""
+    u = rng.random() * sum(weight for _, weight in table)
+    for value, weight in table:
+        u -= weight
+        if u < 0:
+            return value
+    return table[-1][0]
 
 
-def build_population(cfg: dict, rng: np.random.Generator) -> Population:
-    n_users = cfg["simulator"]["n_users"]
-    n_merch = cfg["simulator"]["n_merchants"]
-    start = datetime.fromisoformat(cfg["simulator"]["start_date"])
-    end = start + timedelta(days=30 * cfg["simulator"]["months"])
+def travel_destination(rng: np.random.Generator, home: str, neighbour_share: float) -> str:
+    """Where a customer living in ``home`` travels: often the neighbouring country."""
+    if rng.random() < neighbour_share:
+        return {"US": "CA", "CA": "US"}.get(home, "US")
+    return pick(rng, TRAVEL_COUNTRIES)
 
-    # --- users: signups from 2 years before window start through window end,
-    # weighted toward recency so new-account fraud has company
-    span_days = (end - start).days + 730
-    ages = rng.beta(1.6, 1.0, n_users) * span_days  # skew recent
-    signup = [end - timedelta(days=float(a), seconds=float(rng.integers(0, 86400))) for a in ages]
-    emails, domains = _emails(rng, n_users)
-    users = pd.DataFrame(
-        {
-            "user_id": np.arange(1, n_users + 1),
-            "signup_ts": signup,
-            "email": emails,
-            "email_domain": domains,
-            "kyc_country": rng.choice(["US", "CA"], n_users, p=[0.85, 0.15]),
-            "dob_year": rng.integers(1955, 2007, n_users),
-        }
-    )
 
-    # --- devices: everyone has 1, ~25% have 2
-    extra = rng.random(n_users) < 0.25
-    n_dev = n_users + int(extra.sum())
-    devices = pd.DataFrame(
-        {
-            "device_id": np.arange(1, n_dev + 1),
-            "fingerprint": [f"{x:016x}" for x in rng.integers(0, 2**63, n_dev)],
-            "ua_family": rng.choice(UA_FAMILIES, n_dev, p=[0.38, 0.34, 0.14, 0.09, 0.05]),
-        }
-    )
-    owner = np.concatenate([np.arange(1, n_users + 1), np.arange(1, n_users + 1)[extra]])
-    first_seen = [
-        users.signup_ts.iloc[int(u) - 1] + timedelta(days=float(rng.integers(0, 200)))
-        for u in owner
-    ]
-    user_devices = pd.DataFrame(
-        {
-            "user_id": owner,
-            "device_id": devices.device_id.values,
-            "first_seen": first_seen,
-            "last_seen": [end] * n_dev,
-        }
-    )
+def ip_address(rng: np.random.Generator, country: str) -> str:
+    """An address from the country's blocks; the same function serves every actor."""
+    blocks = IP_BLOCKS[country]
+    first = blocks[int(rng.integers(0, len(blocks)))]
+    return (f"{first}.{int(rng.integers(0, 256))}.{int(rng.integers(0, 256))}."
+            f"{int(rng.integers(1, 255))}")
 
-    # --- cards: 1-2 per user; bin_country == kyc mostly
-    extra_c = rng.random(n_users) < 0.3
-    owner_c = np.concatenate([np.arange(1, n_users + 1), np.arange(1, n_users + 1)[extra_c]])
-    n_cards = len(owner_c)
-    kyc = users.set_index("user_id").kyc_country
-    bin_country = [
-        kyc.loc[int(u)] if rng.random() > 0.02 else rng.choice(COUNTRIES_FOREIGN)
-        for u in owner_c
-    ]
-    cards = pd.DataFrame(
-        {
-            "card_id": np.arange(1, n_cards + 1),
-            "user_id": owner_c,
-            "bin_country": bin_country,
-            "network": rng.choice(["visa", "mc", "amex", "discover"], n_cards,
-                                  p=[0.52, 0.32, 0.09, 0.07]),
-            "last4": [f"{x:04d}" for x in rng.integers(0, 10000, n_cards)],
-        }
-    )
 
-    # --- addresses: 1 per user + ~15% second
-    extra_a = rng.random(n_users) < 0.15
-    owner_a = np.concatenate([np.arange(1, n_users + 1), np.arange(1, n_users + 1)[extra_a]])
-    n_addr = len(owner_a)
-    cities = ["Minneapolis", "Chicago", "Denver", "Austin", "Phoenix", "Atlanta", "Seattle",
-              "Columbus", "Charlotte", "Portland", "Toronto", "Vancouver", "Calgary"]
-    addresses = pd.DataFrame(
-        {
-            "address_id": np.arange(1, n_addr + 1),
-            "user_id": owner_a,
-            "line_hash": [f"a{x:012x}" for x in rng.integers(0, 2**48, n_addr)],
-            "city": rng.choice(cities, n_addr),
-            "region": rng.choice(["MN", "IL", "CO", "TX", "AZ", "GA", "WA", "OH", "NC",
-                                  "OR", "ON", "BC", "AB"], n_addr),
-            "country": [kyc.loc[int(u)] for u in owner_a],
-            "added_ts": [users.signup_ts.iloc[int(u) - 1] for u in owner_a],
-        }
-    )
+def person_name(rng: np.random.Generator) -> tuple[str, str]:
+    return FIRST[int(rng.integers(0, len(FIRST)))], LAST[int(rng.integers(0, len(LAST)))]
 
-    # --- merchants
-    cat_names = [c[0] for c in CATEGORIES]
-    cat_w = np.array([c[2] for c in CATEGORIES], dtype=float)
-    cat_w /= cat_w.sum()
-    m_cat = rng.choice(cat_names, n_merch, p=cat_w)
-    adjectives = ["urban", "nova", "prime", "lux", "peak", "true", "bright", "swift", "pure",
-                  "north", "blue", "gold", "iron", "cedar", "atlas"]
-    nouns = ["threads", "tech", "goods", "supply", "market", "collective", "haus", "works",
-             "trading", "outfitters", "depot", "labs", "gallery", "province", "row"]
-    names = []
-    used = set()
-    while len(names) < n_merch:
-        nm = f"{rng.choice(adjectives)}-{rng.choice(nouns)}-{rng.integers(10, 99)}"
-        if nm not in used:
-            used.add(nm)
-            names.append(nm)
-    onboard = [start - timedelta(days=float(rng.integers(30, 900))) for _ in range(n_merch)]
-    merchants = pd.DataFrame(
-        {
-            "merchant_id": np.arange(1, n_merch + 1),
-            "name": names,
-            "category": m_cat,
-            "risk_tier": rng.choice([1, 2, 3], n_merch, p=[0.6, 0.3, 0.1]),
-            "onboarded_ts": onboard,
-        }
-    )
 
-    pop = Population(users, devices, user_devices, cards, addresses, merchants)
-    pop.user_primary_device = dict(
-        user_devices.groupby("user_id").device_id.first()
-    )
-    pop.user_primary_address = dict(addresses.groupby("user_id").address_id.first())
-    pop.user_primary_card = dict(cards.groupby("user_id").card_id.first())
-    return pop
+def email_address(
+    rng: np.random.Generator,
+    first: str,
+    last: str,
+    *,
+    disposable: bool = False,
+    domain: str | None = None,
+) -> str:
+    """An email in one of the common local-part styles people use."""
+    if domain is None:
+        domain = (DISPOSABLE_DOMAINS[int(rng.integers(0, len(DISPOSABLE_DOMAINS)))]
+                  if disposable else pick(rng, BENIGN_DOMAINS))
+    number = int(rng.integers(1, 9999))
+    style = int(rng.integers(0, 5))
+    local = (f"{first}.{last}{number}", f"{first}{last}{number % 100}",
+             f"{first[0]}.{last}{number}", f"{first}{number}",
+             f"{last}.{first}{number % 1000}")[style]
+    if rng.random() < 0.01:
+        local += "+shop"
+    return f"{local}@{domain}"
+
+
+def email_variant(rng: np.random.Generator, root_email: str, n: int) -> str:
+    """Another spelling of ``root_email`` that normalizes to the same identity:
+    a plus-tag, or for Gmail an inserted dot."""
+    local, domain = root_email.split("@")
+    local = local.split("+")[0]
+    if domain == "gmail.com" and rng.random() < 0.5:
+        bare = local.replace(".", "")
+        cut = 1 + int(rng.integers(0, max(1, len(bare) - 1)))
+        return f"{bare[:cut]}.{bare[cut:]}@{domain}" if n % 2 else f"{bare}+{n}@{domain}"
+    return f"{local}+{n}@{domain}"
+
+
+def device_ua(rng: np.random.Generator, mobile: bool = True) -> str:
+    table = MOBILE_UA if mobile else DESKTOP_UA
+    return table[int(rng.integers(0, len(table)))]
+
+
+def fingerprint(rng: np.random.Generator) -> str:
+    return f"{int(rng.integers(0, 2**62)):016x}"
+
+
+def card_network(rng: np.random.Generator) -> str:
+    return pick(rng, CARD_NETWORKS)
+
+
+def last4(rng: np.random.Generator) -> str:
+    return f"{int(rng.integers(0, 10000)):04d}"
+
+
+def home_city(rng: np.random.Generator, country: str) -> tuple[str, str]:
+    cities = CITIES[country]
+    return cities[int(rng.integers(0, len(cities)))]
+
+
+def line_hash(rng: np.random.Generator) -> str:
+    return f"h{int(rng.integers(0, 2**60)):015x}"
+
+
+def order_amount_cents(
+    rng: np.random.Generator, category: str, multiplier: float = 1.0, sigma: float = 0.65
+) -> int:
+    """A price drawn around the category median (lognormal), in cents."""
+    dollars = float(np.exp(rng.normal(np.log(CATEGORY_MEDIAN[category] * multiplier), sigma)))
+    return int(round(min(max(dollars, 12.0), 4000.0) * 100))
