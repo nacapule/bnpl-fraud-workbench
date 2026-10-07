@@ -122,3 +122,62 @@ def test_raising_the_decline_band_never_adds_declines() -> None:
 def test_missing_input_column_raises() -> None:
     with pytest.raises(KeyError, match="accounts_on_device_30d"):
         fired(frame().drop(columns="accounts_on_device_30d"))
+
+
+# ------------------------------------- the rules and the evidence classification agree
+def _contexts_from_worlds() -> pd.DataFrame:
+    """Context rows of seeded random worlds, at checkout and at later decisions."""
+    from asof_worlds import later_decisions, random_world
+
+    rows = []
+    for seed in (1, 2, 3, 4):
+        tables = random_world(seed)
+        rows += [asof.build_context(tables), asof.build_context(
+            tables, later_decisions(tables, seed=seed, count=150))]
+    return pd.concat(rows, ignore_index=True)
+
+
+def _contexts_at_the_thresholds(n: int = 5_000, seed: int = 0) -> pd.DataFrame:
+    """Rows whose columns are drawn from values at, just below and just above every rule
+    threshold, missing only where the context can leave a value missing (the category
+    ratios below their minimum sample)."""
+    rng = np.random.default_rng(seed)
+    floats = np.array([0.0, 1.0, 1.0001, 5.0, 6.99, 7.0, 47.99, 48.0, 48.01, 71.99, 72.0,
+                       72.01, 89.99, 90.0, 899.99, 900.0, 900.01, 2_160.0, 2_160.01,
+                       asof.NO_EVENT_HOURS])
+    columns = {}
+    for column in asof.COLUMNS:
+        if column.dtype == "int8":
+            columns[column.name] = rng.choice([0, 1, 2], n)
+        elif column.dtype == "int64":
+            columns[column.name] = rng.choice(np.arange(8), n)
+        elif column.name.startswith("amount_over_category_"):
+            columns[column.name] = rng.choice(np.append(floats, np.nan), n)
+        else:
+            columns[column.name] = rng.choice(floats, n)
+    frame = pd.DataFrame(columns)
+    # as in the context, the credential column is the least of its three parts
+    frame["hours_since_credential_change"] = frame[[
+        "hours_since_password_change", "hours_since_password_reset",
+        "hours_since_email_change"]].min(axis=1)
+    return frame
+
+
+def test_rules_and_the_evidence_classification_agree_on_every_rule() -> None:
+    """The rule engine (rule scores and queue priority) and core.evidence (families and
+    permitted actions) state R01–R11 separately; they must hold on the same rows."""
+    from core import evidence
+
+    context = pd.concat([_contexts_from_worlds(), _contexts_at_the_thresholds()],
+                        ignore_index=True)
+    rules = fired(context)
+    classified = evidence.conditions(context)
+    classified["R06"] = classified["R06(a)"] | classified["R06(b)"]
+    disagree = {}
+    for rule in (*RULE_IDS, "R06(a)", "R06(b)"):
+        assert rules[rule].sum() > 20, rule  # each condition is exercised both ways
+        assert (~rules[rule]).sum() > 20, rule
+        differ = rules[rule].to_numpy() != classified[rule].to_numpy()
+        if differ.any():
+            disagree[rule] = context.loc[differ].head(3).to_dict("records")
+    assert not disagree, disagree
