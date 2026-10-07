@@ -1,120 +1,135 @@
-"""Packet hygiene: no ground-truth leakage into what the model sees."""
+"""Packets carry the as-of facts at the decision time, placeholders instead of ids, and
+nothing from labels or simulation truth."""
 
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
-from llm.packet import FORBIDDEN_KEYS, _assert_no_forbidden
+from core.actions import Check, CheckOutcome
+from core.evidence import CheckResult
+from llm.packet import (
+    CONTEXT_FIELDS,
+    ENTITIES,
+    assert_no_forbidden,
+    build_packet,
+    build_packets,
+    checks_of,
+    context_row,
+    placeholders,
+)
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[1]
+CASE = json.loads((REPO / "tests" / "fixtures" / "llm" / "quiet_case.json").read_text())
 
 
-def test_forbidden_walker_catches_planted_label() -> None:
+def packet(**changes):
+    row = {**CASE["context_row"], **changes.pop("context", {})}
+    return build_packet(row, CASE["order"], merchant_category=CASE["merchant_category"],
+                        card_bin_country=CASE["card_bin_country"],
+                        home_country=CASE["home_country"], **changes)
+
+
+def test_packet_carries_every_context_fact_at_the_decision() -> None:
+    built = packet()
+    assert list(built["context"]) == list(CONTEXT_FIELDS)
+    assert built["decision"] == {"point": "review", "decision_at": "2025-07-03 14:05:00",
+                                 "checks": []}
+    assert built["order"]["placed_at"] == "2025-07-03 13:40:12"
+    assert built["order"]["promotion_used"] is False
+    json.dumps(built)  # serializable
+
+
+def test_entity_ids_never_reach_the_packet() -> None:
+    text = json.dumps(packet())
+    for key in ("order_id", "user_id", "merchant_id", "device_id", "card_id", "ship_address_id"):
+        assert f'"{key}"' not in text
+    for raw in ("5012", "377", "9001", "4410", "8120", "10.1.2.3"):
+        assert raw not in text
+    assert {packet()["order"][entity] for entity in ENTITIES} == {
+        "O1", "U1", "M1", "D1", "C1", "A1"}
+
+
+def test_fresh_placeholders_are_distinct_and_reproducible() -> None:
+    first, again, other = placeholders(11), placeholders(11), placeholders(12)
+    assert first == again != other
+    assert len(set(first.values())) == len(ENTITIES)
+    renamed = packet(names=first)
+    assert renamed["context"] == packet()["context"]
+    assert renamed["order"]["order"] == first["order"]
+
+
+def test_values_keep_full_precision() -> None:
+    # rounding 72.0001 hours to 72 would make R01's "within 72 h" hold on the packet
+    # while it does not hold on the context row
+    built = packet(context={"device_link_age_hours": 72.0001})
+    assert built["context"]["device_link_age_hours"] == 72.0001
+    assert isinstance(built["context"]["attempts_user_24h"], int)
+
+
+def test_missing_values_stay_missing() -> None:
+    built = packet(context={"home_address_age_days": float("nan")})
+    assert built["context"]["home_address_age_days"] is None
+    assert pd.isna(context_row(built)["home_address_age_days"])
+
+
+def test_checks_are_recorded_in_completion_order() -> None:
+    checks = (
+        CheckResult(Check.ID_CHECK, CheckOutcome.PASSED, datetime(2025, 7, 3, 14, 0)),
+        CheckResult(Check.CONTACT, CheckOutcome.NO_RESPONSE, datetime(2025, 7, 3, 13, 50)),
+    )
+    built = packet(checks=checks)
+    assert built["decision"]["point"] == "check_completed"
+    assert [item["check"] for item in built["decision"]["checks"]] == ["contact", "id_check"]
+    assert {(r.check, r.outcome) for r in checks_of(built)} == {
+        (r.check, r.outcome) for r in checks}
+
+
+@pytest.mark.parametrize("problem", ["decision_before_order", "check_after_decision",
+                                     "check_twice", "other_order", "missing_fact"])
+def test_inconsistent_inputs_are_refused(problem: str) -> None:
+    late = CheckResult(Check.CONTACT, CheckOutcome.PASSED, datetime(2025, 7, 3, 15, 0))
+    early = CheckResult(Check.CONTACT, CheckOutcome.PASSED, datetime(2025, 7, 3, 13, 45))
+    with pytest.raises((ValueError, KeyError)):
+        if problem == "decision_before_order":
+            packet(context={"decision_at": "2025-07-03 13:00:00"})
+        elif problem == "check_after_decision":
+            packet(checks=(late,))
+        elif problem == "check_twice":
+            packet(checks=(early, early))
+        elif problem == "other_order":
+            packet(context={"order_id": 1})
+        else:
+            row = dict(CASE["context_row"])
+            del row["accounts_on_device_30d"]
+            build_packet(row, CASE["order"], merchant_category="x", card_bin_country="US",
+                         home_country="US")
+
+
+def test_forbidden_walker_catches_planted_truth() -> None:
     with pytest.raises(AssertionError):
-        _assert_no_forbidden({"account": {"nested": [{"pattern_id": "P-ATO"}]}})
-    _assert_no_forbidden({"account": {"ok_field": 1}})  # clean passes
+        assert_no_forbidden({"context": {"nested": [{"pattern_id": "P-ATO"}]}})
+    with pytest.raises(AssertionError):
+        assert_no_forbidden({"label_known_at": "2025-01-01"})
+    assert_no_forbidden(packet())
 
 
-def test_forbidden_keys_cover_truth_tables() -> None:
-    assert {"pattern_id", "labels", "story_id"} <= FORBIDDEN_KEYS
-
-
-@pytest.mark.legacy_world
-def test_live_packet_has_no_forbidden_keys() -> None:
-    import pandas as pd
-    import sqlalchemy as sa
-
-    from llm.packet import build_packet, get_engine
-
-    engine = get_engine()
-    try:
-        with engine.connect() as c:
-            alerts = pd.read_sql(sa.text("SELECT alert_id FROM alerts LIMIT 3"), c)
-    except sa.exc.ProgrammingError:
-        pytest.skip("alerts table not built yet (rules engine hasn't run)")
-    if alerts.empty:
-        pytest.skip("no alerts")
-    for aid in alerts.alert_id:
-        packet = build_packet(int(aid), engine)
-        _assert_no_forbidden(packet)  # raises on violation
-        assert packet["alert"]["fired_rules"], "packet must carry fired rules"
-        json.dumps(packet)  # must be serializable
-
-    # Appending facts after the alert is equivalent to comparing a world
-    # truncated at the alert timestamp with the full world.  The packet must
-    # be invariant to those future facts.
-    alert_id = int(alerts.iloc[0]["alert_id"])
-    with engine.connect() as connection:
-        transaction = connection.begin()
-        try:
-            before = build_packet(alert_id, connection)
-            alert = before["alert"]
-            future_ts = pd.Timestamp(alert["ts"]) + pd.Timedelta(days=400)
-            new_user_id = int(connection.scalar(sa.text("SELECT MAX(user_id) + 1 FROM users")))
-            new_order_id = int(connection.scalar(sa.text("SELECT MAX(order_id) + 1 FROM orders")))
-            new_plan_id = int(connection.scalar(sa.text("SELECT MAX(plan_id) + 1 FROM plans")))
-            new_installment_id = int(
-                connection.scalar(sa.text("SELECT MAX(installment_id) + 1 FROM installments"))
-            )
-            connection.execute(
-                sa.text(
-                    """INSERT INTO users
-                       SELECT :new_uid, :future_ts, email, email_domain, kyc_country, dob_year
-                       FROM users WHERE user_id = :uid"""
-                ),
-                {
-                    "new_uid": new_user_id,
-                    "future_ts": future_ts,
-                    "uid": alert["user_id"],
-                },
-            )
-            connection.execute(
-                sa.text(
-                    """INSERT INTO orders
-                       SELECT :new_oid, :new_uid, merchant_id, :future_ts, amount, ip,
-                              ip_country, device_id, card_id, ship_address_id, avs_result,
-                              cvv_result, 'approved'
-                       FROM orders WHERE order_id = :oid"""
-                ),
-                {
-                    "new_oid": new_order_id,
-                    "new_uid": new_user_id,
-                    "future_ts": future_ts,
-                    "oid": alert["order_id"],
-                },
-            )
-            connection.execute(
-                sa.text(
-                    """INSERT INTO plans
-                       VALUES (:plan_id, :order_id, 100.00, 25.00, 3)"""
-                ),
-                {"plan_id": new_plan_id, "order_id": new_order_id},
-            )
-            connection.execute(
-                sa.text(
-                    """INSERT INTO installments
-                       VALUES (:installment_id, :plan_id, 1, :due_ts, :paid_ts,
-                               25.00, 'paid')"""
-                ),
-                {
-                    "installment_id": new_installment_id,
-                    "plan_id": new_plan_id,
-                    "due_ts": future_ts + pd.Timedelta(days=14),
-                    "paid_ts": future_ts + pd.Timedelta(days=14),
-                },
-            )
-            after = build_packet(alert_id, connection)
-            assert after == before
-        finally:
-            transaction.rollback()
-
-
-def test_frozen_eval_packets_clean_if_present() -> None:
-    pdir = REPO / "llm" / "eval" / "benchmarks" / "2026-08-dev" / "original" / "packets"
-    files = list(pdir.glob("*.json")) if pdir.exists() else []
-    for f in files[:50]:
-        _assert_no_forbidden(json.loads(f.read_text()))
-
+def test_packets_for_context_rows_read_only_the_order_and_its_entities() -> None:
+    order = CASE["order"]
+    tables = {
+        "order_attempts": pd.DataFrame([order]),
+        "accounts": pd.DataFrame([{"user_id": 377, "home_country": "CA"}]),
+        "cards": pd.DataFrame([{"card_id": 4410, "bin_country": "GB"}]),
+        "merchants": pd.DataFrame([{"merchant_id": 12, "category": "travel"}]),
+        "labels": None,  # never read
+    }
+    context = pd.DataFrame([CASE["context_row"]])
+    built = build_packets(tables, context)
+    (only,) = built.values()
+    assert only["order"]["account_home_country"] == "CA"
+    assert only["order"]["card_bin_country"] == "GB"
+    assert only["order"]["merchant_category"] == "travel"

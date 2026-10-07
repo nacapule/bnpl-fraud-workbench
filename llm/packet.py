@@ -1,195 +1,198 @@
-"""Build the case packet for one alert — the ONLY thing the triage model sees.
+"""The case packet: what the memo drafter and the referee see for one review decision.
 
-Hard rule (FP-1 §2.4): nothing here may read the ``labels`` table or
-``stories.jsonl``. The packet carries observable facts plus fired-rule
-rationales; ``tests/test_packet.py`` walks the JSON to prove label fields are
-absent. Derived values the memo may cite (tenure days, ratios, linkage counts)
-are materialized as explicit fields so the concrete-token verifier can match
-them verbatim.
+A packet describes one order at one decision time: the review, or the completion of a
+verification check (fraud policy §2.4, §6.6). Its facts come from the shared as-of
+context (:mod:`core.asof`) at that time, so the packet obeys the same knowledge rules
+as the rules, the models and the simulated reviewer: order-anchored facts as at the
+order, linkage and earlier outcomes as known at the decision. Nothing here computes
+history; the order's own attributes come from its attempt row and the entities it
+names.
+
+Entity ids are replaced by placeholders (``O1``, ``U1``, ``M1``, ``D1``, ``C1``,
+``A1`` by default; :func:`placeholders` draws fresh ones for invariance probes), so
+identifiers carry no information about how the world was generated. The mapping
+stays with the caller and never enters the packet. Labels and latent tables are
+never read (:data:`FORBIDDEN_KEYS` guards the output).
 """
 
 from __future__ import annotations
 
-import json
-from contextlib import nullcontext
+import math
+import random
+import string
+from collections.abc import Mapping, Sequence
+from datetime import datetime
 from typing import Any
 
 import pandas as pd
-import sqlalchemy as sa
 
-from core.config import db_settings
+from core.actions import Check, CheckOutcome
+from core.asof import COLUMNS
+from core.evidence import CheckResult
 
-FORBIDDEN_KEYS = {"label", "labels", "pattern_id", "story_id", "is_fraud"}
+PACKET_VERSION = "fp2-1"
+DECISION_POINTS = ("review", "check_completed")
+
+# Every context column the packet carries: those the specification gives to packets or
+# the referee, in specification order.
+CONTEXT_FIELDS: tuple[str, ...] = tuple(
+    column.name for column in COLUMNS if {"packets", "referee"} & set(column.used_by))
+ENTITIES = ("order", "account", "merchant", "device", "card", "ship_address")
+DEFAULT_PREFIX = {"order": "O", "account": "U", "merchant": "M", "device": "D", "card": "C",
+                  "ship_address": "A"}
+FORBIDDEN_KEYS = {"label", "labels", "label_known_at", "basis", "pattern_id", "episode_id",
+                  "intent", "mimic", "actor", "profile", "is_fraud", "story_id"}
+INTEGER_DTYPES = ("int8", "int64")
 
 
-def get_engine() -> sa.Engine:
-    return sa.create_engine(db_settings().sqlalchemy_url())
+def placeholders(seed: int | None = None) -> dict[str, str]:
+    """Placeholder names for the packet's entities: ``O1``… by default, or fresh random
+    names (a letter, a hyphen, three characters) for an invariance probe."""
+    if seed is None:
+        return {entity: f"{DEFAULT_PREFIX[entity]}1" for entity in ENTITIES}
+    rng = random.Random(seed)
+    alphabet = string.ascii_uppercase + string.digits
+    names: dict[str, str] = {}
+    for entity in ENTITIES:
+        name = ""
+        while not name or name in names.values():
+            name = f"{DEFAULT_PREFIX[entity]}-" + "".join(rng.choice(alphabet) for _ in range(3))
+        names[entity] = name
+    return names
 
 
-def _rows(engine: sa.Engine | sa.Connection, sql: str, **params: Any) -> list[dict[str, Any]]:
-    connection = nullcontext(engine) if isinstance(engine, sa.Connection) else engine.connect()
-    with connection as connected:
-        df = pd.read_sql(sa.text(sql), connected, params=params)
-    for col in df.columns:
-        if pd.api.types.is_datetime64_any_dtype(df[col]):
-            df[col] = df[col].astype(str)
-    return json.loads(df.to_json(orient="records"))
+def _timestamp(value: Any) -> str:
+    stamp = pd.Timestamp(value)
+    if pd.isna(stamp):
+        raise ValueError("a packet timestamp is missing")
+    return stamp.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _value(name: str, value: Any) -> int | float | None:
+    if value is None or (isinstance(value, float) and math.isnan(value)) or value is pd.NA:
+        return None
+    dtype = next(column.dtype for column in COLUMNS if column.name == name)
+    if dtype in INTEGER_DTYPES:
+        if float(value) != int(value):
+            raise ValueError(f"{name} must be a whole number, got {value!r}")
+        return int(value)
+    return float(value)  # full precision: rounding could move a value across a threshold
 
 
 def build_packet(
-    alert_id: int, engine: sa.Engine | sa.Connection | None = None
+    context_row: Mapping[str, Any],
+    order: Mapping[str, Any],
+    *,
+    merchant_category: str,
+    card_bin_country: str,
+    home_country: str,
+    checks: Sequence[CheckResult] = (),
+    names: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
-    engine = engine or get_engine()
+    """One packet from the order's context row at its decision time.
 
-    alert = _rows(
-        engine,
-        """SELECT a.alert_id, a.order_id, a.user_id, a.ts, a.score, a.band, a.fired_rules,
-                  o.amount, o.ip, o.ip_country, o.device_id, o.card_id, o.ship_address_id,
-                  o.avs_result, o.cvv_result, o.status,
-                  m.name AS merchant_name, m.category AS merchant_category
-           FROM alerts a
-           JOIN orders o ON o.order_id = a.order_id
-           JOIN merchants m ON m.merchant_id = o.merchant_id
-           WHERE a.alert_id = :aid""",
-        aid=alert_id,
-    )[0]
-    alert["fired_rules"] = json.loads(alert["fired_rules"])
-    uid = alert["user_id"]
-    order_ts = alert["ts"]
-
-    account = _rows(
-        engine,
-        """SELECT u.user_id, u.signup_ts, u.email, u.email_domain, u.kyc_country,
-                  DATEDIFF(:ts, u.signup_ts) AS tenure_days
-           FROM users u WHERE u.user_id = :uid""",
-        uid=uid,
-        ts=order_ts,
-    )[0]
-
-    history = _rows(
-        engine,
-        """SELECT COUNT(*) AS n_orders_prior,
-                  COALESCE(SUM(amount), 0) AS total_spent_prior,
-                  COALESCE(AVG(amount), 0) AS avg_amount_prior,
-                  SUM(avs_result <> 'Y') AS n_avs_mismatch_prior,
-                  SUM(cvv_result <> 'M') AS n_cvv_mismatch_prior
-           FROM orders WHERE user_id = :uid AND ts < :ts AND status = 'approved'""",
-        uid=uid,
-        ts=order_ts,
-    )[0]
-
-    amount_ctx = _rows(
-        engine,
-        """SELECT ROUND(:amt / NULLIF(AVG(ranked.amount), 0), 2)
-                     AS amount_over_category_median
-           FROM (
-             SELECT o2.amount,
-                    ROW_NUMBER() OVER (ORDER BY o2.amount) AS rn,
-                    COUNT(*) OVER () AS rc
-             FROM orders o2
-             JOIN merchants m2 ON m2.merchant_id = o2.merchant_id
-             WHERE m2.category = :cat AND o2.status = 'approved' AND o2.ts <= :ts
-           ) ranked
-           WHERE ranked.rn IN (
-             FLOOR((ranked.rc + 1) / 2),
-             FLOOR((ranked.rc + 2) / 2)
-           )""",
-        amt=alert["amount"],
-        cat=alert["merchant_category"],
-        ts=order_ts,
-    )[0]
-
-    repayment = _rows(
-        engine,
-        """SELECT COUNT(*) AS installments_due,
-                  SUM(i.paid_ts <= :ts AND i.paid_ts <= i.due_ts) AS paid,
-                  SUM(i.paid_ts <= :ts AND i.paid_ts > i.due_ts) AS late,
-                  SUM(i.paid_ts IS NULL AND EXISTS (
-                    SELECT 1 FROM payments px
-                    WHERE px.installment_id = i.installment_id
-                      AND px.result = 'fail' AND px.ts <= :ts
-                  )) AS failed_or_written_off
-           FROM installments i JOIN plans p ON p.plan_id = i.plan_id
-           JOIN orders o ON o.order_id = p.order_id
-           WHERE o.user_id = :uid AND i.due_ts <= :ts""",
-        uid=uid,
-        ts=order_ts,
-    )[0]
-
-    last_orders = _rows(
-        engine,
-        """SELECT o.order_id, o.ts, o.amount, o.status, o.ip_country, o.device_id,
-                  o.avs_result, o.cvv_result, m.category
-           FROM orders o JOIN merchants m ON m.merchant_id = o.merchant_id
-           WHERE o.user_id = :uid AND o.ts <= :ts
-           ORDER BY o.ts DESC LIMIT 10""",
-        uid=uid,
-        ts=order_ts,
-    )
-
-    events = _rows(
-        engine,
-        """SELECT ts, kind, ip, device_id FROM account_events
-           WHERE user_id = :uid AND ts <= :ts AND ts >= DATE_SUB(:ts, INTERVAL 90 DAY)
-           ORDER BY ts DESC LIMIT 40""",
-        uid=uid,
-        ts=order_ts,
-    )
-
-    linkage = _rows(
-        engine,
-        """SELECT
-             (SELECT COUNT(DISTINCT o2.user_id) FROM orders o2
-              WHERE o2.device_id = :dev AND o2.user_id <> :uid
-                AND o2.ts BETWEEN DATE_SUB(:ts, INTERVAL 30 DAY) AND :ts)
-                 AS other_accounts_on_device,
-             (SELECT COUNT(DISTINCT o3.user_id) FROM orders o3
-              WHERE o3.ship_address_id = :addr AND o3.user_id <> :uid AND o3.ts <= :ts)
-                 AS other_accounts_on_ship_address,
-             (SELECT COUNT(*) - 1 FROM users u2
-              WHERE u2.email_domain = :dom AND SUBSTRING_INDEX(REPLACE(u2.email, '.', ''), '+', 1)
-                    = SUBSTRING_INDEX(REPLACE(:email, '.', ''), '+', 1)
-                AND u2.signup_ts <= :ts)
-                 AS other_accounts_same_email_root""",
-        dev=alert["device_id"],
-        addr=alert["ship_address_id"],
-        uid=uid,
-        dom=account["email_domain"],
-        email=account["email"],
-        ts=order_ts,
-    )[0]
-
-    card = _rows(
-        engine,
-        """SELECT c.bin_country, c.network,
-                  (SELECT COUNT(*) FROM orders od WHERE od.card_id = c.card_id
-                     AND od.status = 'declined'
-                     AND od.ts BETWEEN DATE_SUB(:ts, INTERVAL 24 HOUR) AND :ts)
-                      AS declines_on_card_24h
-           FROM cards c WHERE c.card_id = :cid""",
-        cid=alert["card_id"],
-        ts=order_ts,
-    )[0]
+    ``context_row`` has core.asof KEY_COLUMNS and at least :data:`CONTEXT_FIELDS`;
+    ``decision_at`` is the decision time. ``order`` is the order's ``order_attempts``
+    row (its own attributes: when it was placed, IP country, AVS and CVV results,
+    promotion). ``checks`` are the verification checks completed by the decision
+    time, at most one of each; with any, the decision point is the completion of the
+    last. ``names`` are the placeholders (:func:`placeholders`).
+    """
+    names = dict(names or placeholders())
+    if set(names) != set(ENTITIES) or len(set(names.values())) != len(ENTITIES):
+        raise ValueError("names must give a distinct placeholder for each entity")
+    if int(context_row["order_id"]) != int(order["order_id"]):
+        raise ValueError("the context row and the order attempt describe different orders")
+    decision_at = pd.Timestamp(context_row["decision_at"])
+    placed_at = pd.Timestamp(order["known_at"])
+    if decision_at < placed_at:
+        raise ValueError("a decision cannot precede its order")
+    checks = sorted(checks, key=lambda result: result.completed_at)
+    if len({result.check for result in checks}) != len(checks):
+        raise ValueError("each check runs at most once (fraud policy §5.1)")
+    for result in checks:
+        if not placed_at <= pd.Timestamp(result.completed_at) <= decision_at:
+            raise ValueError("a check must complete between the order and the decision")
+    missing = [field for field in CONTEXT_FIELDS if field not in context_row]
+    if missing:
+        raise KeyError(f"context row lacks {missing}")
 
     packet = {
-        "alert": alert,
-        "account": {**account, **history, **amount_ctx},
-        "repayment_history": repayment,
-        "card": card,
-        "last_orders": last_orders,
-        "account_events_90d": events,
-        "linkage": linkage,
+        "packet_version": PACKET_VERSION,
+        "decision": {
+            "point": "check_completed" if checks else "review",
+            "decision_at": _timestamp(decision_at),
+            "checks": [{"check": str(result.check), "outcome": str(result.outcome),
+                        "completed_at": _timestamp(result.completed_at)} for result in checks],
+        },
+        "order": {
+            **{entity: names[entity] for entity in ENTITIES},
+            "placed_at": _timestamp(placed_at),
+            "merchant_category": str(merchant_category),
+            "promotion_used": bool(pd.notna(order.get("promo_id"))),
+            "ip_country": str(order["ip_country"]),
+            "card_bin_country": str(card_bin_country),
+            "account_home_country": str(home_country),
+            "avs_result": str(order["avs_result"]),
+            "cvv_result": str(order["cvv_result"]),
+        },
+        "context": {field: _value(field, context_row[field]) for field in CONTEXT_FIELDS},
     }
-    _assert_no_forbidden(packet)
+    assert_no_forbidden(packet)
     return packet
 
 
-def _assert_no_forbidden(obj: Any, path: str = "") -> None:
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            if k.lower() in FORBIDDEN_KEYS:
-                raise AssertionError(f"forbidden key {k!r} at {path}")
-            _assert_no_forbidden(v, f"{path}.{k}")
-    elif isinstance(obj, list):
-        for i, v in enumerate(obj):
-            _assert_no_forbidden(v, f"{path}[{i}]")
+def build_packets(
+    tables: Mapping[str, pd.DataFrame],
+    context: pd.DataFrame,
+    *,
+    checks: Mapping[tuple[int, datetime], Sequence[CheckResult]] | None = None,
+    name_seeds: Mapping[tuple[int, datetime], int] | None = None,
+) -> dict[tuple[int, pd.Timestamp], dict[str, Any]]:
+    """Packets for every row of ``context`` (core.asof rows at their decision times),
+    keyed by (order_id, decision_at). ``tables`` supply the order attempts, accounts,
+    cards and merchants; ``checks`` and ``name_seeds`` are optional per decision."""
+    attempts = tables["order_attempts"].set_index("order_id")
+    accounts = tables["accounts"].set_index("user_id")
+    cards = tables["cards"].set_index("card_id")
+    merchants = tables["merchants"].set_index("merchant_id")
+    packets: dict[tuple[int, pd.Timestamp], dict[str, Any]] = {}
+    for row in context.to_dict("records"):
+        key = (int(row["order_id"]), pd.Timestamp(row["decision_at"]))
+        order = {"order_id": key[0], **attempts.loc[key[0]].to_dict()}
+        seed = (name_seeds or {}).get(key)
+        packets[key] = build_packet(
+            row, order,
+            merchant_category=merchants.loc[order["merchant_id"], "category"],
+            card_bin_country=cards.loc[order["card_id"], "bin_country"],
+            home_country=accounts.loc[order["user_id"], "home_country"],
+            checks=(checks or {}).get(key, ()),
+            names=placeholders(seed),
+        )
+    return packets
+
+
+def assert_no_forbidden(obj: Any, path: str = "") -> None:
+    """Raise if a label or simulation-truth key appears anywhere in ``obj``."""
+    if isinstance(obj, Mapping):
+        for key, value in obj.items():
+            if str(key).lower() in FORBIDDEN_KEYS:
+                raise AssertionError(f"forbidden key {key!r} at {path or '.'}")
+            assert_no_forbidden(value, f"{path}.{key}")
+    elif isinstance(obj, list | tuple):
+        for index, value in enumerate(obj):
+            assert_no_forbidden(value, f"{path}[{index}]")
+
+
+def context_row(packet: Mapping[str, Any]) -> dict[str, Any]:
+    """The context values a packet carries (what the referee classifies), with missing
+    values as NaN so that a missing fact never makes a condition hold."""
+    return {field: (math.nan if value is None else value)
+            for field, value in packet["context"].items()}
+
+
+def checks_of(packet: Mapping[str, Any]) -> tuple[CheckResult, ...]:
+    """The completed checks a packet records."""
+    return tuple(CheckResult(Check(item["check"]), CheckOutcome(item["outcome"]),
+                             datetime.fromisoformat(item["completed_at"]))
+                 for item in packet["decision"]["checks"])
