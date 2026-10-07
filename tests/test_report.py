@@ -305,6 +305,7 @@ def test_inline_code_with_three_backticks_does_not_open_a_fence() -> None:
     "- > > ```text\n  > > example 12\n  > > ```\n  > >\n  > > Loss was 84% of GMV.\n",
     "Method\n===\n    example 12\n\nLoss was 84% of GMV.\n",  # code after a setext heading
     "<!-- a note on 12 -->\nText <!-- and 12 --> here.\n\nLoss was 84% of GMV.\n",  # comments
+    '[1]: https://example.com/2025/x "Version 12"\nLoss was 84% of GMV.\n',  # a definition
 ])
 def test_a_fence_ends_with_its_closer_or_its_container(template: str) -> None:
     """Fence content is read as content first; a fence never outlives its container."""
@@ -327,6 +328,9 @@ def test_a_fence_ends_with_its_closer_or_its_container(template: str) -> None:
     "<!-- check\nthe denominator --> Loss was 84% of GMV.\n",
     "Use ``a`b``. Loss was 84% of GMV. See ``c`d``.\n",  # code spans of two backticks
     "[ref]: target\n===\n    Loss was 84% of GMV.\n",  # no heading text, so no heading
+    "Context.\n\n[ref]: target\n===\n    Loss was 84% of GMV.\n",
+    "[note]: Loss was 84% of GMV.\n",  # not a reference definition: prose
+    "[ref]: target\n    Loss was 84% of GMV.\n",  # text after a definition is not code
 ])
 def test_visible_text_is_never_taken_for_code(template: str) -> None:
     """Container marks are read as CommonMark reads them, so prose stays prose."""

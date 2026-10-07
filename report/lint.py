@@ -61,15 +61,17 @@ IDENTIFIERS = (
 # A code span: a run of backticks to the next run of the same length.
 INLINE_CODE = re.compile(r"(?<!`)(`+)(?!`).+?(?<!`)\1(?!`)")
 LINK_TARGET = re.compile(r"\]\([^)]*\)")
-# A link reference definition: only its target is blanked; footnotes keep their text.
-REFERENCE_TARGET = re.compile(r"^(\s*\[(?!\^)[^\]]+\]:)(\s*\S+.*)$", re.MULTILINE)
 FOOTNOTE_MARKER = re.compile(r"\[\^[^\]\s]+\]")
 NUMBER = re.compile(r"\d[\d,.]*")
 LIST_MARK = re.compile(r"[-+*]|(\d{1,9})[.)]")
 THEMATIC_BREAK = re.compile(r" {0,3}([-*_])(?:[ \t]*\1){2,}[ \t]*$")
 SETEXT_UNDERLINE = re.compile(r" {0,3}(?:=+|-+)[ \t]*$")
 COMMENT_BLOCK = re.compile(r" {0,3}<!--")
-REFERENCE_DEFINITION = re.compile(r" {0,3}\[[^\]]+\]:\s*\S")
+# A complete link reference definition (not a footnote): a label, a destination and
+# at most a quoted title. Anything else on the line makes it prose.
+REFERENCE_DEFINITION = re.compile(
+    r" {0,3}\[(?!\^)(?:[^\]\\]|\\.)+\]:[ \t]*(?:<[^<>\n]*>|[^\s<]\S*)"
+    r"(?:[ \t]+(?:\"[^\"]*\"|'[^']*'|\([^()]*\)))?[ \t]*$")
 HEADING = re.compile(r" {0,3}#{1,6}(?:[ \t]|$)")
 # A fence opens with three or more backticks (whose info string holds no
 # backtick: ```make final``` is inline code) or three or more tildes.
@@ -124,7 +126,6 @@ def literal_text(template: str, allowed_phrases: Iterable[str] = ()) -> str:
     text = PLACEHOLDER.sub(lambda match: _blank(match)[:-1] + "}", text)
     for pattern in (INLINE_CODE, LINK_TARGET, FOOTNOTE_MARKER):
         text = pattern.sub(_blank, text)
-    text = REFERENCE_TARGET.sub(lambda m: m.group(1) + " " * len(m.group(2)), text)
     for phrase in allowed_phrases:
         text = re.sub(re.escape(phrase), _blank, text)
     for identifier in IDENTIFIERS:
@@ -226,23 +227,21 @@ def _visible_blocks(text: str) -> str:
     inline: list[tuple[int, str]] = []  # lines of an inline comment not yet closed
 
     def end_paragraph() -> None:
-        nonlocal paragraph
+        nonlocal paragraph, heading_text
         for index, original in inline:  # an unclosed comment was text after all
             out[index] = original
         inline.clear()
-        paragraph = False
+        paragraph = heading_text = False
 
     def paragraph_line(prefix: int, rest: str) -> None:
         nonlocal paragraph, heading_text
-        defines = REFERENCE_DEFINITION.match(rest) and not heading_text
-        heading_text = (heading_text if paragraph else False) or not defines
         masked, still_open = _mask_inline(rest, bool(inline))
         if still_open:
             inline.append((len(out), " " * prefix + rest))
         else:
             inline.clear()
         out.append(" " * prefix + masked)
-        paragraph = True
+        paragraph = heading_text = True
 
     for raw in text.expandtabs(4).split("\n"):
         pos, matched = 0, 0
@@ -319,6 +318,10 @@ def _visible_blocks(text: str) -> str:
             end_paragraph()
             masked, unclosed = _mask_inline(rest, False)  # a heading is one line
             out.append(" " * pos + (rest if unclosed else masked))
+            continue
+        if not heading_text and not inline and REFERENCE_DEFINITION.match(rest):
+            out.append(" " * len(raw))  # a link reference definition is not shown
+            paragraph = True  # but, like a paragraph, it is not interrupted by code
             continue
         paragraph_line(pos, rest)
     end_paragraph()
