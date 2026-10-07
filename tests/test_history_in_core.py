@@ -30,7 +30,6 @@ LEGACY = {
     "model/evaluate.py",
     "model/features.py",
     "queue_sim/simulate.py",
-    "rules/engine.py",
     "rules/tuning.py",
 }
 

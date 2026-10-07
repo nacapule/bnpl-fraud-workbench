@@ -1,10 +1,16 @@
-"""Rule definitions R01–R11. Intents and weights mirror policy/fraud-policy.md §4;
-if you change a threshold here, update the policy doc (FP-1 §8 change control).
+"""Rule conditions R01–R11 of the fraud policy (FP-2 §6.2) and their score weights.
 
-Each rule consumes the point-in-time enriched order frame built by
-``rules.engine`` (every column is computed strictly from data at or before the
-order timestamp) and returns a boolean fire mask plus a vectorized rationale
-string with concrete values — alerts must be explainable (FP-1 §2).
+Each condition reads only as-of context columns (``core.asof``), evaluated at the
+decision time, and returns a boolean fire mask plus a rationale with the values it
+rests on (FP-2 §6.1). R06 has two parts under one rule id: R06(a), a disposable
+email domain (Context), and R06(b), a normalized email shared with another account
+(Linkage); the rule fires when either part does and its weight counts once.
+R12 (a vendor score) is retired and its id is never reused.
+
+Thresholds must match the policy text (FP-2 §12.2); weights add up to the rule
+score that checkout routing compares with the bands in ``config/policy.yaml``
+(FP-2 §4.1). Families, settling outcomes and household exceptions belong to the
+evidence classification (``core.evidence``), not to the score.
 """
 
 from __future__ import annotations
@@ -14,170 +20,167 @@ from dataclasses import dataclass
 
 import pandas as pd
 
+Mask = Callable[[pd.DataFrame], pd.Series]
+
 
 @dataclass(frozen=True)
-class Rule:
-    id: str
+class Condition:
+    id: str  # "R01" ... "R11", or "R06(a)" / "R06(b)"
+    rule: str  # the rule id it belongs to
     name: str
-    targets: tuple[str, ...]
-    rationale: str  # intent, one sentence (policy §4 wording)
-    weight: int
-    fire: Callable[[pd.DataFrame], pd.Series]
+    columns: tuple[str, ...]  # the core.asof columns it reads
+    fire: Mask
     explain: Callable[[pd.DataFrame], pd.Series]  # only called on fired rows
 
 
-def _r01_fire(df: pd.DataFrame) -> pd.Series:
-    return (df.account_age_days >= 90) & (df.cred_change_hours <= 48) & df.device_new
+def _number(values: pd.Series, digits: int = 0) -> pd.Series:
+    rounded = values.astype(float).round(digits)
+    return (rounded.astype(int) if digits == 0 else rounded).astype(str)
 
 
-def _r01_explain(df: pd.DataFrame) -> pd.Series:
-    return (
-        "credential/contact change " + df.cred_change_hours.round(1).astype(str)
-        + "h before order on " + df.account_age_days.astype(int).astype(str)
-        + "d-old account, order from new device d_" + df.device_id.astype(str)
-    )
+def _r01(df: pd.DataFrame) -> pd.Series:
+    return ((df.hours_since_credential_change <= 48) & (df.account_age_days >= 90)
+            & (df.device_link_age_hours <= 72))
 
 
-def _r02_fire(df: pd.DataFrame) -> pd.Series:
-    return df.users_on_device >= 3
+def _r01_text(df: pd.DataFrame) -> pd.Series:
+    return ("password or email change " + _number(df.hours_since_credential_change, 1)
+            + "h before the order on a " + _number(df.account_age_days) + "-day-old account; "
+            + "device first used on it " + _number(df.device_link_age_hours, 1) + "h before")
 
 
-def _r02_explain(df: pd.DataFrame) -> pd.Series:
-    return (
-        df.users_on_device.astype(int).astype(str)
-        + " accounts have transacted on device d_" + df.device_id.astype(str)
-        + " as of this order"
-    )
+def _r02(df: pd.DataFrame) -> pd.Series:
+    return df.accounts_on_device_30d >= 3
 
 
-def _r03_fire(df: pd.DataFrame) -> pd.Series:
-    return df.bin_ip_mismatch & (df.avs_bad | df.cvv_bad)
+def _r02_text(df: pd.DataFrame) -> pd.Series:
+    return (_number(df.accounts_on_device_30d) + " accounts, this one included, with an "
+            "attempt or account event on this device in the past 30 days")
 
 
-def _r03_explain(df: pd.DataFrame) -> pd.Series:
-    return (
-        "card BIN country " + df.bin_country + " vs IP country " + df.ip_country
-        + " with AVS=" + df.avs_result + "/CVV=" + df.cvv_result
-    )
+def _r03(df: pd.DataFrame) -> pd.Series:
+    return (df.bin_ip_country_mismatch == 1) & ((df.avs_mismatch == 1) | (df.cvv_mismatch == 1))
 
 
-def _r04_fire(df: pd.DataFrame) -> pd.Series:
-    return df.is_first_order & (df.amount_vs_p95 > 1.0) & (df.account_age_days < 7)
+def _r03_text(df: pd.DataFrame) -> pd.Series:
+    return ("card issuing country differs from the IP country; AVS mismatch="
+            + _number(df.avs_mismatch) + ", CVV mismatch=" + _number(df.cvv_mismatch))
 
 
-def _r04_explain(df: pd.DataFrame) -> pd.Series:
-    return (
-        "first-ever order $" + df.amount.round(2).astype(str) + " is "
-        + df.amount_vs_p95.round(2).astype(str) + "x the category P95, account "
-        + (df.account_age_days * 24).round(0).astype(int).astype(str) + "h old"
-    )
+def _r04(df: pd.DataFrame) -> pd.Series:
+    return ((df.is_first_attempt_user == 1) & (df.amount_over_category_p95 > 1.0)
+            & (df.account_age_days < 7))
 
 
-def _r05_fire(df: pd.DataFrame) -> pd.Series:
-    return (df.n_user_24h > 3) | (df.n_dev_24h > 5)
+def _r04_text(df: pd.DataFrame) -> pd.Series:
+    return ("first order attempt at " + _number(df.amount_over_category_p95, 2)
+            + "x the category's 95th percentile of earlier approved amounts, account "
+            + _number(df.account_age_days * 24) + "h old")
 
 
-def _r05_explain(df: pd.DataFrame) -> pd.Series:
-    return (
-        "burst: " + df.n_user_24h.astype(int).astype(str) + " orders/24h on account, "
-        + df.n_dev_24h.astype(int).astype(str) + " on device d_" + df.device_id.astype(str)
-    )
+def _r05(df: pd.DataFrame) -> pd.Series:
+    return (df.attempts_user_24h > 3) | (df.attempts_device_24h > 5)
 
 
-def _r06_fire(df: pd.DataFrame) -> pd.Series:
-    return df.email_disposable | df.email_root_dup
+def _r05_text(df: pd.DataFrame) -> pd.Series:
+    return (_number(df.attempts_user_24h) + " order attempts on the account and "
+            + _number(df.attempts_device_24h) + " on the device in the 24h up to this one")
 
 
-def _r06_explain(df: pd.DataFrame) -> pd.Series:
-    return (
-        "email identity cost-reduction: disposable_domain=" + df.email_disposable.astype(str)
-        + ", shared_root_accounts=" + df.email_root_accounts.astype(int).astype(str)
-    )
+def _r06a(df: pd.DataFrame) -> pd.Series:
+    return df.email_domain_class == 2
 
 
-def _r07_fire(df: pd.DataFrame) -> pd.Series:
-    return df.card_test_declines >= 3
+def _r06a_text(df: pd.DataFrame) -> pd.Series:
+    return pd.Series("disposable email domain", index=df.index)
 
 
-def _r07_explain(df: pd.DataFrame) -> pd.Series:
-    return (
-        df.card_test_declines.astype(int).astype(str)
-        + " declined attempts on this card/device in the prior 24h, then this approval"
-    )
+def _r06b(df: pd.DataFrame) -> pd.Series:
+    return df.email_root_other_accounts >= 1
 
 
-def _r08_fire(df: pd.DataFrame) -> pd.Series:
-    return df.users_on_ship_addr >= 3
+def _r06b_text(df: pd.DataFrame) -> pd.Series:
+    return (_number(df.email_root_other_accounts)
+            + " other accounts hold an email that normalizes to this account's")
 
 
-def _r08_explain(df: pd.DataFrame) -> pd.Series:
-    return (
-        "ship-to address a_" + df.ship_address_id.astype(str) + " already used by "
-        + df.users_on_ship_addr.astype(int).astype(str) + " distinct accounts"
-    )
+def _r07(df: pd.DataFrame) -> pd.Series:
+    return (df.processor_declines_card_24h >= 3) | (df.processor_declines_device_24h >= 3)
 
 
-def _r09_fire(df: pd.DataFrame) -> pd.Series:
-    return df.prior_inr_cbs >= 2
+def _r07_text(df: pd.DataFrame) -> pd.Series:
+    return (_number(df.processor_declines_card_24h) + " processor declines on this card and "
+            + _number(df.processor_declines_device_24h) + " on this device in the 24h before")
 
 
-def _r09_explain(df: pd.DataFrame) -> pd.Series:
-    return (
-        df.prior_inr_cbs.astype(int).astype(str)
-        + " prior item-not-received chargebacks on this account with healthy repayment"
-    )
+def _r08(df: pd.DataFrame) -> pd.Series:
+    return df.accounts_on_address_30d >= 3
 
 
-def _r10_fire(df: pd.DataFrame) -> pd.Series:
-    return df.promo_cluster_size >= 3
+def _r08_text(df: pd.DataFrame) -> pd.Series:
+    return (_number(df.accounts_on_address_30d) + " accounts, this one included, with an "
+            "attempt to this shipping address in the past 30 days")
 
 
-def _r10_explain(df: pd.DataFrame) -> pd.Series:
-    return (
-        "promo redeemed inside a device/address cluster with "
-        + df.promo_cluster_size.astype(int).astype(str) + " linked redemptions"
-    )
+def _r09(df: pd.DataFrame) -> pd.Series:
+    return df.inr_disputes_opened_user >= 2
 
 
-def _r11_fire(df: pd.DataFrame) -> pd.Series:
-    return df.geo_kmh > 900
+def _r09_text(df: pd.DataFrame) -> pd.Series:
+    return (_number(df.inr_disputes_opened_user)
+            + " item-not-received disputes opened on the account's earlier orders")
 
 
-def _r11_explain(df: pd.DataFrame) -> pd.Series:
-    return (
-        "impossible travel: " + df.prev_ip_country + "→" + df.ip_country + " implies "
-        + df.geo_kmh.round(0).astype(int).astype(str) + " km/h"
-    )
+def _r10(df: pd.DataFrame) -> pd.Series:
+    return df.promo_uses_linked_accounts >= 3
 
 
-RULES: list[Rule] = [
-    Rule("R01", "credential change before order", ("P-ATO",),
-         "Account takeover leaves a manipulation trail before the money moves",
-         45, _r01_fire, _r01_explain),
-    Rule("R02", "multi-account device", ("P-SYNTH", "P-PROMO"),
-         "Device reuse is the cheapest ring signal", 40, _r02_fire, _r02_explain),
-    Rule("R03", "geo + verification mismatch", ("P-STOLEN",),
-         "BIN/IP mismatch compounds with AVS/CVV failure; either alone is noise",
-         35, _r03_fire, _r03_explain),
-    Rule("R04", "oversized first order", ("P-STOLEN", "P-NEVERPAY"),
-         "New accounts starting at the top of the amount distribution front-load risk",
-         30, _r04_fire, _r04_explain),
-    Rule("R05", "order burst", ("P-STOLEN", "P-ATO"),
-         "Velocity beyond organic shopping rhythm", 30, _r05_fire, _r05_explain),
-    Rule("R06", "identity cost reduction", ("P-SYNTH", "P-PROMO"),
-         "Disposable/duplicated mailboxes precede scaled abuse", 25, _r06_fire, _r06_explain),
-    Rule("R07", "card testing", ("P-STOLEN",),
-         "Decline burst then success is credential validation before spend",
-         40, _r07_fire, _r07_explain),
-    Rule("R08", "shared drop address", ("P-SYNTH",),
-         "Goods land somewhere; drops collapse rings", 35, _r08_fire, _r08_explain),
-    Rule("R09", "repeat INR disputes", ("P-INR-ABUSE",),
-         "Repeat INR with healthy repayment is the friendly-fraud shape",
-         45, _r09_fire, _r09_explain),
-    Rule("R10", "promo farming cluster", ("P-PROMO",),
-         "Promo economics attract multi-accounting", 30, _r10_fire, _r10_explain),
-    Rule("R11", "impossible geo-velocity", ("P-ATO", "P-STOLEN"),
-         "Two locations faster than travel allows means two actors or proxying",
-         25, _r11_fire, _r11_explain),
-    # R12 (vendor email/IP score) is retired; its id is not reused.
-]
+def _r10_text(df: pd.DataFrame) -> pd.Series:
+    return ("first-purchase promotion used by " + _number(df.promo_uses_linked_accounts)
+            + " accounts linked by a shared device or email, this one included")
+
+
+def _r11(df: pd.DataFrame) -> pd.Series:
+    return df.geo_kmh_from_previous_attempt > 900
+
+
+def _r11_text(df: pd.DataFrame) -> pd.Series:
+    return ("previous attempt from another country implies "
+            + _number(df.geo_kmh_from_previous_attempt) + " km/h")
+
+
+CONDITIONS: tuple[Condition, ...] = (
+    Condition("R01", "R01", "credential change before the order", (
+        "hours_since_credential_change", "account_age_days", "device_link_age_hours"),
+        _r01, _r01_text),
+    Condition("R02", "R02", "multi-account device", ("accounts_on_device_30d",), _r02, _r02_text),
+    Condition("R03", "R03", "geography and verification mismatch", (
+        "bin_ip_country_mismatch", "avs_mismatch", "cvv_mismatch"), _r03, _r03_text),
+    Condition("R04", "R04", "oversized first order", (
+        "is_first_attempt_user", "amount_over_category_p95", "account_age_days"),
+        _r04, _r04_text),
+    Condition("R05", "R05", "order burst", ("attempts_user_24h", "attempts_device_24h"),
+              _r05, _r05_text),
+    Condition("R06(a)", "R06", "disposable email domain", ("email_domain_class",),
+              _r06a, _r06a_text),
+    Condition("R06(b)", "R06", "shared normalized email", ("email_root_other_accounts",),
+              _r06b, _r06b_text),
+    Condition("R07", "R07", "card testing", (
+        "processor_declines_card_24h", "processor_declines_device_24h"), _r07, _r07_text),
+    Condition("R08", "R08", "shared shipping address", ("accounts_on_address_30d",),
+              _r08, _r08_text),
+    Condition("R09", "R09", "repeat item-not-received disputes", ("inr_disputes_opened_user",),
+              _r09, _r09_text),
+    Condition("R10", "R10", "promotion used across linked accounts",
+              ("promo_uses_linked_accounts",), _r10, _r10_text),
+    Condition("R11", "R11", "impossible geo-velocity", ("geo_kmh_from_previous_attempt",),
+              _r11, _r11_text),
+)
+
+# Score weight per rule id (R06 counts once, whichever part fires). R12 is retired.
+WEIGHTS: dict[str, int] = {
+    "R01": 45, "R02": 40, "R03": 35, "R04": 30, "R05": 30, "R06": 25,
+    "R07": 40, "R08": 35, "R09": 45, "R10": 30, "R11": 25,
+}
+RULE_IDS = tuple(WEIGHTS)
+COLUMNS = tuple(dict.fromkeys(column for c in CONDITIONS for column in c.columns))
