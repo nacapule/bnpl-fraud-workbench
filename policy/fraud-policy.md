@@ -32,8 +32,9 @@ including orders refused for account blocks.
 
 **2.4 Decision time** is checkout for routing; the analyst's decision for review.
 
-**2.5 Linked accounts** are other accounts with orders from the order's device or
-shipments to its address within R02 and R08 windows, as known at decision time.
+**2.5 Linked accounts** are the other accounts counted by R02 or R08 for this order: any
+account with an order attempt or account event on its device, or an order attempt to its
+shipping address, in the 30 days before decision time.
 
 ## 3. What is known when
 
@@ -45,6 +46,7 @@ shipments to its address within R02 and R08 windows, as known at decision time.
 |---|---|
 | Account opening; password, email, device and address changes | when they happen |
 | Order attempts, processor declines, AVS and CVV results, IP, device, card, address, promotion use | at the attempt |
+| Shipment reports by the merchant; carrier-confirmed deliveries; merchant closures | when they happen |
 | Verification outcomes (§5) | at check completion |
 | Installment payments and failures | each due or retry date, from two weeks after checkout |
 | Default (§8.2) | 30 days after a missed due date |
@@ -67,8 +69,8 @@ Only `decline` and `escalate` block accounts, only under §6.
 
 **4.3** `needs_check` is a memo recommendation, not an action: the evidence does not
 decide the order, and the memo names the §5.1 check that would. The analyst carries it
-out as a `hold` with that check. It is correct under §6.6(b) and wrong under §6.6(a) and
-(c).
+out as a `hold` with that check. It is correct under §6.6(b) while a required check has
+not yet run, and wrong otherwise.
 
 | Action | Order | Customer | Analyst time |
 |---|---|---|---|
@@ -76,7 +78,7 @@ out as a `hold` with that check. It is correct under §6.6(b) and wrong under §
 | `review` | ships unless held or declined first | none unless held or declined | one review at §7 priority |
 | `auto_decline` | not created; no money moves | declined, not blocked | none |
 | `clear` | ships | none | review |
-| `hold` | shipment and merchant payment paused up to 48 h for checks; after shipment, checks run without pausing | verification requested; released if verified, otherwise cancelled and checkout payment refunded | review and checks |
+| `hold` | before shipment: shipment and merchant payment paused up to 48 h for the checks; after shipment: the checks run and nothing is paused | asked to verify; before shipment, released if verified, otherwise cancelled with the checkout payment refunded; after shipment, unchanged unless a check fails (§5.3) | review and checks |
 | `decline` | before shipment: voided and refunded; after shipment (decline after fulfilment): loss stands | blocked; later orders declined | review |
 | `escalate` | as `decline` | as `decline`; all linked accounts also blocked | review and senior review |
 
@@ -97,11 +99,10 @@ errors).
 **5.2** Families present (§6.2) require `contact` for Account access and `id_check` for
 Card, Velocity and Linkage. Run both when both are required.
 
-**5.3** (a) All required checks `passed`: `clear`. (b) Any check `failed`: `decline`, or
-`escalate` if Linkage is present; cite the failure. (c) No response within 48 hours:
-cancel and refund without blocking accounts. After shipment, a failed check means
-`decline` (the loss stands and the account is blocked); a pass or no response changes
-nothing.
+**5.3** (a) All required checks `passed`: `clear`. (b) Any check `failed`: `escalate` if
+Linkage is present, otherwise `decline`; cite the failure. (c) No response within
+48 hours: before shipment, cancel and refund without blocking accounts; after shipment,
+nothing changes. After shipment, (b) still applies and the loss stands.
 
 ## 6. Evidence standards
 
@@ -115,17 +116,17 @@ retired; never reuse its id.
 
 | Rule | Condition | Family | Intent |
 |---|---|---|---|
-| R01 | password or email changed in the 48 h before the order; account at least 90 days old; and device first seen on the account within 72 h of the order | Account access | takeover leaves a trail |
-| R11 | previous account order from another country under 12 h earlier, implying over 900 km/h | Account access | two places at once |
+| R01 | password changed or reset, or email changed, in the 48 h before the order; account at least 90 days old; and the device first used on this account in the 72 h before the order | Account access | takeover leaves a trail |
+| R11 | the account's previous order attempt came from another country under 12 h earlier, implying over 900 km/h between the countries' centroids | Account access | two places at once |
 | R03 | card issuing and IP countries differ, and AVS or CVV failed | Card | stolen card details |
-| R07 | 3 or more processor declines on this card or device in the prior 24 h | Card | testing stolen cards |
-| R05 | more than 3 order attempts on the account or more than 5 on the device in the 24 h up to the order | Velocity | faster than ordinary shopping |
-| R02 | 3 or more accounts ordered from this device in the past 30 days | Linkage | shared devices tie rings |
-| R08 | 3 or more accounts shipped to this address in the past 30 days | Linkage | goods land somewhere |
-| R06(b) | normalized email matches another account's | Linkage | duplicated identities |
-| R10 | order uses a promotion and its device or address has 3 or more promotion uses | Linkage | multi-account promotion use |
+| R07 | 3 or more processor declines on this card, or 3 or more on this device, in the 24 h before the order | Card | testing stolen cards |
+| R05 | more than 3 order attempts on the account, or more than 5 on the device, in the 24 h up to and including this one | Velocity | faster than ordinary shopping |
+| R02 | 3 or more accounts, this one included, with an order attempt or account event on this device in the past 30 days | Linkage | shared devices tie rings |
+| R08 | 3 or more accounts, this one included, with an order attempt to this shipping address in the past 30 days | Linkage | goods land somewhere |
+| R06(b) | the normalized email (plus-tags removed; dots removed for Gmail only) matches another account's | Linkage | duplicated identities |
+| R10 | the order uses a first-purchase promotion that 3 or more accounts, this one included, linked by a shared device or normalized email have used | Linkage | multi-account promotion use |
 | R06(a) | disposable email domain | Context | cheap identity |
-| R04 | account's first order; amount above its category's 95th percentile of amounts so far; and account under 7 days old | Context | front-loaded exposure |
+| R04 | the account's first order attempt; amount above the 95th percentile of earlier processor-approved amounts in its merchant category; account under 7 days old | Context | front-loaded exposure |
 | R09 | 2 or more `item_not_received` disputes opened on earlier account orders | Context | repeated claims |
 
 **6.3** Earlier outcomes known at decision time settle the order: (a) an earlier order
@@ -135,10 +136,10 @@ never-pay determination (§8.3); (c) item-not-received abuse was determined on t
 account (§9(d)).
 
 **6.4** Households share devices and addresses. (a) Exclude R02 when the device was first
-seen on the account at least 90 days before the order and at most 4 accounts ordered
-from it in the past 30 days. (b) Exclude R08 when the address is the account's home
-address, registered at least 90 days before the order, and at most 4 accounts shipped
-there in the past 30 days. Accounts sharing a device or home address for 90 days before
+used on this account at least 90 days before the order and R02 counts at most 4
+accounts. (b) Exclude R08 when the shipping address is the account's current home
+address, registered on this account at least 90 days before the order, and R08 counts
+at most 4 accounts. Accounts sharing a device or home address for 90 days before
 acting are a known gap. Account age and repayment history alone explain nothing:
 they describe the account holder, not who ordered.
 
@@ -156,8 +157,9 @@ explanations or context:
 - (f) Other plans' repayment history, good or bad, except §6.3(b).
 
 **6.6** A family is present when one of its conditions holds without a §6.4 exception.
-Use the first applicable row; **Standard** is the review procedure's action. After a check,
-apply §5.3.
+Evaluate at review and again when each check completes, with the evidence known then,
+and use the first applicable row; **Standard** is the review procedure's action. Row (a)
+overrides any check result; otherwise, once the required checks have run, §5.3 decides.
 
 | | Evidence | Standard | Also permitted | Prohibited |
 |---|---|---|---|---|
@@ -197,21 +199,22 @@ payment remains unpaid 30 days past due and no full or partial payment has been 
 on the plan after the checkout payment.
 
 **8.3** A zero-effort default is never-pay (first-party fraud) only with an intent marker:
-(a) another plan on the account, opened within 7 days of it, is also a zero-effort
-default; or
-(b) the account shares a device, shipping address or normalized email with two or more
-other accounts whose plans became zero-effort defaults within 30 days of it. The
-determination becomes known when its last qualifying default is known and is final;
-record later payments as recoveries.
+(a) another plan on the account, created within 7 days of this plan's creation, is also
+a zero-effort default; or (b) two or more other accounts that share a device, a shipping
+address or a normalized email with this account have zero-effort defaults whose default
+dates (§3.2) fall within 30 days of this plan's. The determination becomes known when the last of its qualifying
+facts is known, the shared device, address or email included, and is final; later
+payments are recorded as recoveries.
 
-**8.4** Every other default, including zero-effort defaults without a marker, is credit
-loss. Continue collections, record no fraud label and take no fraud-operations action.
-Non-payment alone cannot establish intent. Some are never-pay fraud the evidence cannot
-establish; the simulation counts these against hidden truth for diagnosis only.
+**8.4** Any other default, including a zero-effort default without a marker, is not
+never-pay: it is a credit loss unless fraud is confirmed on other grounds (§9), and the
+default alone gives no fraud label and no fraud-operations action. Non-payment alone
+cannot establish intent. Some of these defaults are never-pay fraud that the evidence
+cannot establish; the simulation counts them against hidden truth, for diagnosis only.
 
 ## 9. Confirmed outcomes
 
-These outcomes confirm fraud. Once known (§3.4), they label orders to measure loss by
+These outcomes confirm fraud. Once known (§3.2), they label orders to measure loss by
 pattern and to train models. A decision is still judged on the evidence known when it was
 made (§3.1), never by its outcome.
 
@@ -220,9 +223,9 @@ made (§3.1), never by its outcome.
 | (a) | an `unauthorized` dispute resolved `lost` | third-party fraud on that order | at resolution |
 | (b) | account holder reports orders they did not place | account takeover on those orders | at the report |
 | (c) | never-pay determination (§8.3) | first-party fraud on that plan | as in §8.3 |
-| (d) | two `item_not_received` disputes on the account resolved `won` (the claim rejected) | item-not-received abuse on those orders | at the second resolution |
-| (e) | three or more accounts sharing a device or normalized email used the same first-purchase promotion, and none reordered without a promotion within 90 days | promotion abuse on those uses | 90 days after the third use |
-| (f) | an `item_not_received` dispute resolved `lost` on an order its merchant reported shipped, after that merchant stopped trading | merchant bust-out on that order | at resolution |
+| (d) | two `item_not_received` disputes on the account resolved `won` on orders with a carrier-confirmed delivery | item-not-received abuse on those orders | at the second resolution |
+| (e) | a use of a first-purchase promotion, when two or more other accounts sharing a device or normalized email with its account used the same promotion within 90 days of it, and none of these accounts placed an order without a promotion within 90 days after its own use | promotion abuse on that use | 90 days after the latest of these uses |
+| (f) | an `item_not_received` dispute resolved `lost` on an order its merchant reported shipped, with no carrier-confirmed delivery, where the merchant closed before the resolution | merchant bust-out on that order | at the resolution or the closure, whichever is later |
 
 ## 10. Memos
 
