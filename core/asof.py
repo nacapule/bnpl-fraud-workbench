@@ -1045,8 +1045,9 @@ def outcome_columns(
     c["unauthorized_disputes_on_card"] = _per(on_card, n)
 
     # never-pay determinations on the account's earlier plans (core.world.adjudicate's rule)
-    determined = _never_pay(tables, a_order[went_through], other["order_id"].unique(),
-                            d.decision_sec.max())
+    stopped = np.minimum(s["voided"], s["cancelled"])
+    determined = _never_pay(tables, a_order[went_through], stopped[went_through],
+                            other["order_id"].unique(), d.decision_sec.max())
     known = other.merge(determined, on="order_id")
     c["never_pay_determined_user"] = _per(known[known["determined"] < known["cut"]], n) > 0
 
@@ -1135,8 +1136,8 @@ def _repayment(tables: Mapping[str, pd.DataFrame], keys: Mapping[str, np.ndarray
     r_key = keys["payment_reversals"]
     r_amount = reversals["amount_cents"].to_numpy(np.int64)
     r_plan, r_seq = p_plan[reversed_payment], p_seq[reversed_payment]
-    width = int(max(p_seq.max(initial=0), 0)) + 1
     schedule = tables["installment_schedule"]
+    width = int(max(p_seq.max(initial=0), schedule["seq"].max() if len(schedule) else 0)) + 1
     schedule = schedule[schedule["seq"] >= 1]
     due = held[["position", "plan_id", "cut"]].merge(
         schedule[["plan_id", "seq", "due_at", "amount_cents"]], on="plan_id")
@@ -1194,27 +1195,46 @@ def _disputes(tables: Mapping[str, pd.DataFrame],
 
 
 def _never_pay(tables: Mapping[str, pd.DataFrame], went_through: np.ndarray,
-               asked: np.ndarray, latest_sec: int) -> pd.DataFrame:
-    """order_id, determined (key): never-pay determinations among the ``asked`` orders,
-    from core.world.adjudicate on these tables with only the orders that went through
-    approved (labels are never read). A determination needs a zero-effort default on
-    the order's own plan, so without one among the asked orders nothing is computed."""
+               stopped: np.ndarray, asked: np.ndarray, latest_sec: int) -> pd.DataFrame:
+    """order_id, determined (key): never-pay determinations (fraud policy §8.3) among the
+    ``asked`` orders, judging the orders that went through as approved; ``stopped`` is
+    when each was voided or cancelled (key, or the maximum). Labels are never read.
+
+    The rule is core.world.adjudicate's, run on these tables with two changes. A
+    voided or cancelled plan owes nothing after it stops, so it defaults (and supplies
+    a marker) only when its default came before that. And the labelling function
+    keeps one determination per order, the first known, so the evidence of every
+    other determination (disputes, victim reports, first-purchase promotions) is
+    withheld: the never-pay rule reads none of it, and a plan that meets §8.3 is
+    reported even when, say, a victim report labelled its order first. Without a
+    zero-effort default among the asked plans nothing is computed."""
     none = pd.DataFrame({"order_id": np.empty(0, np.int64), "determined": np.empty(0, np.int64)})
     rules = config.load("world")["labels"]
-    plans = tables["plans"][tables["plans"]["order_id"].isin(asked)
-                            & tables["plans"]["order_id"].isin(went_through)]
-    if plans.empty:
-        return none
-    owners = plans[["plan_id", "order_id", "created_at"]].merge(
+    plans = tables["plans"]
+    plans = plans[plans["order_id"].isin(went_through)]
+    stop_sec = pd.Series(stopped >> SUB_BITS, index=went_through)
+    stop_sec = stop_sec[stopped < _NEVER]
+    schedule = tables["installment_schedule"]
+    if len(stop_sec):
+        stop = _take(stop_sec, _take(plans.set_index("plan_id")["order_id"],
+                                     schedule["plan_id"].to_numpy(np.int64), -1), _NEVER)
+        default = _seconds(schedule["due_at"]) + rules["default_grace_days"] * _DAY
+        schedule = schedule[(schedule["seq"] < 1).to_numpy() | (default < stop)]
+    mine = plans[plans["order_id"].isin(asked)][["plan_id", "order_id", "created_at"]].merge(
         tables["order_attempts"][["order_id", "user_id"]], on="order_id")
-    if world._zero_effort_defaults(tables, owners, rules["default_grace_days"]).empty:
+    observed = {**tables, "installment_schedule": schedule}
+    if mine.empty or world._zero_effort_defaults(
+            observed, mine, rules["default_grace_days"]).empty:
         return none
     orders = tables["order_attempts"].copy()
     orders["processor_result"] = np.where(orders["order_id"].isin(went_through), "approved",
                                           "declined")
+    withheld = {name: world.empty(name) for name in (
+        "dispute_openings", "dispute_resolutions", "victim_reports")}
     labels = world.adjudicate(
-        {**tables, "order_attempts": orders}, horizon_days=0,
-        observed_until=pd.Timestamp(latest_sec, unit="s"), **rules)
+        {**observed, **withheld, "order_attempts": orders,
+         "promotions": tables["promotions"].assign(first_purchase_only=False)},
+        horizon_days=0, observed_until=pd.Timestamp(latest_sec, unit="s"), **rules)
     labels = labels[(labels["basis"] == "never_pay") & labels["order_id"].isin(asked)]
     return pd.DataFrame({"order_id": labels["order_id"].to_numpy(np.int64),
                          "determined": _derived_key(_seconds(labels["label_known_at"]))})

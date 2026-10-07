@@ -164,6 +164,20 @@ def test_metrics_are_metric_objects_with_counts(base) -> None:
         "detection.validation.positives"].value > 0
 
 
+def test_a_validation_window_without_known_labels_is_reported_not_evaluated(world,
+                                                                           tmp_path) -> None:
+    span = PROTOCOL.windows["validation"]
+    context = world["context"]
+    validation = context.loc[(context["decision_at"] >= span.start)
+                             & (context["decision_at"] < span.end), "order_id"]
+    labels = world["labels"][~world["labels"]["order_id"].isin(validation)]
+    result = _fit(world, tmp_path, labels)
+    assert result.metrics["detection.validation.orders"].value == 0
+    for name in ("rules", "tree", "logistic", "boosting"):
+        for kind in ("average_precision", "brier"):
+            assert result.metrics[f"detection.{name}.{kind}.validation"].value is None
+
+
 def test_average_precision_and_brier_on_a_hand_case() -> None:
     class Fixed:
         columns = ()

@@ -64,15 +64,17 @@ def detection_metrics(scorers: Mapping[str, Scorer], rows: pd.DataFrame,
                                                 population=population, window=window),
     }
     for name, scorer in scorers.items():
+        if not len(rows):
+            for kind in ("average_precision", "brier"):
+                metrics[f"detection.{name}.{kind}.{window}"] = Metric.not_evaluated(
+                    unit="score", population=population, window=window,
+                    reason="no labelled orders")
+            continue
         metrics[f"detection.{name}.average_precision.{window}"] = _ap(
             labels, scorer.score(rows), population=population, window=window)
-        if len(rows):
-            brier = float(np.mean((scorer.probability(rows) - labels) ** 2))
-            metrics[f"detection.{name}.brier.{window}"] = Metric(
-                value=brier, unit="score", population=population, window=window)
-        else:
-            metrics[f"detection.{name}.brier.{window}"] = Metric.not_evaluated(
-                unit="score", population=population, window=window, reason="no labelled orders")
+        brier = float(np.mean((scorer.probability(rows) - labels) ** 2))
+        metrics[f"detection.{name}.brier.{window}"] = Metric(
+            value=brier, unit="score", population=population, window=window)
     return metrics
 
 

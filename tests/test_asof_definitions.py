@@ -1,8 +1,11 @@
 """Named definitions in the as-of context, each checked on a small hand-built world:
 attempts versus approved orders, first attempts, address linkage windows, email
-identity, rows that arrive later, home geography and the travel-speed boundary."""
+identity, rows that arrive later, home geography, the travel-speed boundary,
+installments paid and the never-pay determination under a policy."""
 
 from __future__ import annotations
+
+import dataclasses
 
 import pandas as pd
 import pytest
@@ -22,6 +25,10 @@ class Builder:
         self.orders: list[dict] = []
         self.events: list[dict] = []
         self.extra_links: list[dict] = []
+        self.plans: list[dict] = []
+        self.schedule: list[dict] = []
+        self.payments: list[dict] = []
+        self.reports: list[dict] = []
 
     def account(self, user_id: int, email: str, created: pd.Timestamp, *, country: str = "US",
                 address: int | None = None) -> None:
@@ -37,6 +44,35 @@ class Builder:
                             "ip_country": ip_country or owner["country"], "merchant": merchant,
                             "address": address or owner["address"],
                             "device": device or user_id})
+
+    def plan(self, order_id: int, *, paid: tuple[int, ...] = ()) -> int:
+        """A pay-in-4 plan on an approved order: 2,500 cents at checkout, then three
+        installments of 2,500 every 14 days; the checkout payment and the ``paid``
+        installments succeed on their due dates."""
+        order = next(o for o in self.orders if o["order_id"] == order_id)
+        plan_id = len(self.plans) + 1
+        self.plans.append({"plan_id": plan_id, "order_id": order_id, "created_at": order["at"],
+                           "principal_cents": 10_000, "down_payment_cents": 2_500,
+                           "n_installments": 3})
+        for seq in range(4):
+            due = order["at"] + pd.Timedelta(days=14 * seq)
+            self.schedule.append({"plan_id": plan_id, "seq": seq, "due_at": due,
+                                  "amount_cents": 2_500})
+            if seq == 0 or seq in paid:
+                self.payment(plan_id, seq, due)
+        return plan_id
+
+    def payment(self, plan_id: int, seq: int, at: pd.Timestamp) -> None:
+        self.payments.append({"event_id": len(self.payments) + 1, "occurred_at": at,
+                              "known_at": at, "plan_id": plan_id, "seq": seq, "attempt_no": 1,
+                              "amount_cents": 2_500, "result": "success"})
+
+    def report(self, order_id: int, at: pd.Timestamp) -> None:
+        """The account's owner disowns the order."""
+        order = next(o for o in self.orders if o["order_id"] == order_id)
+        self.reports.append({"event_id": len(self.reports) + 1, "occurred_at": at,
+                             "known_at": at, "user_id": order["user_id"],
+                             "order_id": order_id})
 
     def tables(self) -> dict[str, pd.DataFrame]:
         accounts = pd.DataFrame(self.accounts)
@@ -87,6 +123,11 @@ class Builder:
             "account_events": pd.DataFrame(self.events) if self.events
             else world.empty("account_events"),
         }
+        for name, rows in (("plans", self.plans), ("installment_schedule", self.schedule),
+                           ("payment_attempts", self.payments),
+                           ("victim_reports", self.reports)):
+            if rows:
+                frames[name] = pd.DataFrame(rows)
         tables = {name: world.coerce(name, frame) for name, frame in frames.items()}
         for name in asof.INPUT_TABLES:
             tables.setdefault(name, world.empty(name))
@@ -224,3 +265,76 @@ def test_a_review_later_sees_linkage_known_by_then() -> None:
     assert rows["attempts_device_24h"].tolist() == [1, 1]
     with pytest.raises(ValueError, match="before the order's checkout"):
         asof.build_context(b.tables(), review.assign(decision_at=T0 - pd.Timedelta(seconds=1)))
+
+
+def test_installments_of_different_plans_are_never_confused() -> None:
+    """Two plans opened a day apart with only their checkout payments: at day 14.5 the
+    first plan's installment is due and unpaid, whatever the second plan's checkout
+    payment, and a payment made later changes nothing."""
+    b = household()
+    b.order(100, 1, T0)
+    b.order(101, 1, T0 + pd.Timedelta(days=1))
+    second = None
+    for order_id in (100, 101):
+        second = b.plan(order_id)
+    b.order(102, 1, T0 + pd.Timedelta(days=14, hours=12))
+    before = context_of(b).loc[102]
+    assert before["installments_due_user"] == 1
+    assert before["installments_paid_user"] == 0
+    b.payment(second, 3, T0 + pd.Timedelta(days=43))
+    after = context_of(b).loc[102]
+    pd.testing.assert_series_equal(before, after)
+
+
+def zero_effort_household() -> Builder:
+    """An account opens two plans a day apart and pays nothing after checkout: both
+    default 30 days after their first installment (days 44 and 45), each the other's
+    intent marker. Order 112 comes at day 60."""
+    b = household()
+    b.order(110, 1, T0)
+    b.order(111, 1, T0 + pd.Timedelta(days=1))
+    b.plan(110)
+    b.plan(111)
+    b.order(112, 1, T0 + pd.Timedelta(days=60))
+    return b
+
+
+def under_policy(b: Builder, voided_after: pd.Timedelta | None) -> pd.Series:
+    """Order 112's outcome columns when the policy voids orders 110 and 111
+    ``voided_after`` their checkouts (never when None)."""
+    tables = b.tables()
+    state = asof.PolicyState.approve_all(tables)
+    if voided_after is not None:
+        at = tables["order_attempts"].set_index("order_id").loc[[110, 111], "known_at"]
+        state = dataclasses.replace(state, voided=pd.DataFrame(
+            {"order_id": [110, 111], "at": (at + voided_after).to_numpy()}))
+    decisions = pd.DataFrame({"order_id": [112], "decision_at": [T0 + pd.Timedelta(days=60)]})
+    return asof.outcome_columns(tables, state, decisions).iloc[0]
+
+
+def test_never_pay_is_determined_from_two_zero_effort_plans() -> None:
+    row = under_policy(zero_effort_household(), None)
+    assert row["installments_due_user"] == 6 and row["installments_paid_user"] == 0
+    assert row["never_pay_determined_user"] == 1
+
+
+@pytest.mark.parametrize(("voided_after", "determined"), [
+    (pd.Timedelta(hours=1), 0),  # voided before shipment: nothing was owed
+    (pd.Timedelta(days=50), 1),  # voided after both defaults: the determination stands
+])
+def test_a_voided_plan_defaults_only_while_it_is_owed(voided_after: pd.Timedelta,
+                                                      determined: int) -> None:
+    row = under_policy(zero_effort_household(), voided_after)
+    assert row["approved_orders_user_ever"] == 0
+    assert row["never_pay_determined_user"] == determined
+
+
+def test_never_pay_is_seen_when_victim_reports_label_the_orders_first() -> None:
+    """Victim reports on both plans' orders do not settle the account (they are
+    reports, not lost disputes), so the never-pay determination must still show."""
+    b = zero_effort_household()
+    b.report(110, T0 + pd.Timedelta(days=2))
+    b.report(111, T0 + pd.Timedelta(days=2))
+    row = context_of(b).loc[112]
+    assert row["victim_reports_user"] == 2
+    assert row["never_pay_determined_user"] == 1
