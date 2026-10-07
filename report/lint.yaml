@@ -34,11 +34,12 @@ comparatives:
   good: [better, beats, beat, outperforms, outperformed, improves, improved, best]
   bad: [worse, worst]
 
-# Words that negate a sentence's comparison: such a claim is tested as
+# Words that negate or except a sentence's comparison: such a claim is tested as
 # no_detected_difference or equivalent, never as a direction.
 negations: [not, no, never, neither, nor, without, none, cannot, "can't", "didn't",
             "doesn't", "don't", "isn't", "wasn't", "aren't", "weren't", "hasn't", "haven't",
-            "hadn't", "won't", "wouldn't", fail, fails, failed]
+            "hadn't", "won't", "wouldn't", fail, fails, failed, except, excluding, unless,
+            barely, hardly, rarely, scarcely]
 
 # Comparative sentences that state no result (exact sentence text).
 allowed_sentences: []
