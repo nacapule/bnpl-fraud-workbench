@@ -1687,8 +1687,8 @@
     "denominator": 200,
     "numerator": 25,
     "user_bootstrap_95": [
-     0.0682927,
-     0.188776
+     0.0643407,
+     0.186892
     ],
     "user_clusters": 190,
     "user_or_story_bootstrap_95": [
@@ -1704,8 +1704,8 @@
     "denominator": 200,
     "numerator": 122,
     "user_bootstrap_95": [
-     0.537688,
-     0.680203
+     0.542714,
+     0.679616
     ],
     "user_or_story_bootstrap_95": [
      0.475301,
@@ -1726,8 +1726,8 @@
     "denominator": 200,
     "numerator": 147,
     "user_bootstrap_95": [
-     0.670102,
-     0.796137
+     0.673267,
+     0.794875
     ],
     "user_or_story_bootstrap_95": [
      0.632908,
@@ -1748,8 +1748,8 @@
     "denominator": 200,
     "numerator": 59,
     "user_bootstrap_95": [
-     0.23075,
-     0.360021
+     0.22999,
+     0.359606
     ],
     "user_clusters": 190,
     "user_or_story_bootstrap_95": [
@@ -1765,8 +1765,8 @@
     "denominator": 200,
     "numerator": 132,
     "user_bootstrap_95": [
-     0.592965,
-     0.727273
+     0.593909,
+     0.729074
     ],
     "user_or_story_bootstrap_95": [
      0.569948,
@@ -1787,8 +1787,8 @@
     "denominator": 200,
     "numerator": 191,
     "user_bootstrap_95": [
-     0.924991,
-     0.9801
+     0.925,
+     0.980198
     ],
     "user_or_story_bootstrap_95": [
      0.920245,
@@ -1809,8 +1809,8 @@
     "denominator": 200,
     "numerator": 58,
     "user_bootstrap_95": [
-     0.226589,
-     0.355
+     0.227256,
+     0.355008
     ],
     "user_clusters": 190,
     "user_or_story_bootstrap_95": [
@@ -1826,8 +1826,8 @@
     "denominator": 200,
     "numerator": 133,
     "user_bootstrap_95": [
-     0.599009,
-     0.731359
+     0.599976,
+     0.733342
     ],
     "user_or_story_bootstrap_95": [
      0.577137,
@@ -1848,8 +1848,8 @@
     "denominator": 200,
     "numerator": 191,
     "user_bootstrap_95": [
-     0.924991,
-     0.9801
+     0.925,
+     0.980198
     ],
     "user_or_story_bootstrap_95": [
      0.920245,
@@ -1870,8 +1870,8 @@
     "denominator": 200,
     "numerator": -27,
     "user_bootstrap_95": [
-     -0.192893,
-     -0.080402
+     -0.190974,
+     -0.0792079
     ],
     "user_clusters": 190,
     "user_or_story_bootstrap_95": [
@@ -1887,8 +1887,8 @@
     "denominator": 200,
     "numerator": 147,
     "user_bootstrap_95": [
-     0.670102,
-     0.796137
+     0.673267,
+     0.794875
     ],
     "user_or_story_bootstrap_95": [
      0.632908,
@@ -1909,8 +1909,8 @@
     "denominator": 200,
     "numerator": 120,
     "user_bootstrap_95": [
-     0.527638,
-     0.671609
+     0.534289,
+     0.666667
     ],
     "user_or_story_bootstrap_95": [
      0.466258,
@@ -1948,8 +1948,8 @@
     "denominator": 86,
     "numerator": 65,
     "user_bootstrap_95": [
-     0.659091,
-     0.847059
+     0.655172,
+     0.848837
     ],
     "user_or_story_bootstrap_95": [
      0.637472,
@@ -1970,7 +1970,7 @@
     "denominator": 86,
     "numerator": 66,
     "user_bootstrap_95": [
-     0.674068,
+     0.670455,
      0.858824
     ],
     "user_or_story_bootstrap_95": [

@@ -891,7 +891,7 @@ def _paired(
     a = np.array([first[i] for i in ids], dtype=float)
     b = np.array([second[i] for i in ids], dtype=float)
     clusterings = {
-        "user": [archive.user(i) for i in ids],
+        "user": [f"user {archive.user(i)}" for i in ids],
         "user_or_story": [groups[str(i)] for i in ids],
     }
     first_rate = _ratio(pair.both + pair.only_first, pair.n, wilson=True)
