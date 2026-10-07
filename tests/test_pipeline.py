@@ -824,9 +824,12 @@ def test_the_expected_cells_are_the_replays_staffing_and_variants() -> None:
     cells = pipeline.expected_cells(policy_cfg)
     staffing = stage.staffing(policy_cfg)
     base = stage.base_staffing(policy_cfg)
-    assert cells[:len(stage.VARIANTS)] == tuple((base.level, base.layout, *variant)
-                                               for variant in stage.VARIANTS)
+    expected = {(base.level, base.layout, *variant) for variant in stage.VARIANTS} | {
+        (staff.level, staff.layout, *stage.VARIANTS[0]) for staff in staffing}
+    assert set(cells) == expected  # every variant at the base, the main one elsewhere
     assert len(cells) == len(stage.VARIANTS) + len(staffing) - 1
+    assert pipeline.main_cell(cells, policy_cfg["roster"]["layout"]) == \
+        (base.level, base.layout, *stage.VARIANTS[0])
 
 
 WEAK = ("base", "current", "policy", "evidence", "verification_weak")
