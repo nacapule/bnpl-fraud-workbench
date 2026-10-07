@@ -42,7 +42,8 @@ class FakeRun:
         self.all_worlds = [self.ref]
         window = SimpleNamespace
         self.protocol = SimpleNamespace(
-            windows={"validation": window(start=T("2024-12-01"), end=T("2025-03-01")),
+            windows={"fit": window(start=T("2024-12-01"), end=T("2025-03-01")),
+                     "validation": window(start=T("2024-12-01"), end=T("2025-03-01")),
                      "test": window(start=T("2025-03-01"), end=T("2025-06-15"))},
             observed_until=T("2025-06-30 23:59:59"),
             order_start=T("2024-12-01"), order_end=T("2025-06-15"))
@@ -114,6 +115,29 @@ def test_the_routing_frame_and_review_decisions_have_their_columns(staged) -> No
     assert list(decisions.columns[:len(asof.KEY_COLUMNS)]) == list(asof.KEY_COLUMNS)
     assert {"checks", "checks_later", "disposition", "final"} <= set(decisions.columns)
     assert (decisions["policy"] == "incumbent_rules").all()
+
+
+def test_the_capacity_base_is_todays_queue_over_eighty_percent() -> None:
+    from queue_sim.reviewer import service_seconds
+
+    tables = mini_tables()
+    # today's bands review at 30 and decline at 90: orders 3, 6 and 12 go to review in
+    # the fit window, order 15 is declined, order 19 is after the window
+    stub = StubContext(tables, scores={3: 40.0, 6: 31.0, 12: 30.0, 15: 95.0, 19: 50.0})
+    run = FakeRun(tables, stub.build(tables))
+    base = stage.capacity_base(run, [run.ref])
+    offered = service_seconds(416, np.array([3, 6, 12]), 7.0, 0.6).sum() / 60
+    assert base["offered_minutes"] == pytest.approx(offered)
+    assert base["needed_minutes"] == pytest.approx(offered / 0.8)
+    days = pd.date_range("2024-12-01", "2025-02-28")
+    shifts = int((days.dayofweek <= 4).sum() + (days.dayofweek >= 2).sum())  # early, late
+    assert base["shifts_per_world"] == shifts
+    per_shift = base["minutes_per_shift"]
+    assert per_shift["base"]["review_minutes_per_shift"] == {
+        "early": int(np.ceil(offered / 0.8 / shifts)), "late": int(np.ceil(offered / 0.8 / shifts))}
+    assert base["whole_analysts"]["base"]["analysts_per_shift"] == {"early": 1, "late": 1}
+    assert not base["whole_analysts"]["low"]["binds"]  # one analyst per shift is far too many
+    assert base["whole_analysts"]["low"]["minutes"] == shifts * 390
 
 
 # ------------------------------------------------------------------ with the real context

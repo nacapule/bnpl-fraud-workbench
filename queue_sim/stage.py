@@ -21,6 +21,7 @@ context is shared through ``run.memory["context"]`` as the pipeline caches it.
 
 from __future__ import annotations
 
+import math
 import multiprocessing
 import os
 import pickle
@@ -105,6 +106,71 @@ def base_staffing(policy_cfg: Mapping[str, Any]) -> Staffing:
         if item.level in ("base", "configured") and item.layout == current:
             return item
     raise ValueError("no base staffing on the current layout")
+
+
+STAFFED_FOR = 0.8  # the base is staffed so today's queue uses 80% of its minutes
+
+
+def capacity_base(run: Any, refs: Sequence[Any]) -> dict[str, Any]:
+    """The capacity base (PLAN §7.6) from development worlds, before any policy comparison.
+
+    Today's rules at today's bands (``config/policy.yaml`` ``rules.bands``) route each
+    world's fit-window orders at checkout on the world-level context; their review
+    minutes (each order's review time), summed over the worlds and divided by
+    :data:`STAFFED_FOR`, are the minutes the base provides. Two readings on the current
+    layout's coverage hours: whole analysts per shift (the same number on every shift),
+    and one analyst per shift with review minutes per shift (the same on every shift).
+    ``levels`` gives low (about half), base and high (about 1.5 times) in each reading,
+    and whether the low level binds (today's minutes exceed its minutes on every world).
+    """
+    policy_cfg = config.load("policy")
+    bands = policy_cfg["rules"]["bands"]
+    window = _window(run.protocol, "fit")
+    t0, t1 = (int(to_seconds(t)) for t in window)
+    layout = policy_cfg["roster"]["layout"]
+    one = Roster.from_config(policy_cfg, layout=layout, analysts_per_shift={
+        item["name"]: 1 for item in policy_cfg["roster"]["layouts"][layout]},
+        review_minutes_per_shift={})
+    shifts = sum(len(one.windows(shift, t0, t1)) for shift in one.shifts)
+    per_world = []
+    for ref in refs:
+        bench = _bench(run, ref)
+        today = policies_for(run.memory["scorers"][ref.seed], bench)[INCUMBENT].with_thresholds(
+            float(bands["review"]), float(bands["decline"]))
+        per_world.append({"seed": ref.seed, "family": ref.family,
+                          "orders": len(bench.world.orders(*window)),
+                          "offered_minutes": bench.routed_minutes(today, window)})
+    offered = sum(w["offered_minutes"] for w in per_world)
+    needed = offered / STAFFED_FOR
+    whole = math.ceil(needed / (one.available_minutes(t0, t1) * len(refs)))
+    minutes = math.ceil(needed / (shifts * len(refs)))
+    names = [shift.name for shift in one.shifts]
+
+    def binds(roster: Roster) -> bool:
+        return all(w["offered_minutes"] > roster.available_minutes(t0, t1) for w in per_world)
+
+    def analysts(n: int) -> dict[str, Any]:
+        roster = Roster(one.shifts, {name: n for name in names})
+        return {"analysts_per_shift": {name: n for name in names},
+                "minutes": roster.available_minutes(t0, t1), "binds": binds(roster)}
+
+    def budget(m: int) -> dict[str, Any]:
+        m = min(m, min(shift.productive_minutes for shift in one.shifts))
+        roster = Roster(one.shifts, {name: 1 for name in names}, {name: m for name in names})
+        return {"analysts_per_shift": {name: 1 for name in names},
+                "review_minutes_per_shift": {name: m for name in names},
+                "minutes": roster.available_minutes(t0, t1), "binds": binds(roster)}
+
+    return {
+        "window": [str(window[0]), str(window[1])], "bands": dict(bands),
+        "staffed_for": STAFFED_FOR, "worlds": per_world, "offered_minutes": offered,
+        "needed_minutes": needed, "shifts_per_world": shifts,
+        "minutes_one_analyst_per_shift": one.available_minutes(t0, t1),
+        "whole_analysts": {"low": analysts(max(1, round(whole / 2))), "base": analysts(whole),
+                           "high": analysts(math.ceil(1.5 * whole))},
+        "minutes_per_shift": {"low": budget(math.ceil(minutes / 2)), "base": budget(minutes),
+                              "high": budget(math.ceil(1.5 * minutes))},
+    }
 
 
 # ------------------------------------------------------------------------- one world

@@ -72,6 +72,12 @@ roster:
     current:
       - {name: early, days: [0, 1, 2, 3, 4], start: "08:00", productive_hours: 6.5}
       - {name: late, days: [2, 3, 4, 5, 6], start: "11:00", productive_hours: 6.5}
+    # The same shifts, days and hours moved later to cover the evening arrival peak
+    # (about a third of orders arrive 17:00-21:00); the staffing comparison runs it at
+    # the base's minutes.
+    evening:
+      - {name: early, days: [0, 1, 2, 3, 4], start: "12:00", productive_hours: 6.5}
+      - {name: late, days: [2, 3, 4, 5, 6], start: "15:00", productive_hours: 6.5}
   analysts_per_shift: {early: 1, late: 1}
   service_time_arithmetic_mean_min: 7.0
   service_time_sigma: 0.6
