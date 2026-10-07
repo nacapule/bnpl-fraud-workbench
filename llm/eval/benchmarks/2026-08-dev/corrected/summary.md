@@ -17,7 +17,7 @@ Final outputs. Decline precision and recall use the referee's primary action; re
 
 | arm | decline precision | decline recall | pattern named | unmatched-token memos | stored latency p50 |
 |---|---|---|---|---|---|
-| memo_v1__claude-sonnet-5 | 27/29 (93.1%) | 27/57 (47.4%) | 161/200 (80.5%) | 67/200 (33.5%) | 56.5 s |
+| memo_v1__claude-sonnet-5 | 27/29 (93.1%) | 27/57 (47.4%) | 161/200 (80.5%) | 68/200 (34.0%) | 56.5 s |
 | memo_v2__claude-sonnet-5 | 30/31 (96.8%) | 30/57 (52.6%) | 150/200 (75.0%) | 9/200 (4.5%) | 58.3 s |
 | memo_v2__gpt-5.6-luna | 22/22 (100.0%) | 22/57 (38.6%) | 131/200 (65.5%) | 3/200 (1.5%) | 39.2 s |
 | memo_v2__gpt-5.6-terra | 14/15 (93.3%) | 14/20 (70.0%) | 62/86 (72.1%) | 1/86 (1.2%) | 27.7 s |
@@ -44,7 +44,8 @@ Intervals: Wilson treats cases as independent; the bootstrap resamples users, or
 | comparison | cases | first rate | second rate | only first | only second | exact McNemar p | difference, user bootstrap | difference, story bootstrap |
 |---|---|---|---|---|---|---|---|---|
 | memo_v1__claude-sonnet-5 vs memo_v2__claude-sonnet-5: action in the acceptable set | 200 | 122/200 (61.0%) | 147/200 (73.5%) | 8 | 33 | 0.000112 | +6.8 to +18.9 pp | +6.3 to +20.2 pp |
-| memo_v1__claude-sonnet-5 vs memo_v2__claude-sonnet-5: no unmatched token in signals_observed (a memo with one fails) | 200 | 133/200 (66.5%) | 191/200 (95.5%) | 1 | 59 | 1.06e-16 | +22.7 to +35.5 pp | +21.6 to +36.8 pp |
+| memo_v1__claude-sonnet-5 vs memo_v2__claude-sonnet-5: no unmatched token in signals_observed (a memo with one fails) | 200 | 132/200 (66.0%) | 191/200 (95.5%) | 1 | 60 | 5.38e-17 | +23.1 to +36.0 pp | +22.2 to +37.6 pp |
+| memo_v1__claude-sonnet-5 vs memo_v2__claude-sonnet-5: no unmatched token in signals_observed under the archived token check | 200 | 133/200 (66.5%) | 191/200 (95.5%) | 1 | 59 | 1.06e-16 | +22.7 to +35.5 pp | +21.6 to +36.8 pp |
 | memo_v2__claude-sonnet-5 vs memo_v2__gpt-5.6-luna: action in the acceptable set | 200 | 147/200 (73.5%) | 120/200 (60.0%) | 32 | 5 | 7.43e-06 | -19.3 to -8.0 pp | -20.8 to -7.4 pp |
 | memo_v2__claude-sonnet-5 vs memo_v2__gpt-5.6-terra: action in the acceptable set | 86 | 65/86 (75.6%) | 66/86 (76.7%) | 3 | 4 | 1 | -4.7 to +7.1 pp | -4.7 to +7.4 pp |
 

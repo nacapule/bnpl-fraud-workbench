@@ -58,7 +58,7 @@
      "numerator": 161,
      "value": 0.805
     },
-    "signals_changed_by_token_fixes": 0,
+    "signals_changed_by_token_fixes": 1,
     "signals_without_tokens": {
      "denominator": 2475,
      "numerator": 250,
@@ -67,13 +67,13 @@
     "strict_rejections": [],
     "unmatched_token_memos": {
      "denominator": 200,
-     "numerator": 67,
-     "value": 0.335
+     "numerator": 68,
+     "value": 0.34
     },
     "unmatched_token_memos_any_text": {
      "denominator": 200,
-     "numerator": 142,
-     "value": 0.71
+     "numerator": 143,
+     "value": 0.715
     },
     "unmatched_token_memos_archived_check": {
      "denominator": 200,
@@ -82,8 +82,8 @@
     },
     "unmatched_token_signals": {
      "denominator": 2475,
-     "numerator": 83,
-     "value": 0.0335354
+     "numerator": 84,
+     "value": 0.0339394
     },
     "valid_outputs": {
      "denominator": 200,
@@ -243,7 +243,7 @@
      "numerator": 161,
      "value": 0.805
     },
-    "signals_changed_by_token_fixes": 0,
+    "signals_changed_by_token_fixes": 1,
     "signals_without_tokens": {
      "denominator": 2475,
      "numerator": 250,
@@ -252,13 +252,13 @@
     "strict_rejections": [],
     "unmatched_token_memos": {
      "denominator": 200,
-     "numerator": 67,
-     "value": 0.335
+     "numerator": 68,
+     "value": 0.34
     },
     "unmatched_token_memos_any_text": {
      "denominator": 200,
-     "numerator": 142,
-     "value": 0.71
+     "numerator": 143,
+     "value": 0.715
     },
     "unmatched_token_memos_archived_check": {
      "denominator": 200,
@@ -267,8 +267,8 @@
     },
     "unmatched_token_signals": {
      "denominator": 2475,
-     "numerator": 83,
-     "value": 0.0335354
+     "numerator": 84,
+     "value": 0.0339394
     },
     "valid_outputs": {
      "denominator": 200,
@@ -1741,6 +1741,67 @@
    }
   },
   "prompt_v1_vs_v2_unmatched_tokens": {
+   "both": 131,
+   "case_set": "all 200 cases; final outputs",
+   "cases": 200,
+   "difference_second_minus_first": {
+    "denominator": 200,
+    "numerator": 59,
+    "user_bootstrap_95": [
+     0.23075,
+     0.360021
+    ],
+    "user_clusters": 190,
+    "user_or_story_bootstrap_95": [
+     0.221717,
+     0.375852
+    ],
+    "user_or_story_clusters": 137,
+    "value": 0.295
+   },
+   "exact_mcnemar_p": 5.37764e-17,
+   "first": "memo_v1__claude-sonnet-5",
+   "first_rate": {
+    "denominator": 200,
+    "numerator": 132,
+    "user_bootstrap_95": [
+     0.592965,
+     0.727273
+    ],
+    "user_or_story_bootstrap_95": [
+     0.569948,
+     0.736001
+    ],
+    "value": 0.66,
+    "wilson_95": [
+     0.591885,
+     0.722085
+    ]
+   },
+   "neither": 8,
+   "only_first": 1,
+   "only_second": 60,
+   "outcome": "no unmatched token in signals_observed (a memo with one fails)",
+   "second": "memo_v2__claude-sonnet-5",
+   "second_rate": {
+    "denominator": 200,
+    "numerator": 191,
+    "user_bootstrap_95": [
+     0.924991,
+     0.9801
+    ],
+    "user_or_story_bootstrap_95": [
+     0.920245,
+     0.981599
+    ],
+    "value": 0.955,
+    "wilson_95": [
+     0.916703,
+     0.976147
+    ]
+   }
+  },
+  "prompt_v1_vs_v2_unmatched_tokens_archived_check": {
    "both": 132,
    "case_set": "all 200 cases; final outputs",
    "cases": 200,
@@ -1781,7 +1842,7 @@
    "neither": 8,
    "only_first": 1,
    "only_second": 59,
-   "outcome": "no unmatched token in signals_observed (a memo with one fails)",
+   "outcome": "no unmatched token in signals_observed under the archived token check",
    "second": "memo_v2__claude-sonnet-5",
    "second_rate": {
     "denominator": 200,

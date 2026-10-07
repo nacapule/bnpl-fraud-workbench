@@ -380,13 +380,18 @@ def _attempt(archive: Archive, model: str, prompt: str) -> tuple[Attempt, dict[s
     record = archive.record(name)
     if record is None:
         return Attempt(name, False, (), None), None
-    response = record["response"]
+    response = record.get("response") if isinstance(record, dict) else None
+    response = response if isinstance(response, dict) else {}
+    text = response.get("text")
     try:
-        memo = parse_response(response["text"])
+        if not isinstance(text, str):
+            raise ValueError("stored response has no text")
+        memo = parse_response(text)
         problems = historical_problems(memo)
-    except ValueError as error:  # includes json.JSONDecodeError
-        memo, problems = None, [str(error)]
-    attempt = Attempt(name, True, tuple(problems), response.get("duration_ms"))
+    except (ValueError, RecursionError) as error:  # ValueError includes JSONDecodeError
+        memo, problems = None, [str(error) or type(error).__name__]
+    duration = response.get("duration_ms")
+    attempt = Attempt(name, True, tuple(problems), duration if isinstance(duration, int) else None)
     return attempt, (memo if attempt.valid else None)
 
 
@@ -931,6 +936,9 @@ def _comparisons(
     def clean(row: Scored) -> bool:
         return row.accepted and row.tokens_corrected["n_unmatched"] == 0
 
+    def clean_archived(row: Scored) -> bool:
+        return row.accepted and row.tokens_archived["n_unmatched"] == 0
+
     def correct(row: Scored) -> bool:
         return row.correct
 
@@ -956,6 +964,16 @@ def _comparisons(
             first_arm=v1,
             second_arm=v2,
             outcome="no unmatched token in signals_observed (a memo with one fails)",
+            case_set="all 200 cases; final outputs",
+        ),
+        "prompt_v1_vs_v2_unmatched_tokens_archived_check": _paired(
+            archive,
+            groups,
+            final(v1, clean_archived),
+            final(v2, clean_archived),
+            first_arm=v1,
+            second_arm=v2,
+            outcome="no unmatched token in signals_observed under the archived token check",
             case_set="all 200 cases; final outputs",
         ),
         "sonnet_vs_luna_action": _paired(
@@ -1267,6 +1285,10 @@ def _interval(bounds: Sequence[float] | None) -> str:
     return f"{100 * bounds[0]:.1f}–{100 * bounds[1]:.1f}%"
 
 
+def _seconds(milliseconds: int | None) -> str:
+    return "–" if milliseconds is None else f"{milliseconds / 1000:.1f} s"
+
+
 def _pct_ci(item: Mapping[str, Any]) -> str:
     return f"{_pct(item)}, {_interval(item.get('wilson_95'))}"
 
@@ -1341,7 +1363,7 @@ def render_summary(stats: Mapping[str, Any]) -> str:
                 _pct(arm["final"]["decline_recall"]),
                 _pct(arm["final"]["pattern_named"]),
                 _pct(arm["final"]["unmatched_token_memos"]),
-                f"{arm['final']['latency_p50_ms'] / 1000:.1f} s",
+                _seconds(arm["final"]["latency_p50_ms"]),
             )
             for arm_id, arm in arms.items()
         ),

@@ -94,6 +94,17 @@ def test_a_number_rounded_to_the_texts_precision_matches():
     assert check_text("average amount was $101.13", PACKET).classification == "unmatched"
 
 
+def test_trailing_zeros_keep_the_precision_the_text_claims():
+    assert check_text("amount $99.00", {"amount": 99.49}).classification == "unmatched"
+    assert check_text("amount -$99.00", {"amount": -99.49}).classification == "unmatched"
+    assert check_text("amount $99.00", {"amount": 99}).classification == "verbatim"
+    assert check_text("amount $99.00", {"amount": 99.004}).classification == "verbatim"
+
+
+def test_a_minus_after_a_bracket_in_the_packet_is_not_a_sign():
+    assert check_text("balance -99", {"range": "[1]-99"}).classification == "unmatched"
+
+
 def test_digits_inside_a_longer_number_do_not_match():
     for invented in ("7 linked accounts", "12 prior orders", "99 days"):
         assert check_text(invented, {"amount": 1370.55, "tenure": 412, "x": 899.99}).missing
@@ -153,9 +164,10 @@ def test_summarize_counts_texts():
 def test_the_archived_check_keeps_the_archived_behaviour():
     # Used only to reproduce the archived numbers.
     old = archived_check_texts(
-        ["device DEV_42", "order amount -$99"], {"d": "OTHERDEV_42X", "a": 99}
+        ["device DEV_42", "order amount -$99", "amount $99.00"],
+        {"d": "OTHERDEV_42X", "a": 99, "b": 98.6},
     )
-    assert [check.classification for check in old] == ["verbatim", "verbatim"]
+    assert [check.classification for check in old] == ["verbatim", "verbatim", "verbatim"]
 
 
 # Citations --------------------------------------------------------------------------

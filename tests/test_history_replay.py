@@ -219,6 +219,28 @@ def test_a_malformed_historical_output_counts_as_a_failure(tmp_path):
     assert not chain.attempts[0].valid and not chain.attempts[1].present
 
 
+def test_a_stored_record_without_text_is_an_invalid_attempt(tmp_path):
+    bench = _copy_archive(tmp_path)
+    archive = Archive(bench)
+    terra = _arm(archive, TERRA)
+    alert = archive.cases[0]["alert_id"]
+    prompt = history.render_prompt(archive.templates["memo_v2"], archive.packets[alert])
+    path = archive.cache_dir / history.cache_file_name(terra.model, prompt)
+    record = json.loads(path.read_text())
+    record["response"]["text"] = None
+    path.write_text(json.dumps(record))
+    [chain] = [c for c in replay_arm(Archive(bench), terra).primary if c.alert_id == alert]
+    assert chain.attempts[0].problems == ("stored response has no text",)
+    assert chain.memo is None
+
+
+def test_the_summary_renders_an_arm_without_valid_outputs(stats):
+    broken = json.loads(json.dumps(stats))
+    broken["arms"][TERRA]["final"]["latency_p50_ms"] = None
+    summary = history.render_summary(broken)
+    assert f"| {TERRA} | 14/15 (93.3%)" in summary and "| \u2013 |" in summary
+
+
 def test_an_arm_without_stored_responses_fails(tmp_path):
     bench = _copy_archive(tmp_path)
     archive = Archive(bench)
@@ -270,7 +292,8 @@ def test_luna_has_no_stored_probes(stats):
     ("name", "cases", "only_first", "only_second", "first", "second"),
     [
         ("prompt_v1_vs_v2_action", 200, 8, 33, 122, 147),
-        ("prompt_v1_vs_v2_unmatched_tokens", 200, 1, 59, 133, 191),
+        ("prompt_v1_vs_v2_unmatched_tokens", 200, 1, 60, 132, 191),
+        ("prompt_v1_vs_v2_unmatched_tokens_archived_check", 200, 1, 59, 133, 191),
         ("sonnet_vs_luna_action", 200, 32, 5, 147, 120),
         ("sonnet_vs_terra_action", 86, 3, 4, 65, 66),
     ],

@@ -42,8 +42,9 @@ CLASSIFICATIONS = ("verbatim", "derived", "unmatched")
 
 _MINUS = "-\u2212"
 _MASK = "\x01"  # stands in for a token already taken, so a hyphen after it is not a sign
-# A minus sign, as opposed to a hyphen inside a word, a number or a range.
-_SIGN = rf"(?<![\w.)\]{_MASK}])[{_MINUS}]"
+# What may not precede a minus sign: a hyphen inside a word, a number or a range.
+_NOT_BEFORE_SIGN = rf"(?<![\w.)\]{_MASK}])"
+_SIGN = rf"{_NOT_BEFORE_SIGN}[{_MINUS}]"
 _TIMESTAMP = re.compile(r"\b\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?\b")
 # Policy references ("FP-1 §6.1", "§6.6(b)") name the policy, not packet facts.
 _POLICY_REFERENCE = re.compile(
@@ -148,7 +149,7 @@ def _boundary(kind: str, normalized: str, archived: bool) -> re.Pattern[str]:
     elif kind == "id":
         pattern = rf"(?<![A-Za-z0-9_]){escaped}(?![A-Za-z0-9_])"
     elif normalized.startswith("-"):
-        pattern = rf"(?<![\w.]){escaped}(?![0-9.])"
+        pattern = rf"{_NOT_BEFORE_SIGN}{escaped}(?![0-9.])"
     else:
         pattern = rf"(?<![0-9.]){escaped}(?![0-9.])"
     return re.compile(pattern, re.IGNORECASE)
@@ -161,13 +162,19 @@ def _present(kind: str, token: str, packet: _Packet, archived: bool) -> bool:
     return _boundary(kind, normalized, archived).search(packet.haystack) is not None
 
 
-def _numeric_match(token: str, numbers: Iterable[float]) -> bool:
-    """Some number rounds to the token at the precision the token is written with."""
+def _numeric_match(token: str, numbers: Iterable[float], archived: bool) -> bool:
+    """Some number rounds to the token at the precision the token is written with.
+
+    ``$99.00`` is written to two places, so 99.49 does not round to it. The
+    archived check dropped trailing zeros first, so there it matched.
+    """
     normalized = _normalize(token)
     if not _NUMERIC.fullmatch(normalized):
         return False
     value = float(normalized)
-    places = len(normalized.split(".")[1]) if "." in normalized else 0
+    written = normalized if archived else token
+    fraction = re.search(r"\.(\d+)", written)
+    places = len(fraction.group(1)) if fraction else 0
     return any(abs(round(number, places) - value) < 10 ** -(places + 6) for number in numbers)
 
 
@@ -228,12 +235,14 @@ def _check(text: str, packet: _Packet, archived: bool) -> TokenCheck:
         # A signed token needs a value written with a minus sign; the archived
         # check had no signed tokens.
         numbers = packet.negatives if _normalize(token).startswith("-") else packet.numbers
-        if not (_present(kind, token, packet, archived) or _numeric_match(token, numbers)):
+        if not (
+            _present(kind, token, packet, archived) or _numeric_match(token, numbers, archived)
+        ):
             missing.append(token)
     derived: list[str] = []
     if missing and all(_NUMERIC.fullmatch(_normalize(token)) for token in missing):
         candidates = _derived_numbers(text, packet.packet)
-        if candidates and all(_numeric_match(token, candidates) for token in missing):
+        if candidates and all(_numeric_match(token, candidates, archived) for token in missing):
             derived, missing = missing, []
     if missing:
         classification = "unmatched"
