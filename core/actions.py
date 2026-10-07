@@ -208,6 +208,8 @@ def fates_as_of(fates: pd.DataFrame, at: pd.Timestamp) -> pd.DataFrame:
     """
     at = pd.Timestamp(at)
     out = fates.loc[fates["checkout_at"] < at].copy()
+    if not any((out[c] >= at).any() for c in ("hold_at", "hold_ended_at", "void_at")):
+        return typed_fates(out)  # nothing was decided at or after ``at``
     late_hold = out["hold_at"] >= at
     out.loc[late_hold, ["hold_at", "released_at", "hold_ended_at", "void_at"]] = pd.NaT
     out.loc[late_hold, ["hold_outcome", "void_cause"]] = None
@@ -280,9 +282,9 @@ def realize(
     themselves are unchanged; ``cash_events`` is the policy's ledger
     (:func:`policy_cash`, which ``memo`` serves).
     """
-    out = _realize_rows(tables, typed_fates(fates), observed_until)
-    out["cash_events"] = policy_cash(tables, fates, terms, observed_until=observed_until,
-                                     memo=memo)
+    typed = typed_fates(fates)
+    out = _realize_rows(tables, typed, observed_until)
+    out["cash_events"] = _policy_cash(tables, typed, terms, observed_until, memo)
     return out
 
 
@@ -383,7 +385,16 @@ def policy_cash(
     ``memo`` (a dict kept by the caller for one world) remembers each voided order's
     cash by its fate, for callers that realize growing sets of fates on the same world.
     """
-    fates = typed_fates(fates)
+    return _policy_cash(tables, typed_fates(fates), terms, observed_until, memo)
+
+
+def _policy_cash(
+    tables: Mapping[str, pd.DataFrame],
+    fates: pd.DataFrame,
+    terms: ledger.ProductTerms,
+    observed_until: pd.Timestamp | None,
+    memo: dict[Any, pd.DataFrame] | None,
+) -> pd.DataFrame:
     world_cash = tables["cash_events"]
     pending = fates["hold_at"].notna() & fates["hold_outcome"].isna() \
         & fates["hold_before_shipment"]
@@ -487,7 +498,26 @@ def policy_state(fates: pd.DataFrame, blocks: pd.DataFrame) -> PolicyState:
     pending); ``voided``: voids before shipment (declines, escalations, cancelled
     holds); ``blocked``: ``blocks`` (user_id, at).
     """
-    fates = typed_fates(fates)
+    return _state(typed_fates(fates), blocks)
+
+
+def realize_with_state(
+    tables: Mapping[str, pd.DataFrame],
+    fates: pd.DataFrame,
+    blocks: pd.DataFrame,
+    terms: ledger.ProductTerms,
+    *,
+    observed_until: pd.Timestamp | None = None,
+    memo: dict[Any, pd.DataFrame] | None = None,
+) -> tuple[dict[str, pd.DataFrame], PolicyState]:
+    """:func:`realize` and :func:`policy_state` of the same fates, checked once."""
+    typed = typed_fates(fates)
+    out = _realize_rows(tables, typed, observed_until)
+    out["cash_events"] = _policy_cash(tables, typed, terms, observed_until, memo)
+    return out, _state(typed, blocks)
+
+
+def _state(fates: pd.DataFrame, blocks: pd.DataFrame) -> PolicyState:
     went_through = fates["route"].isin([CheckoutRoute.APPROVE.value, CheckoutRoute.REVIEW.value])
     pre_hold = fates["hold_at"].notna() & fates["hold_before_shipment"]
     approved_at = fates["checkout_at"].where(~pre_hold, fates["released_at"])

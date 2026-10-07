@@ -221,8 +221,8 @@ class PolicyHistory:
                 np.unique(world_rows.loc[mask, "user_id"].to_numpy(np.int64)))
         fates, blocks = so_far.fates(users), so_far.blocks()
         view = _policy_view(self.world.tables, users, at)
-        realized = actions.realize(view, fates, self.world.terms, memo=self._memo)
-        state = actions.policy_state(fates, blocks)
+        realized, state = actions.realize_with_state(view, fates, blocks, self.world.terms,
+                                                     memo=self._memo)
         kwargs = {} if self.neighbours is None else {"neighbours": self.neighbours}
         self.calls += 1
         policy_rows = self.policy_rows or asof.policy_rows
