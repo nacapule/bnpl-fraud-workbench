@@ -715,8 +715,8 @@ def _random_fates(tables, rng) -> pd.DataFrame:
             changes[order] = {"route": "review", "void_at": before,
                               "void_cause": str(rng.choice(["decline", "escalate"]))}
         elif u < 0.72:
-            changes[order] = _hold(before, outcome="cleared",
-                                   release=between(before + SECOND, before + pd.Timedelta(hours=48)))
+            release = between(before + SECOND, before + pd.Timedelta(hours=48))
+            changes[order] = _hold(before, outcome="cleared", release=release)
         elif u < 0.8:
             changes[order] = _hold(before, outcome="cancelled",
                                    void=before + pd.Timedelta(hours=48), cause="hold_cancelled")
