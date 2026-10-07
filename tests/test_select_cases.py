@@ -11,6 +11,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from core.actions import Check, CheckOutcome
+from core.evidence import CheckResult
 from llm.eval import harness, select_cases
 from llm.eval.select_cases import (
     MAX_PER_CLUSTER,
@@ -63,6 +65,39 @@ def test_strata_name_patterns_and_benign_behaviour() -> None:
     assert groups[frame["stratum"] != "P-STOLEN"].nunique() == 20  # one per account
     assert set(frame.loc[frame["stratum"] != "P-STOLEN", "latent_class"]) == {"legitimate"}
     assert frame["case_id"].is_unique
+
+
+def test_benign_strata_are_the_rarest_trait_of_combined_labels() -> None:
+    # simulated worlds join several traits in one mimic or profile label
+    labels = ([("profile", "existing")] * 6 + [("profile", "existing+traveller")] * 3
+              + [("profile", "new_customer")] * 4 + [("profile", "household+new_customer")] * 2
+              + [("mimic", "gift+new_customer_first_order")] * 2
+              + [("mimic", "new_customer_first_order")] * 5 + [("profile", None)])
+    attempts, latent_orders, latent_accounts, decisions = [], [], [], []
+    for order_id, (source, label) in enumerate(labels, start=1):
+        attempts.append({"order_id": order_id, "user_id": order_id})
+        latent_accounts.append({"user_id": order_id,
+                                "profile": label if source == "profile" else "existing"})
+        latent_orders.append({"order_id": order_id, "pattern_id": None, "episode_id": None,
+                              "intent": "legitimate",
+                              "mimic": label if source == "mimic" else None})
+        decisions.append({"order_id": order_id, "decision_at": pd.Timestamp("2025-06-01")})
+    frame = candidates(7, "baseline", pd.DataFrame(decisions), {
+        "order_attempts": pd.DataFrame(attempts), "latent_orders": pd.DataFrame(latent_orders),
+        "latent_accounts": pd.DataFrame(latent_accounts)})
+    assert list(frame["stratum"].str.removeprefix("legitimate:")) == (
+        ["existing"] * 6 + ["traveller"] * 3 + ["new_customer"] * 4 + ["household"] * 2
+        + ["gift"] * 2 + ["new_customer_first_order"] * 5 + ["other"])
+
+
+def test_more_strata_than_cases_are_refused() -> None:
+    frame = pd.DataFrame({"case_id": [f"c{i}" for i in range(5)],
+                          "stratum": [f"s{i}" for i in range(5)],
+                          "account_key": [f"1:{i}" for i in range(5)],
+                          "episode_key": [None] * 5})
+    with pytest.raises(ValueError, match="strata"):
+        select(frame, 3, rng_seed=1)
+    assert len(select(frame, 5, rng_seed=1)) == 5
 
 
 def test_an_account_in_two_episodes_links_them() -> None:
@@ -187,13 +222,13 @@ def mini_world_with_reviews(directory: Path, seed: int) -> Path:
 @pytest.fixture
 def mini_phases(tmp_path, monkeypatch):
     """The mini world's review decisions fall in the validation window; the sizes are
-    small enough for it."""
+    small enough for it and at least its number of strata."""
     phases = {name: {**rules, "window": "validation"}
               for name, rules in select_cases.PHASES.items()}
     monkeypatch.setattr(select_cases, "PHASES", phases)
     monkeypatch.setattr(select_cases, "BENCHMARKS", tmp_path / "benchmarks")
-    monkeypatch.setattr(harness, "SIZES", {**harness.SIZES, "development_cases": 6,
-                                           "final_cases": 9, "probe_cases": 3})
+    monkeypatch.setattr(harness, "SIZES", {**harness.SIZES, "development_cases": 12,
+                                           "final_cases": 18, "probe_cases": 3})
     (tmp_path / "benchmarks").mkdir()
 
 
@@ -202,7 +237,7 @@ def test_benchmarks_are_built_from_worlds_and_their_review_decisions(tmp_path, m
         "t-dev", "development", [mini_world_with_reviews(tmp_path / "dev", 1041)],
         rng_seed=1)
     bench = tmp_path / "benchmarks" / "t-dev"
-    assert len(development["cases"]) == 6
+    assert len(development["cases"]) == 12
     assert {p.stem for p in (bench / "packets").glob("*.json")} == {
         case["case_id"] for case in development["cases"]}
     views = json.loads((bench / "referee.json").read_text())
@@ -224,6 +259,34 @@ def test_benchmarks_are_built_from_worlds_and_their_review_decisions(tmp_path, m
 
     assert all(case["packet_sha256"] for case in final["cases"])
     assert not list((tmp_path / "benchmarks").glob(".*staging"))
+
+
+@pytest.mark.parametrize("form", ["triples", "results"])
+def test_review_decisions_in_the_pipelines_pickle_are_read(tmp_path, mini_phases, form):
+    # the pipeline keeps review decisions as a pickled frame whose checks are lists:
+    # (check, outcome, completed_at) triples as the replay keeps them, or check results
+    world = mini_world_with_reviews(tmp_path / "dev", 1041)
+    frame = pd.read_csv(world / "review_decisions.csv")
+    (world / "review_decisions.csv").unlink()
+
+    def item(entry: dict):
+        at = pd.Timestamp(entry["completed_at"])
+        if form == "triples":
+            return (entry["check"], entry["outcome"], at)
+        return CheckResult(Check(entry["check"]), CheckOutcome(entry["outcome"]),
+                           at.to_pydatetime())
+
+    frame["checks"] = [[item(entry) for entry in json.loads(text)] for text in frame["checks"]]
+    frame["decision_at"] = pd.to_datetime(frame["decision_at"])
+    frame.to_pickle(world / "review_decisions.pkl")
+    development = select_cases.build("t-dev", "development", [world], rng_seed=1)
+    bench = tmp_path / "benchmarks" / "t-dev"
+    packets = [json.loads((bench / "packets" / f"{case['case_id']}.json").read_text())
+               for case in development["cases"]]
+    checks = {case["case_id"]: packet["decision"]["checks"]
+              for case, packet in zip(development["cases"], packets, strict=True)}
+    assert any(checks.values()) and not all(checks.values())
+    assert all(check["outcome"] == "passed" for done in checks.values() for check in done)
 
 
 @pytest.mark.parametrize("phase,seed,family", [

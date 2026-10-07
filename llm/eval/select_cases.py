@@ -11,8 +11,10 @@ packets never carry it.
   baseline worlds; final cases from the test windows of at least three final seeds
   (:data:`PHASES`). A world outside its phase's seeds or families is refused.
 * Strata: every fraud pattern among the review decisions, and the legitimate orders by
-  their benign mimic or behaviour profile (legitimate new customers, households,
-  travellers, movers, hardship, ...), each a stratum of its own.
+  benign trait: of the traits in an order's mimic label (or, without one, its account's
+  behaviour profile: new customers, households, travellers, movers, hardship, ...), the
+  one rarest among the pool's legitimate orders (:func:`stratify`). More strata than
+  cases are refused, so every stratum has cases.
 * Independence: cases linked through an account or an episode form one group (the
   cluster for intervals), and at most two cases per group are eligible; development
   and final cohorts share no account and no episode.
@@ -37,6 +39,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
@@ -87,9 +90,9 @@ def candidates(seed: int, family: str, decisions: pd.DataFrame,
              .merge(accounts, on="user_id", how="left", validate="many_to_one"))
     if frame["user_id"].isna().any() or frame["intent"].isna().any():
         raise ValueError("every decision needs its order attempt and latent order row")
-    benign = frame["mimic"].fillna(frame["profile"]).fillna("other")
-    frame["stratum"] = np.where(frame["pattern_id"].notna(), frame["pattern_id"],
-                                "legitimate:" + benign.astype(str))
+    frame["benign_traits"] = [_traits(mimic) or _traits(profile) for mimic, profile
+                              in zip(frame["mimic"], frame["profile"], strict=True)]
+    frame["stratum"] = stratify(frame)
     frame["latent_class"] = np.where(frame["intent"].eq("legitimate"), "legitimate", "fraud")
     frame["seed"], frame["family"] = int(seed), str(family)
     frame["case_id"] = [case_id(seed, family, o, t)
@@ -98,6 +101,28 @@ def candidates(seed: int, family: str, decisions: pd.DataFrame,
     frame["episode_key"] = [f"{seed}:{int(e)}" if pd.notna(e) else None
                             for e in frame["episode_id"]]
     return frame
+
+
+def _traits(value: Any) -> tuple[str, ...]:
+    """The traits of a ``+``-joined mimic or profile label."""
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return ()
+    return tuple(sorted({trait.strip() for trait in str(value).split("+") if trait.strip()}))
+
+
+def stratify(frame: pd.DataFrame) -> list[str]:
+    """Each candidate's stratum: its fraud pattern, or for a legitimate order
+    ``legitimate:<trait>``, the rarest among the frame's legitimate orders of the order's
+    benign traits (its mimic's, else its account profile's), so a combined label such as
+    ``gift+new_customer_first_order`` falls in one stratum per trait and rare traits keep
+    a stratum of their own; ``legitimate:other`` when it has none."""
+    legitimate = frame["pattern_id"].isna().to_numpy()
+    counts = Counter(trait for traits, plain in zip(frame["benign_traits"], legitimate,
+                                                    strict=True) if plain for trait in traits)
+    return [pattern if not plain else
+            "legitimate:" + (min(traits, key=lambda t: (counts[t], t)) if traits else "other")
+            for pattern, traits, plain in zip(frame["pattern_id"], frame["benign_traits"],
+                                              legitimate, strict=True)]
 
 
 def linked_groups(frame: pd.DataFrame) -> list[str]:
@@ -170,6 +195,9 @@ def select(pool: pd.DataFrame, total: int, *, rng_seed: int,
     drawn = eligible.loc[first_phase]
     drawn = drawn.iloc[rng.permutation(len(drawn))]  # an independent order for phase two
     available = drawn["stratum"].value_counts().to_dict()
+    if len(available) > total:
+        raise ValueError(f"{len(available)} strata for {total} cases: some strata would "
+                         "get no case and the weights could not reach them")
     quota = _allocation(available, total)
     if sum(quota.values()) < total:
         raise ValueError(f"the pool yields {sum(quota.values())} of the {total} cases "
@@ -264,13 +292,22 @@ def write_benchmark(directory: Path, *, benchmark_id: str, phase: str,
 
 
 def _checks(value: Any) -> tuple[CheckResult, ...]:
-    """Completed checks from a review-decision row (a JSON list or a list of mappings)."""
+    """Completed checks from a review-decision row: a list (or its JSON text) of check
+    results, mappings with ``check``, ``outcome`` and ``completed_at``, or
+    ``(check, outcome, completed_at)`` triples as the replay keeps them."""
     if value is None or (isinstance(value, float) and pd.isna(value)) or value == "":
         return ()
-    items = json.loads(value) if isinstance(value, str) else value
-    return tuple(CheckResult(Check(item["check"]), CheckOutcome(item["outcome"]),
-                             pd.Timestamp(item["completed_at"]).to_pydatetime())
-                 for item in items)
+    results = []
+    for item in json.loads(value) if isinstance(value, str) else value:
+        if isinstance(item, CheckResult):
+            results.append(item)
+            continue
+        check, outcome, completed_at = (
+            (item["check"], item["outcome"], item["completed_at"])
+            if isinstance(item, Mapping) else item)
+        results.append(CheckResult(Check(check), CheckOutcome(outcome),
+                                   pd.Timestamp(completed_at).to_pydatetime()))
+    return tuple(results)
 
 
 def _read_decisions(world_dir: Path) -> pd.DataFrame:
@@ -313,6 +350,7 @@ def build(benchmark_id: str, phase: str, world_dirs: Sequence[Path], *, rng_seed
         pools.append(candidates(seed, family, decisions, tables))
         worlds[(seed, family)] = (tables, decisions)
     pool = pd.concat(pools, ignore_index=True)
+    pool["stratum"] = stratify(pool)  # trait rarity over every world of the build
     exclude: dict[str, set[str]] = {"accounts": set(), "episodes": set()}
     if phase == "final":
         if development is None:
