@@ -81,23 +81,26 @@ def is_contrast(key: str) -> bool:
 
 
 def selected_reason(key: str, summary: Mapping[str, Any]) -> str | None:
-    """Why no test of ``key`` may be published, or ``None``: the key's family, capacity
-    and policy (its last three plain segments) are a cell where the recommendation
-    rule selected that policy (``evaluate.flips``), whatever the metric."""
+    """Why no test of ``key`` may be published, or ``None``: the key's family and
+    capacity (its last plain segments but one) are a cell where the recommendation rule
+    selected (``evaluate.flips``) the key's policy (its last plain segment) or the
+    reference it is compared with (a ``vs_<reference>`` segment), whatever the metric."""
     try:
         flips = table(summary, "evaluate.flips")
     except KeyError:
         return None
-    plain = [part for part in key.split(".") if not part.startswith("vs_")]
+    parts = key.split(".")
+    plain = [part for part in parts if not part.startswith("vs_")]
     if len(plain) < 4 or plain[0] != "evaluate":
         return None
     family, capacity, policy = plain[-3:]
+    compared = [policy, *(part[len("vs_"):] for part in parts if part.startswith("vs_"))]
     for row in flips:
-        if (row.get("family"), row.get("capacity"), row.get("recommended")) == \
-                (family, capacity, policy):
-            return (f"{policy} was selected by the recommendation rule among the challengers "
-                    f"({family}, {capacity}), so no test or p-value of it is published; "
-                    f"state the rule's result instead")
+        chosen = row.get("recommended")
+        if (row.get("family"), row.get("capacity")) == (family, capacity) and chosen in compared:
+            return (f"{chosen} was selected by the recommendation rule among the challengers "
+                    f"({family}, {capacity}), so no test or p-value of a comparison with it "
+                    f"is published; state the rule's result instead")
     return None
 
 

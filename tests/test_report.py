@@ -698,7 +698,9 @@ def _with_selection(recommended: str | None) -> dict:
     gain = cents(123_456, dict(enumerate(NET_SEEDS, start=1)))
     stage = StageResult(
         stage="evaluate", versions={"world": "w1"}, inputs={},
-        metrics={"evaluate.rule_net_per_1000_orders.vs_incumbent.surge.high.hybrid": gain},
+        metrics={"evaluate.rule_net_per_1000_orders.vs_incumbent.surge.high.hybrid": gain,
+                 "evaluate.net.vs_hybrid.surge.high.incumbent": cents(
+                     -123_456, {seed: -value for seed, value in enumerate(NET_SEEDS, start=1)})},
         tables={"evaluate.flips": [
             {"cell": "primary", "family": "baseline", "capacity": "base",
              "recommended": None},
@@ -718,6 +720,20 @@ def test_no_test_or_p_value_is_published_for_the_selected_policy() -> None:
         with pytest.raises(FormatError, match="no test or p-value"):
             render_value(f"{key} | p", sources)
         assert render_value(f"{key} | signs", sources) == "positive on 9/10 seeds"
+    # nor with the selected policy as the reference
+    reverse = "evaluate.net.vs_hybrid.surge.high.incumbent"
+    scope = {"policy": "incumbent", "reference": "hybrid", "key": reverse, "family": "surge",
+             "capacity": "high"}
+    for backwards in (claim(**scope, direction="negative"), claim(**scope)):
+        with pytest.raises(claims_module.ClaimError, match="selected by the recommendation"):
+            claims_module.sentence(backwards, selected, WORDING)
+    with pytest.raises(FormatError, match="no test or p-value"):
+        render_value(f"{reverse} | p", sources)
+    # a comparison of two other policies in that cell, or the same comparison in another
+    # cell, is tested as before
+    for key in ("evaluate.net.vs_incumbent.surge.high.v2",
+                "evaluate.net.vs_hybrid.baseline.base.incumbent"):
+        assert claims_module.selected_reason(key, selected) is None
     # another policy, or a cell where the rule kept the incumbent, is tested as before
     unselected = _with_selection(None)
     assert claims_module.sentence(record, unselected, WORDING).endswith("p = 0.021).")
