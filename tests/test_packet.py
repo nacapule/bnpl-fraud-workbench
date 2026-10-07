@@ -133,3 +133,40 @@ def test_packets_for_context_rows_read_only_the_order_and_its_entities() -> None
     assert only["order"]["account_home_country"] == "CA"
     assert only["order"]["card_bin_country"] == "GB"
     assert only["order"]["merchant_category"] == "travel"
+
+
+def test_packets_from_a_generated_world_carry_its_as_of_context(tmp_path: Path) -> None:
+    # a small simulated world, its as-of context at checkout and the next morning, and
+    # the packets: the referee's reading of each packet (after a JSON round trip) holds
+    # the same policy conditions as the evidence module's reading of the context row
+    from core import asof, evidence
+    from core.world import read_world
+    from llm import referee
+    from simulator.generate import generate_world
+
+    generate_world(416, "baseline", tmp_path, scale=0.02)
+    tables = read_world(tmp_path)
+    attempts = tables["order_attempts"]
+    approved = attempts[attempts["processor_result"].eq("approved")]
+    fraud = approved["order_id"].isin(
+        tables["latent_orders"].dropna(subset=["pattern_id"])["order_id"])
+    chosen = pd.concat([approved[fraud].head(20), approved[~fraud].sample(40, random_state=1)])
+    placed = pd.to_datetime(chosen["known_at"])
+    decisions = pd.concat([
+        pd.DataFrame({"order_id": chosen["order_id"], "decision_at": placed}),
+        pd.DataFrame({"order_id": chosen["order_id"],
+                      "decision_at": (placed + pd.Timedelta(days=1)).dt.floor("D")}),
+    ], ignore_index=True)
+    context = asof.build_context(tables, decisions)
+    built = build_packets(tables, context)
+    assert len(built) == len(context) == len(decisions)
+    held = evidence.conditions(context)
+    rules = list(evidence.RULE_FAMILY)
+    assert held[rules].to_numpy().any()  # some condition holds, so the comparison bites
+    for index, row in enumerate(context.to_dict("records")):
+        shown = json.loads(json.dumps(built[(int(row["order_id"]),
+                                             pd.Timestamp(row["decision_at"]))]))
+        assert_no_forbidden(shown)
+        assert set(shown["context"]) == set(CONTEXT_FIELDS)
+        expected = {rule for rule in rules if bool(held.iloc[index][rule])}
+        assert set(referee.view(shown).rules) == expected
