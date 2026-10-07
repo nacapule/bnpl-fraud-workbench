@@ -205,6 +205,40 @@ def test_a_given_world_written_another_way_is_stored_in_canonical_form(tmp_path:
         pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)
 
 
+def test_a_runs_own_world_cannot_be_given_as_its_source(tmp_path: Path) -> None:
+    """Copying a world onto itself would delete it first."""
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
+    pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)
+    own = run.world_dir(run.worlds[0])
+    again = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=own)
+    with pytest.raises(pipeline.PipelineError, match="this run's own world directory"):
+        pipeline.execute(again, pipeline.select(until="world"), log=lambda _: None)
+    assert (own / "order_attempts.csv").read_bytes() == \
+        (MINI_WORLD / "order_attempts.csv").read_bytes()
+
+
+def test_an_unreadable_world_file_is_a_pipeline_error(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    shutil.copytree(MINI_WORLD, source)
+    (source / "accounts.csv").chmod(0)
+    try:  # unreadable when copied
+        run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path / "runs", world=source)
+        with pytest.raises(pipeline.PipelineError, match="world 0-baseline: cannot copy"):
+            pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)
+    finally:
+        (source / "accounts.csv").chmod(0o644)
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path / "other", world=source)
+    pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)
+    stored = run.world_dir(run.worlds[0]) / "accounts.csv"
+    stored.chmod(0)
+    try:  # unreadable when hashed
+        assert pipeline.input_hash(run, "world:0-baseline") is None
+        with pytest.raises(pipeline.PipelineError, match="missing or differs"):
+            pipeline.execute(run, pipeline.select("validate", "validate"), log=lambda _: None)
+    finally:
+        stored.chmod(0o644)
+
+
 def _given_world(tmp_path: Path) -> tuple[pipeline.Run, Path]:
     run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
     pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)

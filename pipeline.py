@@ -342,14 +342,14 @@ def world_identity(run: Run, ref: WorldRef) -> str | None:
     (``core.world.write_world``), so their bytes are checked without parsing.
     """
     directory = run.world_dir(ref)
-    path = directory / "manifest.json"
-    if not path.exists():
-        return None
-    manifest = json.loads(path.read_text())
-    for name, entry in manifest.get("tables", {}).items():
-        table_file = directory / f"{name}.csv"
-        if not table_file.is_file() or file_sha256(table_file) != entry.get("sha256"):
-            return None
+    try:
+        manifest = json.loads((directory / "manifest.json").read_text())
+        for name, entry in manifest["tables"].items():
+            table_file = directory / f"{name}.csv"
+            if not table_file.is_file() or file_sha256(table_file) != entry["sha256"]:
+                return None
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return None  # missing, unreadable or malformed: not the world it claims to be
     return manifest_identity(manifest)
 
 
@@ -361,7 +361,10 @@ def input_hash(run: Run, name: str) -> str | None:
         path = run.results_dir / name[len("results/"):]
     else:
         path = REPO / name
-    return file_sha256(path) if path.is_file() else None
+    try:
+        return file_sha256(path) if path.is_file() else None
+    except OSError:
+        return None
 
 
 def _count(value: int, population: str, window: str = "all") -> Metric:
@@ -374,6 +377,13 @@ def stage_world(run: Run) -> StageOutput:
     worlds = run.all_worlds
     for ref in worlds:  # refuse before generating anything
         protocol_module.check_seed(ref.seed)
+    if run.source is not None:  # never delete what is about to be copied
+        source = run.source.resolve()
+        for ref in worlds:
+            target = run.world_dir(ref).resolve()
+            if source == target or source.is_relative_to(target) or target.is_relative_to(source):
+                raise PipelineError(f"world {ref.name}: the given world {run.source} is this "
+                                    "run's own world directory; give a copy outside it")
     generate = None if run.source else entry("world", "simulator.generate", "generate_world")
     run.memory.clear()
     rows = []
@@ -382,10 +392,17 @@ def stage_world(run: Run) -> StageOutput:
         if target.exists():
             shutil.rmtree(target)
         if run.source is not None:
-            shutil.copytree(run.source, target, ignore=shutil.ignore_patterns("*.py", "*.md"))
+            try:
+                shutil.copytree(run.source, target, ignore=shutil.ignore_patterns("*.py", "*.md"))
+            except OSError as error:
+                raise PipelineError(f"world {ref.name}: cannot copy {run.source}: {error}") \
+                    from error
         else:
             generate(ref.seed, ref.family, target, scale=run.scale)
-        manifest = run.manifest(ref)
+        try:
+            manifest = run.manifest(ref)
+        except (OSError, ValueError) as error:
+            raise PipelineError(f"world {ref.name}: unreadable manifest: {error}") from error
         if (manifest.get("seed"), manifest.get("family")) != (ref.seed, ref.family):
             raise PipelineError(f"world {ref.name}: the manifest names another seed or family")
         if world_identity(run, ref) is None:
