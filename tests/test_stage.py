@@ -136,17 +136,119 @@ def test_the_capacity_base_is_todays_queue_over_eighty_percent() -> None:
     run = FakeRun(tables, stub.build(tables))
     base = stage.capacity_base(run, [run.ref])
     offered = service_seconds(416, np.array([3, 6, 12]), 7.0, 0.6).sum() / 60
-    assert base["offered_minutes"] == pytest.approx(offered)
-    assert base["needed_minutes"] == pytest.approx(offered / 0.8)
+    assert base["worlds"][0]["offered_minutes"] == pytest.approx(offered)
+    assert base["needed_minutes_per_world"] == pytest.approx(offered / 0.8)
     days = pd.date_range("2024-12-01", "2025-02-28")
     shifts = int((days.dayofweek <= 4).sum() + (days.dayofweek >= 2).sum())  # early, late
     assert base["shifts_per_world"] == shifts
-    per_shift = base["minutes_per_shift"]
-    assert per_shift["base"]["review_minutes_per_shift"] == {
-        "early": int(np.ceil(offered / 0.8 / shifts)), "late": int(np.ceil(offered / 0.8 / shifts))}
+    budget = base["minutes_per_shift"]["base"]
+    per_shift = int(np.ceil(offered / 0.8 / shifts))
+    assert budget["review_minutes_per_shift"] == {"early": per_shift, "late": per_shift}
+    assert budget["minutes"] == shifts * per_shift >= offered / 0.8
     assert base["whole_analysts"]["base"]["analysts_per_shift"] == {"early": 1, "late": 1}
     assert not base["whole_analysts"]["low"]["binds"]  # one analyst per shift is far too many
     assert base["whole_analysts"]["low"]["minutes"] == shifts * 390
+
+
+@dataclass(frozen=True)
+class SaturdayStaff:
+    """One analyst on Saturdays 12:30-12:33 (a stand-in for the base staffing)."""
+
+    level: str = "base"
+    layout: str = "current"
+
+    def roster(self, policy_cfg):
+        from queue_sim.roster import Roster, Shift
+
+        return Roster((Shift("sat", (5,), 12 * 60 + 30, 3),), {"sat": 1})
+
+
+def test_tuning_keeps_a_point_that_fits_only_because_a_decline_blocks_the_account() -> None:
+    """Orders 11 and 13 of one account score for review: 2.9 and 3.6 minutes against 3
+    available. The first review declines on settled evidence and blocks the account, so
+    order 13 never reaches the queue and the point fits; a rule that dropped points whose
+    checkout routing alone offers more than 1.25 times the minutes would have lost it."""
+    tables = mini_tables()
+    stub = StubContext(tables, scores={11: 5.0, 13: 5.0},
+                       overrides={11: {"unauthorized_disputes_lost_user": 1}})
+    run = FakeRun(tables, stub.build(tables))
+    run.protocol.windows["validation"] = SimpleNamespace(start=T("2025-02-01"),
+                                                         end=T("2025-02-05"))
+    patch = pytest.MonkeyPatch()
+    patch.setattr(asof, "build_context", lambda t, d=None, **_: stub.build(t, d))
+    patch.setattr(tuning.Grid, "from_config",
+                  classmethod(lambda cls, cfg=None: cls((0.0, 0.5), (0.0,))))
+    patch.setattr(asof, "policy_rows",
+                  lambda world_rows, *_, **__: world_rows.reset_index(drop=True),
+                  raising=False)
+    patch.setattr(stage, "base_staffing", lambda cfg: SaturdayStaff())
+    try:
+        tuned = stage.tune(run)
+    finally:
+        patch.undo()
+    frontier = pd.DataFrame(tuned.tables["tune.frontier"])
+    point = frontier.loc[(frontier["policy"] == "incumbent_rules")
+                         & (frontier["review_rate"] == 0.5)].iloc[0]
+    assert point["review_minutes_routed"] > 1.25 * point["available_minutes"] == 3.75
+    assert point["review_minutes_offered"] <= point["available_minutes"] and point["feasible"]
+    assert run.memory["tuned"][416]["incumbent_rules"].review_threshold == 5.0
+
+
+def _current_shifts():
+    from core import config
+    from queue_sim.roster import Roster
+
+    return Roster.from_config(config.load("policy"), layout="current",
+                              analysts_per_shift={"early": 1, "late": 1}).shifts
+
+
+def _seconds(stamp: str) -> int:
+    return int(T(stamp).timestamp())
+
+
+def test_a_base_beyond_one_analysts_shift_adds_analysts_instead_of_capping() -> None:
+    """129 full shifts give one analyst 50,310 minutes; today's 60,000 minutes need
+    75,000. Capping the minutes per shift at the productive shift would have reported
+    50,310 minutes as base and as high."""
+    window = (_seconds("2025-01-01"), _seconds("2025-04-01"))
+    levels = stage.capacity_levels(_current_shifts(), window, [60_000.0])
+    assert levels["minutes_one_analyst_per_shift"] == 129 * 390
+    budget = levels["minutes_per_shift"]
+    assert budget["base"]["analysts_per_shift"] == {"early": 2, "late": 2}
+    assert budget["base"]["review_minutes_per_shift"] == {"early": 291, "late": 291}
+    for name in ("low", "base", "high"):
+        assert budget[name]["minutes"] >= budget[name]["target_minutes"]
+    assert budget["low"]["minutes"] < budget["base"]["minutes"] < budget["high"]["minutes"]
+    assert budget["low"]["binds"] and not budget["base"]["binds"]
+    whole = levels["whole_analysts"]
+    assert whole["base"]["analysts_per_shift"] == {"early": 2, "late": 2}
+    assert whole["high"]["analysts_per_shift"] == {"early": 3, "late": 3}
+
+
+def test_no_review_minutes_give_the_minimum_staffing() -> None:
+    window = (_seconds("2025-01-01"), _seconds("2025-04-01"))
+    levels = stage.capacity_levels(_current_shifts(), window, [0.0, 0.0])
+    for reading in ("whole_analysts", "minutes_per_shift"):
+        for name in ("low", "base"):
+            assert levels[reading][name]["analysts_per_shift"] == {"early": 1, "late": 1}
+        high, base = levels[reading]["high"], levels[reading]["base"]
+        assert high["minutes"] >= 1.5 * base["minutes"]
+        assert not any(levels[reading][name]["binds"] for name in ("low", "base", "high"))
+    assert levels["minutes_per_shift"]["base"]["review_minutes_per_shift"] == {
+        "early": 1, "late": 1}
+
+
+def test_shifts_cut_by_the_window_count_only_their_time_inside() -> None:
+    """Monday 14:29 to Wednesday 11:01 holds 1 minute of Monday's early shift, Tuesday's
+    390, 181 of Wednesday's early and 1 of its late shift. 240 minutes need 300: 149
+    minutes per shift give 1 + 149 + 149 + 1; dividing 300 by four shifts would give 75
+    a shift and only 152 minutes."""
+    window = (_seconds("2025-02-03 14:29"), _seconds("2025-02-05 11:01"))
+    levels = stage.capacity_levels(_current_shifts(), window, [240.0])
+    assert levels["shifts_per_world"] == 4 and levels["minutes_one_analyst_per_shift"] == 573
+    base = levels["minutes_per_shift"]["base"]
+    assert base["review_minutes_per_shift"] == {"early": 149, "late": 149}
+    assert base["minutes"] == 300 >= base["target_minutes"]
 
 
 # ------------------------------------------------------------------ with the real context

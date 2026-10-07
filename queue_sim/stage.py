@@ -22,7 +22,6 @@ context is shared through ``run.memory["context"]`` as the pipeline caches it.
 
 from __future__ import annotations
 
-import math
 import multiprocessing
 import os
 import pickle
@@ -42,7 +41,7 @@ from queue_sim import outcomes, policies
 from queue_sim.replay import FrozenHistory, PolicyHistory, ReplayResult, Settings, World
 from queue_sim.replay import replay as run_replay
 from queue_sim.reviewer import PerfectReviewer, Reviewer, Verification, service_seconds
-from queue_sim.roster import Roster, ServiceCalendar, to_seconds
+from queue_sim.roster import Roster, ServiceCalendar, Shift, to_seconds
 from rules import tuning
 
 BASELINE = "baseline"
@@ -113,26 +112,20 @@ STAFFED_FOR = 0.8  # the base is staffed so today's queue uses 80% of its minute
 
 
 def capacity_base(run: Any, refs: Sequence[Any]) -> dict[str, Any]:
-    """The capacity base (PLAN §7.6) from development worlds, before any policy comparison.
+    """The capacity base from development worlds, fixed before any policy comparison.
 
     Today's rules at today's bands (``config/policy.yaml`` ``rules.bands``) route each
     world's fit-window orders at checkout on the world-level context; their review
-    minutes (each order's review time), summed over the worlds and divided by
-    :data:`STAFFED_FOR`, are the minutes the base provides. Two readings on the current
-    layout's coverage hours: whole analysts per shift (the same number on every shift),
-    and one analyst per shift with review minutes per shift (the same on every shift).
-    ``levels`` gives low (about half), base and high (about 1.5 times) in each reading,
-    and whether the low level binds (today's minutes exceed its minutes on every world).
+    minutes (each order's review time) are today's queue. :func:`capacity_levels` sizes
+    the levels on the current layout from them.
     """
     policy_cfg = config.load("policy")
     bands = policy_cfg["rules"]["bands"]
     window = _window(run.protocol, "fit")
-    t0, t1 = (int(to_seconds(t)) for t in window)
     layout = policy_cfg["roster"]["layout"]
-    one = Roster.from_config(policy_cfg, layout=layout, analysts_per_shift={
+    shifts = Roster.from_config(policy_cfg, layout=layout, analysts_per_shift={
         item["name"]: 1 for item in policy_cfg["roster"]["layouts"][layout]},
-        review_minutes_per_shift={})
-    shifts = sum(len(one.windows(shift, t0, t1)) for shift in one.shifts)
+        review_minutes_per_shift={}).shifts
     per_world = []
     for ref in refs:
         bench = _bench(run, ref)
@@ -141,37 +134,86 @@ def capacity_base(run: Any, refs: Sequence[Any]) -> dict[str, Any]:
         per_world.append({"seed": ref.seed, "family": ref.family,
                           "orders": len(bench.world.orders(*window)),
                           "offered_minutes": bench.routed_minutes(today, window)})
-    offered = sum(w["offered_minutes"] for w in per_world)
-    needed = offered / STAFFED_FOR
-    whole = math.ceil(needed / (one.available_minutes(t0, t1) * len(refs)))
-    minutes = math.ceil(needed / (shifts * len(refs)))
-    names = [shift.name for shift in one.shifts]
+    levels = capacity_levels(shifts, tuple(int(to_seconds(t)) for t in window),
+                             [w["offered_minutes"] for w in per_world])
+    return {"window": [str(window[0]), str(window[1])], "bands": dict(bands),
+            "layout": layout, "worlds": per_world, **levels}
 
-    def binds(roster: Roster) -> bool:
-        return all(w["offered_minutes"] > roster.available_minutes(t0, t1) for w in per_world)
 
-    def analysts(n: int) -> dict[str, Any]:
-        roster = Roster(one.shifts, {name: n for name in names})
-        return {"analysts_per_shift": {name: n for name in names},
-                "minutes": roster.available_minutes(t0, t1), "binds": binds(roster)}
+def capacity_levels(shifts: Sequence[Shift], window: tuple[int, int],
+                    offered: Sequence[float]) -> dict[str, Any]:
+    """Low, base and high staffing for today's queue (``offered`` minutes per world).
 
-    def budget(m: int) -> dict[str, Any]:
-        m = min(m, min(shift.productive_minutes for shift in one.shifts))
-        roster = Roster(one.shifts, {name: 1 for name in names}, {name: m for name in names})
-        return {"analysts_per_shift": {name: 1 for name in names},
-                "review_minutes_per_shift": {name: m for name in names},
-                "minutes": roster.available_minutes(t0, t1), "binds": binds(roster)}
+    The base must provide today's minutes per world, averaged over the worlds, divided
+    by :data:`STAFFED_FOR`, over ``window`` (seconds); it is the smallest staffing whose
+    available minutes (shifts clipped to the window) reach that target; low and high are
+    the smallest reaching half and 1.5 times the base's minutes. Two readings:
 
-    return {
-        "window": [str(window[0]), str(window[1])], "bands": dict(bands),
-        "staffed_for": STAFFED_FOR, "worlds": per_world, "offered_minutes": offered,
-        "needed_minutes": needed, "shifts_per_world": shifts,
-        "minutes_one_analyst_per_shift": one.available_minutes(t0, t1),
-        "whole_analysts": {"low": analysts(max(1, round(whole / 2))), "base": analysts(whole),
-                           "high": analysts(math.ceil(1.5 * whole))},
-        "minutes_per_shift": {"low": budget(math.ceil(minutes / 2)), "base": budget(minutes),
-                              "high": budget(math.ceil(1.5 * minutes))},
-    }
+    * ``whole_analysts``: the same number of analysts on every shift, at least one;
+    * ``minutes_per_shift``: the fewest analysts per shift (at least one) and then the
+      fewest whole review minutes per shift, the same on every shift, that reach the
+      target (more analysts only when the productive shift is not enough).
+
+    Each level reports its staffing, its minutes per world, its target, and ``binds``:
+    today's minutes exceed the level's on every world. With no review minutes at all the
+    levels are the minimum staffing (one analyst, one minute).
+    """
+    t0, t1 = window
+    names = [shift.name for shift in shifts]
+    productive = min(shift.productive_minutes for shift in shifts)
+    average = sum(offered) / max(len(offered), 1)
+    needed = average / STAFFED_FOR
+
+    def roster(n: int, m: int | None = None) -> Roster:
+        return Roster(tuple(shifts), {name: n for name in names},
+                      None if m is None else {name: m for name in names})
+
+    def minutes(r: Roster) -> float:
+        return r.available_minutes(t0, t1)
+
+    one = minutes(roster(1))
+    if one <= 0:
+        raise ValueError("no shift falls in the window")
+
+    def whole(target: float) -> Roster:
+        n = max(1, int(target // one))
+        while minutes(roster(n)) < target:
+            n += 1
+        return roster(n)
+
+    def budget(target: float) -> Roster:
+        n = max(1, int(target // one))
+        while minutes(roster(n, productive)) < target:  # the productive shift is not enough
+            n += 1
+        lo, hi = 1, productive  # the fewest whole minutes per shift that reach the target
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if minutes(roster(n, mid)) >= target:
+                hi = mid
+            else:
+                lo = mid + 1
+        return roster(n, lo)
+
+    def level(r: Roster, target: float) -> dict[str, Any]:
+        out = {"analysts_per_shift": dict(r.analysts_per_shift), "minutes": minutes(r),
+               "target_minutes": target,
+               "binds": bool(offered) and all(o > minutes(r) for o in offered)}
+        if r.review_minutes_per_shift is not None:
+            out["review_minutes_per_shift"] = dict(r.review_minutes_per_shift)
+        return out
+
+    readings = {}
+    for name, size in (("whole_analysts", whole), ("minutes_per_shift", budget)):
+        base = size(needed)
+        readings[name] = {
+            "low": level(size(minutes(base) / 2), minutes(base) / 2),
+            "base": level(base, needed),
+            "high": level(size(1.5 * minutes(base)), 1.5 * minutes(base)),
+        }
+    return {"staffed_for": STAFFED_FOR, "offered_minutes_per_world": average,
+            "needed_minutes_per_world": needed,
+            "shifts_per_world": sum(len(roster(1).windows(s, t0, t1)) for s in shifts),
+            "minutes_one_analyst_per_shift": one, **readings}
 
 
 # ------------------------------------------------------------------------- one world
