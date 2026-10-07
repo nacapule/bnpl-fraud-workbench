@@ -44,15 +44,19 @@ before it and the earlier requests' output as input (a token covers at least one
 and ``max_output_tokens`` as output, which the backend enforces (a token cap is refused
 for a backend that cannot). It does not cover requests the CLI repeats after an API error
 or a broken stream; those are billed little or nothing, and the margin is for them. The
-bound is reserved before the call; afterwards the reservation becomes the reported usage,
-or stays charged in full when the usage is unknown or the run was interrupted. A call
-whose reported usage exceeds its bound parks the arm in the same change of the ledger
-that charges it, and a failed isolation check parks it too: the ledger records why, and
-no live run of the arm starts until someone has looked and removed the ``parked``
-entry. A case's attempts and their usage are kept beside its record until it is written
-(``cache/<key>.started.json``), written before each settlement, so the records' usage
-adds up to the ledger's charges even for a run that stopped mid-case; the isolation
-checks' usage is in the ledger and ``canaries.json``.
+bound is reserved, with the case it is for, before the call; afterwards the reservation
+becomes a receipt of the reported usage, or of the whole bound when the usage is unknown
+or the run was interrupted. A case's record takes its attempts and usage from its
+receipts, so the records add up to the ledger wherever a run stopped; an isolation
+check's receipt is its own, and its outcome is in ``canaries.json``. A call whose
+reported usage exceeds its bound, or a failed isolation check, parks the arm in the same
+ledger change that charges it: the ledger records why, and no live run of the arm starts
+until someone has looked and removed the ``parked`` entry.
+
+The request count assumes Claude Code runs each call itself, with one model turn
+(``--max-turns 1``). A launcher in ``CLAUDE_CLI_BIN`` must keep a call to one turn as
+well before the next request is sent; that is the operator's precondition, like signing
+in with a personal subscription only, and a call over its bound still parks the arm.
 
 Scoring replays the cache only, after checking that the policy, prompt, packets, the
 referee's views and the scoring code still have their recorded hashes (a scoring change
@@ -327,8 +331,9 @@ class Ledger:
     Opening it takes the arm's run lock, so one live run per arm holds it at a time;
     reservations still pending then were left by a run that ended without settling them
     and are charged in full. Every change reloads the file under a file lock, so runs
-    of different arms never overwrite each other. A call's bound is reserved before it is
-    made and settled after it."""
+    of different arms never overwrite each other. A call's bound is reserved, with the
+    case it is for, before it is made, and settled after it into a receipt for that
+    case; a case's record takes its usage from its receipts (:meth:`case_usage`)."""
 
     def __init__(self, path: Path, arm: str, *, calls: int | None, tokens: int | None,
                  margin: int = 0):
@@ -345,8 +350,7 @@ class Ledger:
             for key in sorted(entry["pending"]):
                 reservation = entry["pending"].pop(key)
                 entry["interrupted_calls"] += 1
-                entry["interrupted_reservations"][key] = reservation["tokens"]
-                self._charge(entry, reservation["benchmark"],
+                self._charge(entry, key, reservation,
                              attempt_usage(reservation["tokens"], None, None))
 
     def close(self) -> None:
@@ -369,7 +373,7 @@ class Ledger:
             for key, empty in (("calls", 0), ("charged_tokens", 0), ("input_tokens", 0),
                                ("output_tokens", 0), ("unknown_usage_calls", 0),
                                ("interrupted_calls", 0), ("by_benchmark", {}), ("pending", {}),
-                               ("interrupted_reservations", {})):
+                               ("receipts", {})):
                 entry.setdefault(key, empty)
             yield entry
             _write_json(self.path, data)
@@ -397,44 +401,52 @@ class Ledger:
         with self._update() as entry:
             entry["parked"] = reason
 
-    def reserve(self, benchmark: str, bound: int) -> str:
-        """Record, before a call, that it may use up to ``bound`` tokens."""
+    def reserve(self, benchmark: str, bound: int, *, case: str) -> str:
+        """Record, before a call for ``case``, that it may use up to ``bound`` tokens."""
         key = f"{benchmark}:{os.getpid()}:{os.urandom(6).hex()}"
         with self._update() as entry:
-            entry["pending"][key] = {"benchmark": benchmark, "tokens": int(bound)}
+            entry["pending"][key] = {"benchmark": benchmark, "case": case,
+                                     "tokens": int(bound)}
         return key
 
     def release(self, key: str) -> None:
-        """A reservation for a call that never reached the model."""
+        """A reservation for a call that never reached the model: no charge, no receipt."""
         with self._update() as entry:
             del entry["pending"][key]
 
-    def settle(self, key: str, input_tokens: int | None, output_tokens: int | None) -> int:
-        """Replace a reservation by the call's reported usage, or charge it in full when
-        the usage is unknown. A charge over the reservation parks the arm in the same
-        change. Returns the charge."""
+    def settle(self, key: str, input_tokens: int | None, output_tokens: int | None, *,
+               park: str | None = None) -> int:
+        """Replace a reservation by a receipt of the call's reported usage, or of its
+        whole bound when the usage is unknown. A charge over the bound parks the arm in
+        the same change, and so does ``park``. Returns the charge."""
         with self._update() as entry:
             reservation = entry["pending"].pop(key)
-            charged = self._charge(entry, reservation["benchmark"], attempt_usage(
+            charged = self._charge(entry, key, reservation, attempt_usage(
                 reservation["tokens"], input_tokens, output_tokens))
             if charged > reservation["tokens"]:
                 entry["parked"] = (f"a call used {charged} tokens, more than its bound "
                                    f"{reservation['tokens']}")
+            elif park:
+                entry["parked"] = park
         return charged
 
-    def was_interrupted(self, key: str) -> bool:
-        """Whether a reservation was charged in full because its run ended first."""
+    def case_usage(self, case: str) -> dict[str, int]:
+        """The usage of every call made for ``case``, across runs."""
         with self._update() as entry:
-            return key in entry["interrupted_reservations"]
+            receipts = [receipt for receipt in entry["receipts"].values()
+                        if receipt["case"] == case]
+        return {name: sum(receipt[name] for receipt in receipts) for name in USAGE_FIELDS}
 
     @staticmethod
-    def _charge(entry: dict[str, Any], benchmark: str, usage: Mapping[str, int]) -> int:
-        for name in ("calls", "charged_tokens", "input_tokens", "output_tokens",
-                     "unknown_usage_calls"):
+    def _charge(entry: dict[str, Any], key: str, reservation: Mapping[str, Any],
+                usage: Mapping[str, int]) -> int:
+        for name in USAGE_FIELDS:
             entry[name] += usage[name]
-        spent = entry["by_benchmark"].setdefault(benchmark, {"calls": 0, "charged_tokens": 0})
+        spent = entry["by_benchmark"].setdefault(reservation["benchmark"],
+                                                 {"calls": 0, "charged_tokens": 0})
         spent["calls"] += 1
         spent["charged_tokens"] += usage["charged_tokens"]
+        entry["receipts"][key] = {"case": reservation["case"], **usage}
         return usage["charged_tokens"]
 
 
@@ -451,12 +463,6 @@ def attempt_usage(bound: int, input_tokens: int | None, output_tokens: int | Non
     return {"calls": 1, "input_tokens": input_tokens or 0, "output_tokens": output_tokens or 0,
             "charged_tokens": max(known, bound) if unknown else known,
             "unknown_usage_calls": int(unknown)}
-
-
-def _usage_sum(*usages: Mapping[str, int], minus: Mapping[str, int] | None = None
-               ) -> dict[str, int]:
-    return {name: sum(usage[name] for usage in usages) - (minus or {}).get(name, 0)
-            for name in USAGE_FIELDS}
 
 
 # Requests the model answers in one call of the Claude Code CLI (its query loop, 2.1.292,
@@ -556,76 +562,72 @@ def _record_canary(directory: Path, entry: Mapping[str, Any]) -> None:
         _write_json(path, [*entries, dict(entry)])
 
 
-def _checkpoint(started: Path, identity: Mapping[str, Any], attempts: int, failed: int,
-                usage: Mapping[str, int], **last: Any) -> None:
-    """A case's attempts so far, for a run that stops before its record is written; the
-    last attempt's reservation, bound and settled usage let a resume reconcile it with
-    the ledger."""
-    _write_json(started, {"identity": identity, "attempts": attempts,
-                          "failed_attempts": failed, "usage": usage, "last": last})
-
-
 def check_isolation(directory: Path, definition: Mapping[str, Any], arm: Arm,
                     pin: Mapping[str, str], ledger: Ledger, backend: Any, *, logs: Path,
                     used: dict[str, Any], refusal: Callable[[int], str | None],
                     max_output: int | None) -> str | None:
     """A run's isolation check (:func:`run_live`): a reason to stop the run, or None when
-    it passed. Parks the arm and raises :class:`IsolationError` when it failed, or
-    :class:`BudgetError` when it used more than its bound. Its spend is in the ledger
-    and, with the verdict, in ``canaries.json``."""
+    it passed. A failed check is parked in the ledger change that charges it, then
+    raises :class:`IsolationError`; a check over its bound is parked the same way and
+    raises :class:`BudgetError`. Its spend is a ledger receipt (case
+    ``isolation-check:...``), and each check that reached the model, with its outcome, is
+    in ``canaries.json``."""
     bound = call_bound(CANARY_SYSTEM, CANARY_PROMPT)
     if reason := refusal(bound):
         return reason
-    reservation = ledger.reserve(definition["id"], bound)
+    stamp = f"canary-{os.getpid()}-{os.urandom(3).hex()}"
+    reservation = ledger.reserve(definition["id"], bound,
+                                 case=f"isolation-check:{definition['id']}:{stamp}")
+    entry = {"arm": arm.name, "cli_version": None, "isolation": None, "verdict": None,
+             "outcome": None, "input_tokens": None, "output_tokens": None}
     try:
         response = backend.complete(client.Request(
             arm.backend, arm.model, arm.effort, CANARY_SYSTEM, CANARY_PROMPT,
             max_output_tokens=max_output))
     except client.BackendError as error:
-        if error.called:
-            used["calls"] += 1
-            used["tokens"] += ledger.settle(reservation, None, None)
-        else:
+        if not error.called:
             ledger.release(reservation)
-        return f"the isolation check failed: {error}"
+            return f"the isolation check could not start: {error}"
+        used["calls"] += 1
+        used["tokens"] += ledger.settle(reservation, None, None)
+        _record_canary(directory, {**entry, "outcome": "transport failure"})
+        return f"the isolation check failed in transport: {error}"
     summary = response.summary
-    charged = ledger.settle(reservation, summary.input_tokens, summary.output_tokens)
-    used["calls"] += 1
-    used["tokens"] += charged
     verdict = canary_verdict(response.text)
     problems = []
     if _contaminated(summary):
         problems.append("tool, file, hook or unrecognised events in the log")
     if summary.model != arm.model:
         problems.append("answered by another model")
-    if charged > bound:
-        outcome = "over its bound"
-    elif summary.cli_version != pin["cli_version"] or summary.isolation != pin["isolation"]:
+    if summary.cli_version != pin["cli_version"] or summary.isolation != pin["isolation"]:
         outcome = "changed CLI or isolation"
     elif not problems and summary.n_error_events:
         outcome = "error events"
     else:
         problems += [f"the model answered {verdict}"] if verdict != "no" else []
         outcome = "failed" if problems else "passed"
+    failure = "the isolation check failed: " + "; ".join(problems)
+    charged = ledger.settle(reservation, summary.input_tokens, summary.output_tokens,
+                            park=failure if outcome == "failed" else None)
+    used["calls"] += 1
+    used["tokens"] += charged
+    if charged > bound:  # parked by the settlement
+        outcome = "over its bound"
     _record_canary(directory, {
-        "arm": arm.name, "cli_version": summary.cli_version, "isolation": summary.isolation,
+        **entry, "cli_version": summary.cli_version, "isolation": summary.isolation,
         "verdict": verdict, "outcome": outcome, "input_tokens": summary.input_tokens,
         "output_tokens": summary.output_tokens})
-    if outcome == "over its bound":  # the ledger parked the arm when it settled
+    if outcome == "over its bound":
         raise BudgetError(f"the isolation check used {charged} tokens, more than its "
                           f"bound {bound}")
+    _write_log(logs / f"{stamp}.events.jsonl",
+               "".join(json.dumps(event) + "\n" for event in response.events))
+    _write_log(logs / f"{stamp}.text.txt", response.text)
     if outcome == "changed CLI or isolation":
         raise FrozenError(f"the CLI or its isolation changed during the run "
                           f"({summary.cli_version})")
     if outcome == "failed":
-        ledger.park("the isolation check failed: " + "; ".join(problems))
-    stamp = f"canary-{os.getpid()}-{os.urandom(3).hex()}"
-    _write_log(logs / f"{stamp}.events.jsonl",
-               "".join(json.dumps(event) + "\n" for event in response.events))
-    _write_log(logs / f"{stamp}.text.txt", response.text)
-    if outcome == "failed":
-        raise IsolationError(f"the isolation check failed: {'; '.join(problems)} "
-                             f"(log {stamp} in {logs})")
+        raise IsolationError(f"{failure} (log {stamp} in {logs})")
     if outcome == "error events":
         return "error events in the isolation check's log"
     return None
@@ -715,18 +717,10 @@ def _calls(directory: Path, definition: Mapping[str, Any], arm: Arm, pin: Mappin
                                        > int(SIZES["context_tokens"])):
             raise BudgetError(f"a request for {stem} could outgrow the context window, "
                               f"where the CLI would add compaction requests")
-        started = path.with_name(f"{path.stem}.started.json")  # a run stopped mid-case
-        earlier = json.loads(started.read_text()) if started.exists() else {}
-        errors: list[str] = ["an earlier run's failed attempt"] * earlier.get("failed_attempts", 0)
+        case = cache_key(identity)
+        attempts = ledger.case_usage(case)["calls"]  # earlier runs' calls; none answered
+        errors: list[str] = ["an earlier run's attempt"] * attempts
         response = None
-        usage = earlier.get("usage") or dict.fromkeys(USAGE_FIELDS, 0)
-        last = earlier.get("last") or {}
-        if last.get("settled") and ledger.was_interrupted(last["reservation"]):
-            # the run ended between this checkpoint and the settlement, so the ledger
-            # charged the attempt's whole bound
-            usage = _usage_sum(usage, attempt_usage(last["bound"], None, None),
-                               minus=last["settled"])
-        attempts = int(earlier.get("attempts", 0))
         while attempts < 2:
             reason = refusal(bound)
             if reason is None and not checked:
@@ -735,47 +729,31 @@ def _calls(directory: Path, definition: Mapping[str, Any], arm: Arm, pin: Mappin
                                          max_output=max_output) or refusal(bound)
                 checked.append(True)
             if reason:
-                if attempts:
-                    _checkpoint(started, identity, attempts, len(errors), usage)
                 used["stopped"] = reason
                 print(f"stopped before a call: {reason}", file=sys.stderr)
                 return used
             attempts += 1
-            reservation = ledger.reserve(definition["id"], bound)
-            lost = attempt_usage(bound, None, None)  # what the ledger charges if the run ends
-            _checkpoint(started, identity, attempts, len(errors) + 1, _usage_sum(usage, lost),
-                        reservation=reservation, bound=bound, settled=None)
+            reservation = ledger.reserve(definition["id"], bound, case=case)
             try:
                 response = backend.complete(client.Request(
                     arm.backend, arm.model, arm.effort, system_prompt, user_prompt,
                     max_output_tokens=max_output))
             except client.BackendError as error:
-                errors.append(str(error))
-                if error.called:
-                    used["calls"] += 1
-                    used["tokens"] += ledger.settle(reservation, None, None)
-                    usage = _usage_sum(usage, lost)
-                else:
+                if not error.called:  # never reached the model: not an attempt
                     ledger.release(reservation)
-                    attempts -= 1  # never reached the model: not an attempt
-                    if attempts:
-                        _checkpoint(started, identity, attempts, len(errors) - 1, usage)
-                    else:
-                        started.unlink(missing_ok=True)
                     used["stopped"] = f"the CLI failed before asking the model: {error}"
                     print(f"stopped: {used['stopped']}", file=sys.stderr)
                     return used
+                errors.append(str(error))
+                used["calls"] += 1
+                used["tokens"] += ledger.settle(reservation, None, None)
                 response = None
                 continue
             summary = response.summary
-            this = attempt_usage(bound, summary.input_tokens, summary.output_tokens)
-            usage = _usage_sum(usage, this)
-            _checkpoint(started, identity, attempts, len(errors) + 1, usage,  # before the
-                        reservation=reservation, bound=bound, settled=this)  # settlement
             charged = ledger.settle(reservation, summary.input_tokens, summary.output_tokens)
             used["calls"] += 1
             used["tokens"] += charged
-            if charged > bound:  # the ledger parked the arm when it settled
+            if charged > bound:  # parked by the settlement
                 raise BudgetError(f"a call used {charged} tokens, more than its bound {bound}")
             _write_log(logs / f"{stem}.attempt{attempts}.events.jsonl",
                        "".join(json.dumps(event) + "\n" for event in response.events))
@@ -790,6 +768,7 @@ def _calls(directory: Path, definition: Mapping[str, Any], arm: Arm, pin: Mappin
             break
         if errors:
             _write_log(logs / f"{stem}.errors.txt", "\n".join(errors) + "\n")
+        usage = ledger.case_usage(case)
         record: dict[str, Any] = {"identity": identity, "attempts": attempts,
                                   "failed_attempts": len(errors), "usage": usage}
         if response is None:
@@ -818,7 +797,6 @@ def _calls(directory: Path, definition: Mapping[str, Any], arm: Arm, pin: Mappin
         if private_terms_in(record, terms):  # only the identity can remain; it was checked
             raise ValueError(f"the record for {stem} names a private term")
         _write_json(path, record)
-        started.unlink(missing_ok=True)
         used["recorded"] += 1
         if failures_in_a_row >= CONSECUTIVE_FAILURES:
             used["stopped"] = f"{failures_in_a_row} cases in a row failed in transport"

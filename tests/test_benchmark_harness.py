@@ -325,7 +325,6 @@ def test_an_interrupted_call_stays_charged_in_full(bench: Path, tmp_path: Path,
     usage = [record["usage"] for record in records(bench)]
     assert sum(u["calls"] for u in usage) == ledger["calls"]
     assert sum(u["charged_tokens"] for u in usage) == ledger["charged_tokens"]
-    assert not list((bench / "cache").glob("*.started.json"))
 
 
 def test_a_case_stopped_before_its_retry_keeps_its_attempt(bench: Path, tmp_path: Path,
@@ -333,7 +332,8 @@ def test_a_case_stopped_before_its_retry_keeps_its_attempt(bench: Path, tmp_path
     monkeypatch.setattr(harness, "CAPS", {"a": {"calls": 1}})
     used, _ = run(bench, "a", tmp_path, failures={(0, 0): 1})
     assert used["calls"] == 1 and used["stopped"]
-    assert len(list((bench / "cache").glob("*.started.json"))) == 1
+    receipts = json.loads((tmp_path / "ledger.json").read_text())["arms"]["a"]["receipts"]
+    assert [r["charged_tokens"] for r in receipts.values()] == [BOUND]  # kept by case
     monkeypatch.setattr(harness, "CAPS", {"a": {"calls": 100}})
     _, backend = run(bench, "a", tmp_path, backend=StandIn("a", failures={(0, 0): 1}))
     [first] = [r for r in records(bench) if r["identity"]["case"].endswith("5012-20250703T140500")
@@ -432,8 +432,8 @@ def test_one_live_run_per_arm_and_no_lost_updates_between_arms(tmp_path: Path) -
         with pytest.raises(harness.BudgetError):
             harness.Ledger(path, "a", calls=1, tokens=None)
         with harness.Ledger(path, "b", calls=None, tokens=None) as other:
-            key_a = first.reserve("x", 100)
-            key_b = other.reserve("x", 100)
+            key_a = first.reserve("x", 100, case="case a")
+            key_b = other.reserve("x", 100, case="case b")
             assert first.refusal(100)  # the pending call counts against the cap of one
             first.settle(key_a, 10, 5)
             other.settle(key_b, 20, 5)
@@ -465,13 +465,13 @@ def test_a_call_over_its_bound_parks_the_arm(bench: Path, tmp_path: Path) -> Non
     assert "more than its bound" in json.loads(path.read_text())["arms"]["a"]["parked"]
     used, backend = run(bench, "a", tmp_path)  # a later run makes no call
     assert used["calls"] == 0 and not backend.calls and "parked" in used["stopped"]
-    [started] = (bench / "cache").glob("*.started.json")  # the spend stays with its case
-    assert json.loads(started.read_text())["usage"]["charged_tokens"] == 2100
     data = json.loads(path.read_text())
     del data["arms"]["a"]["parked"]  # resolved by hand
     path.write_text(json.dumps(data))
     used, _ = run(bench, "a", tmp_path)
     assert used["recorded"] == 5
+    spent = sorted(record["usage"]["charged_tokens"] for record in records(bench))
+    assert spent[-1] == 2100 + 150  # the case keeps the call over its bound and its retry
 
 
 @pytest.fixture
@@ -529,7 +529,7 @@ def test_an_isolation_check_that_fails_in_transport_stops_without_parking(
     ledger = json.loads((tmp_path / "ledger.json").read_text())["arms"]["a"]
     assert "parked" not in ledger and ledger["calls"] == 3
     outcomes = [e["outcome"] for e in json.loads((bench / "canaries.json").read_text())]
-    assert outcomes == ["error events", "error events"]
+    assert outcomes == ["transport failure", "error events", "error events"]
     used, _ = run(bench, "a", tmp_path)
     assert used["recorded"] == 5
 
@@ -570,14 +570,19 @@ def test_a_memo_call_over_its_bound_parks_the_arm_whatever_the_logs_do(
     assert "more than its bound" in ledger["parked"]
 
 
-@pytest.mark.parametrize("stop", ["settle", "log"])
-def test_records_match_the_ledger_after_a_run_stops_around_a_settlement(
-        bench: Path, tmp_path: Path, monkeypatch, stop) -> None:
-    # the run ends just before the ledger settles a 150-token answer, or just after
-    target, name = (harness.Ledger, "settle") if stop == "settle" else (harness, "_write_log")
+@pytest.mark.parametrize("stop", ["call", "settle", "log", "record"])
+def test_records_match_the_ledger_wherever_a_run_stops(bench: Path, tmp_path: Path,
+                                                       monkeypatch, stop) -> None:
+    # the first call's run ends while the model works, just before the ledger settles a
+    # 150-token answer, just after it, or as the record is written
+    target, name = {"call": (StandIn, "complete"), "settle": (harness.Ledger, "settle"),
+                    "log": (harness, "_write_log"), "record": (harness, "private_terms_in")
+                    }[stop]
     real = getattr(target, name)
 
     def interrupted(*args, **kwargs):
+        if stop == "record" and len(args[0]) < 3:  # the fingerprint and arm checks
+            return real(*args, **kwargs)
         raise KeyboardInterrupt
 
     monkeypatch.setattr(target, name, interrupted)
@@ -588,10 +593,86 @@ def test_records_match_the_ledger_after_a_run_stops_around_a_settlement(
     assert used["recorded"] == 5
     ledger = json.loads((tmp_path / "ledger.json").read_text())["arms"]["a"]
     usage = [record["usage"] for record in records(bench)]
-    assert sum(u["calls"] for u in usage) == ledger["calls"] == 6
+    assert sum(u["calls"] for u in usage) == ledger["calls"]
     assert sum(u["charged_tokens"] for u in usage) == ledger["charged_tokens"]
-    assert ledger["charged_tokens"] == 5 * 150 + (BOUND if stop == "settle" else 150)
-    assert not list((bench / "cache").glob("*.started.json"))
+    lost = {"call": BOUND, "settle": BOUND, "log": 150, "record": 150}[stop]
+    assert ledger["calls"] == 6 and ledger["charged_tokens"] == 5 * 150 + lost
+
+
+def test_records_match_the_ledger_after_a_stop_just_after_a_reservation(
+        bench: Path, tmp_path: Path, monkeypatch) -> None:
+    real = harness.Ledger.reserve
+
+    def reserve_then_stop(self, *args, **kwargs):
+        real(self, *args, **kwargs)
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(harness.Ledger, "reserve", reserve_then_stop)
+    with pytest.raises(KeyboardInterrupt):
+        run(bench, "a", tmp_path)
+    monkeypatch.setattr(harness.Ledger, "reserve", real)
+    run(bench, "a", tmp_path)
+    ledger = json.loads((tmp_path / "ledger.json").read_text())["arms"]["a"]
+    usage = [record["usage"] for record in records(bench)]
+    assert sum(u["charged_tokens"] for u in usage) == ledger["charged_tokens"] == 5 * 150 + BOUND
+    assert sum(u["calls"] for u in usage) == ledger["calls"] == 6
+
+
+def test_records_match_the_ledger_after_a_stop_just_after_a_release(
+        bench: Path, tmp_path: Path, monkeypatch) -> None:
+    class Unready(StandIn):
+        def complete(self, request):
+            raise client.BackendError("no credentials", called=False)
+
+    run(bench, "a", tmp_path, backend=StandIn("a", failures={(0, 0): 1}), max_calls=1)
+    real = harness.Ledger.release
+
+    def release_then_stop(self, key):
+        real(self, key)
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(harness.Ledger, "release", release_then_stop)
+    with pytest.raises(KeyboardInterrupt):
+        run(bench, "a", tmp_path, backend=Unready("a"))
+    monkeypatch.setattr(harness.Ledger, "release", real)
+    run(bench, "a", tmp_path)
+    ledger = json.loads((tmp_path / "ledger.json").read_text())["arms"]["a"]
+    usage = [record["usage"] for record in records(bench)]
+    assert sum(u["charged_tokens"] for u in usage) == ledger["charged_tokens"] == 5 * 150 + BOUND
+    assert sum(u["calls"] for u in usage) == ledger["calls"] == 6
+
+
+def test_a_setup_failure_after_an_attempt_leaves_records_matching_the_ledger(
+        bench: Path, tmp_path: Path) -> None:
+    class UnreadyAfterOne(StandIn):
+        def complete(self, request):
+            if self.calls:
+                raise client.BackendError("no credentials", called=False)
+            return super().complete(request)
+
+    run(bench, "a", tmp_path, backend=StandIn("a", failures={(0, 0): 1}), max_calls=1)
+    used, _ = run(bench, "a", tmp_path, backend=UnreadyAfterOne("a"))
+    assert "before asking the model" in used["stopped"]
+    run(bench, "a", tmp_path)
+    assert len(records(bench)) == 5
+    ledger = json.loads((tmp_path / "ledger.json").read_text())["arms"]["a"]
+    usage = [record["usage"] for record in records(bench)]
+    assert sum(u["charged_tokens"] for u in usage) == ledger["charged_tokens"]
+    assert sum(u["calls"] for u in usage) == ledger["calls"]
+
+
+@pytest.mark.usefixtures("checked")
+def test_a_failed_isolation_check_is_parked_even_if_nothing_after_it_can_be_written(
+        bench: Path, tmp_path: Path, monkeypatch) -> None:
+    def unwritable(*args, **kwargs):
+        raise OSError("read-only benchmark folder")
+
+    monkeypatch.setattr(harness, "_record_canary", unwritable)
+    monkeypatch.setattr(harness, "_write_log", unwritable)
+    with pytest.raises(OSError):
+        run(bench, "a", tmp_path, backend=StandIn("a", check=("YES", {})))
+    ledger = json.loads((tmp_path / "ledger.json").read_text())["arms"]["a"]
+    assert "isolation check failed" in ledger["parked"] and ledger["calls"] == 1
 
 
 def test_one_retry_for_transport_or_error_events_then_a_recorded_failure(
