@@ -67,6 +67,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -268,6 +269,7 @@ def realize(
     terms: ledger.ProductTerms,
     *,
     observed_until: pd.Timestamp | None = None,
+    memo: dict[Any, pd.DataFrame] | None = None,
 ) -> dict[str, pd.DataFrame]:
     """The policy's realized observations in the world schema (see the module table).
 
@@ -276,10 +278,11 @@ def realize(
     a fate keep their world rows. Events a released hold moves past
     ``observed_until`` are dropped. Entity tables, account events and the attempts
     themselves are unchanged; ``cash_events`` is the policy's ledger
-    (:func:`policy_cash`).
+    (:func:`policy_cash`, which ``memo`` serves).
     """
     out = _realize_rows(tables, typed_fates(fates), observed_until)
-    out["cash_events"] = policy_cash(tables, fates, terms, observed_until=observed_until)
+    out["cash_events"] = policy_cash(tables, fates, terms, observed_until=observed_until,
+                                     memo=memo)
     return out
 
 
@@ -363,6 +366,7 @@ def policy_cash(
     terms: ledger.ProductTerms,
     *,
     observed_until: pd.Timestamp | None = None,
+    memo: dict[Any, pd.DataFrame] | None = None,
 ) -> pd.DataFrame:
     """The ledger of the world's orders under the policy (natural events plus refunds).
 
@@ -375,6 +379,9 @@ def policy_cash(
     shipment changes nothing). Natural events keep the
     world's event ids (matched by kind and reference); a refund's id is the negative
     of the payment event it returns, so ids stay unique and the same in every policy.
+
+    ``memo`` (a dict kept by the caller for one world) remembers each voided order's
+    cash by its fate, for callers that realize growing sets of fates on the same world.
     """
     fates = typed_fates(fates)
     world_cash = tables["cash_events"]
@@ -395,9 +402,17 @@ def policy_cash(
     reversals = tables["payment_reversals"]
     for order, at, cause in voided[["order_id", "void_at", "void_cause"]].itertuples(index=False):
         events = by_order.get(order)
-        if events is not None and len(events):
-            events = events.loc[events["occurred_at"] <= cut_at[order]]
-            parts.append(ledger.cancel_before_fulfilment(events, at, cause, reversals=reversals))
+        if events is None or not len(events):
+            continue
+        key = (int(order), at, cut_at[order], cause)
+        if memo is not None and key in memo:
+            parts.append(memo[key])
+            continue
+        events = events.loc[events["occurred_at"] <= cut_at[order]]
+        cash = ledger.cancel_before_fulfilment(events, at, cause, reversals=reversals)
+        parts.append(cash)
+        if memo is not None:
+            memo[key] = cash
     for order, at in held[["order_id", "hold_at"]].itertuples(index=False):
         events = by_order.get(order)
         if events is not None and len(events):

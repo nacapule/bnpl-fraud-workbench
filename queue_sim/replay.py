@@ -197,6 +197,7 @@ class PolicyHistory:
     frozen: FrozenHistory | None = None
     calls: int = 0
     rebuilt: np.ndarray | None = None  # rows of the last call rebuilt under the policy
+    _memo: dict[Any, pd.DataFrame] = field(default_factory=dict, repr=False)
 
     def __post_init__(self) -> None:
         self.frozen = self.frozen or FrozenHistory(self.world, neighbours=self.neighbours)
@@ -214,9 +215,13 @@ class PolicyHistory:
             return world_rows
         self.rebuilt = mask
         fates, blocks = so_far.fates(), so_far.blocks()
-        realized = actions.realize(_world_before(self.world.tables, at), fates,
-                                   self.world.terms)
-        realized["order_attempts"] = self.world.tables["order_attempts"]
+        users = np.unique(world_rows.loc[mask, "user_id"].to_numpy(np.int64))
+        if self.neighbours is not None:  # what core.asof.outcome_columns reads for them
+            users = self.neighbours.around(users)
+            fates = fates.loc[fates["user_id"].isin(users)]
+        view = _policy_view(self.world.tables, users if self.neighbours is not None else None,
+                            at)
+        realized = actions.realize(view, fates, self.world.terms, memo=self._memo)
         state = actions.policy_state(fates, blocks)
         kwargs = {} if self.neighbours is None else {"neighbours": self.neighbours}
         self.calls += 1
@@ -229,23 +234,41 @@ class PolicyHistory:
         return out
 
 
-def _world_before(tables: Mapping[str, pd.DataFrame], at: pd.Timestamp) -> dict[str, pd.DataFrame]:
-    """The world's order-bound rows of orders checked out before ``at``; other tables whole."""
-    attempts = tables["order_attempts"]
-    early = set(attempts.loc[attempts["known_at"] < at, "order_id"])
-    plans = tables["plans"]
-    early_plans = set(plans.loc[plans["order_id"].isin(early), "plan_id"])
-    disputes = tables["dispute_openings"]
-    early_disputes = set(disputes.loc[disputes["order_id"].isin(early), "dispute_id"])
+_ACCOUNT_TABLES = ("accounts", "account_events", "device_links", "address_links", "cards",
+                   "order_attempts")
+
+
+def _policy_view(tables: Mapping[str, pd.DataFrame], users: np.ndarray | None,
+                 at: pd.Timestamp) -> dict[str, pd.DataFrame]:
+    """The world's rows the policy's history at ``at`` is built from.
+
+    With ``users``, only those accounts' rows (they include every account whose rows
+    the outcome columns of the decided accounts read). Order-bound rows (plans,
+    shipments, payments, disputes, reports, cash) only for orders checked out before
+    ``at``; the attempts themselves whole.
+    """
     out = dict(tables)
+    if users is not None:
+        for name in _ACCOUNT_TABLES:
+            frame = tables[name]
+            out[name] = frame.loc[np.isin(frame["user_id"].to_numpy(np.int64), users)]
+    attempts = out["order_attempts"]
+    early = attempts.loc[attempts["known_at"] < at, "order_id"].to_numpy(np.int64)
+    plans = tables["plans"]
+    early_plans = plans.loc[np.isin(plans["order_id"].to_numpy(np.int64), early),
+                            "plan_id"].to_numpy(np.int64)
+    disputes = tables["dispute_openings"]
+    early_disputes = disputes.loc[np.isin(disputes["order_id"].to_numpy(np.int64), early),
+                                  "dispute_id"].to_numpy(np.int64)
     for name in ("plans", "fulfilments", "deliveries", "dispute_openings", "victim_reports",
                  "cash_events"):
-        out[name] = tables[name].loc[tables[name]["order_id"].isin(early)]
+        out[name] = tables[name].loc[np.isin(tables[name]["order_id"].to_numpy(np.int64), early)]
     for name in ("installment_schedule", "payment_attempts", "payment_reversals",
                  "plan_writeoffs"):
-        out[name] = tables[name].loc[tables[name]["plan_id"].isin(early_plans)]
-    out["dispute_resolutions"] = tables["dispute_resolutions"].loc[
-        tables["dispute_resolutions"]["dispute_id"].isin(early_disputes)]
+        out[name] = tables[name].loc[np.isin(tables[name]["plan_id"].to_numpy(np.int64),
+                                             early_plans)]
+    out["dispute_resolutions"] = tables["dispute_resolutions"].loc[np.isin(
+        tables["dispute_resolutions"]["dispute_id"].to_numpy(np.int64), early_disputes)]
     return out
 
 
