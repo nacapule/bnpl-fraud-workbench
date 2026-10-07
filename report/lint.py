@@ -67,7 +67,7 @@ IDENTIFIERS = (
     rf"(?>\bCASE-\d{{2}}){END}",  # case files
 )
 FOOTNOTE_MARKER = re.compile(r"\[\^([^\]\s]+)\]")
-FOOTNOTE_DEFINITION = re.compile(r" {0,3}\[\^([^\]\s]+)\]:")
+FOOTNOTE_DEFINITION = re.compile(r"\[\^([^\]\s]+)\]:")
 NUMBER = re.compile(r"\d[\d,.]*")
 
 # ---------------------------------------------------------- reading a template
@@ -75,7 +75,7 @@ FILL = "\x1a"  # holds a placeholder's place while the structure is read
 PUNCTUATION = frozenset("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~")
 BACKTICKS = re.compile(r"`+")
 # Link destinations and titles, on one line (CommonMark 0.31 §6.3).
-_PLAIN = r"(?:[^\s()\\]|\\.)"
+_PLAIN = r"(?:[^\s()\\]|\\\S)"  # a backslash cannot escape a space
 _NESTED = rf"\({_PLAIN}*\)"
 for _ in range(2):
     _NESTED = rf"\((?:{_PLAIN}|{_NESTED})*\)"
@@ -99,7 +99,7 @@ AUTOLINK = re.compile(
     r"|<[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?"
     r"(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*>")
 # Where a browser ends a comment in raw HTML: at once (<!-->), or at --> or --!>.
-BROWSER_COMMENT = re.compile(r"<!--(?:>|->|.*?--!?>)")
+COMMENT_END = re.compile(r"--!?>")
 # HTML blocks (§4.6): the start conditions, in order, and the line that ends each.
 RAW_TAGS = "pre|script|style|textarea"
 RAW_END = re.compile(rf"</(?:{RAW_TAGS})>", re.I)
@@ -130,12 +130,15 @@ RAW_REGIONS = (
     (re.compile(r"<![A-Za-z]"), re.compile(r">"), 2),
 )
 CONTAINER_MARKS = re.compile(r"(?:[ \t]*(?:>[ \t]?|(?:[-+*]|\d{1,9}[.)])(?=[ \t]|$)))*[ \t]*")
-# Elements whose content a browser shows as plain text, so comments and code in it
-# are not what they seem: a template with one is read with no Markdown skipped.
+# Elements whose content a browser does not read as HTML (shown as plain text, or
+# run), or reads as foreign content: a template with one is read with nothing skipped.
 TEXT_ELEMENTS = re.compile(
-    r"</?(?:textarea|title|xmp|plaintext|noscript|noembed|noframes|iframe|svg|math)"
+    r"</?(?:textarea|title|xmp|plaintext|noscript|noembed|noframes|iframe|svg|math|script"
+    r"|style)"
     r"(?![A-Za-z0-9-])",
     re.I)
+TAG_START = re.compile(r"</?[A-Za-z]")
+QUOTES = re.compile(r"(?: {0,3}>[ ]?)* {0,3}")  # quote marks a paragraph line can open
 SETEXT = re.compile(r" {0,3}(?:=+|-+)[ \t]*")
 ORDERED_ITEM = re.compile(r"((?:[ \t]*>[ ]?)*([ \t]*))(\d{1,9})([.)])([ \t]+|$)")
 
@@ -229,18 +232,19 @@ def _html_block(line: str, paragraph: bool) -> tuple[re.Pattern[str] | None] | s
     return None
 
 
-def _top_level(lines: list[str]) -> tuple[list[str], list[bool], list[bool]]:
-    """Blank the fenced code blocks and HTML comment blocks that open at the left margin.
+def _top_level(lines: list[str]) -> tuple[list[bool], list[bool], dict[int, int], int]:
+    """Find the fenced code blocks and HTML blocks that open at the left margin.
 
     A line at the margin that opens a fence or an HTML block does so at the top level:
     it is not indented into a list item and cannot continue a quote. The reading stops
     at the first line it cannot place for certain (a fence or HTML line indented one to
     three columns, which may sit in a list item; an unclosed block; a line the
     CommonMark versions read differently), and what follows is left as text.
-    Returns the lines, which lines are fenced code, and which belong to an HTML block.
+    Returns which lines are fenced code, which belong to an HTML block, the comment
+    blocks (first line to last), and the line where the reading stopped.
     """
-    out = list(lines)
     fenced, html = [False] * len(lines), [False] * len(lines)
+    comments: dict[int, int] = {}
     index, paragraph = 0, False
     while index < len(lines):
         line = lines[index]
@@ -260,7 +264,7 @@ def _top_level(lines: list[str]) -> tuple[list[str], list[bool], list[bool]]:
             if close is None:
                 break
             for later in range(index, close + 1):
-                out[later], fenced[later] = " " * len(lines[later]), True
+                fenced[later] = True
             index, paragraph = close + 1, False
             continue
         block = None if content[0] != "<" else _html_block(line, paragraph)
@@ -282,17 +286,109 @@ def _top_level(lines: list[str]) -> tuple[list[str], list[bool], list[bool]]:
         for later in range(index, last + 1):
             html[later] = True
         if line.startswith("<!--"):
-            text = "\n".join(lines[index:last + 1])
-            if text.startswith(">", 4):
-                stop = 5
-            elif text.startswith("->", 4):
-                stop = 6
-            else:
-                stop = re.compile(r"--!?>").search(text, 4).end()
-            hidden = re.sub(r"[^\n]", " ", text[:stop]) + text[stop:]
-            out[index:last + 1] = hidden.split("\n")
+            comments[index] = last
         index, paragraph = last + 1, False
-    return out, fenced, html
+    return fenced, html, comments, index
+
+
+def _comment_end(text: str, start: int) -> int | None:
+    """Where a browser ends the comment opened by the ``<!--`` at ``start``."""
+    body = start + 4
+    if text.startswith(">", body):
+        return body + 1
+    if text.startswith("->", body):
+        return body + 2
+    match = COMMENT_END.search(text, body)
+    return match and match.end()
+
+
+def _tag_end(line: str, start: int) -> int | None:
+    """Where a browser ends the tag opened at ``start``: the first ``>`` outside an
+    attribute value; None if the tag runs past the line."""
+    index = start + 1
+    while index < len(line):
+        char = line[index]
+        if char == ">":
+            return index + 1
+        index += 1
+        if char == "=":
+            while index < len(line) and line[index] in " \t\f":
+                index += 1
+            if index < len(line) and line[index] in "\"'":
+                close = line.find(line[index], index + 1)
+                if close < 0:
+                    return None
+                index = close + 1
+            else:
+                while index < len(line) and line[index] not in " \t\f>":
+                    index += 1
+    return None
+
+
+def _raw_comments(line: str, start: int) -> list[tuple[int, int]] | None:
+    """The comments a browser reads in one line of raw HTML, from ``start`` with no tag,
+    attribute or comment open; None if one of those runs past the line."""
+    spans, index = [], start
+    while (index := line.find("<", index)) >= 0:
+        if line.startswith("<!--", index):
+            end = _comment_end(line, index)
+            if end is None:
+                return None
+            spans.append((index, end))
+        elif TAG_START.match(line, index):
+            end = _tag_end(line, index)
+        elif line.startswith(("<!", "<?", "</"), index):  # read up to its > and dropped
+            end = line.find(">", index) + 1 or None
+        else:
+            end = index + 1
+        if end is None:
+            return None
+        index = end
+    return spans
+
+
+def _hide_raw_comments(lines: list[str], source: list[str], raw: list[bool],
+                       html: list[bool], comments: dict[int, int]) -> list[str]:
+    """Blank the comments of HTML blocks, reading raw HTML in order as a browser does,
+    for as long as that reading is certain: from the first tag, attribute or comment
+    that may run past its line, nothing more is blanked."""
+    out = list(lines)
+
+    def blank(index: int, spans: list[tuple[int, int]]) -> None:
+        line = out[index]
+        for start, end in spans:
+            line = line[:start] + " " * (end - start) + line[end:]
+        out[index] = line
+
+    index = 0
+    while index < len(source):
+        if not raw[index]:
+            index += 1
+            continue
+        first, start = index, 0
+        if index in comments:  # a comment block: hidden up to where a browser ends it
+            last = comments[index]
+            text = "\n".join(source[index:last + 1])
+            stop = _comment_end(text, text.index("<!--"))
+            if stop is None:
+                return out
+            offset = 0
+            for line in range(index, last + 1):
+                begin, end = offset, offset + len(source[line])
+                if begin < stop:
+                    blank(line, [(0, min(stop, end) - begin)])
+                if stop <= end:
+                    first, start = line, stop - begin
+                    break
+                offset = end + 1
+        for line in range(first, comments.get(index, index) + 1):
+            spans = _raw_comments(source[line], start if line == first else 0)
+            if spans is None:
+                return out
+            if html[line]:
+                blank(line, spans)
+        index = comments.get(index, index) + 1
+    return out
 
 
 def _raw_lines(lines: list[str], fenced: list[bool]) -> list[bool]:
@@ -444,8 +540,11 @@ def _list_numbers(lines: list[str], source: list[str], skip: list[bool],
         if match:
             prefix, indent, number, delimiter, space = match.groups()
             text = line[match.end():].strip(" \t")
-            first = int(number) == 1 and text and _column(indent) <= 3
-            if breaks[index] or first or (last and last[:2] == (prefix, delimiter)):
+            # without a blank line before it, an item needs marks that certainly make one
+            plain = QUOTES.fullmatch(prefix) is not None
+            first = int(number) == 1 and text and plain
+            sibling = last is not None and last[:2] == (prefix, delimiter) and plain
+            if breaks[index] or first or sibling:
                 out[index] = prefix + " " * len(number) + out[index][len(prefix) + len(number):]
                 width = len(space) if 0 < len(space) <= 4 and text else 1
                 column = len(prefix) + len(number) + 1 + width
@@ -464,8 +563,11 @@ def literal_text(template: str, allowed_phrases: Iterable[str] = ()) -> str:
     text = PLACEHOLDER.sub(_fill, template)
     if not TEXT_ELEMENTS.search(text):
         source = text.split("\n")
-        lines, fenced, html = _top_level(source)
+        fenced, html, comments, certain = _top_level(source)
+        lines = [" " * len(line) if fence else line
+                 for line, fence in zip(source, fenced, strict=True)]
         raw = [a or b for a, b in zip(_raw_lines(source, fenced), html, strict=True)]
+        lines = _hide_raw_comments(lines, source, raw, html, comments)
         # where a paragraph cannot be open: the start, after a blank line or a block
         breaks = [index == 0 or _blank_line(source[index - 1]) or fenced[index - 1]
                   or html[index - 1] for index in range(len(source))]
@@ -476,14 +578,17 @@ def literal_text(template: str, allowed_phrases: Iterable[str] = ()) -> str:
                  for line, a, b, c in zip(source, fenced, defined, html, strict=True)]
         lines = _inline(lines, raw, apart)
         lines = _list_numbers(lines, source, raw, breaks)
-        notes = {match.group(1) for index, line in enumerate(source) if not raw[index]
+        # footnotes defined at the margin, where the structure is certain (a definition
+        # there interrupts a paragraph in GitHub's reading)
+        notes = {match.group(1) for index, line in enumerate(source[:certain])
+                 if not raw[index] and not fenced[index]
                  and (match := FOOTNOTE_DEFINITION.match(line))}
 
         def footnote(match: re.Match[str]) -> str:  # shown as an ordinal, if defined
             return _blank(match) if match.group(1) in notes else match.group(0)
 
-        lines = [BROWSER_COMMENT.sub(_blank, line) if html[index] else line if raw[index]
-                 else FOOTNOTE_MARKER.sub(footnote, line) for index, line in enumerate(lines)]
+        lines = [line if raw[index] else FOOTNOTE_MARKER.sub(footnote, line)
+                 for index, line in enumerate(lines)]
         text = "\n".join(lines)
     text = text.replace(FILL, " ")
     for phrase in allowed_phrases:

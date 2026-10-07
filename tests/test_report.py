@@ -348,6 +348,15 @@ SHOWN = "Hybrid earned more at 84%."
     "<div>Hybrid earned `more` at `84%`</div>\n",
     "- <div>\n  Hybrid earned `more` at `84%`.\n  </div>\n",
     "<svg><text><![CDATA[" + SHOWN + "]]></text></svg>\n",
+    # raw HTML is read as a browser reads it, and only while that reading is certain
+    '<div title="<!--">' + SHOWN + '</div><!-- end -->\n',
+    "<div title='a\n\n<!--\n'>" + SHOWN + "\n-->\n",
+    "- <div title='\n\n<!--\n'>" + SHOWN + "\n-->\n",
+    "<div>\n<!-- a --!> " + SHOWN + " -->\n</div>\n",
+    "<!-- a -->x<!-- b\n\n" + SHOWN + "\n",
+    "<div>\n<a href='x'\ntitle='<!--'>" + SHOWN + "</a> -->\n</div>\n",
+    "<div>\n<!x <!-- >" + SHOWN + " -->\n</div>\n",
+    '<div>\n<a b=c="<!--">' + SHOWN + " -->\n</div>\n",
     "Enter <input value='84'> more\n",
     # code spans
     "Use ``a`b``. " + SHOWN + " See ``c`d``.\n",
@@ -369,8 +378,10 @@ SHOWN = "Hybrid earned more at 84%."
     "[a [b](x) c](more-84) " + SHOWN + "\n",
     "[x](<" + SHOWN + "\\>)\n",
     "[^1](more-84) " + SHOWN + "\n",
+    '[operating review](reports/operating\\ review.md "' + SHOWN + '")\n',
     "| a | b |\n|---|---|\n| [Hybrid earned | more](at-84) |\n",
     "See [^84] for more.\n",
+    "See [^84] for more.\n\n```\n[^84]: Example\n```\n",  # a definition in code
     # reference definitions: only valid ones, where a paragraph starts
     "[note]: Loss was 84% of GMV, more than incumbent rules.\n",
     '[ref]: https://example.com/report) "Loss was more at 84%."\n',
@@ -382,6 +393,7 @@ SHOWN = "Hybrid earned more at 84%."
     '[a[b]: /url "' + SHOWN + '"\n',
     "[ ]: /url '" + SHOWN + "'\n",
     "[ref]: <84% more\n",
+    '[ref]: reports/operating\\ review.md "' + SHOWN + '"\n',  # a space cannot be escaped
     "Context.\n[ref]: /url '" + SHOWN + "'\n",
     "`x`\n[ref]: /url '" + SHOWN + "'\n",
     "- <pre>\n\n  [ref]: x '" + SHOWN + "'\n  </pre>\n",
@@ -400,6 +412,7 @@ SHOWN = "Hybrid earned more at 84%."
     "<pre>\n\n84. " + SHOWN + "\n</pre>\n",
     "- <pre>\n\n  84. " + SHOWN + "\n  </pre>\n",
     "Context\n\u00a0\n84. " + SHOWN + "\n",
+    "Context\n    > 1. baseline\n    > 84. observed rate, more\n",  # not a quote
 ])
 def test_visible_text_is_never_hidden(template: str) -> None:
     """The lints skip only what they can place for certain as code or as hidden."""
@@ -419,6 +432,9 @@ def test_visible_text_is_never_hidden(template: str) -> None:
     "Text <!-- note 12 --> here.\n",
     "<!--\nmulti 12\nline\n-->\n",
     "<div>\n<!-- note 12 -->\n</div>\n",
+    '<div title="x"><!-- note 12 --></div>\n',
+    "<!-- a 12 -->\n<div>\n<!-- b 12 -->\n</div>\n",
+    "<!-- a 12\nb 12 --> c\n",
     "[ref]: https://example.com/2025 'Title 12'\n",
     "Text.\n\n[a]: /a-1\n[b]: /b-2\n",
     "1. a\n2. b\n3. c\n",
