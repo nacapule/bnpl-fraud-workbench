@@ -23,7 +23,7 @@ down:
 schema:  ## regenerate db/schema.sql from the world contract
 	$(PY) db/load_world.py --write-schema
 
-dev:  ## development seeds, every family, into runs/dev (loads the canonical world)
+dev:  ## development seeds, every family but the lag sensitivities, into runs/dev (loads the canonical world)
 	$(PY) pipeline.py run --profile dev
 
 canonical:  ## the canonical world (seed 416) at full size, loaded into MySQL, into runs/canonical

@@ -561,6 +561,18 @@ def test_any_override_turns_the_final_profile_into_a_trial_run(tmp_path: Path) -
         assert run.results_dir.is_relative_to(tmp_path) and run.docs_dir.is_relative_to(tmp_path)
 
 
+def test_no_workflow_runs_on_a_schedule_and_none_starts_a_final_run() -> None:
+    import yaml
+
+    for path in sorted((REPO / ".github" / "workflows").glob("*.yml")):
+        spec = yaml.safe_load(path.read_text())
+        triggers = spec.get("on", spec.get(True))  # YAML 1.1 reads a bare on as true
+        assert "schedule" not in (triggers or {}), path.name
+        text = path.read_text()
+        assert "make final" not in "\n".join(  # mentioned in comments only
+            line for line in text.splitlines() if not line.lstrip().startswith("#")), path.name
+
+
 def test_untracked_files_make_the_tree_dirty(tmp_path: Path) -> None:
     def git(*args: str) -> None:
         subprocess.run(["git", "-C", str(tmp_path), "-c", "user.name=T", "-c",

@@ -1,35 +1,28 @@
 name: regenerate
 
-# The full final run from a clean checkout: every final-seed world, every
-# stage, the results and the documents. The regenerated files must equal the
-# committed ones byte for byte. Manual, and weekly.
+# Manual only. The full regeneration (every final-seed world, every stage, the
+# results and the documents) takes about 6-8 hours on an 8-core machine, longer
+# than a hosted runner allows, and the committed results are produced on macOS
+# arm64, so a byte comparison on a Linux runner would test the platform as much
+# as the code. It is therefore run locally from a clean clone:
+#
+#   make venv && make final && git status --porcelain   # must print nothing
+#
+# `make final` refuses unless the protocol is frozen, the tree is clean and
+# committed, and the installed packages equal requirements.lock. What fits here,
+# and runs on demand: the freeze gate on a clean checkout (the frozen files match
+# experiments/FREEZE.json and are committed), and the committed documents in sync
+# with the committed results. The small world runs every stage on every push (ci).
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "17 5 * * 1"
 
 env:
   PYTHONDONTWRITEBYTECODE: "1"
-  BNPL_DB_HOST: 127.0.0.1
-  BNPL_DB_PORT: "3306"
 
 jobs:
-  regenerate:
+  frozen:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
-    services:
-      mysql:
-        image: mysql:8.4
-        env:
-          MYSQL_ROOT_PASSWORD: rootpw
-          MYSQL_DATABASE: bnpl
-          MYSQL_USER: fraud
-          MYSQL_PASSWORD: fraudpw
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd "mysqladmin ping -h 127.0.0.1 -ufraud -pfraudpw"
-          --health-interval 5s --health-timeout 3s --health-retries 30
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -39,10 +32,7 @@ jobs:
           cache-dependency-path: requirements.lock
       - name: Install the locked environment
         run: make venv
-      - name: Final run (refused unless the protocol is frozen)
-        run: make final
-      - name: Regenerated results and documents equal the committed ones
-        run: |
-          git status --porcelain
-          git diff --stat --exit-code
-          test -z "$(git status --porcelain)"
+      - name: The protocol is frozen and the frozen files are unchanged
+        run: .venv/bin/python -c "from core import protocol; protocol.require_freeze()"
+      - name: Documents match the committed results
+        run: make docs-check
