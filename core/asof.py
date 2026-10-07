@@ -1014,8 +1014,10 @@ def outcome_columns(
     c["promo_redemptions_user"] = _per(live[live["promo"]], n)
     c.update(_repayment(tables, keys, live, n))
 
-    # disputes and reports on the account's other orders that went through
-    other = mine[mine["approved"] < _NEVER][["position", "order_id", "cut"]]
+    # disputes and reports on the account's other orders the policy let through before
+    # the decision (a later void does not undo their history)
+    through = mine[mine["approved"] < mine["cut"]]
+    other = through[["position", "order_id", "cut"]]
     disputes = _disputes(tables, keys)
     on_mine = other.merge(disputes, on="order_id")
     opened = on_mine[on_mine["opened"] < on_mine["cut"]]
@@ -1032,17 +1034,21 @@ def outcome_columns(
     reported = pd.DataFrame({"user_id": reports["user_id"].to_numpy(np.int64),
                              "order_id": reports["order_id"].to_numpy(np.int64),
                              "key": keys["victim_reports"]})
-    reported = mine[mine["approved"] < _NEVER][["position", "user_id", "order_id", "cut"]].merge(
+    reported = through[["position", "user_id", "order_id", "cut"]].merge(
         reported, on=["user_id", "order_id"])
     c["victim_reports_user"] = _per(reported[reported["key"] < reported["cut"]], n)
     a_card = attempts["card_id"].to_numpy(np.int64)
     card_disputes = disputes[disputes["order_id"].isin(a_order[went_through])
                              & (disputes["reason"] == "unauthorized")]
+    disputed = card_disputes["order_id"].to_numpy(np.int64)
     on_card = pd.DataFrame({"position": np.arange(n), "card": a_card[d.row], "current": current,
                             "cut": d.cut}).merge(
-        card_disputes.assign(card=_map(card_disputes["order_id"], attempts, "card_id")),
+        card_disputes.assign(card=_map(card_disputes["order_id"], attempts, "card_id"),
+                             approved=_take(pd.Series(s["approved"], index=a_order), disputed,
+                                            _NEVER)),
         on="card")
     on_card = on_card[(on_card["order_id"] != on_card["current"])
+                      & (on_card["approved"] < on_card["cut"])
                       & (on_card["opened"] < on_card["cut"])]
     c["unauthorized_disputes_on_card"] = _per(on_card, n)
 

@@ -340,6 +340,26 @@ def test_never_pay_is_seen_when_victim_reports_label_the_orders_first() -> None:
     assert row["never_pay_determined_user"] == 1
 
 
+def held_until(tables: dict[str, pd.DataFrame], order_id: int, held: pd.Timestamp,
+               release: pd.Timestamp, at: pd.Timestamp) -> asof.PolicyState:
+    """What a policy has done by ``at`` if it approves every order at checkout except
+    ``order_id``, which it holds before shipment from ``held`` and lets through at
+    ``release``."""
+    everything = asof.PolicyState.approve_all(tables)
+    released = release <= at
+    approved = everything.approved[everything.approved["order_id"] != order_id]
+    if released:
+        approved = pd.concat([approved, pd.DataFrame(
+            {"order_id": [order_id], "approved_at": [release]})], ignore_index=True)
+    hold = pd.DataFrame({"order_id": [order_id], "held_at": [held],
+                         "released_at": [release if released else pd.NaT],
+                         "outcome": ["cleared" if released else None],
+                         "before_shipment": [True]})
+    return dataclasses.replace(
+        everything, approved=approved.astype({"approved_at": "datetime64[s]"}),
+        held=hold.astype({"held_at": "datetime64[s]", "released_at": "datetime64[s]"}))
+
+
 def test_an_order_released_from_a_hold_shares_its_address_from_the_release() -> None:
     """Accounts 1, 2 and 3 each default on one plan at day 44; 2 and 3 ship to one
     address. On day 45 account 1 orders to that address too, and the policy holds the
@@ -355,27 +375,34 @@ def test_an_order_released_from_a_hold_shares_its_address_from_the_release() -> 
     checkout, release = T0 + pd.Timedelta(days=45), T0 + pd.Timedelta(days=47)
     b.order(133, 1, checkout, address=2)
     tables = b.tables()
-    at_checkout = asof.PolicyState.approve_all(tables)
-
-    def state(at: pd.Timestamp) -> asof.PolicyState:
-        """What the policy has done by ``at``."""
-        released = release <= at
-        approved = at_checkout.approved
-        approved = approved[approved["order_id"] != 133]
-        if released:
-            approved = pd.concat([approved, pd.DataFrame(
-                {"order_id": [133], "approved_at": [release]})], ignore_index=True)
-        held = pd.DataFrame({"order_id": [133], "held_at": [checkout],
-                             "released_at": [release if released else pd.NaT],
-                             "outcome": ["cleared" if released else None],
-                             "before_shipment": [True]})
-        return dataclasses.replace(
-            at_checkout, approved=approved.astype({"approved_at": "datetime64[s]"}),
-            held=held.astype({"held_at": "datetime64[s]", "released_at": "datetime64[s]"}))
-
     waiting, after = checkout + pd.Timedelta(hours=1), release + pd.Timedelta(days=1)
     decisions = pd.DataFrame({"order_id": [133, 133], "decision_at": [waiting, after]})
-    final = asof.outcome_columns(tables, state(after), decisions)
-    then = asof.outcome_columns(tables, state(waiting), decisions.iloc[:1])
+    final = asof.outcome_columns(tables, held_until(tables, 133, checkout, release, after),
+                                 decisions)
+    then = asof.outcome_columns(tables, held_until(tables, 133, checkout, release, waiting),
+                                decisions.iloc[:1])
     assert final["never_pay_determined_user"].tolist() == [0, 1]
+    pd.testing.assert_frame_equal(final.iloc[:1], then)
+
+
+def test_history_counts_only_orders_let_through_by_the_decision() -> None:
+    """The owner reports an order in its checkout second and the policy holds it a minute
+    later, until hour 48. Another order of the account at hour 2 does not see the report
+    (the reported order has not gone through); one at hour 49 does."""
+    b = household()
+    b.order(140, 1, T0)
+    b.report(140, T0)
+    b.order(141, 1, T0 + pd.Timedelta(hours=2))
+    b.order(142, 1, T0 + pd.Timedelta(hours=49))
+    tables = b.tables()
+    held, release = T0 + pd.Timedelta(minutes=1), T0 + pd.Timedelta(hours=48)
+    decisions = pd.DataFrame({"order_id": [141, 142],
+                              "decision_at": [T0 + pd.Timedelta(hours=2),
+                                              T0 + pd.Timedelta(hours=49)]})
+    final = asof.outcome_columns(tables, held_until(tables, 140, held, release, release),
+                                 decisions)
+    then = asof.outcome_columns(
+        tables, held_until(tables, 140, held, release, decisions["decision_at"][0]),
+        decisions.iloc[:1])
+    assert final["victim_reports_user"].tolist() == [0, 1]
     pd.testing.assert_frame_equal(final.iloc[:1], then)

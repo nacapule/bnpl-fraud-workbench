@@ -397,22 +397,23 @@ class Oracle:
         }
 
     # ----------------------------------------------------------------- outcomes
-    def went_through(self, a) -> bool:
-        return a.order_id in self.approved_at
-
-    def live(self, a, v: View) -> bool:
-        """Let through as far as the decision knows, and not voided."""
+    def let_through(self, a, v: View) -> bool:
+        """Let through as far as the decision knows (a later void does not undo it)."""
         at = self.approved_at.get(a.order_id)
         if at is None:
             return False
-        seen = v.event(a) if at == a.known_at else v.derived(at)  # at checkout: in place
-        return seen and not any(v.derived(x) for x in self.voided_at[a.order_id])
+        return v.event(a) if at == a.known_at else v.derived(at)  # at checkout: in place
+
+    def live(self, a, v: View) -> bool:
+        """Let through as far as the decision knows, and not voided."""
+        return self.let_through(a, v) and not any(
+            v.derived(x) for x in self.voided_at[a.order_id])
 
     def outcomes(self, o, v: View) -> dict:
         user = o.user_id
         others = [a for a in self.by_user[user] if a.order_id != o.order_id]
         live = [a for a in others if self.live(a, v)]
-        through = [a for a in others if self.went_through(a)]
+        through = [a for a in others if self.let_through(a, v)]
         c = {"approved_orders_user_ever": len(live),
              "approved_orders_user_24h": sum(self.approved_at[a.order_id] >= v.at - DAY
                                              for a in live),
@@ -448,7 +449,7 @@ class Oracle:
         resolved = [(a, d, r) for a, d in disputes for r in self.resolutions[d.dispute_id]
                     if v.event(r)]
         on_card = [d for a in self.by_card[o.card_id]
-                   if a.order_id != o.order_id and self.went_through(a)
+                   if a.order_id != o.order_id and self.let_through(a, v)
                    for d in self.disputes[a.order_id]]
         c["unauthorized_disputes_on_card"] = sum(
             d.reason == "unauthorized" and v.event(d) for d in on_card)
