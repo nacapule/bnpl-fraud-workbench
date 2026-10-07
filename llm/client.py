@@ -30,11 +30,14 @@ Claude
   built-in tools), ``--strict-mcp-config`` without a configuration (no MCP
   servers), ``--disable-slash-commands`` (no skills), ``--system-prompt`` in
   place of the CLI's own prompt, ``--effort`` explicit, CLAUDE.md files and
-  auto-memory off, an empty temporary working directory and a minimal
-  environment (the process basics, the sign-in variables if set, and any
-  names listed in ``CLAUDE_CLI_ENV`` for a launcher that needs them). Hook
-  events are requested in the log and count as protocol failures. The CLI
-  still adds a short environment note and the signed-in account's email
+  auto-memory off, the output bounded when the caller asks
+  (``CLAUDE_CODE_MAX_OUTPUT_TOKENS``), an empty temporary working directory
+  and a minimal environment (the process basics, the network and sign-in
+  variables if set). Managed settings, which no flag switches off, are refused:
+  a call does not run while any managed settings file, managed preferences
+  file or cached server-managed settings file exists (:func:`managed_settings`).
+  Hook events are requested in the log and count as protocol failures. The
+  CLI still adds a short environment note and the signed-in account's email
   address to the context, so callers scan every response for private terms
   (:func:`private_matches`).
 
@@ -54,13 +57,16 @@ caller can pin both before it looks anything up.
 
 from __future__ import annotations
 
+import getpass
 import hashlib
 import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
+import unicodedata
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
@@ -103,11 +109,25 @@ CLAUDE_FLAGS = ("-p", "--output-format", "stream-json", "--verbose", "--include-
                 "--disable-slash-commands")
 CLAUDE_SETTINGS_ENV = {"CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1",
                        "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"}
-# Event types in a Claude stream-json log; anything else is not recognised.
-CLAUDE_EVENTS = frozenset({"system", "assistant", "user", "result", "ping", "stream_event",
-                           "rate_limit_event"})
+# Event types and system subtypes in a tool-less Claude stream-json log; anything else
+# (including any user event: a tool-less call has none) is not recognised.
+CLAUDE_EVENTS = frozenset({"system", "assistant", "result", "ping", "rate_limit_event"})
+CLAUDE_SYSTEM_SUBTYPES = frozenset({"init", "status", "session_state_changed",
+                                    "post_turn_summary"})
 CLAUDE_TEXT_BLOCKS = frozenset({"text", "thinking", "redacted_thinking"})
 CLAUDE_TOOL_BLOCKS = frozenset({"tool_use", "server_tool_use", "mcp_tool_use"})
+# Settings an administrator or a server manages, which every Claude Code call loads
+# whatever its flags (macOS and Linux locations; ``{user}`` is the login name).
+MANAGED_SETTINGS = (
+    "/Library/Application Support/ClaudeCode/managed-settings.json",
+    "/Library/Application Support/ClaudeCode/managed-settings.d",
+    "/Library/Application Support/ClaudeCode/managed-mcp.json",
+    "/Library/Managed Preferences/com.anthropic.claudecode.plist",
+    "/Library/Managed Preferences/{user}/com.anthropic.claudecode.plist",
+    "/etc/claude-code/managed-settings.json",
+    "/etc/claude-code/managed-settings.d",
+    "/etc/claude-code/managed-mcp.json",
+)
 # Environment variables a CLI may need for the network, passed through when set.
 NETWORK_ENV = ("HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "https_proxy", "http_proxy",
                "no_proxy", "SSL_CERT_FILE", "SSL_CERT_DIR")
@@ -116,6 +136,13 @@ PROCESS_ENV = ("PATH", "HOME", "USER", "LOGNAME", "SHELL", "TMPDIR", "LANG", "LC
                "LC_CTYPE", "TERM")
 # Where Claude Code finds its sign-in when it is not in the default place.
 CLAUDE_AUTH_ENV = ("ANTHROPIC_API_KEY", "CLAUDE_CODE_OAUTH_TOKEN", "CLAUDE_CONFIG_DIR")
+
+
+def environment_digest(env: Mapping[str, str]) -> dict[str, Any]:
+    """What the isolation hash records of an environment: the variables passed, the
+    network settings' values as a digest, and nothing of the sign-in values."""
+    network = {name: env[name] for name in NETWORK_ENV if name in env}
+    return {"passed": sorted(env), "network_sha256": sha256_text(canonical_json(network))}
 
 
 class BackendError(RuntimeError):
@@ -137,12 +164,16 @@ class Request:
     system_prompt: str
     prompt: str
     timeout_s: int = 900
+    max_output_tokens: int | None = None  # only for a backend that bounds its output
 
     def __post_init__(self) -> None:
         if self.backend not in BACKENDS:
             raise ValueError(f"unknown backend {self.backend!r}")
         if self.effort not in EFFORTS:
             raise ValueError(f"effort must be one of {EFFORTS}, not {self.effort!r}")
+        if self.max_output_tokens is not None and (
+                isinstance(self.max_output_tokens, bool) or self.max_output_tokens <= 0):
+            raise ValueError("max_output_tokens must be a positive number of tokens")
 
 
 @dataclass(frozen=True)
@@ -222,10 +253,27 @@ def _jsonl(stdout: str) -> list[dict[str, Any]]:
     return events
 
 
+def _folded(text: str) -> str:
+    return unicodedata.normalize("NFKC", text).casefold()
+
+
 def private_matches(text: str, terms: Iterable[str]) -> list[str]:
-    """The private terms (an author's name or address) that occur in ``text``."""
-    lowered = text.lower()
-    return sorted({term for term in terms if term and term.lower() in lowered})
+    """The private terms (an author's name or address) that occur in ``text``, ignoring
+    case and Unicode composition."""
+    folded = _folded(text)
+    return sorted({term for term in terms if term.strip() and _folded(term) in folded})
+
+
+def managed_settings() -> list[str]:
+    """The managed settings sources present on this machine (which no command-line
+    flag switches off), including a cached server-managed settings file."""
+    if sys.platform == "win32":
+        return ["managed settings cannot be checked on Windows"]
+    user = getpass.getuser()
+    config = Path(os.environ.get("CLAUDE_CONFIG_DIR") or Path.home() / ".claude")
+    paths = [Path(path.format(user=user)) for path in MANAGED_SETTINGS]
+    paths.append(config / "remote-settings.json")
+    return [str(path) for path in paths if path.exists()]
 
 
 def _first_line(result: subprocess.CompletedProcess[str]) -> str:
@@ -317,6 +365,7 @@ def codex_final_text(events: Sequence[Mapping[str, Any]]) -> str | None:
 
 class CodexBackend:
     name = "codex"
+    bounds_output = False  # no setting caps a Codex call's output tokens
 
     def __init__(self, binary: str | None = None, auth_file: str | Path | None = None):
         self.binary = binary or os.environ.get("CODEX_CLI_BIN", "codex")
@@ -333,8 +382,11 @@ class CodexBackend:
     def version(self) -> str:
         return _first_line(_run([self.binary, "--version"], timeout_s=60))
 
-    def fingerprint(self, model: str, effort: str) -> dict[str, str]:
+    def fingerprint(self, model: str, effort: str,
+                    max_output_tokens: int | None = None) -> dict[str, str]:
         """The CLI version and the isolation hash a call with this model would have."""
+        if max_output_tokens is not None:
+            raise BackendError("Codex calls cannot bound their output", called=False)
         with tempfile.TemporaryDirectory(prefix="memo-") as name:
             *_, settings = self.prepare(Path(name), Request("codex", model, effort, "", ""))
         return {"cli_version": self.version(), "isolation": sha256_text(canonical_json(settings))}
@@ -342,6 +394,8 @@ class CodexBackend:
     def prepare(self, base: Path, request: Request) -> tuple[list[str], dict[str, str], Path,
                                                                dict[str, Any]]:
         """Build the isolated command, environment and working directory in ``base``."""
+        if request.max_output_tokens is not None:
+            raise BackendError("Codex calls cannot bound their output", called=False)
         home, codex_home, work, tmp = (base / name for name in
                                        ("home", "codex-home", "work", "tmp"))
         for directory in (home, codex_home, work, tmp):
@@ -376,7 +430,7 @@ class CodexBackend:
         settings = {
             "flags": list(CODEX_FLAGS), "config": list(CODEX_CONFIG),
             "disabled_features": disabled, "model_overrides": dict(CODEX_MODEL_OVERRIDES),
-            "instructions": "system prompt", "environment": sorted(env),
+            "instructions": "system prompt", "environment": environment_digest(env),
         }
         return command, env, work, settings
 
@@ -419,10 +473,18 @@ def summarize_claude(events: Sequence[Mapping[str, Any]], *, cli_version: str, m
         content = message.get("content") or []
         blocks = [block for block in content if isinstance(block, Mapping)] \
             if isinstance(content, list) else []
-        if kind not in CLAUDE_EVENTS:
+        if kind == "user":  # a tool result, or anything else a tool-less call never sends
+            results = sum(block.get("type") == "tool_result" for block in blocks)
+            file += results
+            unrecognized += int(not results)
+        elif kind not in CLAUDE_EVENTS:
             unrecognized += 1
         elif kind == "system" and str(subtype).startswith("hook"):
             hook += 1
+        elif kind == "system" and subtype == "api_retry":
+            error += 1
+        elif kind == "system" and subtype not in CLAUDE_SYSTEM_SUBTYPES:
+            unrecognized += 1
         elif kind == "system" and subtype == "init":
             offered = list(event.get("tools") or []) + list(event.get("mcp_servers") or [])
             tools_offered = len(offered)
@@ -432,8 +494,7 @@ def summarize_claude(events: Sequence[Mapping[str, Any]], *, cli_version: str, m
             tool += sum(block.get("type") in CLAUDE_TOOL_BLOCKS for block in blocks)
             unrecognized += sum(block.get("type") not in CLAUDE_TOOL_BLOCKS | CLAUDE_TEXT_BLOCKS
                                 for block in blocks)
-        elif kind == "user":
-            file += sum(block.get("type") == "tool_result" for block in blocks)
+            unrecognized += int(not isinstance(content, list) or len(blocks) != len(content))
         elif kind == "result":
             usage = event.get("usage") if isinstance(event.get("usage"), Mapping) else {}
             error += bool(event.get("is_error")) or subtype not in (None, "success")
@@ -458,6 +519,7 @@ def claude_final_text(events: Sequence[Mapping[str, Any]]) -> str | None:
 
 class ClaudeBackend:
     name = "claude"
+    bounds_output = True  # CLAUDE_CODE_MAX_OUTPUT_TOKENS
 
     def __init__(self, binary: str | None = None):
         self.binary = binary or os.environ.get("CLAUDE_CLI_BIN", "claude")
@@ -474,28 +536,32 @@ class ClaudeBackend:
             code = _first_line(_run(["claude", "--version"], timeout_s=60))
         return f"{code}; launcher {sha256_text(own)[:12]}"
 
-    def fingerprint(self, model: str, effort: str) -> dict[str, str]:
+    def fingerprint(self, model: str, effort: str,
+                    max_output_tokens: int | None = None) -> dict[str, str]:
         """The CLI version and the isolation hash a call with this model would have."""
-        *_, settings = self.prepare(Request("claude", model, effort, "", ""))
+        *_, settings = self.prepare(Request("claude", model, effort, "", "",
+                                            max_output_tokens=max_output_tokens))
         return {"cli_version": self.version(), "isolation": sha256_text(canonical_json(settings))}
 
-    @staticmethod
-    def _environment() -> tuple[dict[str, str], list[str]]:
-        extra = [name.strip() for name in os.environ.get("CLAUDE_CLI_ENV", "").split(",")
-                 if name.strip()]
-        names = [*PROCESS_ENV, *NETWORK_ENV, *CLAUDE_AUTH_ENV, *extra]
-        env = {name: os.environ[name] for name in names if name in os.environ}
-        env.update(CLAUDE_SETTINGS_ENV)
-        passed = sorted(name for name in env if name not in PROCESS_ENV)
-        return env, passed
-
     def prepare(self, request: Request) -> tuple[list[str], dict[str, str], dict[str, Any]]:
+        """The command, environment and isolation settings; refuses to run under
+        managed settings."""
+        managed = managed_settings()
+        if managed:
+            raise BackendError(f"managed Claude Code settings can add hooks or context "
+                               f"that no flag removes: {managed}", called=False)
         command = [self.binary, *CLAUDE_FLAGS, "--model", request.model,
                    "--effort", request.effort, "--system-prompt", request.system_prompt]
-        env, passed = self._environment()
+        fixed = dict(CLAUDE_SETTINGS_ENV)
+        if request.max_output_tokens is not None:
+            fixed["CLAUDE_CODE_MAX_OUTPUT_TOKENS"] = str(request.max_output_tokens)
+        env = {name: os.environ[name] for name in (*PROCESS_ENV, *NETWORK_ENV, *CLAUDE_AUTH_ENV)
+               if name in os.environ}
+        env.update(fixed)
         settings = {"flags": list(CLAUDE_FLAGS), "system_prompt": "replaced",
-                    "environment": dict(CLAUDE_SETTINGS_ENV), "process": list(PROCESS_ENV),
-                    "passed": passed}
+                    "environment": fixed, "managed_settings": managed,
+                    **environment_digest({k: v for k, v in env.items()
+                                          if k not in PROCESS_ENV})}
         return command, env, settings
 
     def complete(self, request: Request) -> Response:

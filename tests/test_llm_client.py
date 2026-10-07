@@ -210,19 +210,60 @@ def test_claude_call_has_no_tools_and_replaces_the_system_prompt(monkeypatch) ->
 
 def test_claude_call_loads_no_settings_hooks_plugins_or_skills(monkeypatch) -> None:
     monkeypatch.setenv("SECRET_SETTING", "do-not-pass")
-    monkeypatch.setenv("CLAUDE_CODE_ENABLE_SOMETHING", "1")
-    monkeypatch.setenv("LAUNCHER_STATE", "kept")
-    monkeypatch.setenv("CLAUDE_CLI_ENV", "LAUNCHER_STATE")
+    monkeypatch.setenv("CLAUDE_CODE_SIMPLE", "1")
+    monkeypatch.setenv("NODE_OPTIONS", "--require /tmp/inject.js")
     command, env, settings = client.ClaudeBackend(binary="claude-cli").prepare(
         client.Request("claude", "claude-opus-5-5", "high", "SYSTEM", "PACKET"))
     assert command[command.index("--setting-sources") + 1] == ""  # no user/project/local
     assert "--disable-slash-commands" in command and "--include-hook-events" in command
     assert "--settings" not in command
     assert env["CLAUDE_CODE_DISABLE_AUTO_MEMORY"] == "1"
-    assert "SECRET_SETTING" not in env and "CLAUDE_CODE_ENABLE_SOMETHING" not in env
-    assert env["LAUNCHER_STATE"] == "kept" and "LAUNCHER_STATE" in settings["passed"]
+    for name in ("SECRET_SETTING", "CLAUDE_CODE_SIMPLE", "NODE_OPTIONS"):
+        assert name not in env
     assert set(env) <= {*client.PROCESS_ENV, *client.NETWORK_ENV, *client.CLAUDE_AUTH_ENV,
-                        *client.CLAUDE_SETTINGS_ENV, "LAUNCHER_STATE"}
+                        *client.CLAUDE_SETTINGS_ENV}
+
+
+def test_managed_settings_stop_a_claude_call_before_it_runs(monkeypatch, tmp_path) -> None:
+    managed = tmp_path / "ClaudeCode" / "managed-settings.json"
+    monkeypatch.setattr(client, "MANAGED_SETTINGS", (str(managed),))
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path / "config"))
+    backend = client.ClaudeBackend(binary="claude-cli")
+    request = client.Request("claude", "claude-opus-5-5", "high", "S", "P")
+    backend.prepare(request)
+    managed.parent.mkdir()
+    managed.write_text('{"hooks": {}}')
+    with pytest.raises(client.BackendError) as raised:
+        backend.prepare(request)
+    assert raised.value.called is False
+    managed.unlink()
+    (tmp_path / "config").mkdir()
+    (tmp_path / "config" / "remote-settings.json").write_text("{}")  # server-managed
+    with pytest.raises(client.BackendError):
+        backend.prepare(request)
+
+
+def test_the_isolation_hash_follows_the_network_settings_and_output_bound(monkeypatch):
+    backend = client.ClaudeBackend(binary="claude-cli")
+    monkeypatch.setattr(backend, "version", lambda: "2.1.9 (Claude Code)")
+    monkeypatch.delenv("HTTPS_PROXY", raising=False)
+    base = backend.fingerprint("m", "high", 32000)["isolation"]
+    assert backend.fingerprint("m", "high", 16000)["isolation"] != base
+    monkeypatch.setenv("HTTPS_PROXY", "http://proxy-a:8080")
+    first = backend.fingerprint("m", "high", 32000)["isolation"]
+    monkeypatch.setenv("HTTPS_PROXY", "http://proxy-b:8080")
+    assert backend.fingerprint("m", "high", 32000)["isolation"] not in (base, first)
+    _, env, _ = backend.prepare(client.Request("claude", "m", "high", "S", "P",
+                                               max_output_tokens=32000))
+    assert env["CLAUDE_CODE_MAX_OUTPUT_TOKENS"] == "32000"
+
+
+def test_codex_cannot_bound_its_output(auth: Path, tmp_path: Path) -> None:
+    with pytest.raises(client.BackendError):
+        client.CodexBackend(auth_file=auth).prepare(
+            tmp_path, client.Request("codex", "gpt-6.1-sol", "high", "S", "P",
+                                     max_output_tokens=100))
+    assert not client.CodexBackend.bounds_output and client.ClaudeBackend.bounds_output
 
 
 @pytest.mark.parametrize("event", [
@@ -239,7 +280,13 @@ def test_hook_events_fail_a_claude_call(event) -> None:
 @pytest.mark.parametrize("events", [
     [{"type": "tool_progress"}],                                   # an unknown event type
     [{"type": "assistant", "message": {"content": [{"type": "image"}]}}],  # unknown block
+    [{"type": "assistant", "message": {"content": "plain"}}],      # content not blocks
     [{"type": "result", "subtype": "error_during_execution", "is_error": False}],
+    [{"type": "user", "message": {"content": [{"type": "document"}]}}],
+    [{"type": "user", "message": {"content": "text"}}],
+    [{"type": "system", "subtype": "files_persisted"}],            # an unknown subtype
+    [{"type": "system", "subtype": "api_retry"}],                  # a retried request
+    [{"type": "stream_event", "event": {}}],                       # not requested
 ])
 def test_unrecognised_or_failed_claude_events_fail_the_call(events) -> None:
     summary = client.summarize_claude([*claude_events(), *events], cli_version="c",
@@ -309,3 +356,5 @@ def test_binaries_come_from_the_environment(monkeypatch) -> None:
 def test_private_terms_are_found_case_insensitively() -> None:
     assert client.private_matches("Memo for JANE Q", ["jane q", "", "x@y.z"]) == ["jane q"]
     assert client.private_matches("nothing here", ["jane q"]) == []
+    decomposed = "Memo for Zoe\u0308 Q"  # e and a combining diaeresis
+    assert client.private_matches(decomposed, ["Zoë Q"]) == ["Zoë Q"]
