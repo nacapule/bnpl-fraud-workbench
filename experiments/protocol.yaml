@@ -104,9 +104,11 @@ tuning:
     grid: >-
       config/policy.yaml tuning.review_rates x tuning.decline_rates, each rate the
       lowest score the policy attains on validation orders whose share at or above
-      it does not exceed the rate; rate 0 switches the route off, so "no review"
-      and "no decline" are always points; a route the policy does not tune keeps
-      its threshold (the expected-loss policy declines at zero expected benefit)
+      it does not exceed the rate, or the highest score attained when even that
+      score's share exceeds the rate (tied scores); rate 0 switches the route off,
+      so "no review" and "no decline" are always points; a route the policy does
+      not tune keeps its threshold (the expected-loss policy declines at zero
+      expected benefit)
     screen: every grid point replayed with frozen approve-all history
     shortlist: >-
       the frozen winner, its neighbours one grid step away on each threshold, and
@@ -305,8 +307,10 @@ cases:
 # (core.protocol.require_freeze). The list is what decides the published
 # numbers: the protocol, the configuration, the policy document, and the code
 # that generates worlds, builds the context, fits, routes, reviews, replays,
-# accounts, evaluates, chooses and referees, with the gate itself and the
-# package versions they run with. A directory
+# accounts, evaluates, chooses and referees, with the gate itself, the
+# package versions they run with, and the archived LLM study the llm stage
+# replays (every in-repository module the frozen code imports is frozen too,
+# except report/, which writes sentences and figures from the results). A directory
 # entry (ending in /) freezes every file under it that git does not ignore, so
 # a file added there later is refused too; what later stages add (case files,
 # benchmarks, templates, the methods text) lives outside these entries. The
@@ -316,7 +320,8 @@ cases:
 # A bug found after the freeze is fixed in a commit of its own that also runs
 # core.protocol.log_fix: it re-records the hashes of the files the fix changed
 # and appends to the marker's fixes the files, what was wrong and the fix's
-# before/after effect on the results. Nothing else re-freezes.
+# before/after effect on the results. Nothing else re-freezes: writing the
+# marker again is refused once it exists.
 freeze:
   marker: experiments/FREEZE.json
   files:
@@ -337,6 +342,16 @@ freeze:
     - queue_sim/
     - rules/
     - model/
+    - core/__init__.py
+    - core/config.py
+    - llm/__init__.py
     - llm/referee.py
+    - llm/packet.py       # the referee reads packets through it
+    - llm/eval/__init__.py
+    - llm/eval/history.py # the archived study's replay, published by the llm stage
+    - llm/eval/tokens.py
+    - llm/eval/benchmarks/2026-08-dev/MANIFEST.json
+    - llm/eval/benchmarks/2026-08-dev/original/
+    - llm/eval/benchmarks/2026-08-dev/corrected/world_checks.json
     - pipeline.py
     - requirements.lock   # the final profile also refuses an installed environment that differs

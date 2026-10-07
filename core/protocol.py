@@ -343,13 +343,18 @@ def frozen_files(root: Path, entries: Iterable[str]) -> list[str]:
 
 
 def write_freeze_marker(root: Path = REPO, protocol_path: Path | None = None) -> Path:
-    """Record the SHA-256 of every file the protocol freezes (run in the freeze commit)."""
+    """Record the SHA-256 of every file the protocol freezes (run once, in the freeze
+    commit). Refuses when a marker exists: after the freeze, a change to a frozen file
+    is recorded with :func:`log_fix`, never by writing the marker again."""
     protocol_path = protocol_path or root / "experiments" / "protocol.yaml"
     protocol = load_protocol(protocol_path)
     if protocol.placeholders():
         raise FreezeError(f"placeholders remain: {protocol.placeholders()}")
     spec = protocol.raw["freeze"]
     marker = root / spec["marker"]
+    if marker.exists():
+        raise FreezeError(f"{spec['marker']} exists: the protocol is frozen; record a fix "
+                          "with log_fix")
     files = {name: file_sha256(root / name) for name in frozen_files(root, spec["files"])}
     marker.write_text(json.dumps({"files": files, "fixes": []}, indent=2, sort_keys=True) + "\n")
     return marker

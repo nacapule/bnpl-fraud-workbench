@@ -239,6 +239,10 @@ def test_a_fix_after_the_freeze_is_logged_and_re_frozen(tmp_path: Path, raw: dic
     root = _frozen_copy(tmp_path, raw, complete=True)
     proto.write_freeze_marker(root)
     _commit(root)
+    (root / "queue_sim" / "module.py").write_text("# changed\n")
+    with pytest.raises(proto.FreezeError, match="exists: the protocol is frozen"):
+        proto.write_freeze_marker(root)  # writing the marker again never re-freezes
+    (root / "queue_sim" / "module.py").write_text("# stand-in for queue_sim/\n")
     final = raw["seeds"]["final"][0]
     with pytest.raises(proto.FreezeError, match="nothing to log"):
         proto.log_fix("a bug", "none", root)
@@ -266,12 +270,74 @@ def test_the_frozen_list_is_what_decides_results_and_nothing_later_stages_add(
                    "policy/fraud-policy.md", "simulator/generate.py", "core/world.py",
                    "core/ledger.py", "core/actions.py", "core/evidence.py", "core/asof.py",
                    "core/recommendation.py", "core/stats.py", "core/results.py",
-                   "core/protocol.py", "queue_sim/replay.py", "rules/tuning.py",
-                   "model/train.py", "llm/referee.py", "pipeline.py", "requirements.lock"):
+                   "core/protocol.py", "core/config.py", "queue_sim/replay.py",
+                   "rules/tuning.py", "model/train.py", "llm/referee.py", "llm/packet.py",
+                   "llm/eval/history.py", "llm/eval/tokens.py", "pipeline.py",
+                   "requirements.lock", "llm/eval/benchmarks/2026-08-dev/MANIFEST.json",
+                   "llm/eval/benchmarks/2026-08-dev/corrected/world_checks.json"):
         assert needed in files
-    later = ("docs/", "report/", "cases/", "llm/eval/", "results/", "reports/", "README")
+    assert any(name.startswith("llm/eval/benchmarks/2026-08-dev/original/") for name in files)
+    # what later stages add or still edit stays open: prose, templates, case files,
+    # results, the live benchmark's code, prompts and artifacts
+    later = ("docs/", "report/", "cases/", "results/", "reports/", "README",
+             "llm/eval/benchmarks/2026-10-final/", "llm/eval/harness.py",
+             "llm/eval/run_live.py", "llm/eval/select_cases.py", "llm/prompts/",
+             "llm/eval/benchmarks/2026-08-dev/HISTORY.md")
     assert not [name for name in files if name.startswith(later)]
     assert not [entry for entry in entries if any(place.startswith(entry) for place in later)]
+
+
+def _imports(path: Path) -> set[str]:
+    """Module names a file imports: import statements, importlib.import_module("...") and
+    the pipeline's entry(stage, "module", name)."""
+    import ast
+
+    names: set[str] = set()
+    package = path.relative_to(REPO).parent.parts
+    for node in ast.walk(ast.parse(path.read_text())):
+        if isinstance(node, ast.Import):
+            names |= {alias.name for alias in node.names}
+        elif isinstance(node, ast.ImportFrom):
+            base = ".".join(package[:len(package) - node.level + 1]) if node.level else ""
+            module = ".".join(part for part in (base, node.module or "") if part)
+            names |= {module} | {f"{module}.{alias.name}" for alias in node.names}
+        elif isinstance(node, ast.Call) and node.args:
+            called = getattr(node.func, "attr", getattr(node.func, "id", ""))
+            where = {"import_module": 0, "entry": 1}.get(called)
+            if where is not None and len(node.args) > where and \
+                    isinstance(node.args[where], ast.Constant):
+                names.add(node.args[where].value)
+    return names
+
+
+def test_the_code_the_frozen_modules_import_is_frozen(raw: dict) -> None:
+    files = set(proto.frozen_files(REPO, raw["freeze"]["files"]))
+
+    def module_file(name: str) -> str | None:
+        parts = name.split(".")
+        for candidate in (Path(*parts).with_suffix(".py"), Path(*parts) / "__init__.py"):
+            if (REPO / candidate).is_file():
+                return candidate.as_posix()
+        return None
+
+    unfrozen, seen = {}, set()
+    todo = sorted(name for name in files if name.endswith(".py"))
+    while todo:
+        name = todo.pop()
+        if name in seen:
+            continue
+        seen.add(name)
+        modules = _imports(REPO / name)
+        modules |= {".".join(m.split(".")[:k]) for m in set(modules)
+                    for k in range(1, m.count(".") + 1)}  # parent packages
+        for module in modules:
+            found = module_file(module)
+            if found is None or found in seen:
+                continue
+            if found not in files and not found.startswith("report/"):
+                unfrozen.setdefault(found, name)
+            todo.append(found)
+    assert unfrozen == {}  # report/ writes sentences and figures from the results
 
 
 def test_the_protocol_states_the_tuning_rule_the_code_runs(raw: dict) -> None:
