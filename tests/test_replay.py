@@ -40,9 +40,9 @@ def tables() -> dict[str, pd.DataFrame]:
 
 def run(tables, *, overrides=None, scores=None, review=1.0, decline=None, roster=None,
         checks=None, classes=None, window=WHOLE, settings=SETTINGS, history=None,
-        linked=None, median_hours=2.0):
+        linked=None, median_hours=2.0, observed_until="2025-06-30 23:59:59"):
     stub = StubContext(tables, overrides=overrides or {}, scores=scores or {})
-    world = stub_world(tables, stub)
+    world = stub_world(tables, stub, observed_until=observed_until)
     result = replay(
         world, scored_policy(review, decline), window=window,
         roster=roster or always_on_roster(), calendar=CALENDAR, reviewer=Reviewer(),
@@ -228,6 +228,15 @@ def test_the_sla_clock_does_not_move_with_the_roster(tables) -> None:
     # a decision outside service hours the next morning counts only service hours
     assert CALENDAR.service_hours(int(T("2025-03-01 19:00").timestamp()),
                                   int(T("2025-03-02 09:00").timestamp())) == pytest.approx(2.0)
+
+
+def test_the_last_second_observed_is_replayed(tables) -> None:
+    """Order 3's review ends at checkout plus its review time: observed until that very
+    second, the review is decided; a second earlier, it is not."""
+    done = T("2024-12-20 13:10")  # ten minutes, the stand-in settings' review time
+    for until, decided in ((done, 1), (done - pd.Timedelta(seconds=1), 0)):
+        result, world = run(tables, scores={3: 5.0}, observed_until=str(until))
+        assert row_of(result, world)["reviews_decided"] == decided
 
 
 def test_an_order_never_decided_misses_its_sla(tables) -> None:

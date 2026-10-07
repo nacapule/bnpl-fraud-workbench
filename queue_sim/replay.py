@@ -375,12 +375,12 @@ def replay(
     """Replay ``policy`` on the world's orders with checkout in ``window``.
 
     Orders before the window keep their approve-all history (the policy starts at the
-    window). Outcomes keep arriving until ``world.observed_until``; reviews still
+    window). Outcomes keep arriving until ``world.observed_until`` (included); reviews still
     waiting then are left undecided.
     """
     start, end = (pd.Timestamp(t) for t in window)
     orders = world.orders(start, end)
-    horizon = int(to_seconds(world.observed_until))
+    horizon = int(to_seconds(world.observed_until)) + 1  # its last second included
     t0, t1 = int(to_seconds(start)), int(to_seconds(end))
     linked = linked_accounts or getattr(asof, "linked_accounts", None)
     hold_s = int(round(settings.hold_max_hours * 3600))
