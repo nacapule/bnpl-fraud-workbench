@@ -32,10 +32,13 @@ Claude
   place of the CLI's own prompt, ``--effort`` explicit, CLAUDE.md files and
   auto-memory off, the output bounded when the caller asks
   (``CLAUDE_CODE_MAX_OUTPUT_TOKENS``), an empty temporary working directory
-  and a minimal environment (the process basics, the network and sign-in
-  variables if set). Managed settings, which no flag switches off, are refused:
-  a call does not run while any managed settings file, managed preferences
-  file or cached server-managed settings file exists (:func:`managed_settings`).
+  and a minimal environment (the process basics, the network variables and
+  ``CLAUDE_CONFIG_DIR`` if set; no API key or token, so the CLI signs in with
+  its stored subscription). Managed settings, which no flag switches off, are
+  refused: a call does not run while any managed settings file, managed
+  preferences file or cached server-managed settings file exists
+  (:func:`managed_settings`), nor unless the signed-in plan is a personal one
+  (:func:`claude_plan`), for which the CLI fetches no server-managed settings.
   Hook events are requested in the log and count as protocol failures. The
   CLI still adds a short environment note and the signed-in account's email
   address to the context, so callers scan every response for private terms
@@ -57,10 +60,10 @@ caller can pin both before it looks anything up.
 
 from __future__ import annotations
 
-import getpass
 import hashlib
 import json
 import os
+import pwd
 import shutil
 import subprocess
 import sys
@@ -134,8 +137,11 @@ NETWORK_ENV = ("HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "https_proxy", "http_pro
 # What a process needs to run at all, passed through when set.
 PROCESS_ENV = ("PATH", "HOME", "USER", "LOGNAME", "SHELL", "TMPDIR", "LANG", "LC_ALL",
                "LC_CTYPE", "TERM")
-# Where Claude Code finds its sign-in when it is not in the default place.
-CLAUDE_AUTH_ENV = ("ANTHROPIC_API_KEY", "CLAUDE_CODE_OAUTH_TOKEN", "CLAUDE_CONFIG_DIR")
+# Where Claude Code keeps its state and sign-in when not in the default place.
+CLAUDE_AUTH_ENV = ("CLAUDE_CONFIG_DIR",)
+# Personal subscription plans: the CLI fetches server-managed settings only for team and
+# enterprise plans, API keys and unknown plans.
+PERSONAL_PLANS = ("claude_max", "claude_pro")
 
 
 def environment_digest(env: Mapping[str, str]) -> dict[str, Any]:
@@ -264,16 +270,41 @@ def private_matches(text: str, terms: Iterable[str]) -> list[str]:
     return sorted({term for term in terms if term.strip() and _folded(term) in folded})
 
 
+def claude_config_dir() -> Path:
+    """Where Claude Code keeps its settings and state: ``CLAUDE_CONFIG_DIR`` (which must
+    then be an absolute path) or ``~/.claude``."""
+    if "CLAUDE_CONFIG_DIR" not in os.environ:
+        return Path.home() / ".claude"
+    config = os.environ["CLAUDE_CONFIG_DIR"]
+    if not config or not Path(config).is_absolute():
+        raise BackendError("CLAUDE_CONFIG_DIR must be an absolute path", called=False)
+    return Path(config)
+
+
 def managed_settings() -> list[str]:
     """The managed settings sources present on this machine (which no command-line
     flag switches off), including a cached server-managed settings file."""
     if sys.platform == "win32":
         return ["managed settings cannot be checked on Windows"]
-    user = getpass.getuser()
-    config = Path(os.environ.get("CLAUDE_CONFIG_DIR") or Path.home() / ".claude")
+    user = pwd.getpwuid(os.getuid()).pw_name  # the login the CLI asks the system for
     paths = [Path(path.format(user=user)) for path in MANAGED_SETTINGS]
-    paths.append(config / "remote-settings.json")
+    paths.append(claude_config_dir() / "remote-settings.json")
     return [str(path) for path in paths if path.exists()]
+
+
+def claude_plan() -> str | None:
+    """The signed-in account's plan as Claude Code recorded it (``claude_max``, ...),
+    or None when it cannot be read."""
+    if "CLAUDE_CONFIG_DIR" in os.environ:
+        state = claude_config_dir() / ".claude.json"
+    else:
+        state = Path.home() / ".claude.json"
+    try:
+        account = json.loads(state.read_text()).get("oauthAccount") or {}
+    except (OSError, ValueError, AttributeError):
+        return None
+    plan = account.get("organizationType") if isinstance(account, Mapping) else None
+    return plan if isinstance(plan, str) else None
 
 
 def _first_line(result: subprocess.CompletedProcess[str]) -> str:
@@ -470,7 +501,7 @@ def summarize_claude(events: Sequence[Mapping[str, Any]], *, cli_version: str, m
         subtype = event.get("subtype")
         counts[f"{kind}:{subtype}" if subtype else kind] += 1
         message = event.get("message") if isinstance(event.get("message"), Mapping) else {}
-        content = message.get("content") or []
+        content = message.get("content")
         blocks = [block for block in content if isinstance(block, Mapping)] \
             if isinstance(content, list) else []
         if kind == "user":  # a tool result, or anything else a tool-less call never sends
@@ -489,6 +520,11 @@ def summarize_claude(events: Sequence[Mapping[str, Any]], *, cli_version: str, m
             offered = list(event.get("tools") or []) + list(event.get("mcp_servers") or [])
             tools_offered = len(offered)
         elif kind == "assistant":
+            if any(event.get(key) for key in ("is_api_error_message", "api_error",
+                                              "api_error_status", "error")):
+                error += 1
+            if not isinstance(event.get("message"), Mapping):
+                unrecognized += 1
             if message.get("model"):
                 reported_model = str(message["model"])
             tool += sum(block.get("type") in CLAUDE_TOOL_BLOCKS for block in blocks)
@@ -550,6 +586,10 @@ class ClaudeBackend:
         if managed:
             raise BackendError(f"managed Claude Code settings can add hooks or context "
                                f"that no flag removes: {managed}", called=False)
+        plan = claude_plan()
+        if plan not in PERSONAL_PLANS:
+            raise BackendError(f"the signed-in plan ({plan}) may receive server-managed "
+                               f"settings; memo calls need a personal plan", called=False)
         command = [self.binary, *CLAUDE_FLAGS, "--model", request.model,
                    "--effort", request.effort, "--system-prompt", request.system_prompt]
         fixed = dict(CLAUDE_SETTINGS_ENV)
@@ -559,7 +599,7 @@ class ClaudeBackend:
                if name in os.environ}
         env.update(fixed)
         settings = {"flags": list(CLAUDE_FLAGS), "system_prompt": "replaced",
-                    "environment": fixed, "managed_settings": managed,
+                    "environment": fixed, "managed_settings": managed, "plan": plan,
                     **environment_digest({k: v for k, v in env.items()
                                           if k not in PROCESS_ENV})}
         return command, env, settings

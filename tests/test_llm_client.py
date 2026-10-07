@@ -52,6 +52,14 @@ def fake_run(calls):
     return run
 
 
+@pytest.fixture(autouse=True)
+def personal_plan(monkeypatch, tmp_path: Path) -> None:
+    """Claude calls here run as if signed in to a personal plan with no managed settings."""
+    monkeypatch.setattr(client, "MANAGED_SETTINGS", ())
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path / "claude-config"))
+    monkeypatch.setattr(client, "claude_plan", lambda: "claude_max")
+
+
 @pytest.fixture
 def auth(tmp_path: Path) -> Path:
     path = tmp_path / "auth.json"
@@ -243,6 +251,52 @@ def test_managed_settings_stop_a_claude_call_before_it_runs(monkeypatch, tmp_pat
         backend.prepare(request)
 
 
+@pytest.mark.parametrize("plan", ["claude_team", "claude_enterprise", None])
+def test_a_plan_that_may_receive_server_managed_settings_is_refused(monkeypatch, tmp_path,
+                                                                    plan) -> None:
+    monkeypatch.undo()
+    monkeypatch.setattr(client, "MANAGED_SETTINGS", ())
+    config = tmp_path / "config"
+    config.mkdir()
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(config))
+    if plan:
+        (config / ".claude.json").write_text(json.dumps({"oauthAccount": {
+            "organizationType": plan}}))
+    with pytest.raises(client.BackendError) as raised:
+        client.ClaudeBackend(binary="claude-cli").prepare(
+            client.Request("claude", "claude-opus-5-5", "high", "S", "P"))
+    assert raised.value.called is False
+    (config / ".claude.json").write_text(json.dumps({"oauthAccount": {
+        "organizationType": "claude_max"}}))
+    assert client.claude_plan() == "claude_max"
+
+
+@pytest.mark.parametrize("value", ["", "relative/config"])
+def test_the_config_directory_must_be_absolute(monkeypatch, value) -> None:
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", value)
+    with pytest.raises(client.BackendError):
+        client.managed_settings()
+
+
+def test_per_user_managed_preferences_follow_the_system_login(monkeypatch, tmp_path) -> None:
+    login = client.pwd.getpwuid(client.os.getuid()).pw_name
+    template = str(tmp_path / "{user}" / "com.anthropic.claudecode.plist")
+    monkeypatch.setattr(client, "MANAGED_SETTINGS", (template,))
+    monkeypatch.setenv("USER", "someone-else")
+    monkeypatch.setenv("LOGNAME", "someone-else")
+    (tmp_path / login).mkdir()
+    (tmp_path / login / "com.anthropic.claudecode.plist").write_text("<plist/>")
+    assert client.managed_settings() == [template.format(user=login)]
+
+
+def test_api_keys_and_tokens_are_not_passed(monkeypatch) -> None:
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "token")
+    _, env, _ = client.ClaudeBackend(binary="claude-cli").prepare(
+        client.Request("claude", "m", "high", "S", "P"))
+    assert "ANTHROPIC_API_KEY" not in env and "CLAUDE_CODE_OAUTH_TOKEN" not in env
+
+
 def test_the_isolation_hash_follows_the_network_settings_and_output_bound(monkeypatch):
     backend = client.ClaudeBackend(binary="claude-cli")
     monkeypatch.setattr(backend, "version", lambda: "2.1.9 (Claude Code)")
@@ -287,6 +341,15 @@ def test_hook_events_fail_a_claude_call(event) -> None:
     [{"type": "system", "subtype": "files_persisted"}],            # an unknown subtype
     [{"type": "system", "subtype": "api_retry"}],                  # a retried request
     [{"type": "stream_event", "event": {}}],                       # not requested
+    [{"type": "assistant", "is_api_error_message": True, "api_error_status": 529,
+      "message": {"content": [{"type": "text", "text": "Overloaded"}]}}],
+    [{"type": "assistant", "error": "rate_limit",
+      "message": {"content": [{"type": "text", "text": "x"}]}}],
+    [{"type": "assistant", "message": {"content": None}}],
+    [{"type": "assistant", "message": {"content": ""}}],
+    [{"type": "assistant", "message": {"content": {}}}],
+    [{"type": "assistant", "message": {"content": 0}}],
+    [{"type": "assistant", "message": None}],
 ])
 def test_unrecognised_or_failed_claude_events_fail_the_call(events) -> None:
     summary = client.summarize_claude([*claude_events(), *events], cli_version="c",
