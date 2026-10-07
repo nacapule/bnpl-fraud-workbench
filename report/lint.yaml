@@ -25,20 +25,29 @@ directional:
   - README.md
   - reports/operating-review.md
 
-directional_words:
-  [more, less, fewer, higher, lower, better, worse, beats, beat, outperforms,
-   outperformed, exceeds, exceeded, reduces, reduced, increases, increased,
-   improves, improved, cheaper, costlier, larger, smaller, most, least, best, worst]
+# Comparative words, by what they assert about the named policy's value against
+# the reference's: up (higher), down (lower), good or bad (better or worse, by
+# the metric's polarity below). A claim's sentence holds exactly one.
+comparatives:
+  up: [more, higher, larger, increases, increased, exceeds, exceeded, costlier, most]
+  down: [less, fewer, lower, smaller, reduces, reduced, cheaper, least]
+  good: [better, beats, beat, outperforms, outperformed, improves, improved, best]
+  bad: [worse, worst]
+
+# Words that negate a sentence's comparison: such a claim is tested as
+# no_detected_difference or equivalent, never as a direction.
+negations: [not, no, never, neither, nor, without, none, cannot, "can't", "didn't",
+            "doesn't", "don't", "isn't", "wasn't", "aren't", "weren't", "hasn't", "haven't",
+            "hadn't", "won't", "wouldn't", fail, fails, failed]
 
 # Comparative sentences that state no result (exact sentence text).
 allowed_sentences: []
 
-# Names that tie a claim's clauses to its checks (report/claims.py), grouped.
+# Names that tie a claim's sentence to its checks (report/claims.py), grouped.
 # Each name is a result-key segment (vs_<name> counts) and its phrases are how
-# documents say it. A name inside a check's clause must be in that check's key;
-# every name in a claim's sentence must be inside the clause of a check whose
-# key includes it; and a check's policies and metric must be named in the
-# sentence. Phrases are whole words, matched longest first.
+# documents say it: whole words, matched longest first, and a comparative word
+# may sit inside a phrase ("held fewer legitimate orders"). Metric phrases are
+# specific, so ordinary words ("held its thresholds") do not name a metric.
 names:
   policies:
     approve_all: [approve-all, approve all, approving everything]
@@ -49,15 +58,17 @@ names:
     hybrid: [hybrid]
     expected_loss: [expected-loss, expected loss]
   metrics:
-    net_contribution: [net contribution, contribution, net cash, earned, earns, earn,
-                        earnings, profit, profits]
-    loss_of_gmv: [loss of GMV, loss rate, losses, loss, lost, lose, loses]
-    legitimate_held_per_10k: [legitimate orders held, good orders held, held, holds]
+    net_contribution: [net contribution, contribution, net cash, earned, earns, earnings,
+                        profit]
+    loss_of_gmv: [loss of GMV, loss rate, fraud loss, fraud losses, losses, loss]
+    legitimate_held_per_10k: [legitimate orders held, good orders held,
+                              held legitimate orders, held good orders, legitimate holds]
     legitimate_declined_per_10k: [legitimate orders declined, good orders declined,
-                                   false declines, declined, declines]
+                                   declined legitimate orders, declined good orders,
+                                   false declines]
     review_minutes_used_share: [review minutes, reviewer minutes, review time, reviewer time]
     decided_after_shipping: [decided after shipping, decided after they shipped,
-                             after shipping, late decisions]
+                             decisions after shipping, late decisions]
   families:
     baseline: [baseline family, baseline world]
     acquisition_surge: [acquisition surge, surge]
@@ -68,6 +79,19 @@ names:
     high: [high capacity, high staffing]
     redesigned_layout: [redesigned layout, redesigned shift layout, evening layout]
 
-# The policies every contrast is taken against (vs_<reference> keys). A claim's
-# context phrases may not name them.
+# The policies every contrast is taken against (vs_<reference> keys).
 references: [approve_all, incumbent_rules]
+
+# Whether a higher value of a metric is better (for better, beats, worse, ...).
+# A metric without one takes only up and down words.
+polarity:
+  net_contribution: higher
+  loss_of_gmv: lower
+  legitimate_held_per_10k: lower
+  legitimate_declined_per_10k: lower
+  decided_after_shipping: lower
+
+# The world family and capacity level a claim means when its sentence names none.
+defaults:
+  families: baseline
+  capacities: base

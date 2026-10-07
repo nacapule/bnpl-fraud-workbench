@@ -33,7 +33,7 @@ def check(summary_path: Path = SUMMARY, root: Path = REPO) -> list[str]:
     """Every problem with the committed documents, claims and templates."""
     claims = claims_module.load_claims()
     config = lint_module.load_config()
-    problems = lint_module.lint(config, claims_module.clauses_by_document(claims), root)
+    problems = lint_module.lint(config, claims_module.sentences_by_document(claims), root)
     if not documents() and not claims:
         return problems
     sources = _sources(summary_path)

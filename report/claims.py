@@ -3,28 +3,35 @@
 ``report/claims.yaml`` lists every directional sentence in the README and the
 operating review (``report/lint.py`` flags any comparative sentence that is
 not listed). A claim names its document, the complete sentence as it appears
-in the rendered document's visible text, and its checks. Each check names the
-clause of the sentence it supports (an exact piece of it), a result and a
-test. Every comparative word must fall inside a check's clause (the lint),
-and a clause holds at most one, so each comparison has its own check.
+in the rendered document's visible text, and the checks behind it.
 
-The names in ``report/lint.yaml`` (policies, metrics, world families and
-capacity levels, each a result-key segment with the phrases documents use)
-tie clauses to results:
+A claim's sentence makes exactly one comparison: it holds one comparative word
+(``comparatives`` in ``report/lint.yaml``). A sentence comparing two things is
+written as two sentences, each a claim. Everything the sentence names takes
+part in that comparison, using the names in ``report/lint.yaml`` (policies,
+metrics, world families and capacity levels, each a result-key segment with the
+phrases documents use):
 
-* a name inside a check's clause must be part of that check's key, so "had
-  lower loss" cannot be supported by a net-contribution result;
-* every name in the sentence must be inside the clause of a check whose key
-  includes it, so "more than the incumbent rules and approve-all" needs a
-  check against each;
-* the policies and the metric a check's key tests must be named in the
-  sentence, so a check cannot test a policy the sentence does not mention.
+* the policies named before the comparative word are compared against the
+  policies named after it, on every metric named, in every family and at every
+  capacity level named (the defaults when none is named). There must be a check
+  for each such comparison, and no check for anything else. "Hybrid earned more
+  than the incumbent rules and approve-all" needs two checks; "in the
+  acquisition surge" binds every check to that family; a policy after the
+  comparative word that is not a reference cannot be supported, because results
+  only compare against the references;
+* the comparative word sets the direction: ``up`` words (more, higher) need a
+  positive difference and ``down`` words (fewer, lower) a negative one;
+  ``good`` and ``bad`` words (better, beats, worse) follow the metric's
+  ``polarity``;
+* a negated sentence ("did not earn more", "no higher than") is tested as
+  ``no_detected_difference`` or ``equivalent``, and only a negated one is.
 
-A policy mentioned without being compared ("Hybrid, which ranks the queue with
-gradient boosting, earned more ...") is declared in the claim's ``context``: a
-phrase of the sentence set off by commas, parentheses or dashes, holding no
-comparative word and no reference policy. Names inside it are not compared and
-count for none of the rules above. The tests:
+A check's key names what it tests: for ``sign`` and ``interval``, one policy, one
+``vs_<reference>`` segment, one metric, and at most one family and one capacity
+level; for ``mcnemar``, the first key holds the cases only the compared policy got
+right and the second those only the reference got right, each naming its own
+policy, the same metric and the same family and capacity level. The tests:
 
 ``sign``
     a paired difference over seeds (a metric whose key has a ``vs_<reference>``
@@ -34,42 +41,43 @@ count for none of the rules above. The tests:
     a paired difference's interval, at a confidence level of at least
     ``1 - alpha``: above zero, or below zero;
 ``mcnemar``
-    two count metrics (``keys``: cases only the first method got right, cases
-    only the second did), tested with the exact McNemar test.
+    two counts of cases (``keys``), tested with the exact McNemar test.
 
-Two further directions describe the absence of a difference, and say
-different things: ``no_detected_difference`` (the test is not significant:
-the data cannot tell, which is not evidence of equality) and ``equivalent``
-(every seed's difference, or the whole interval, lies within ``±margin``, a
-tolerance in the metric's own unit fixed in the claim; not for ``mcnemar``).
+``no_detected_difference`` (the test is not significant: the data cannot tell,
+which is not evidence of equality) and ``equivalent`` (every seed's difference,
+or the whole interval, lies within ``±margin``, a tolerance in the metric's own
+unit fixed in the claim; not for ``mcnemar``) say different things.
 
-A claim fails when its sentence is no longer in the document or a check is no
-longer supported, so changed results cannot leave a stale sentence behind.
+A claim fails when its sentence is no longer in the document, its document has
+Markdown the sentence reader does not follow, its checks do not match its
+sentence, or a check is no longer supported, so changed results cannot leave a
+stale sentence behind.
 """
 
 from __future__ import annotations
 
+import itertools
 import re
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 import yaml
 
 from core.results import metric
 from core.stats import mcnemar_exact, sign_test
-from report.lint import clause_spans, inside, normalize, phrase_spans, sentences
+from report.lint import SIGNS, markdown_problems, normalize, phrase_spans, sentences
 from report.render import REPO, is_contrast
 
 CLAIMS = REPO / "report" / "claims.yaml"
 DIRECTIONS = ("positive", "negative", "no_detected_difference", "equivalent")
 TESTS = ("sign", "interval", "mcnemar")
+GROUPS = ("policies", "metrics", "families", "capacities")
 
 
 @dataclass(frozen=True)
 class Check:
-    clause: str
     test: str
     direction: str
     key: str | None = None
@@ -78,8 +86,6 @@ class Check:
     margin: float | None = None
 
     def __post_init__(self) -> None:
-        if not isinstance(self.clause, str) or not normalize(self.clause):
-            raise ValueError("a check needs the clause of the sentence it supports")
         if self.test not in TESTS:
             raise ValueError(f"test must be one of {TESTS}, got {self.test!r}")
         if self.direction not in DIRECTIONS:
@@ -105,62 +111,75 @@ class Claim:
     document: str
     sentence: str
     checks: tuple[Check, ...]
-    context: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not normalize(self.sentence):
             raise ValueError(f"claim {self.id}: the sentence is empty")
         if not self.checks:
             raise ValueError(f"claim {self.id}: needs at least one check")
-        if any(not isinstance(phrase, str) or not normalize(phrase) for phrase in self.context):
-            raise ValueError(f"claim {self.id}: a context phrase is empty")
 
 
 @dataclass(frozen=True)
 class Vocabulary:
-    """How documents name what results test: ``names``, ``references`` and the
-    comparative words of ``report/lint.yaml``."""
+    """How documents name what results test (``report/lint.yaml``)."""
 
-    names: Mapping[str, tuple[str, ...]]  # result-key segment -> its phrases
-    must_name: frozenset[str]  # policies and metrics: named whenever a key tests them
+    groups: Mapping[str, Mapping[str, tuple[str, ...]]]  # group -> name -> phrases
     references: frozenset[str]
-    comparatives: tuple[str, ...]
+    comparatives: Mapping[str, str]  # word -> up, down, good or bad
+    negations: tuple[str, ...]
+    polarity: Mapping[str, int]  # metric -> +1 when higher is better, -1 when lower is
+    defaults: Mapping[str, str]  # families / capacities -> the name meant when none is named
 
     @classmethod
     def from_config(cls, config: Mapping[str, Any]) -> Vocabulary:
-        groups = config.get("names") or {}
-        names: dict[str, tuple[str, ...]] = {}
+        groups: dict[str, dict[str, tuple[str, ...]]] = {group: {} for group in GROUPS}
         owner: dict[str, str] = {}
-        for entries in groups.values():
-            for name, phrases in entries.items():
-                if name in names:
+        for group, entries in (config.get("names") or {}).items():
+            if group not in GROUPS:
+                raise ValueError(f"names: unknown group {group}; use {GROUPS}")
+            for name, phrases in (entries or {}).items():
+                if any(name in known for known in groups.values()):
                     raise ValueError(f"names: {name} is listed twice")
-                names[name] = tuple(phrases)
+                groups[group][name] = tuple(phrases)
                 for phrase in phrases:
                     key = normalize(phrase).lower()
                     if key in owner:
                         raise ValueError(f"names: {phrase!r} names both {owner[key]} and {name}")
                     owner[key] = name
-        policies = set(groups.get("policies") or {})
         references = frozenset(config.get("references") or ())
-        if not references <= policies:
-            raise ValueError(f"references must be policies: {sorted(references - policies)}")
-        return cls(names=names,
-                   must_name=frozenset(policies | set(groups.get("metrics") or {})),
-                   references=references,
-                   comparatives=tuple(config.get("directional_words") or ()))
+        if missing := sorted(references - set(groups["policies"])):
+            raise ValueError(f"references must be policies: {missing}")
+        comparatives = {}
+        for sign, words in (config.get("comparatives") or {}).items():
+            if sign not in SIGNS:
+                raise ValueError(f"comparatives: unknown group {sign}; use {SIGNS}")
+            comparatives.update({normalize(word).lower(): sign for word in words})
+        polarity = {}
+        for name, better in (config.get("polarity") or {}).items():
+            if name not in groups["metrics"] or better not in ("higher", "lower"):
+                raise ValueError(f"polarity: {name}: {better!r} (a metric: higher or lower)")
+            polarity[name] = 1 if better == "higher" else -1
+        defaults = dict(config.get("defaults") or {})
+        for group, name in defaults.items():
+            if group not in ("families", "capacities") or name not in groups[group]:
+                raise ValueError(f"defaults: {group}: {name} is not one of the {group}")
+        return cls(groups=groups, references=references, comparatives=comparatives,
+                   negations=tuple(config.get("negations") or ()), polarity=polarity,
+                   defaults=defaults)
 
+    @property
+    def names(self) -> dict[str, tuple[str, ...]]:
+        return {name: phrases for entries in self.groups.values()
+                for name, phrases in entries.items()}
 
-NO_VOCABULARY = Vocabulary(names={}, must_name=frozenset(), references=frozenset(),
-                           comparatives=())
+    def group_of(self, name: str) -> str | None:
+        return next((group for group, entries in self.groups.items() if name in entries), None)
 
 
 def parse_claims(data: Any) -> list[Claim]:
     claims = []
     for entry in (data or {}).get("claims") or []:
         entry = dict(entry)
-        if "context" in entry:
-            entry["context"] = tuple(entry["context"] or ())
         checks = []
         for item in entry.pop("checks", None) or []:
             item = dict(item)
@@ -243,106 +262,217 @@ def _mcnemar(check: Check, summary: Mapping[str, Any]) -> str | None:
     return None
 
 
-def key_names(check: Check) -> set[str]:
-    """The segments of a check's keys, with ``vs_<reference>`` read as the reference."""
-    names = set()
-    for key in (check.key,) if check.key else check.keys:
-        for part in key.split("."):
-            names.add(part[len("vs_"):] if part.startswith("vs_") else part)
-    return names
-
-
-def mentions(names: Mapping[str, Sequence[str]], text: str) -> list[tuple[tuple[int, int], str]]:
-    """Where ``text`` names each name: whole words, case-insensitive, longest phrase first
-    (so "expected loss" is the policy, not the metric)."""
-    lookup = {normalize(phrase).lower(): name for name, phrases in names.items()
-              for phrase in phrases if normalize(phrase)}
-    if not lookup:
+# ---------------------------------------------------------------- sentence and checks
+def mentions(names: Mapping[str, Iterable[str]], text: str,
+             between: Iterable[str] = ()) -> list[tuple[tuple[int, int], str]]:
+    """Where ``text`` names each name: whole words, case-insensitive, the longest
+    phrase first (so "expected loss" is the policy, not the metric). A word of
+    ``between`` may sit between a phrase's words: "held fewer legitimate orders"
+    names "held legitimate orders"."""
+    between = sorted({normalize(word) for word in between if normalize(word)}, key=len,
+                     reverse=True)
+    gap = r"\s+" if not between else (
+        r"\s+(?:(?:" + "|".join(re.escape(word) for word in between) + r")\s+)?")
+    phrases = sorted(
+        {(normalize(phrase), name) for name, items in names.items() for phrase in items
+         if normalize(phrase)},
+        key=lambda item: (-len(item[0].split()), -len(item[0]), item[0]),
+    )
+    if not phrases:
         return []
-    pattern = re.compile(r"\b(" + "|".join(re.escape(phrase) for phrase in
-                                           sorted(lookup, key=len, reverse=True)) + r")\b",
-                         re.IGNORECASE)
-    return [(match.span(), lookup[normalize(match.group(0)).lower()])
+    alternatives = "|".join(
+        f"(?P<g{index}>" + gap.join(re.escape(word) for word in phrase.split()) + ")"
+        for index, (phrase, _) in enumerate(phrases)
+    )
+    pattern = re.compile(rf"\b(?:{alternatives})\b", re.IGNORECASE)
+    return [(match.span(), phrases[int(match.lastgroup[1:])][1])
             for match in pattern.finditer(text)]
 
 
-OPENERS, CLOSERS = ",(—–;:", ",)—–;"
-CONNECTIVES = {"and", "or", "nor", "but", "than", "versus", "vs", "vs."}
+class Tested(NamedTuple):
+    """What one check compares: a policy against a reference on a metric."""
+
+    policy: str
+    reference: str
+    metric: str
+    family: str | None
+    capacity: str | None
 
 
-def _context_problems(phrase: str, sentence: str, start: int,
-                      vocabulary: Vocabulary) -> list[str]:
-    text = sentence[start:start + len(normalize(phrase))]
-    before, after = sentence[:start].rstrip(), sentence[start + len(text):].lstrip()
-    opened = text[0] in OPENERS or (before and before[-1] in OPENERS)
-    closed = text[-1] in CLOSERS or (after and after[0] in CLOSERS)
+def _segments(key: str) -> tuple[list[str], list[str]]:
+    plain, versus = [], []
+    for part in key.split("."):
+        (versus if part.startswith("vs_") else plain).append(part.removeprefix("vs_"))
+    return plain, versus
+
+
+def _one(names: list[str], what: str, key: str, optional: bool = False) -> str | None:
+    if len(names) > 1 or (not names and not optional):
+        raise ValueError(f"{key} names {len(names)} {what} from report/lint.yaml names, "
+                         f"not {'at most ' if optional else ''}one")
+    return names[0] if names else None
+
+
+def tested(check: Check, vocabulary: Vocabulary) -> Tested:
+    """The comparison a check's key tests, read through the vocabulary's names."""
+    def within(group: str, names: list[str]) -> list[str]:
+        return [name for name in names if name in vocabulary.groups[group]]
+
+    keys = (check.key,) if check.key else check.keys
+    shared = []
+    for key in keys:
+        plain, _ = _segments(key)
+        shared.append(tuple(_one(within(group, plain), group, key, optional=group != "metrics")
+                            for group in ("metrics", "families", "capacities")))
+    if len(set(shared)) > 1:
+        raise ValueError(f"its keys {list(keys)} differ in metric, family or capacity")
+    metric_name, family, capacity = shared[0]
+    if check.test == "mcnemar":
+        policy = _one(within("policies", _segments(keys[0])[0]), "policies", keys[0])
+        reference = _one(within("policies", _segments(keys[1])[0]), "policies", keys[1])
+    else:
+        plain, versus = _segments(check.key)
+        policy = _one(within("policies", plain), "policies", check.key)
+        reference = _one(within("policies", versus), "vs_<reference> policies", check.key)
+    return Tested(policy, reference, metric_name, family, capacity)
+
+
+def _phrase_list(names: Iterable[str]) -> str:
+    return ", ".join(sorted(names)) or "none"
+
+
+def claim_problems(claim: Claim, vocabulary: Vocabulary) -> list[str]:
+    """How a claim's checks fail to match its sentence (see the module doc)."""
+    sentence = normalize(claim.sentence)
+    words = [(span, sentence[span[0]:span[1]].lower())
+             for span in phrase_spans(vocabulary.comparatives, sentence)]
+    if len(words) != 1:
+        found = ", ".join(word for _, word in words) or "none"
+        return [f"its sentence makes {len(words)} comparisons ({found}); a claim's sentence "
+                "makes exactly one"]
+    (start, end), word = words[0]
+    named: dict[str, set[str]] = {"before": set(), "after": set(), "metrics": set(),
+                                  "families": set(), "capacities": set()}
+    for (_, last), name in mentions(vocabulary.names, sentence, vocabulary.comparatives):
+        group = vocabulary.group_of(name)
+        if group == "policies":
+            named["before" if last <= start else "after"].add(name)
+        else:
+            named[group].add(name)
     problems = []
-    if not (opened and closed) or text.split()[0].lower() in CONNECTIVES:
-        problems.append(f"context {phrase!r} is not an aside set off by commas, parentheses "
-                        "or dashes")
-    if words := [text[a:b] for a, b in phrase_spans(vocabulary.comparatives, text)]:
-        problems.append(f"context {phrase!r} makes a comparison ({', '.join(words)})")
-    if references := sorted({name for _, name in mentions(vocabulary.names, text)}
-                            & vocabulary.references):
-        problems.append(f"context {phrase!r} names {', '.join(references)}, which comparisons "
-                        "are against")
+    if not named["before"]:
+        problems.append(f"its sentence names no policy before {word!r}")
+    if not named["after"]:
+        problems.append(f"its sentence names no policy after {word!r} to compare against")
+    if not named["metrics"]:
+        problems.append("its sentence names no metric")
+    negated = bool(phrase_spans(vocabulary.negations, sentence))
+    sign = vocabulary.comparatives[word]
+    found: list[Tested] = []
+    for index, check in enumerate(claim.checks, start=1):
+        try:
+            item = tested(check, vocabulary)
+        except ValueError as error:
+            problems.append(f"check {index}: {error}")
+            continue
+        found.append(item)
+        problems += [f"check {index}: {problem}"
+                     for problem in _match_problems(item, named, word, vocabulary)]
+        if negated != (check.direction in ("no_detected_difference", "equivalent")):
+            problems.append(
+                f"check {index}: a negated comparison is tested as no_detected_difference or "
+                "equivalent, and only a negated one" if negated else
+                f"check {index}: {word!r} states a direction; test it as positive or negative")
+        elif not negated:
+            expected = {"up": 1, "down": -1}.get(sign)
+            if expected is None:
+                polarity = vocabulary.polarity.get(item.metric)
+                if polarity is None:
+                    problems.append(f"check {index}: {word!r} needs a metric where higher or "
+                                    f"lower is better; {item.metric} has none, so say more or "
+                                    "less")
+                    continue
+                expected = polarity if sign == "good" else -polarity
+            if expected != (1 if check.direction == "positive" else -1):
+                problems.append(f"check {index}: {word!r} means a "
+                                f"{'positive' if expected > 0 else 'negative'} difference in "
+                                f"{item.metric}, but the check tests {check.direction}")
+    problems += _coverage_problems(found, named, vocabulary)
     return problems
 
 
-def name_problems(claim: Claim, vocabulary: Vocabulary) -> list[str]:
-    """How a claim's clauses fail to match what their checks test (see the module doc)."""
-    sentence = normalize(claim.sentence)
-    problems: list[str] = []
-    asides = []
-    for phrase in claim.context:
-        start = sentence.find(normalize(phrase))
-        if start < 0:
-            problems.append(f"context {phrase!r} is not in the sentence")
-            continue
-        problems += _context_problems(phrase, sentence, start, vocabulary)
-        asides.append((start, start + len(normalize(phrase))))
-    named = [(span, name) for span, name in mentions(vocabulary.names, sentence)
-             if not inside(span, asides)]
-    clauses = []
-    for index, check in enumerate(claim.checks, start=1):
-        clause = normalize(check.clause)
-        if clause not in sentence:
-            problems.append(f"check {index}: its clause is not in the sentence")
-            continue
-        where = clause_spans(sentence, [clause])[0]
-        tested = key_names(check)
-        clauses.append((where, tested))
-        words = [clause[a:b] for a, b in phrase_spans(vocabulary.comparatives, clause)]
-        if len(words) > 1:
-            problems.append(f"check {index}: its clause makes {len(words)} comparisons "
-                            f"({', '.join(words)}); give each its own check")
-        for name in sorted({name for span, name in named if inside(span, [where])} - tested):
-            problems.append(f"check {index}: its clause names {name}, which its key "
-                            "does not test")
-        for name in sorted((tested & vocabulary.must_name) - {name for _, name in named}):
-            problems.append(f"check {index}: its key tests {name}, which the sentence "
-                            "does not name")
-    for span, name in named:
-        if not any(inside(span, [where]) and name in tested for where, tested in clauses):
-            problems.append(f"{sentence[span[0]:span[1]]!r} ({name}) is in no check's "
-                            "clause that tests it")
+def _match_problems(item: Tested, named: Mapping[str, set[str]], word: str,
+                    vocabulary: Vocabulary) -> list[str]:
+    problems = []
+    if item.policy not in named["before"]:
+        problems.append(f"its key compares {item.policy}, which the sentence does not name "
+                        f"before {word!r}")
+    if item.reference not in named["after"]:
+        problems.append(f"its key compares against {item.reference}, which the sentence does "
+                        f"not name after {word!r}")
+    if item.metric not in named["metrics"]:
+        problems.append(f"its key measures {item.metric}, which the sentence does not name")
+    for group, value in (("families", item.family), ("capacities", item.capacity)):
+        allowed = named[group] or {vocabulary.defaults.get(group), None}
+        if value not in allowed:
+            what = {"families": "family", "capacities": "capacity level"}[group]
+            problems.append(f"its key is for the {what} {value}, but the sentence means "
+                            f"{_phrase_list(name for name in allowed if name)}" if value else
+                            f"its key names no {what}, but the sentence names "
+                            f"{_phrase_list(allowed)}")
+    return problems
+
+
+def _covers(item: Tested, wanted: tuple[str, str, str, str | None, str | None],
+            vocabulary: Vocabulary) -> bool:
+    """Whether a check tests one wanted comparison; no family or capacity named
+    means the default (or a key without that dimension)."""
+    policy, reference, metric_name, family, capacity = wanted
+    return (item.policy == policy and item.reference == reference
+            and item.metric == metric_name
+            and (item.family == family if family else
+                 item.family in (vocabulary.defaults.get("families"), None))
+            and (item.capacity == capacity if capacity else
+                 item.capacity in (vocabulary.defaults.get("capacities"), None)))
+
+
+def _coverage_problems(found: list[Tested], named: Mapping[str, set[str]],
+                       vocabulary: Vocabulary) -> list[str]:
+    problems = []
+    for wanted in itertools.product(
+            sorted(named["before"]), sorted(named["after"]), sorted(named["metrics"]),
+            sorted(named["families"]) or [None], sorted(named["capacities"]) or [None]):
+        policy, reference, metric_name, family, capacity = wanted
+        if policy != reference and not any(_covers(item, wanted, vocabulary)
+                                           for item in found):
+            where = "".join(f" in {name}" for name in (family, capacity) if name)
+            problems.append(f"no check tests {policy} against {reference} on "
+                            f"{metric_name}{where}")
     return problems
 
 
 def check_claims(claims: list[Claim], summary: Mapping[str, Any],
                  read_document: Callable[[str], str | None],
-                 vocabulary: Vocabulary = NO_VOCABULARY) -> list[str]:
-    """Problems with each claim: its sentence missing from the document, clauses
-    that do not match what their checks test, or a check the results do not support."""
+                 vocabulary: Vocabulary) -> list[str]:
+    """Problems with each claim: its sentence missing from its document, unreadable
+    Markdown in that document, checks that do not match the sentence, or a check
+    the results do not support."""
     problems = []
+    documents: dict[str, str | None] = {}
     for claim in claims:
-        text = read_document(claim.document)
+        if claim.document not in documents:
+            text = documents[claim.document] = read_document(claim.document)
+            if text is not None:
+                problems += [f"{claim.document}:{line}: the claims check cannot read {reason}; "
+                             "rewrite it as top-level Markdown"
+                             for line, reason in markdown_problems(text)]
+        text = documents[claim.document]
         if text is None:
             problems.append(f"{claim.id}: document {claim.document} does not exist")
         elif normalize(claim.sentence) not in {sentence for _, sentence in sentences(text)}:
             problems.append(f"{claim.id}: its sentence is not a visible sentence of "
                             f"{claim.document}")
-        problems += [f"{claim.id}: {problem}" for problem in name_problems(claim, vocabulary)]
+        problems += [f"{claim.id}: {problem}" for problem in claim_problems(claim, vocabulary)]
         for index, check in enumerate(claim.checks):
             try:
                 reason = support(check, summary)
@@ -353,11 +483,9 @@ def check_claims(claims: list[Claim], summary: Mapping[str, Any],
     return problems
 
 
-def clauses_by_document(claims: list[Claim]) -> dict[str, dict[str, list[str]]]:
-    """For the lint: each document's claim sentences and their checks' clauses."""
-    out: dict[str, dict[str, list[str]]] = {}
+def sentences_by_document(claims: list[Claim]) -> dict[str, set[str]]:
+    """For the lint: each document's claim sentences."""
+    out: dict[str, set[str]] = {}
     for claim in claims:
-        out.setdefault(claim.document, {})[normalize(claim.sentence)] = [
-            check.clause for check in claim.checks
-        ]
+        out.setdefault(claim.document, set()).add(normalize(claim.sentence))
     return out
