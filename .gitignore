@@ -9,3 +9,4 @@ data/*.jsonl
 mysql-data/
 reports/*.tmp
 .DS_Store
+runs/
