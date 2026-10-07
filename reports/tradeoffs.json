@@ -1,0 +1,352 @@
+[
+ {
+  "review_band": 30,
+  "decline_band": 70,
+  "alerts_per_day": 24.9,
+  "precision": 0.089,
+  "recall_overall": 0.598,
+  "caught_usd": 37847.0,
+  "n_insults": 8,
+  "net_usd": 32305.0
+ },
+ {
+  "review_band": 30,
+  "decline_band": 80,
+  "alerts_per_day": 24.9,
+  "precision": 0.089,
+  "recall_overall": 0.598,
+  "caught_usd": 37847.0,
+  "n_insults": 6,
+  "net_usd": 32406.0
+ },
+ {
+  "review_band": 30,
+  "decline_band": 90,
+  "alerts_per_day": 24.9,
+  "precision": 0.089,
+  "recall_overall": 0.598,
+  "caught_usd": 37847.0,
+  "n_insults": 0,
+  "net_usd": 32550.0
+ },
+ {
+  "review_band": 30,
+  "decline_band": 100,
+  "alerts_per_day": 24.9,
+  "precision": 0.089,
+  "recall_overall": 0.598,
+  "caught_usd": 37847.0,
+  "n_insults": 0,
+  "net_usd": 32550.0
+ },
+ {
+  "review_band": 30,
+  "decline_band": 110,
+  "alerts_per_day": 24.9,
+  "precision": 0.089,
+  "recall_overall": 0.598,
+  "caught_usd": 37847.0,
+  "n_insults": 0,
+  "net_usd": 32550.0
+ },
+ {
+  "review_band": 35,
+  "decline_band": 70,
+  "alerts_per_day": 24.7,
+  "precision": 0.089,
+  "recall_overall": 0.595,
+  "caught_usd": 36855.0,
+  "n_insults": 8,
+  "net_usd": 31353.0
+ },
+ {
+  "review_band": 35,
+  "decline_band": 80,
+  "alerts_per_day": 24.7,
+  "precision": 0.089,
+  "recall_overall": 0.595,
+  "caught_usd": 36855.0,
+  "n_insults": 6,
+  "net_usd": 31454.0
+ },
+ {
+  "review_band": 35,
+  "decline_band": 90,
+  "alerts_per_day": 24.7,
+  "precision": 0.089,
+  "recall_overall": 0.595,
+  "caught_usd": 36855.0,
+  "n_insults": 0,
+  "net_usd": 31598.0
+ },
+ {
+  "review_band": 35,
+  "decline_band": 100,
+  "alerts_per_day": 24.7,
+  "precision": 0.089,
+  "recall_overall": 0.595,
+  "caught_usd": 36855.0,
+  "n_insults": 0,
+  "net_usd": 31598.0
+ },
+ {
+  "review_band": 35,
+  "decline_band": 110,
+  "alerts_per_day": 24.7,
+  "precision": 0.089,
+  "recall_overall": 0.595,
+  "caught_usd": 36855.0,
+  "n_insults": 0,
+  "net_usd": 31598.0
+ },
+ {
+  "review_band": 40,
+  "decline_band": 70,
+  "alerts_per_day": 7.6,
+  "precision": 0.259,
+  "recall_overall": 0.528,
+  "caught_usd": 29222.0,
+  "n_insults": 8,
+  "net_usd": 27364.0
+ },
+ {
+  "review_band": 40,
+  "decline_band": 80,
+  "alerts_per_day": 7.6,
+  "precision": 0.259,
+  "recall_overall": 0.528,
+  "caught_usd": 29222.0,
+  "n_insults": 6,
+  "net_usd": 27465.0
+ },
+ {
+  "review_band": 40,
+  "decline_band": 90,
+  "alerts_per_day": 7.6,
+  "precision": 0.259,
+  "recall_overall": 0.528,
+  "caught_usd": 29222.0,
+  "n_insults": 0,
+  "net_usd": 27609.0
+ },
+ {
+  "review_band": 40,
+  "decline_band": 100,
+  "alerts_per_day": 7.6,
+  "precision": 0.259,
+  "recall_overall": 0.528,
+  "caught_usd": 29222.0,
+  "n_insults": 0,
+  "net_usd": 27609.0
+ },
+ {
+  "review_band": 40,
+  "decline_band": 110,
+  "alerts_per_day": 7.6,
+  "precision": 0.259,
+  "recall_overall": 0.528,
+  "caught_usd": 29222.0,
+  "n_insults": 0,
+  "net_usd": 27609.0
+ },
+ {
+  "review_band": 45,
+  "decline_band": 70,
+  "alerts_per_day": 7.4,
+  "precision": 0.244,
+  "recall_overall": 0.487,
+  "caught_usd": 24807.0,
+  "n_insults": 8,
+  "net_usd": 22982.0
+ },
+ {
+  "review_band": 45,
+  "decline_band": 80,
+  "alerts_per_day": 7.4,
+  "precision": 0.244,
+  "recall_overall": 0.487,
+  "caught_usd": 24807.0,
+  "n_insults": 6,
+  "net_usd": 23083.0
+ },
+ {
+  "review_band": 45,
+  "decline_band": 90,
+  "alerts_per_day": 7.4,
+  "precision": 0.244,
+  "recall_overall": 0.487,
+  "caught_usd": 24807.0,
+  "n_insults": 0,
+  "net_usd": 23227.0
+ },
+ {
+  "review_band": 45,
+  "decline_band": 100,
+  "alerts_per_day": 7.4,
+  "precision": 0.244,
+  "recall_overall": 0.487,
+  "caught_usd": 24807.0,
+  "n_insults": 0,
+  "net_usd": 23227.0
+ },
+ {
+  "review_band": 45,
+  "decline_band": 110,
+  "alerts_per_day": 7.4,
+  "precision": 0.244,
+  "recall_overall": 0.487,
+  "caught_usd": 24807.0,
+  "n_insults": 0,
+  "net_usd": 23227.0
+ },
+ {
+  "review_band": 50,
+  "decline_band": 70,
+  "alerts_per_day": 1.4,
+  "precision": 0.93,
+  "recall_overall": 0.339,
+  "caught_usd": 9902.0,
+  "n_insults": 8,
+  "net_usd": 9369.0
+ },
+ {
+  "review_band": 50,
+  "decline_band": 80,
+  "alerts_per_day": 1.4,
+  "precision": 0.93,
+  "recall_overall": 0.339,
+  "caught_usd": 9902.0,
+  "n_insults": 6,
+  "net_usd": 9470.0
+ },
+ {
+  "review_band": 50,
+  "decline_band": 90,
+  "alerts_per_day": 1.4,
+  "precision": 0.93,
+  "recall_overall": 0.339,
+  "caught_usd": 9902.0,
+  "n_insults": 0,
+  "net_usd": 9614.0
+ },
+ {
+  "review_band": 50,
+  "decline_band": 100,
+  "alerts_per_day": 1.4,
+  "precision": 0.93,
+  "recall_overall": 0.339,
+  "caught_usd": 9902.0,
+  "n_insults": 0,
+  "net_usd": 9614.0
+ },
+ {
+  "review_band": 50,
+  "decline_band": 110,
+  "alerts_per_day": 1.4,
+  "precision": 0.93,
+  "recall_overall": 0.339,
+  "caught_usd": 9902.0,
+  "n_insults": 0,
+  "net_usd": 9614.0
+ },
+ {
+  "review_band": 55,
+  "decline_band": 70,
+  "alerts_per_day": 1.4,
+  "precision": 0.93,
+  "recall_overall": 0.339,
+  "caught_usd": 9902.0,
+  "n_insults": 8,
+  "net_usd": 9369.0
+ },
+ {
+  "review_band": 55,
+  "decline_band": 80,
+  "alerts_per_day": 1.4,
+  "precision": 0.93,
+  "recall_overall": 0.339,
+  "caught_usd": 9902.0,
+  "n_insults": 6,
+  "net_usd": 9470.0
+ },
+ {
+  "review_band": 55,
+  "decline_band": 90,
+  "alerts_per_day": 1.4,
+  "precision": 0.93,
+  "recall_overall": 0.339,
+  "caught_usd": 9902.0,
+  "n_insults": 0,
+  "net_usd": 9614.0
+ },
+ {
+  "review_band": 55,
+  "decline_band": 100,
+  "alerts_per_day": 1.4,
+  "precision": 0.93,
+  "recall_overall": 0.339,
+  "caught_usd": 9902.0,
+  "n_insults": 0,
+  "net_usd": 9614.0
+ },
+ {
+  "review_band": 55,
+  "decline_band": 110,
+  "alerts_per_day": 1.4,
+  "precision": 0.93,
+  "recall_overall": 0.339,
+  "caught_usd": 9902.0,
+  "n_insults": 0,
+  "net_usd": 9614.0
+ },
+ {
+  "review_band": 60,
+  "decline_band": 70,
+  "alerts_per_day": 1.4,
+  "precision": 0.93,
+  "recall_overall": 0.339,
+  "caught_usd": 9902.0,
+  "n_insults": 8,
+  "net_usd": 9369.0
+ },
+ {
+  "review_band": 60,
+  "decline_band": 80,
+  "alerts_per_day": 1.4,
+  "precision": 0.93,
+  "recall_overall": 0.339,
+  "caught_usd": 9902.0,
+  "n_insults": 6,
+  "net_usd": 9470.0
+ },
+ {
+  "review_band": 60,
+  "decline_band": 90,
+  "alerts_per_day": 1.4,
+  "precision": 0.93,
+  "recall_overall": 0.339,
+  "caught_usd": 9902.0,
+  "n_insults": 0,
+  "net_usd": 9614.0
+ },
+ {
+  "review_band": 60,
+  "decline_band": 100,
+  "alerts_per_day": 1.4,
+  "precision": 0.93,
+  "recall_overall": 0.339,
+  "caught_usd": 9902.0,
+  "n_insults": 0,
+  "net_usd": 9614.0
+ },
+ {
+  "review_band": 60,
+  "decline_band": 110,
+  "alerts_per_day": 1.4,
+  "precision": 0.93,
+  "recall_overall": 0.339,
+  "caught_usd": 9902.0,
+  "n_insults": 0,
+  "net_usd": 9614.0
+ }
+]

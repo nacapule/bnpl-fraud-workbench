@@ -587,6 +587,9 @@ The higher-PR-AUC model ({best_name}) supplies the model ranking.
 ```
 """
     (REPORT_DIR / "model.md").write_text(report)
+    (REPORT_DIR / "model.json").write_text(
+        json.dumps(model_summary, indent=1, sort_keys=True) + "\n"
+    )
     print(report)
     print(f"evaluation runtime: {elapsed:.2f} seconds")
 

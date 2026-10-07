@@ -267,6 +267,10 @@ def main() -> None:
     )
     utilization = offered_hours / coverage_hours
 
+    records = [
+        {key: value for key, value in result.items() if key != "backlog_curve"}
+        for result in results
+    ]
     lines = [
         f"# Alert queue / SLA simulation (from {cfg['holdout_start']})\n",
         f"Operating point: review ≥ {op['review_band']} → {len(alerts)} alerts "
@@ -308,11 +312,11 @@ def main() -> None:
             "single-covered, visible as the weekly backlog sawtooth.",
         "",
         "```json",
-        *[json.dumps({key: value for key, value in result.items() if key != "backlog_curve"})
-          for result in results],
+        *[json.dumps(record) for record in records],
         "```",
     ]
     (REPO / "reports" / "queue.md").write_text("\n".join(lines) + "\n")
+    (REPO / "reports" / "queue.json").write_text(json.dumps(records, indent=1) + "\n")
 
     fig, ax = plt.subplots(figsize=(9, 4.5))
     for r in results:
@@ -325,10 +329,9 @@ def main() -> None:
     fig.tight_layout()
     fig.savefig(REPO / "reports" / "queue_backlog.svg", metadata={"Date": None})
 
-    for r in results:
-        r.pop("backlog_curve")
-        print(json.dumps(r))
-    print("wrote reports/queue.md, reports/queue_backlog.svg")
+    for record in records:
+        print(json.dumps(record))
+    print("wrote reports/queue.{md,json}, reports/queue_backlog.svg")
 
 
 if __name__ == "__main__":

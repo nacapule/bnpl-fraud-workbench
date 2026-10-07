@@ -6,7 +6,7 @@ The ONE rules-side component allowed to read labels (offline calibration,
 FP-1 §2.4). Run: python -m rules.tuning  (after rules.engine has built the
 enriched frame logic — this re-derives scores itself so it can sweep).
 
-Outputs: reports/tradeoffs.md, reports/tradeoffs.svg, reports/operating_point.json
+Outputs: reports/tradeoffs.{md,json,svg}, reports/operating_point.json
 """
 
 from __future__ import annotations
@@ -159,6 +159,8 @@ def main() -> None:
     ]
     (REPO / "reports").mkdir(exist_ok=True)
     (REPO / "reports" / "tradeoffs.md").write_text("\n".join(lines) + "\n")
+    frontier = [{c: g[c] for c in cols} for g in grid]
+    (REPO / "reports" / "tradeoffs.json").write_text(json.dumps(frontier, indent=1) + "\n")
 
     # frontier SVG
     fig, axes = plt.subplots(1, 1, figsize=(8, 5))
@@ -180,7 +182,7 @@ def main() -> None:
 
     (REPO / "reports" / "operating_point.json").write_text(json.dumps(chosen, indent=1))
     print(json.dumps({k: v for k, v in chosen.items() if k != "recall_by_pattern"}, indent=1))
-    print("wrote reports/tradeoffs.{md,svg}, reports/operating_point.json")
+    print("wrote reports/tradeoffs.{md,json,svg}, reports/operating_point.json")
 
 
 if __name__ == "__main__":

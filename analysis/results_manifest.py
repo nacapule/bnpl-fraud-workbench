@@ -14,21 +14,6 @@ START = "<!-- results:start -->"
 END = "<!-- results:end -->"
 
 
-def _json_lines(path: Path) -> list[dict[str, Any]]:
-    records = []
-    inside = False
-    for line in path.read_text().splitlines():
-        if line.strip() == "```json":
-            inside = True
-            continue
-        if inside and line.strip() == "```":
-            inside = False
-            continue
-        if inside and line.strip():
-            records.append(json.loads(line))
-    return records
-
-
 def _result(prompt: str, model: str) -> dict[str, Any]:
     path = REPO / "llm" / "eval" / "results" / f"{prompt}__{model}.json"
     return json.loads(path.read_text())
@@ -36,9 +21,10 @@ def _result(prompt: str, model: str) -> dict[str, Any]:
 
 def render_results() -> str:
     operating = json.loads((REPO / "reports" / "operating_point.json").read_text())
-    model = _json_lines(REPO / "reports" / "model.md")[-1]
+    model = json.loads((REPO / "reports" / "model.json").read_text())
     queue = {
-        record["policy"]: record for record in _json_lines(REPO / "reports" / "queue.md")
+        record["policy"]: record
+        for record in json.loads((REPO / "reports" / "queue.json").read_text())
     }
     v1 = _result("memo_v1", "claude-sonnet-5")
     v2 = _result("memo_v2", "claude-sonnet-5")

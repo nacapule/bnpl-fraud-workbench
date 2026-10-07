@@ -136,8 +136,7 @@ def test_expected_calibration_error_on_a_hand_computed_case() -> None:
 
 
 def test_committed_calibration_block_reports_an_improvement() -> None:
-    report = (REPO / "reports" / "model.md").read_text()
-    summary = json.loads(report.rsplit("```json\n", 1)[1].split("\n```", 1)[0])
+    summary = json.loads((REPO / "reports" / "model.json").read_text())
     calibration = summary["calibration"]
     holdout_start = pd.Timestamp(load_config()["holdout_start"])
     assert pd.Timestamp(calibration["slice_start"]) == holdout_start - pd.Timedelta(

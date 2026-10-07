@@ -349,20 +349,7 @@ def precision_at_capacity_counts(
 def threshold_sensitivity() -> dict[str, Any]:
     """Read the committed tuning frontier at the chosen decline band."""
     operating = json.loads((REPO / "reports" / "operating_point.json").read_text())
-    columns: list[str] = []
-    grid: list[dict[str, float]] = []
-    for line in (REPO / "reports" / "tradeoffs.md").read_text().splitlines():
-        if not line.startswith("|"):
-            continue
-        cells = [cell.strip() for cell in line.strip().lstrip("|").split("|")]
-        if not columns:
-            columns = cells[: cells.index("net_usd") + 1]
-            continue
-        if set(cells[0]) <= {"-"}:
-            continue
-        # the chosen row and over-capacity rows carry a trailing annotation
-        values = (float(cell) for cell in cells[: len(columns)])
-        grid.append(dict(zip(columns, values, strict=True)))
+    grid = json.loads((REPO / "reports" / "tradeoffs.json").read_text())
     at_decline = sorted(
         (point for point in grid if point["decline_band"] == operating["decline_band"]),
         key=lambda point: point["review_band"],

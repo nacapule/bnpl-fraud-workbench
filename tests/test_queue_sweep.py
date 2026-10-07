@@ -36,18 +36,8 @@ def holdout_alerts() -> tuple[pd.DataFrame, dict]:
 
 
 def _committed_queue_rows() -> dict[str, dict]:
-    records = {}
-    inside = False
-    for line in (REPO / "reports" / "queue.md").read_text().splitlines():
-        if line.strip() == "```json":
-            inside = True
-            continue
-        if inside and line.strip() == "```":
-            break
-        if inside and line.strip():
-            record = json.loads(line)
-            records[record["policy"]] = record
-    return records
+    records = json.loads((REPO / "reports" / "queue.json").read_text())
+    return {record["policy"]: record for record in records}
 
 
 def test_roster_reuses_the_configured_analysts(config: dict) -> None:
