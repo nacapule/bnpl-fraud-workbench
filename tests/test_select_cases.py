@@ -1,0 +1,166 @@
+"""Benchmark case selection: strata for every pattern and benign behaviour, at most two
+cases per account or episode, and development and final cohorts kept apart."""
+
+from __future__ import annotations
+
+import json
+import shutil
+from pathlib import Path
+
+import pandas as pd
+import pytest
+
+from llm.eval import select_cases
+from llm.eval.select_cases import (
+    MAX_PER_CLUSTER,
+    candidates,
+    check_cohorts,
+    probe_cases,
+    select,
+)
+
+
+def world(seed: int, n_accounts: int = 30) -> tuple[pd.DataFrame, dict[str, pd.DataFrame]]:
+    """Review decisions in a small synthetic world: three orders per account; accounts
+    0-9 a stolen-card ring (episodes of five accounts), 10-14 travellers, 15-19 new
+    customers, the rest ordinary customers."""
+    attempts, latent_orders, latent_accounts, decisions = [], [], [], []
+    order_id = 0
+    for user in range(n_accounts):
+        profile = "traveller" if 10 <= user < 15 else "new_customer" if 15 <= user < 20 else None
+        latent_accounts.append({"user_id": user, "profile": profile})
+        for k in range(3):
+            order_id += 1
+            fraud = user < 10
+            attempts.append({"order_id": order_id, "user_id": user})
+            latent_orders.append({"order_id": order_id,
+                                  "pattern_id": "P-STOLEN" if fraud else None,
+                                  "episode_id": user // 5 if fraud else None,
+                                  "intent": "fraud" if fraud else "legitimate",
+                                  "mimic": None})
+            decisions.append({"order_id": order_id,
+                              "decision_at": pd.Timestamp("2025-06-01") + pd.Timedelta(hours=k)})
+    tables = {"order_attempts": pd.DataFrame(attempts),
+              "latent_orders": pd.DataFrame(latent_orders),
+              "latent_accounts": pd.DataFrame(latent_accounts)}
+    return pd.DataFrame(decisions), tables
+
+
+def pool(seed: int, family: str = "baseline") -> pd.DataFrame:
+    decisions, tables = world(seed)
+    return candidates(seed, family, decisions, tables)
+
+
+def test_strata_name_patterns_and_benign_behaviour() -> None:
+    frame = pool(1041)
+    assert set(frame["stratum"]) == {"P-STOLEN", "legitimate:traveller",
+                                     "legitimate:new_customer", "legitimate:other"}
+    stolen = frame[frame["stratum"] == "P-STOLEN"]
+    assert set(stolen["cluster"]) == {"1041:0", "1041:1"}  # episodes, not accounts
+    assert set(frame.loc[frame["stratum"] != "P-STOLEN", "latent_class"]) == {"legitimate"}
+    assert frame["case_id"].is_unique
+
+
+def test_selection_caps_accounts_and_episodes_and_balances_strata() -> None:
+    chosen = select(pool(1041), 8, rng_seed=0)
+    assert len(chosen) == 8
+    assert chosen["account_key"].value_counts().max() <= MAX_PER_CLUSTER
+    assert chosen["episode_key"].dropna().value_counts().max() <= MAX_PER_CLUSTER
+    assert set(chosen["stratum"].value_counts()) == {2}  # equal shares of four strata
+    everything = select(pool(1041), 100, rng_seed=0)
+    counts = everything["stratum"].value_counts()
+    assert counts["P-STOLEN"] == 2 * MAX_PER_CLUSTER  # two episodes, two cases each
+    assert counts["legitimate:traveller"] == 5 * MAX_PER_CLUSTER  # five accounts
+    # weights restore the natural mix: weighted stratum shares equal the eligible pool's
+    shares = chosen.groupby("stratum")["weight"].sum() / chosen["weight"].sum()
+    natural = pool(1041)["stratum"].value_counts(normalize=True)
+    assert (shares - natural.loc[shares.index]).abs().max() < 1e-6
+    assert select(pool(1041), 8, rng_seed=0).equals(chosen)
+
+
+def test_excluded_accounts_and_episodes_never_appear() -> None:
+    frame = pool(1041)
+    chosen = select(frame, 12, rng_seed=1, exclude_accounts={"1041:10", "1041:11"},
+                    exclude_episodes={"1041:0"})
+    assert not {"1041:10", "1041:11"} & set(chosen["account_key"])
+    assert "1041:0" not in set(chosen["episode_key"].dropna())
+
+
+def test_cohorts_must_not_share_accounts_or_episodes() -> None:
+    development = select(pool(1041), 6, rng_seed=0)
+    finals = pd.concat([select(pool(seed), 6, rng_seed=0) for seed in (11, 12, 13)])
+    check_cohorts(development, finals, final_seeds=(11, 12, 13, 14))
+    leaked = pd.concat([finals, development.head(1)])
+    with pytest.raises(ValueError):
+        check_cohorts(development, leaked, final_seeds=(11, 12, 13, 1041))
+
+
+def test_final_cases_come_from_three_final_seeds() -> None:
+    development = select(pool(1041), 6, rng_seed=0)
+    two_seeds = pd.concat([select(pool(seed), 6, rng_seed=0) for seed in (11, 12)])
+    with pytest.raises(ValueError):
+        check_cohorts(development, two_seeds, final_seeds=(11, 12, 13))
+    not_final = pd.concat([select(pool(seed), 6, rng_seed=0) for seed in (11, 12, 99)])
+    with pytest.raises(ValueError):
+        check_cohorts(development, not_final, final_seeds=(11, 12, 13))
+
+
+def test_probe_cases_spread_across_strata() -> None:
+    chosen = select(pool(1041), 12, rng_seed=0)
+    probes = probe_cases(chosen, 4, rng_seed=0)
+    assert len(probes) == 4
+    assert chosen.set_index("case_id").loc[probes, "stratum"].nunique() == 4
+
+
+MINI = Path(__file__).resolve().parent / "fixtures" / "mini_world"
+QUIET = json.loads((Path(__file__).resolve().parent / "fixtures" / "llm" /
+                    "quiet_case.json").read_text())["context_row"]
+
+
+def mini_world_with_reviews(directory: Path, seed: int) -> Path:
+    """The mini world as a run directory: its tables, a manifest for ``seed`` and review
+    decisions an hour after each approved order (context values from the fixture)."""
+    shutil.copytree(MINI, directory)
+    manifest = json.loads((directory / "manifest.json").read_text())
+    (directory / "manifest.json").write_text(json.dumps({**manifest, "seed": seed}))
+    attempts = pd.read_csv(directory / "order_attempts.csv")
+    approved = attempts[attempts["processor_result"] == "approved"]
+    rows = []
+    for order in approved.itertuples():
+        decision_at = pd.Timestamp(order.known_at) + pd.Timedelta(hours=1)
+        checks = ([{"check": "id_check", "outcome": "passed",
+                    "completed_at": str(decision_at - pd.Timedelta(minutes=5))}]
+                  if order.order_id % 2 else [])
+        rows.append({**QUIET, "order_id": order.order_id, "user_id": order.user_id,
+                     "merchant_id": order.merchant_id, "decision_at": decision_at,
+                     "checks": json.dumps(checks)})
+    pd.DataFrame(rows).to_csv(directory / "review_decisions.csv", index=False)
+    return directory
+
+
+def test_benchmarks_are_built_from_worlds_and_their_review_decisions(tmp_path, monkeypatch):
+    monkeypatch.setattr(select_cases, "BENCHMARKS", tmp_path / "benchmarks")
+    development = select_cases.build(
+        "t-dev", "development", [mini_world_with_reviews(tmp_path / "dev", 1041)],
+        n_cases=6, window="validation", rng_seed=1)
+    bench = tmp_path / "benchmarks" / "t-dev"
+    assert len(development["cases"]) == 6
+    assert {p.stem for p in (bench / "packets").glob("*.json")} == {
+        case["case_id"] for case in development["cases"]}
+    views = json.loads((bench / "referee.json").read_text())
+    assert set(views) == {case["case_id"] for case in development["cases"]}
+    for case in development["cases"]:
+        packet = json.loads((bench / "packets" / f"{case['case_id']}.json").read_text())
+        assert packet["context"]["account_age_days"] == QUIET["account_age_days"]
+        assert "pattern" not in json.dumps(packet) and "P-" not in json.dumps(packet)
+    finals = [mini_world_with_reviews(tmp_path / f"final-{seed}", seed)
+              for seed in (35244829, 931592514, 2066792625)]
+    final = select_cases.build("t-final", "final", finals, n_cases=9, window="validation",
+                               rng_seed=2, development="t-dev", n_probes=3)
+    assert len({case["seed"] for case in final["cases"]}) == 3
+    assert set(final["probes"]) == {"shuffled", "renamed"}
+    assert len(final["probes"]["shuffled"]) == 3
+    checked = [json.loads((tmp_path / "benchmarks" / "t-final" / "packets" /
+                           f"{case['case_id']}.json").read_text())
+               for case in final["cases"]]
+    assert any(packet["decision"]["point"] == "check_completed" for packet in checked)
