@@ -11,7 +11,13 @@ legitimate. Latent truth appears only in the separate diagnostic table.
 Review minutes are fraud-queue minutes from the shift allotment: review time and the
 senior review an escalation adds (``senior_minutes``, its share of the minutes offered).
 ``review_minutes_offered`` counts the work that reached the queue, ``review_minutes_used``
-the work begun.
+the work begun (analysts keep working the queue after the window, until the end of
+observation). ``available_minutes`` is the allotment of the shifts inside the window,
+used or not. ``review_band`` is 1 when the policy has a review route at all;
+``scored_to_review`` counts the orders its scores sent to review, of which ``reviews``
+reached the queue (an earlier block declined the rest at checkout). Per priority, ``reviews_pN`` counts the orders
+that entered the queue and ``sla_met_pN`` those decided within the target service hours;
+an order still undecided at the end of observation is a miss.
 
 :data:`OUTCOME_COLUMNS` are the stage's row (all integers except the key fields);
 ratios such as utilization (``review_minutes_used / available_minutes``) or loss in
@@ -46,6 +52,7 @@ OUTCOME_COLUMNS = (
     "legitimate_declined_review", "legitimate_declined", "friction_cost_cents",
     "unknown_orders",
     "fraud_declined_checkout", "fraud_stopped_before_shipping", "fraud_declined_after_shipping",
+    "review_band", "scored_to_review",
     "reviews", "reviews_decided", "review_minutes_offered", "review_minutes_used",
     "available_minutes",
     "coverage_minutes", "senior_minutes", "decided_after_shipping", "holds",
@@ -135,6 +142,10 @@ def outcome_row(result: ReplayResult, world_: World, *, keys: Mapping[str, Any],
         "fraud_declined_checkout": int((fraud & (declined_checkout | blocked_checkout)).sum()),
         "fraud_stopped_before_shipping": int((fraud & voided).sum()),
         "fraud_declined_after_shipping": int((fraud & after_ship_decline).sum()),
+        "review_band": int(result.review_band),
+        "scored_to_review": int((result.routes["scored_route"]
+                                 == actions.CheckoutRoute.REVIEW.value).sum())
+        if len(result.routes) else 0,
         "reviews": len(r), "reviews_decided": int(decided.sum()),
         "review_minutes_offered": int(round(
             r["service_seconds"].sum() / 60 + r["senior_minutes"].sum())),

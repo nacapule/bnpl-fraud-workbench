@@ -230,6 +230,19 @@ def test_the_sla_clock_does_not_move_with_the_roster(tables) -> None:
                                   int(T("2025-03-02 09:00").timestamp())) == pytest.approx(2.0)
 
 
+def test_an_order_never_decided_misses_its_sla(tables) -> None:
+    """No analyst is staffed: every order that entered the queue stays undecided and
+    counts as a miss of its priority's target."""
+    nobody = Roster((Shift("day", tuple(range(7)), 9 * 60, 60),), {"day": 0})
+    scores = {order: 5.0 for order in (3, 6, 12, 19)}
+    row = row_of(*run(tables, scores=scores, roster=nobody))
+    entered = sum(row[f"reviews_p{p}"] for p in range(4))
+    assert entered == row["reviews"] == 4 and row["reviews_decided"] == 0
+    assert sum(row[f"sla_met_p{p}"] for p in range(4)) == 0
+    assert row["review_band"] == 1
+    assert row_of(*run(tables, scores=scores, review=None))["review_band"] == 0
+
+
 # ------------------------------------------------------------------ actions and their effects
 
 
@@ -346,8 +359,8 @@ def test_an_escalations_senior_review_draws_on_the_shift_allotment(tables) -> No
 def test_the_routes_show_an_order_of_a_blocked_account_as_blocked(tables) -> None:
     """Order 11 is declined on settled evidence and its account blocked: order 13 of the
     same account scored for review, but it was declined at checkout."""
-    result, _ = run(tables, scores={11: 5.0, 13: 5.0},
-                    overrides={11: {"unauthorized_disputes_lost_user": 1}})
+    result, world = run(tables, scores={11: 5.0, 13: 5.0},
+                        overrides={11: {"unauthorized_disputes_lost_user": 1}})
     routes = result.routes.set_index("order_id")
     assert fate(result, 13)["route"] == "blocked" == routes.loc[13, "route"]
     assert routes.loc[13, "scored_route"] == "review"
@@ -357,6 +370,8 @@ def test_the_routes_show_an_order_of_a_blocked_account_as_blocked(tables) -> Non
 
     flagged = alerts(result, scored_policy(1.0))
     assert flagged["order_id"].tolist() == [11] and flagged["band"].tolist() == ["review"]
+    row = row_of(result, world)
+    assert row["review_band"] == 1 and row["scored_to_review"] == 2 and row["reviews"] == 1
 
 
 class Recording(Reviewer):

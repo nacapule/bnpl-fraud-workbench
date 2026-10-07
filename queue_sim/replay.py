@@ -356,6 +356,7 @@ class ReplayResult:
     roster: Roster
     reviewer: str
     history: str
+    review_band: bool = False  # the policy has a review route (it can send orders to review)
 
 
 def replay(
@@ -455,6 +456,7 @@ def replay(
         coverage_minutes=roster.coverage_minutes(t0, t1), roster=roster,
         reviewer=getattr(reviewer, "name", type(reviewer).__name__),
         history=type(history).__name__,
+        review_band=policy.review is not None and policy.review_threshold is not None,
     )
 
 
