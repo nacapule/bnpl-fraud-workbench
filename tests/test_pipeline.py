@@ -1115,6 +1115,30 @@ def test_evaluate_refuses_incomplete_or_repeated_outcomes() -> None:
         evaluate(rows, cells=(BASE, BASE))
 
 
+def test_the_detection_metrics_of_different_worlds_pool_over_seeds() -> None:
+    from model.evaluate import detection_metrics
+
+    class Fixed:
+        columns = ()
+
+        def score(self, rows):
+            return rows["s"].to_numpy()
+
+        def probability(self, rows):
+            return rows["s"].to_numpy()
+
+    worlds = {1: pd.DataFrame({"s": [0.9, 0.2, 0.4], "label": [1, 0, 0]}),
+              2: pd.DataFrame({"s": [0.8, 0.7, 0.1, 0.3], "label": [1, 1, 0, 0]})}
+    per_seed = {seed: detection_metrics({"m": Fixed()}, rows, "validation")
+                for seed, rows in worlds.items()}
+    for key in per_seed[1]:
+        pooled = pipeline.pool_over_seeds({s: m[key] for s, m in per_seed.items()}, key, (1, 2))
+        assert pooled.seeds.n == 2
+    orders = pipeline.pool_over_seeds({s: m["detection.validation.orders"]
+                                       for s, m in per_seed.items()}, "orders", (1, 2))
+    assert orders.seeds.per_seed == {1: 3, 2: 4}
+
+
 def test_pooling_per_seed_metrics() -> None:
     def rate(n: int, d: int) -> Metric:
         return Metric.from_ratio(n, d, population="fit-window orders", window="fit")

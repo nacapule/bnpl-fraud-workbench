@@ -38,9 +38,10 @@ PROFILE = {"account_age_days": 5.0, "amount_over_category_median": 1.3}
 TOP_SHARE = 0.01  # the cutoff is the validation window's top 1% of full-model scores
 
 
-def _population(window: str, rows: pd.DataFrame) -> str:
-    return (f"processor-approved orders at checkout in the {window} window with a known "
-            f"label ({len(rows)} orders, {int(rows['label'].sum())} positive)")
+def _population(window: str) -> str:
+    """What the metrics count, the same in every world (the counts are metrics of their
+    own), so seeds can be pooled."""
+    return f"processor-approved orders at checkout in the {window} window with a known label"
 
 
 def _ap(labels: np.ndarray, scores: np.ndarray, *, population: str, window: str) -> Metric:
@@ -56,7 +57,7 @@ def detection_metrics(scorers: Mapping[str, Scorer], rows: pd.DataFrame,
     """AP of each scorer's raw score and Brier of its calibrated probability on labelled
     ``rows`` (from ``model.features.labelled``), plus the row and positive counts."""
     labels = rows["label"].to_numpy()
-    population = _population(window, rows)
+    population = _population(window)
     metrics = {
         f"detection.{window}.orders": Metric(value=len(rows), unit="count",
                                              population=population, window=window),
@@ -97,7 +98,7 @@ def shortcut_sensitivity(tables: Mapping[str, pd.DataFrame], context: pd.DataFra
     valid = labelled(rows, tables["labels"], protocol.windows["validation"],
                      protocol.freezes["policy"])
     labels = valid["label"].to_numpy()
-    population = _population("validation", valid)
+    population = _population("validation")
     prefix = "detection.sensitivity"
     present = len(valid) > 0  # the models refuse an empty frame
     scores = full.score(valid) if present else np.empty(0)
@@ -121,8 +122,7 @@ def shortcut_sensitivity(tables: Mapping[str, pd.DataFrame], context: pd.DataFra
     cutoff = np.quantile(scores, 1 - TOP_SHARE) if len(scores) else np.nan
     first = valid[(valid["label"] == 0) & (valid["is_first_attempt_user"] == 1)]
     moved = first.assign(**PROFILE)
-    first_population = (f"legitimate first orders in the validation window ({len(first)}); "
-                        f"profile {PROFILE}")
+    first_population = f"legitimate first orders in the validation window; profile {PROFILE}"
     for name, frame in (("as_observed", first), ("new_account_profile", moved)):
         above = int((full.score(frame) > cutoff).sum()) if len(frame) else 0
         key = f"{prefix}.first_orders.{name}"

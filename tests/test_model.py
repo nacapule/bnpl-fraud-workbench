@@ -199,6 +199,13 @@ def test_average_precision_and_brier_on_a_hand_case() -> None:
     assert metrics["detection.m.brier.validation"].value == pytest.approx((0 + .25 + .25 + 0) / 4)
     empty = detection_metrics({"m": Fixed()}, rows.assign(label=0), "validation")
     assert empty["detection.m.average_precision.validation"].value is None
+    # what is counted is the same in every world, so seeds pool; the counts are metrics
+    other = detection_metrics({"m": Fixed()}, rows.iloc[:3], "validation")
+    for key, item in metrics.items():
+        assert (item.unit, item.population, item.window) == \
+            (other[key].unit, other[key].population, other[key].window)
+    assert (metrics["detection.validation.orders"].value,
+            other["detection.validation.orders"].value) == (4, 3)
 
 
 def test_shortcut_sensitivity_reports_each_check(world, base) -> None:
@@ -210,6 +217,8 @@ def test_shortcut_sensitivity_reports_each_check(world, base) -> None:
     before = metrics["detection.sensitivity.first_orders.as_observed.median_score"].value
     after = metrics["detection.sensitivity.first_orders.new_account_profile.median_score"].value
     assert after > before  # in this world, young accounts are riskier by construction
+    assert not any(char.isdigit() for item in metrics.values()
+                   for char in item.population.split("; profile")[0])  # no per-world counts
 
 
 def test_no_model_binaries_are_committed() -> None:
