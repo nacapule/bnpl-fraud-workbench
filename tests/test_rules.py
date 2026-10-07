@@ -20,9 +20,9 @@ BASE = {
     "bin_ip_mismatch": False, "avs_bad": False, "cvv_bad": False,
     "email_disposable": False, "email_root_dup": False, "email_root_accounts": 1,
     "card_test_declines": 0, "prior_inr_cbs": 0, "promo_cluster_size": 0,
-    "geo_kmh": 0.0, "prev_ip_country": "", "vendor_email_score": np.nan,
-    "vendor_ip_score": np.nan, "device_id": 7, "ship_address_id": 9, "amount": 100.0,
-    "avs_result": "Y", "cvv_result": "M", "bin_country": "US", "ip_country": "US",
+    "geo_kmh": 0.0, "prev_ip_country": "", "device_id": 7, "ship_address_id": 9,
+    "amount": 100.0, "avs_result": "Y", "cvv_result": "M", "bin_country": "US",
+    "ip_country": "US",
 }
 
 
@@ -52,8 +52,12 @@ CASES = {
     "R09": (dict(prior_inr_cbs=2), dict(prior_inr_cbs=1)),
     "R10": (dict(promo_cluster_size=3), dict(promo_cluster_size=2)),
     "R11": (dict(geo_kmh=2000.0, prev_ip_country="DE"), dict(geo_kmh=800.0)),
-    "R12": (dict(vendor_ip_score=90.0), dict(vendor_ip_score=80.0, vendor_email_score=60.0)),
 }
+
+
+def test_active_rule_ids_are_r01_to_r11() -> None:
+    """R12 is retired and its id is never reused."""
+    assert [r.id for r in RULES] == [f"R{i:02d}" for i in range(1, 12)]
 
 
 @pytest.mark.parametrize("rule_id", list(CASES))

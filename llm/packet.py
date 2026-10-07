@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import json
 from contextlib import nullcontext
-from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -21,7 +20,6 @@ import sqlalchemy as sa
 from core.config import db_settings
 
 FORBIDDEN_KEYS = {"label", "labels", "pattern_id", "story_id", "is_fraud"}
-REPO = Path(__file__).resolve().parent.parent
 
 
 def get_engine() -> sa.Engine:
@@ -173,17 +171,6 @@ def build_packet(
         ts=order_ts,
     )[0]
 
-    vendor: dict[str, Any] = {}
-    try:
-        scores = pd.read_csv(REPO / "vendor" / "fixtures" / "scores.csv")
-        for kind, val in (("ip", alert["ip"]), ("email", account["email"])):
-            hit = scores[(scores["kind"] == kind) & (scores["value"] == val)]
-            if len(hit):
-                vendor[f"{kind}_fraud_score"] = int(hit.iloc[0]["fraud_score"])
-                vendor["source"] = str(hit.iloc[0]["source"])
-    except FileNotFoundError:
-        pass
-
     packet = {
         "alert": alert,
         "account": {**account, **history, **amount_ctx},
@@ -192,7 +179,6 @@ def build_packet(
         "last_orders": last_orders,
         "account_events_90d": events,
         "linkage": linkage,
-        "vendor_scores": vendor or None,
     }
     _assert_no_forbidden(packet)
     return packet

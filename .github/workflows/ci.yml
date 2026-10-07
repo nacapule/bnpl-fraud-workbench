@@ -35,7 +35,7 @@ jobs:
           python -m venv .venv
           .venv/bin/pip install -q -e ".[dev]"
       - name: Lint
-        run: .venv/bin/ruff check simulator db rules queue_sim model llm vendor analysis tests
+        run: .venv/bin/ruff check .
       - name: Copy tree to scratch
         run: |
           mkdir -p /tmp/scaled

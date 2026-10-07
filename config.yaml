@@ -77,10 +77,3 @@ llm_eval:
   hard_negatives_min: 60
   consistency_cases: 50
   consistency_runs: 3
-
-vendor:
-  # vendor scores generated locally by `make vendor`, deliberately untracked.
-  # Sized for the IPQS free tier (1,000 lookups/mo, 35/day): 17 cases x
-  # (email + ip) = 34 lookups, one day's allowance.
-  ipqs_sample_flagged: 12
-  ipqs_sample_benign: 5

@@ -1,4 +1,4 @@
-"""Rules engine: build the point-in-time enriched order frame, fire R01–R12,
+"""Rules engine: build the point-in-time enriched order frame, fire R01–R11,
 score, band, and write alerts (MySQL table + data/alerts.csv).
 
 Run: python -m rules.engine
@@ -233,17 +233,6 @@ def build_enriched(data_dir: Path | None = None) -> pd.DataFrame:
         0.0,
     )
     ap["prev_ip_country"] = ap.prev_ip_country.fillna("")
-
-    # vendor scores (fixtures; absent file -> R12 never fires)
-    ap["vendor_email_score"] = np.nan
-    ap["vendor_ip_score"] = np.nan
-    scores_path = REPO / "vendor" / "fixtures" / "scores.csv"
-    if scores_path.exists():
-        sc = pd.read_csv(scores_path)
-        em = sc[sc.kind == "email"].set_index("value").fraud_score
-        ip = sc[sc.kind == "ip"].set_index("value").fraud_score
-        ap["vendor_email_score"] = ap.email.map(em)
-        ap["vendor_ip_score"] = ap.ip.map(ip)
 
     return ap.sort_values("ts").reset_index(drop=True)
 

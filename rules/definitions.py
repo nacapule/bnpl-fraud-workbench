@@ -1,4 +1,4 @@
-"""Rule definitions R01–R12. Intents and weights mirror policy/fraud-policy.md §4;
+"""Rule definitions R01–R11. Intents and weights mirror policy/fraud-policy.md §4;
 if you change a threshold here, update the policy doc (FP-1 §8 change control).
 
 Each rule consumes the point-in-time enriched order frame built by
@@ -150,17 +150,6 @@ def _r11_explain(df: pd.DataFrame) -> pd.Series:
     )
 
 
-def _r12_fire(df: pd.DataFrame) -> pd.Series:
-    return (df.vendor_email_score >= 85) | (df.vendor_ip_score >= 85)
-
-
-def _r12_explain(df: pd.DataFrame) -> pd.Series:
-    return (
-        "vendor risk score email=" + df.vendor_email_score.fillna(-1).astype(int).astype(str)
-        + " ip=" + df.vendor_ip_score.fillna(-1).astype(int).astype(str) + " (threshold 85)"
-    )
-
-
 RULES: list[Rule] = [
     Rule("R01", "credential change before order", ("P-ATO",),
          "Account takeover leaves a manipulation trail before the money moves",
@@ -190,6 +179,5 @@ RULES: list[Rule] = [
     Rule("R11", "impossible geo-velocity", ("P-ATO", "P-STOLEN"),
          "Two locations faster than travel allows means two actors or proxying",
          25, _r11_fire, _r11_explain),
-    Rule("R12", "vendor risk signal", ("P-STOLEN", "P-SYNTH"),
-         "Independent external signal on identity infrastructure", 25, _r12_fire, _r12_explain),
+    # R12 (vendor email/IP score) is retired; its id is not reused.
 ]

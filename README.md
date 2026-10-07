@@ -19,7 +19,7 @@ statement about method on simulated data, not a real-world rate claim. See
 graph LR
     S[simulator<br/>353k orders, 7 patterns] --> DB[(MySQL 8.4)]
     DB --> Q[Q01–Q12<br/>investigation queries]
-    DB --> R[rules engine R01–R12<br/>cost-tuned bands]
+    DB --> R[rules engine R01–R11<br/>cost-tuned bands]
     R --> AL[alerts]
     AL --> QS[queue / SLA sim]
     AL --> PK[case packets]
@@ -78,7 +78,7 @@ queue ops, and loss accounting.
 **Policy + rules** ([`policy/fraud-policy.md`](policy/fraud-policy.md),
 [`rules/`](rules)) — FP-1 is a written internal policy: definitions (fraud vs credit vs
 abuse), evidence standards, an action ladder, per-rule intent, and false-positive
-guidance. R01–R12 implement it with per-order rationale strings, so every alert is
+guidance. R01–R11 implement it with per-order rationale strings, so every alert is
 explainable. [`rules/tuning.py`](rules/tuning.py) sweeps the review/decline bands —
 **selected before the configured 2026-04-01 holdout, reported after it** — under an explicit cost model
 (review $2.50/case; false decline = 5% margin + $15 LTV proxy; both are stated
@@ -125,12 +125,6 @@ band, and the rules operating point is shown moving across the tuning grid
 multipliers ×1–×8 and rosters of one to four analysts, so the SLA target and the
 fraud-dollar curve have break points instead of one comfortable number
 ([`reports/queue_frontier.md`](reports/queue_frontier.md)).
-
-**Vendor enrichment** ([`vendor/`](vendor)) — optional IPQualityScore email/IP scoring
-feeding rule R12: `make vendor` (synthetic stand-in scores, clearly labeled) or
-`make vendor-live` with `IPQS_API_KEY`. Kept out of `make demo` so the headline numbers
-above stay exactly reproducible from the seed; the run reported here executed without
-vendor signals.
 
 ## Case files — the analyst workflow, end to end
 

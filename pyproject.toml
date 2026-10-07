@@ -12,7 +12,6 @@ dependencies = [
     "sqlalchemy>=2.0",
     "pyyaml>=6.0",
     "matplotlib>=3.9",
-    "requests>=2.32",
 ]
 
 [project.optional-dependencies]
@@ -30,4 +29,4 @@ select = ["E", "F", "I", "W", "UP", "B"]
 testpaths = ["tests"]
 
 [tool.setuptools]
-packages = ["simulator", "rules", "queue_sim", "model", "llm", "vendor"]
+packages = ["core", "simulator", "rules", "queue_sim", "model", "llm"]
