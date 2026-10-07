@@ -250,6 +250,25 @@ def test_world_version_ignores_the_commit_but_not_the_content(tmp_path: Path) ->
     assert pipeline.world_version(run) != first
 
 
+def test_the_replay_keeps_each_worlds_review_decisions(tmp_path: Path, monkeypatch) -> None:
+    module = types.ModuleType("queue_sim.replay")
+    rows = [outcome(0, "approve_all", 0)]
+    module.replay = lambda run: pipeline.StageOutput(tables={"replay.outcomes": rows})
+    module.review_decisions = lambda run, ref: pd.DataFrame({
+        "order_id": [1, 2], "decision_at": pd.to_datetime(["2025-01-01 10:00", "2025-01-02 09:30"]),
+        "disposition": ["hold", "clear"],
+    })
+    monkeypatch.setitem(sys.modules, "queue_sim.replay", module)
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
+    pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)
+    pipeline.execute(run, pipeline.select("replay", "replay"), log=lambda _: None)
+    kept = pipeline.review_decisions(run, run.worlds[0])
+    assert list(kept["disposition"]) == ["hold", "clear"]
+    assert str(kept["decision_at"].dtype).startswith("datetime64")
+    lineage = json.loads((run.directory / "lineage.json").read_text())
+    assert "worlds/0-baseline/review_decisions.pkl" in lineage["stages"]["replay"]["outputs"]
+
+
 # ---------------------------------------------------------------- evaluate
 def outcome(seed: int, policy: str, net: int, *, family: str = "baseline",
             capacity: str = "base", held: int = 10, legit: int = 10_000) -> dict:

@@ -450,13 +450,37 @@ def stage_tune(run: Run) -> StageOutput:
     return output
 
 
+REVIEW_DECISIONS = "review_decisions.pkl"
+
+
 def stage_replay(run: Run) -> StageOutput:
-    """Replay every policy on every world at every capacity level."""
+    """Replay every policy on every world at every capacity level.
+
+    Also keeps, per world, the incumbent's review decisions at base capacity
+    (with the context rows and completed checks behind them) in
+    ``worlds/<seed>-<family>/review_decisions.pkl`` for case selection.
+    """
     replay = entry("replay", "queue_sim.replay", "replay")
+    decisions = entry("replay", "queue_sim.replay", "review_decisions")
     output = replay(run)
     if "replay.outcomes" not in output.tables:
         raise PipelineError("replay: no replay.outcomes table")
+    for ref in run.all_worlds:
+        path = run.world_dir(ref) / REVIEW_DECISIONS
+        frame = decisions(run, ref)
+        if not isinstance(frame, pd.DataFrame):
+            raise PipelineError(f"replay: review decisions of {ref.name} are not a data frame")
+        frame.to_pickle(path)
+        output.outputs.append(path)
     return output
+
+
+def review_decisions(run: Run, ref: WorldRef) -> pd.DataFrame:
+    """The incumbent's review decisions on one world, as the replay stage kept them."""
+    path = run.world_dir(ref) / REVIEW_DECISIONS
+    if not path.exists():
+        raise PipelineError(f"no review decisions for {ref.name}; run the replay stage")
+    return pd.read_pickle(path)
 
 
 def stage_alerts(run: Run) -> StageOutput:

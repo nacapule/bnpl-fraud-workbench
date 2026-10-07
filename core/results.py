@@ -13,11 +13,14 @@ A :class:`Metric` is a value together with the question it answers: its unit,
 the population that was counted and the protocol window it covers (``test``,
 ``validation``, ... or ``all``). Rates and shares carry their numerator and
 denominator, and any metric that has them must equal their quotient (``bps``
-is 10,000 times the quotient). Money is in cents, and a money figure is
-published beside the count it covers, recorded as a metric of its own. An
-:class:`Interval` covers the variation its method resamples within one world;
-the spread over seeds (one world per seed) is a :class:`SeedSpread`, which also
-counts how many seeds are positive, negative and zero for paired differences.
+is 10,000 times the quotient). A difference of two rates or shares is not a
+quotient: record it in ``bps`` (10,000 times the difference) with no
+numerator or denominator, and documents print it in percentage points. Money
+is in cents, and a money figure is published beside the count it covers,
+recorded as a metric of its own. An :class:`Interval` covers the variation its
+method resamples within one world; the spread over seeds (one world per seed)
+is a :class:`SeedSpread`, which also counts how many seeds are positive,
+negative and zero for paired differences.
 
 A zero denominator is not a metric. When there is nothing to measure, or a
 figure is withheld (for example below a minimum support), the stage records
