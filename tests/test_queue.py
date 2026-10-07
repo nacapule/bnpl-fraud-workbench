@@ -92,3 +92,31 @@ def test_review_times_have_the_configured_mean() -> None:
     assert abs(seconds.mean() / 60 - 7.0) < 0.05
     median = lognormal(np.array([0.5]), median=6.0, sigma=1.0)
     assert median[0] == pytest.approx(6.0)
+
+
+def test_review_minutes_per_shift_cap_the_work_and_the_rest_waits_for_the_next_shift() -> None:
+    roster = Roster((Shift("day", (0, 1, 2), 9 * 60, 8 * 60),), {"day": 1}, {"day": 30})
+    clock = roster.clock(roster.shifts[0], s("2025-06-01"), s("2025-06-05"))
+    assert clock.take(s("2025-06-02 09:00"), 20 * 60) == s("2025-06-02 09:20")
+    # 10 of the shift's 30 minutes are left: a 15-minute review does 10 today, 5 tomorrow
+    assert clock.finish(s("2025-06-02 13:00"), 15 * 60) == s("2025-06-03 09:05")
+    assert clock.take(s("2025-06-02 13:00"), 15 * 60) == s("2025-06-03 09:05")
+    assert clock.next_on_shift(s("2025-06-02 14:00")) == s("2025-06-03 09:00")
+    assert clock.next_on_shift(s("2025-06-03 09:05")) == s("2025-06-03 09:05")
+    assert clock.take(s("2025-06-03 10:00"), 25 * 60) == s("2025-06-03 10:25")
+    assert clock.next_on_shift(s("2025-06-03 10:25")) == s("2025-06-04 09:00")  # spent
+    assert clock.take(s("2025-06-04 09:00"), 31 * 60) is None  # no shift left to finish it
+    assert clock.used == [30 * 60, 30 * 60, 0]  # a refused review books nothing
+    week = (s("2025-06-02"), s("2025-06-09"))
+    assert roster.available_minutes(*week) == 3 * 30
+    assert roster.coverage_minutes(*week) == 3 * 8 * 60  # coverage hours do not change
+
+
+def test_review_minutes_must_fit_the_shift() -> None:
+    shift = Shift("day", (0,), 9 * 60, 60)
+    with pytest.raises(ValueError, match="review minutes"):
+        Roster((shift,), {"day": 1}, {"day": 61})
+    with pytest.raises(ValueError, match="lacks"):
+        Roster((shift,), {"day": 1}, {"night": 10})
+    whole = Roster((shift,), {"day": 1})
+    assert whole.review_minutes(shift) == 60

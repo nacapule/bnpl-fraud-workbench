@@ -7,9 +7,12 @@ so a day's weekday is ``(day + 3) % 7`` with 0 = Monday.
 Capacity has two parameters (experiments/protocol.yaml): coverage hours, which the
 shift *layout* sets (when someone is on shift, which decides whether a review can
 finish before shipment), and review minutes, which the number of analysts per shift
-sets. Utilization is measured against the analysts' summed productive minutes; the
-union coverage of the shifts is reported separately (they differ whenever shifts
-overlap). The SLA clock is a fixed :class:`ServiceCalendar` that does not move with the
+and each analyst's review minutes per shift set. An analyst works the queue while on
+shift until that shift's review minutes are spent (by default the whole productive
+shift); a review that reaches the end of the shift or of its minutes resumes on the
+analyst's next shift. Utilization is measured against the analysts' summed review
+minutes; the union coverage of the shifts is reported separately (they differ whenever
+shifts overlap). The SLA clock is a fixed :class:`ServiceCalendar` that does not move with the
 roster, so changing the staffing never changes how service hours are counted.
 """
 
@@ -63,10 +66,15 @@ class Shift:
 
 @dataclass(frozen=True)
 class Roster:
-    """A shift layout and the number of analysts on each shift."""
+    """A shift layout, the number of analysts on each shift and their review minutes.
+
+    ``review_minutes_per_shift`` caps each analyst's review work in one shift (by shift
+    name); a shift it does not name, or ``None``, gives the whole productive shift.
+    """
 
     shifts: tuple[Shift, ...]
     analysts_per_shift: Mapping[str, int]
+    review_minutes_per_shift: Mapping[str, int] | None = None
 
     def __post_init__(self) -> None:
         names = [shift.name for shift in self.shifts]
@@ -76,10 +84,20 @@ class Roster:
             raise ValueError("analysts_per_shift must name every shift exactly")
         if any(not isinstance(n, int) or n < 0 for n in self.analysts_per_shift.values()):
             raise ValueError("analysts per shift must be whole, non-negative numbers")
+        budget = self.review_minutes_per_shift or {}
+        if not set(budget) <= set(names):
+            raise ValueError("review_minutes_per_shift names a shift the layout lacks")
+        for shift in self.shifts:
+            minutes = budget.get(shift.name)
+            if minutes is not None and (not isinstance(minutes, int)
+                                        or not 0 < minutes <= shift.productive_minutes):
+                raise ValueError(f"shift {shift.name}: review minutes must be whole and "
+                                 "within the productive shift")
 
     @classmethod
     def from_config(cls, policy: Mapping[str, Any] | None = None, *, layout: str | None = None,
-                    analysts_per_shift: Mapping[str, int] | None = None) -> Roster:
+                    analysts_per_shift: Mapping[str, int] | None = None,
+                    review_minutes_per_shift: Mapping[str, int] | None = None) -> Roster:
         policy = config.load("policy") if policy is None else policy
         roster = policy["roster"]
         layout = layout or roster["layout"]
@@ -89,7 +107,18 @@ class Roster:
             for item in roster["layouts"][layout]
         )
         counts = analysts_per_shift or roster["analysts_per_shift"]
-        return cls(shifts, dict(counts))
+        budget = (review_minutes_per_shift if review_minutes_per_shift is not None
+                  else roster.get("review_minutes_per_shift"))
+        return cls(shifts, dict(counts), None if budget is None else dict(budget))
+
+    def review_minutes(self, shift: Shift) -> int:
+        """Each analyst's review minutes in one of ``shift``'s shifts."""
+        budget = (self.review_minutes_per_shift or {}).get(shift.name)
+        return shift.productive_minutes if budget is None else int(budget)
+
+    def clock(self, shift: Shift, start: int, end: int) -> AnalystClock:
+        """A clock for one analyst on ``shift`` over [start, end)."""
+        return AnalystClock(self.windows(shift, start, end), self.review_minutes(shift) * 60)
 
     @property
     def analysts(self) -> tuple[tuple[str, Shift], ...]:
@@ -109,10 +138,13 @@ class Roster:
         return out
 
     def available_minutes(self, start: int, end: int) -> float:
-        """Summed productive analyst-minutes inside [start, end)."""
+        """Summed analyst review minutes inside [start, end) (a shift cut by the interval
+        counts its review minutes up to the time it has inside)."""
         total = 0
         for _, shift in self.analysts:
-            total += sum(min(b, end) - max(a, start) for a, b in self.windows(shift, start, end))
+            budget = self.review_minutes(shift) * 60
+            total += sum(min(budget, min(b, end) - max(a, start))
+                         for a, b in self.windows(shift, start, end))
         return total / 60
 
     def coverage_minutes(self, start: int, end: int) -> float:
@@ -131,37 +163,65 @@ class Roster:
 class AnalystClock:
     """One analyst's on-shift time: when the next review can start and when it ends.
 
-    Work happens only on shift. A review that reaches the end of a shift resumes at
-    the start of the analyst's next shift, so busy time inside any shift never exceeds
-    that shift's productive minutes.
+    Work happens only on shift and, in each shift, for at most ``budget`` seconds (the
+    analyst's review minutes; by default the whole shift). A review that reaches the
+    end of a shift or of its minutes resumes at the start of the analyst's next shift,
+    so review time inside any shift never exceeds either. :meth:`take` books the work;
+    the clock serves one review at a time, in time order.
     """
 
-    def __init__(self, windows: list[tuple[int, int]]) -> None:
+    def __init__(self, windows: list[tuple[int, int]], budget: int | None = None) -> None:
         self.starts = [a for a, _ in windows]
         self.ends = [b for _, b in windows]
         if any(b <= a for a, b in windows) or any(
                 self.starts[i + 1] < self.ends[i] for i in range(len(windows) - 1)):
             raise ValueError("an analyst's shifts must be ordered and must not overlap")
+        if budget is not None and budget <= 0:
+            raise ValueError("an analyst's review time per shift must be positive")
+        self.budget = budget
+        self.used = [0] * len(windows)
+
+    def _left(self, i: int) -> int:
+        return (self.ends[i] - self.starts[i] if self.budget is None else self.budget) \
+            - self.used[i]
 
     def next_on_shift(self, t: int) -> int | None:
-        """The earliest instant at or after ``t`` on shift (None after the last shift)."""
+        """The earliest instant at or after ``t`` on shift with review time left (None
+        after the last shift)."""
         i = bisect_right(self.ends, t)
+        while i < len(self.starts) and self._left(i) <= 0:
+            i += 1
         if i >= len(self.starts):
             return None
         return max(t, self.starts[i])
 
-    def finish(self, start: int, seconds: int) -> int | None:
-        """When work of ``seconds`` begun at ``start`` (on shift) completes."""
+    def _plan(self, start: int, seconds: int) -> tuple[int | None, list[tuple[int, int]]]:
         i = bisect_right(self.ends, start)
-        t, left = start, seconds
+        t, left, booked = start, seconds, []
         while i < len(self.starts):
             t = max(t, self.starts[i])
-            room = self.ends[i] - t
-            if left <= room:
-                return t + left
-            left -= room
+            room = min(self.ends[i] - t, self._left(i))
+            if room > 0:
+                if left <= room:
+                    booked.append((i, left))
+                    return t + left, booked
+                booked.append((i, room))
+                left -= room
             i += 1
-        return None
+        return None, booked
+
+    def finish(self, start: int, seconds: int) -> int | None:
+        """When work of ``seconds`` begun at ``start`` (on shift) would complete."""
+        return self._plan(start, seconds)[0]
+
+    def take(self, start: int, seconds: int) -> int | None:
+        """Book work of ``seconds`` begun at ``start`` and return when it completes;
+        books nothing and returns None when no shift is left to finish it."""
+        done, booked = self._plan(start, seconds)
+        if done is not None:
+            for i, used in booked:
+                self.used[i] += used
+        return done
 
 
 @dataclass(frozen=True)

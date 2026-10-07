@@ -47,7 +47,7 @@ from core.actions import Check, CheckOutcome, CheckoutRoute, Disposition
 from core.evidence import CheckResult
 from queue_sim import policies
 from queue_sim.reviewer import Decision, Verification, service_seconds
-from queue_sim.roster import DAY, AnalystClock, Roster, ServiceCalendar, to_seconds
+from queue_sim.roster import DAY, Roster, ServiceCalendar, to_seconds
 
 # Event kinds, in the order simultaneous events are processed.
 ARRIVAL, REVIEW_DONE, CHECK_DONE, HOLD_EXPIRE, WAKE = range(5)
@@ -462,7 +462,7 @@ class _Simulation:
         self.blocked: dict[int, tuple[int, str, int]] = {}  # user -> (at, cause, order)
         self.log: list[tuple[int, int, str, int]] = []  # at, seq, kind, order
         names = roster.analysts
-        self.clocks = [AnalystClock(roster.windows(shift, t0, horizon)) for _, shift in names]
+        self.clocks = [roster.clock(shift, t0, horizon) for _, shift in names]
         self.analyst_names = [name for name, _ in names]
         self.busy = [False] * len(names)
         self.wake_at: list[int | None] = [None] * len(names)
@@ -562,7 +562,7 @@ class _Simulation:
                 continue
             _, _, _, order = heapq.heappop(self.queue)
             o = self.orders[order]
-            finish = clock.finish(now, self.service[order])
+            finish = clock.take(now, self.service[order])
             if finish is None:  # no shift left to finish it: it stays undecided
                 heapq.heappush(self.queue, (PRIORITY_RANK[o.priority], -o.queue_score,
                                             o.checkout, o.order_id))
