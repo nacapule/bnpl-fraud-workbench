@@ -38,9 +38,11 @@ fulfilment:
 # Determinations of the adjudicated label (core.world.adjudicate), from the fraud
 # policy. The label horizon is pre-registered in experiments/protocol.yaml.
 labels:
-  default_grace_days: 30       # first installment unpaid this long after due: zero-effort default
-  linked_plan_days: 7          # another zero-effort plan opened this close makes it never-pay
-  promo_linked_accounts: 3     # linked accounts on one first-purchase promotion: promo abuse
+  default_grace_days: 30       # installment 1 unpaid this long after due, nothing paid since checkout
+  linked_plan_days: 7          # never-pay marker: another zero-effort plan opened this close
+  shared_default_days: 30      # never-pay marker: two sharing accounts defaulting this close
+  promo_linked_accounts: 3     # accounts sharing a device or email on one first-purchase promotion
+  promo_quiet_days: 90         # ... none ordering again without a promotion for this long
 
 # Parameter changes each family applies from its start date (protocol.yaml).
 families:

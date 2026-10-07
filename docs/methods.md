@@ -34,13 +34,24 @@ episode, what intent), observable outcomes (payments, failures, reversals,
 disputes and their resolutions, victim reports, deliveries), and an adjudicated
 label computed from observable outcomes only (`core.world.adjudicate`). The
 label follows the fraud policy's determinations: an unauthorized-use dispute
-lost by the platform, a victim report, a never-pay determination, two
-item-not-received claims resolved against the customer, three or more linked
-accounts on one first-purchase promotion, and orders left undelivered when a
-merchant closed. Each determination becomes known at a stated time; an order
-with no determination becomes a known negative 60 days after it, later if a
-dispute is still open. Until then its label is unknown, and unknown is never
-treated as negative. Latent truth is reported only as a separate diagnostic.
+lost by the platform, a victim report, never-pay, two item-not-received claims
+resolved against the customer on orders the carrier confirmed delivering,
+promotion abuse and merchant bust-out. Never-pay needs a zero-effort default
+(nothing paid after the checkout payment and the first installment still unpaid
+30 days after its due date) plus a mark of intent: a second such plan on the
+account within 7 days, or two or more other accounts sharing its device,
+shipping address or email that defaulted the same way within 30 days. A
+zero-effort default without that mark is a credit loss, not fraud. Promotion
+abuse is a use of a first-purchase promotion when two or more other accounts
+sharing a device or email with its account (not an address, which households
+share) used the same promotion within 90 days of it, and none of them ordered
+without a promotion within 90 days of its own use. Bust-out is an
+item-not-received claim upheld on an order the merchant reported shipped and
+the carrier never confirmed delivering, after the merchant stopped trading.
+Each determination becomes known at a stated time; an order with no
+determination becomes a known negative 60 days after it, later if a dispute is
+still open. Until then its label is unknown, and unknown is never treated as
+negative. Latent truth is reported only as a separate diagnostic.
 
 ## Evaluation protocol
 

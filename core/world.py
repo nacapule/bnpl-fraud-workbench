@@ -721,7 +721,9 @@ def adjudicate(
     observed_until: pd.Timestamp | str,
     default_grace_days: int = 30,
     linked_plan_days: int = 7,
+    shared_default_days: int = 30,
     promo_linked_accounts: int = 3,
+    promo_quiet_days: int = 90,
 ) -> pd.DataFrame:
     """Adjudicated labels from observable outcomes only (the fraud policy's determinations).
 
@@ -730,20 +732,33 @@ def adjudicate(
     * ``third_party_fraud``: an unauthorized-use dispute lost by the platform, known
       at its resolution;
     * ``account_takeover``: a victim report on the order, known at the report;
-    * ``never_pay``: a zero-effort default (the first installment still unpaid
-      ``default_grace_days`` after its due date with nothing on the plan's
-      installments ever paid) where the account had paid no installment on any
-      earlier plan when the order was placed, or another plan of the account
-      opened within ``linked_plan_days`` is also a zero-effort default; known when
-      the qualifying default is. Every other default is a credit loss;
+    * ``never_pay``: a zero-effort default with an intent marker. A zero-effort
+      default is a plan whose first installment after the checkout payment (seq 1)
+      is still unpaid ``default_grace_days`` after its due date, with no payment on
+      the plan after the checkout payment (seq 0 never counts). The markers: another
+      plan of the account opened within ``linked_plan_days`` is also a zero-effort
+      default; or the account shares a device, a shipping address or a normalized
+      email with two or more other accounts whose plans became zero-effort defaults
+      within ``shared_default_days`` of it. Known when the last qualifying default
+      (and the sharing) is known; final, so later payments are recoveries. An
+      unmarked zero-effort default is a credit loss;
     * ``inr_abuse``: the account's second item-not-received dispute resolved against
-      the customer; both orders known at the second resolution, later ones at
-      their own;
-    * ``promo_abuse``: ``promo_linked_accounts`` or more accounts linked by device
-      or address using the same first-purchase promotion; known at that use, later
-      uses at their own time;
-    * ``merchant_bustout``: orders at a merchant that closed while they were still
-      undelivered, known at the closure.
+      the customer, counting only orders with a carrier-confirmed delivery; each claim
+      counts from the later of its resolution and its delivery, both orders are known
+      when the second claim counts, later ones when their own does;
+    * ``promo_abuse``: a use of a first-purchase promotion when
+      ``promo_linked_accounts - 1`` or more other accounts sharing a device or a
+      normalized email with its account (not an address: households share addresses)
+      used the same promotion within ``promo_quiet_days`` of it, and none of these
+      accounts ordered without a promotion within ``promo_quiet_days`` after its own
+      use; known that many days after the latest of these uses (or when the sharing is
+      known, if later), taking the other accounts that make it known earliest;
+    * ``merchant_bustout``: an item-not-received dispute resolved for the customer on
+      an order the merchant reported shipped, with no carrier-confirmed delivery,
+      where the merchant closed at or before the resolution; known at the latest of
+      the resolution, the closure and the shipment report (no delivery known by then).
+
+    Every determination is dated by the last fact it rests on.
 
     Negative: known at ``order time + horizon_days`` when no positive is known by
     then, postponed to the resolution of any dispute opened before that time;
@@ -791,76 +806,76 @@ def adjudicate(
     reports = tables["victim_reports"]
     found(reports.rename(columns={"known_at": "label_known_at"}), "account_takeover")
 
-    # (c) never-pay
-    schedule = tables["installment_schedule"]
-    first_due = schedule[schedule["seq"] == 1][["plan_id", "due_at"]]
-    plan_state = plans.merge(first_due, on="plan_id", how="inner")
-    plan_state["default_at"] = plan_state["due_at"] + pd.Timedelta(days=default_grace_days)
-    standing = _standing_installment_payments(tables).merge(
-        plan_state[["plan_id", "default_at"]], on="plan_id"
-    )
-    standing_at_default = standing[
-        (standing["known_at"] <= standing["default_at"])
-        & ~(standing["reversed_at"] <= standing["default_at"])
-    ]
-    paid_by_default = set(standing_at_default["plan_id"])
-    zero_effort = plan_state[~plan_state["plan_id"].isin(paid_by_default)].copy()
-
-    installments = _standing_installment_payments(tables).merge(
-        plans[["plan_id", "user_id"]], on="plan_id"
-    )
-    prior = zero_effort[["plan_id", "user_id", "created_at"]].merge(
-        installments[["user_id", "known_at", "reversed_at"]], on="user_id", how="left"
-    )
-    prior_paid = prior[
-        (prior["known_at"] <= prior["created_at"])
-        & ~(prior["reversed_at"] <= prior["created_at"])
-    ]
-    had_paid_before = set(prior_paid["plan_id"])
-    first_party = zero_effort[~zero_effort["plan_id"].isin(had_paid_before)]
-    determined = [first_party[["order_id", "default_at"]]]
-    pairs = zero_effort[["plan_id", "order_id", "user_id", "created_at", "default_at"]].merge(
+    # (c) never-pay: a zero-effort default with an intent marker
+    zero_effort = _zero_effort_defaults(tables, plans, default_grace_days)
+    marked = []
+    same_account = zero_effort.merge(
         zero_effort[["plan_id", "user_id", "created_at", "default_at"]],
-        on="user_id",
-        suffixes=("", "_other"),
+        on="user_id", suffixes=("", "_other"),
     )
-    pairs = pairs[
-        (pairs["plan_id"] != pairs["plan_id_other"])
-        & ((pairs["created_at"] - pairs["created_at_other"]).abs()
+    same_account = same_account[
+        (same_account["plan_id"] != same_account["plan_id_other"])
+        & ((same_account["created_at"] - same_account["created_at_other"]).abs()
            <= pd.Timedelta(days=linked_plan_days))
     ]
-    pairs = pairs.assign(default_at=pairs[["default_at", "default_at_other"]].max(axis=1))
-    determined.append(pairs[["order_id", "default_at"]])
-    never_pay = pd.concat(determined, ignore_index=True)
-    never_pay = never_pay.groupby("order_id", as_index=False)["default_at"].min()
-    found(never_pay.rename(columns={"default_at": "label_known_at"}), "never_pay")
+    marked.append(same_account.assign(
+        at=same_account[["default_at", "default_at_other"]].max(axis=1))[["order_id", "at"]])
+    others = zero_effort[["plan_id", "order_id", "user_id", "default_at"]].merge(
+        _shared_accounts(tables, orders), on="user_id"
+    ).merge(
+        zero_effort[["user_id", "default_at"]].rename(
+            columns={"user_id": "other_id", "default_at": "other_default_at"}),
+        on="other_id",
+    )
+    others = others[(others["other_default_at"] - others["default_at"]).abs()
+                    <= pd.Timedelta(days=shared_default_days)]
+    others["at"] = others[["other_default_at", "shared_at"]].max(axis=1)
+    per_other = others.groupby(["plan_id", "order_id", "default_at", "other_id"],
+                               as_index=False)["at"].min()
+    per_other = per_other.sort_values(["plan_id", "at", "other_id"], kind="stable")
+    per_other["nth"] = per_other.groupby("plan_id").cumcount() + 1
+    second = per_other[per_other["nth"] == 2]
+    marked.append(second.assign(at=second[["at", "default_at"]].max(axis=1))[["order_id", "at"]])
+    never_pay = pd.concat(marked, ignore_index=True).groupby("order_id", as_index=False)["at"].min()
+    found(never_pay.rename(columns={"at": "label_known_at"}), "never_pay")
 
     # (d) INR claims resolved against the customer, second and later per account
+    delivered = tables["deliveries"].groupby("order_id")["known_at"].min()
     rejected = disputes[
         (disputes["reason"] == "item_not_received") & (disputes["outcome"] == "won")
     ].merge(orders[["order_id", "user_id"]], on="order_id")
-    rejected = rejected.sort_values(["user_id", "resolved_known_at", "dispute_id"])
+    rejected["delivered_at"] = _map(rejected["order_id"], delivered)
+    rejected = rejected[rejected["delivered_at"].notna()]
+    # each claim counts once both its resolution and its delivery are known
+    rejected["ready"] = rejected[["resolved_known_at", "delivered_at"]].max(axis=1)
+    rejected = rejected.sort_values(["user_id", "ready", "dispute_id"])
     rejected["nth"] = rejected.groupby("user_id").cumcount() + 1
-    second = rejected[rejected["nth"] == 2].set_index("user_id")["resolved_known_at"]
+    second = rejected[rejected["nth"] == 2].set_index("user_id")["ready"]
     rejected["second_at"] = _map(rejected["user_id"], second)
     inr = rejected[rejected["second_at"].notna()].copy()
-    inr["label_known_at"] = inr[["resolved_known_at", "second_at"]].max(axis=1)
+    inr["label_known_at"] = inr[["ready", "second_at"]].max(axis=1)
     found(inr, "inr_abuse")
 
-    # (e) promotion farming across linked accounts
-    found(_promo_abuse(tables, orders, promo_linked_accounts), "promo_abuse")
+    # (e) promotion farming across accounts sharing a device or an email
+    found(_promo_abuse(tables, orders, promo_linked_accounts, promo_quiet_days), "promo_abuse")
 
-    # (f) merchant bust-out: undelivered at closure
-    merchants = tables["merchants"]
-    closed = merchants[merchants["closed_at"].notna()][["merchant_id", "closed_at"]]
-    at_closed = orders.merge(closed, on="merchant_id")
-    at_closed = at_closed[at_closed["occurred_at"] < at_closed["closed_at"]]
-    delivered = tables["deliveries"][["order_id", "known_at"]].rename(
-        columns={"known_at": "delivered_at"}
-    )
-    at_closed = at_closed.merge(delivered, on="order_id", how="left")
-    undelivered = at_closed[~(at_closed["delivered_at"] <= at_closed["closed_at"])]
-    found(undelivered.rename(columns={"closed_at": "label_known_at"}), "merchant_bustout")
+    # (f) merchant bust-out: shipped, never delivered, claim upheld after the merchant closed
+    shipped = tables["fulfilments"].groupby("order_id")["known_at"].min()
+    closed_at = tables["merchants"].set_index("merchant_id")["closed_at"]
+    upheld = disputes[(disputes["reason"] == "item_not_received")
+                      & (disputes["outcome"] == "lost")].merge(
+        orders[["order_id", "merchant_id"]], on="order_id"
+    ).merge(resolutions[["dispute_id", "occurred_at"]], on="dispute_id")
+    upheld["closed_at"] = _map(upheld["merchant_id"], closed_at)
+    upheld["shipped_at"] = _map(upheld["order_id"], shipped)
+    upheld["label_known_at"] = upheld[["resolved_known_at", "closed_at", "shipped_at"]].max(
+        axis=1)
+    bustout = upheld[
+        upheld["shipped_at"].notna()
+        & ~(_map(upheld["order_id"], delivered) <= upheld["label_known_at"])
+        & (upheld["closed_at"] <= upheld["occurred_at"])
+    ]
+    found(bustout, "merchant_bustout")
 
     basis_order = {basis: i for i, basis in enumerate(LABEL_POSITIVE_BASES)}
     positive = pd.concat(positives, ignore_index=True)
@@ -905,65 +920,93 @@ def adjudicate(
     return coerce("labels", labels)
 
 
-def _promo_abuse(
-    tables: Mapping[str, pd.DataFrame], orders: pd.DataFrame, threshold: int
+def _zero_effort_defaults(
+    tables: Mapping[str, pd.DataFrame], plans: pd.DataFrame, grace_days: int
 ) -> pd.DataFrame:
+    """Plans whose seq 1 is unpaid ``grace_days`` after due, with nothing paid after seq 0."""
+    schedule = tables["installment_schedule"]
+    first_due = schedule[schedule["seq"] == 1][["plan_id", "due_at"]]
+    state = plans.merge(first_due, on="plan_id", how="inner")
+    state["default_at"] = state["due_at"] + pd.Timedelta(days=grace_days)
+    standing = _standing_installment_payments(tables).merge(
+        state[["plan_id", "default_at"]], on="plan_id"
+    )
+    paid = standing[(standing["known_at"] <= standing["default_at"])
+                    & ~(standing["reversed_at"] <= standing["default_at"])]
+    return state[~state["plan_id"].isin(set(paid["plan_id"]))].reset_index(drop=True)
+
+
+def _shared_accounts(
+    tables: Mapping[str, pd.DataFrame], orders: pd.DataFrame, *, shipping: bool = True
+) -> pd.DataFrame:
+    """Pairs of accounts sharing a device, a normalized email or (``shipping``) an
+    address an approved order shipped to.
+
+    Columns user_id, other_id, shared_at (when both sides of the earliest shared
+    item were known).
+    """
+    from core.asof import normalize_email
+
+    accounts = tables["accounts"]
+    emails = accounts[["user_id", "created_at"]].assign(
+        item="e" + accounts["email"].map(normalize_email))
+    devices = tables["device_links"][["user_id", "device_id", "created_at"]]
+    devices = devices.assign(item="d" + devices["device_id"].astype(str))
+    frames = [emails, devices]
+    if shipping:
+        shipped = orders.merge(tables["order_attempts"][["order_id", "ship_address_id"]],
+                               on="order_id")
+        shipped = shipped.groupby(["user_id", "ship_address_id"],
+                                  as_index=False)["occurred_at"].min()
+        frames.append(shipped.rename(columns={"occurred_at": "created_at"}).assign(
+            item="a" + shipped["ship_address_id"].astype(str)))
+    items = pd.concat([frame[["user_id", "item", "created_at"]] for frame in frames],
+                      ignore_index=True)
+    items = items.groupby(["user_id", "item"], as_index=False)["created_at"].min()
+    pairs = items.merge(items, on="item", suffixes=("", "_other"))
+    pairs = pairs[pairs["user_id"] != pairs["user_id_other"]]
+    pairs = pairs.assign(shared_at=pairs[["created_at", "created_at_other"]].max(axis=1))
+    return pairs.rename(columns={"user_id_other": "other_id"}).groupby(
+        ["user_id", "other_id"], as_index=False)["shared_at"].min()
+
+
+def _promo_abuse(
+    tables: Mapping[str, pd.DataFrame], orders: pd.DataFrame, threshold: int, quiet_days: int
+) -> pd.DataFrame:
+    """Promotion-abuse uses of first-purchase promotions and when each is known.
+
+    See ``adjudicate``: each use needs ``threshold - 1`` other accounts sharing a
+    device or email whose uses fall within ``quiet_days`` of it, all of them quiet
+    (no order without a promotion) for ``quiet_days`` after their own use.
+    """
     promotions = tables["promotions"]
     first_purchase = set(promotions.loc[promotions["first_purchase_only"], "promo_id"])
     uses = orders[orders["promo_id"].isin(first_purchase)][
         ["order_id", "user_id", "occurred_at", "promo_id"]
     ]
-    if uses.empty:
-        return pd.DataFrame({"order_id": [], "label_known_at": []})
-    links = pd.concat([
-        tables["device_links"][["user_id", "device_id", "created_at"]].assign(
-            node=lambda f: "d" + f["device_id"].astype(str)
-        ),
-        tables["address_links"][["user_id", "address_id", "created_at"]].assign(
-            node=lambda f: "a" + f["address_id"].astype(str)
-        ),
-    ])[["user_id", "node", "created_at"]]
-    timeline = pd.concat([
-        links.assign(order=0, order_id=-1, promo_id=-1).rename(columns={"created_at": "at"}),
-        uses.assign(order=1, node="").rename(columns={"occurred_at": "at"}),
-    ]).sort_values(["at", "order", "order_id"], kind="stable")
-
-    parent: dict[Any, Any] = {}
-
-    def find(x: Any) -> Any:
-        parent.setdefault(x, x)
-        while parent[x] != x:
-            parent[x] = parent[parent[x]]
-            x = parent[x]
-        return x
-
-    users_by_root: dict[Any, dict[int, list[tuple[int, int]]]] = {}
-
-    def union(a: Any, b: Any) -> None:
-        ra, rb = find(a), find(b)
-        if ra == rb:
-            return
-        parent[rb] = ra
-        merged = users_by_root.setdefault(ra, {})
-        for promo, members in users_by_root.pop(rb, {}).items():
-            merged.setdefault(promo, []).extend(members)
-
-    labelled: dict[int, pd.Timestamp] = {}
-    for row in timeline.itertuples(index=False):
-        account = ("u", int(row.user_id))
-        if row.order == 0:
-            union(account, row.node)
-            continue
-        root = find(account)
-        members = users_by_root.setdefault(root, {}).setdefault(int(row.promo_id), [])
-        members.append((int(row.user_id), int(row.order_id)))
-        if len({user for user, _ in members}) >= threshold:
-            for _, order_id in members:
-                labelled.setdefault(order_id, row.at)
-    return pd.DataFrame({
-        "order_id": list(labelled),
-        "label_known_at": pd.to_datetime(list(labelled.values())),
-    })
+    quiet = pd.Timedelta(days=quiet_days)
+    plain = orders.loc[orders["promo_id"].isna(), ["user_id", "occurred_at"]]
+    later = uses.merge(plain.rename(columns={"occurred_at": "plain_at"}), on="user_id")
+    loud = later[(later["plain_at"] > later["occurred_at"])
+                 & (later["plain_at"] <= later["occurred_at"] + quiet)]
+    uses = uses[~uses["order_id"].isin(loud["order_id"])]
+    pairs = uses.merge(_shared_accounts(tables, orders, shipping=False), on="user_id").merge(
+        uses.rename(columns={"order_id": "other_order", "user_id": "other_id",
+                             "occurred_at": "other_at"}),
+        on=["other_id", "promo_id"],
+    )
+    pairs = pairs[(pairs["other_at"] - pairs["occurred_at"]).abs() <= quiet]
+    # each other account's use counts from when it and the sharing are both known
+    pairs = pairs.assign(ready=pd.concat(
+        [pairs["other_at"] + quiet, pairs["shared_at"]], axis=1).max(axis=1))
+    per_other = pairs.groupby(["order_id", "occurred_at", "other_id"],
+                              as_index=False)["ready"].min()
+    per_other = per_other.sort_values(["order_id", "ready", "other_id"], kind="stable")
+    per_other["nth"] = per_other.groupby("order_id").cumcount() + 1
+    enough = per_other[per_other["nth"] == threshold - 1]
+    known = pd.concat([enough["occurred_at"] + quiet, enough["ready"]], axis=1).max(axis=1)
+    return pd.DataFrame({"order_id": enough["order_id"].to_numpy(),
+                         "label_known_at": known.to_numpy()})
 
 
 def labels_as_of(labels: pd.DataFrame, at: pd.Timestamp | str) -> pd.DataFrame:

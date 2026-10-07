@@ -233,13 +233,23 @@ COLUMNS: tuple[AsofColumn, ...] = (
          "written-off plans.", "plans of policy-approved orders", "at the decision", False,
          *ALL),
     _col("unauthorized_disputes_on_card", OC, "int64",
-         "Unauthorized-use disputes known before the decision on orders paid with this card.",
-         "disputes on policy-approved orders", "ever", False, *ALL),
+         "Unauthorized-use disputes known before the decision on orders paid with this card "
+         "(a learned feature; the fraud policy does not use it).",
+         "disputes on policy-approved orders", "ever", False, "ml"),
+    _col("unauthorized_disputes_lost_user", OC, "int64",
+         "Unauthorized-use disputes resolved lost on the account's earlier orders, the "
+         "resolution known before the decision.", "disputes on policy-approved orders",
+         "ever", False, *ALL),
+    _col("victim_reports_user", OC, "int64",
+         "Reports by the account holder of orders they did not place, known before the "
+         "decision.", "victim reports on policy-approved orders", "ever", False, *ALL),
     _col("inr_disputes_opened_user", OC, "int64",
          "Item-not-received disputes opened by the account, known before the decision.",
          "disputes on policy-approved orders", "ever", False, *ALL),
     _col("inr_claims_rejected_user", OC, "int64",
-         "Item-not-received disputes resolved against the account, known before the decision.",
+         "Item-not-received disputes resolved against the account (won) on orders with a "
+         "carrier-confirmed delivery, the resolution and the delivery both known before the "
+         "decision (the fraud policy's item-not-received abuse counts these).",
          "disputes on policy-approved orders", "ever", False, *ALL),
     _col("never_pay_determined_user", OC, "int8",
          "A never-pay determination on one of the account's earlier plans was known before "
@@ -248,8 +258,9 @@ COLUMNS: tuple[AsofColumn, ...] = (
     _col("promo_redemptions_user", OC, "int64", "Promotions used on the account's orders.",
          "policy-approved orders", "ever, before the decision", False, "rules", "ml"),
     _col("promo_uses_linked_accounts", OC, "int64",
-         "Accounts linked to this one by device or address that used the same first-purchase "
-         "promotion, including this account's use.", "policy-approved orders",
+         "Accounts linked to this one by a shared device or normalized email (not an "
+         "address) that used the same first-purchase promotion, including this account's "
+         "use.", "policy-approved orders",
          "ever, before the decision", True, *ALL),
     _col("shipped_at_decision", OC, "int8",
          "The order's fulfilment is known at the decision (always 0 at checkout).",

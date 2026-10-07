@@ -19,11 +19,12 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[2]))
 
-from core import ledger, world  # noqa: E402
+from core import config, ledger, world  # noqa: E402
 
 T = pd.Timestamp
 H = pd.Timedelta
 TERMS = ledger.ProductTerms.from_config()
+LABEL_RULES = config.load("world")["labels"]
 SEED = 0
 FAMILY = "baseline"
 ORDER_START = "2024-12-01 00:00:00"
@@ -243,7 +244,7 @@ class MiniWorld:
         frames = world.renumber_events(frames)
         frames["cash_events"] = world.coerce("cash_events", frames["cash_events"])
         frames["labels"] = world.adjudicate(frames, horizon_days=HORIZON_DAYS,
-                                            observed_until=OBSERVED_UNTIL)
+                                            observed_until=OBSERVED_UNTIL, **LABEL_RULES)
         frames.update(self.latent(frames, ids))
         return {name: world.coerce(name, frames[name]) for name in world.TABLES}
 
@@ -374,14 +375,39 @@ def build() -> dict[str, pd.DataFrame]:
     for n in (1, 2, 3):
         w.order_truth(f"eve{n}", "P-STOLEN", "e_stolen", "fraud")
 
-    # fay: new customer who never pays after checkout (never-pay determination).
+    # fay: new customer who places two orders three days apart and pays nothing after
+    # either checkout (never-pay: a second zero-effort plan within 7 days).
     w.episode("e_neverpay", "P-NEVERPAY", "2025-02-01 12:00", "2025-03-15 12:30")
     w.customer("fay", "2025-02-01 12:00", dob=2001)
     w.order("fay1", "fay", "m_tech", "2025-02-01 12:30", 52000, ship_hours=18)
     w.miss("fay1")
     w.write_off("fay1")
+    w.order("fay2", "fay", "m_home", "2025-02-04 10:00", 18000)
+    w.miss("fay2")
+    w.write_off("fay2")
     w.truth("fay", "fraudster", "e_neverpay")
     w.order_truth("fay1", "P-NEVERPAY", "e_neverpay", "fraud")
+    w.order_truth("fay2", "P-NEVERPAY", "e_neverpay", "fraud")
+
+    # nr1-nr3: three new accounts on one phone, each defaulting with zero effort
+    # within days of the others (never-pay through shared devices).
+    w.episode("e_ring", "P-NEVERPAY", "2025-03-03 11:00", "2025-03-08 16:20")
+    w.device("d_ring", "2025-03-03 11:00", ua="Android")
+    for n, (signup, ordered, amount) in enumerate(
+        (("2025-03-03 11:00", "2025-03-03 11:20", 32000),
+         ("2025-03-05 09:00", "2025-03-05 09:30", 27500),
+         ("2025-03-08 16:00", "2025-03-08 16:20", 41000)), start=1):
+        user = f"nr{n}"
+        w.account(user, signup, dob=1998)
+        w.link_device(user, "d_ring", signup)
+        w.address(f"a_{user}", signup, city="Tulsa", region="OK")
+        w.link_address(user, f"a_{user}", signup)
+        w.card(f"c_{user}", user, signup)
+        w.order(f"{user}1", user, "m_tech", ordered, amount, device="d_ring")
+        w.miss(f"{user}1")
+        w.write_off(f"{user}1")
+        w.truth(user, "fraudster", "e_ring")
+        w.order_truth(f"{user}1", "P-NEVERPAY", "e_ring", "fraud")
 
     # gus: returning customer in hardship; a zero-effort default after a repaid plan
     # is a credit loss, not never-pay.

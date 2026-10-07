@@ -116,10 +116,10 @@ def test_screener_rollup_runs_on_the_compatibility_views(loaded) -> None:
     tables = world.read_world(FIXTURE)
     orders_table = tables["order_attempts"]
     approved = orders_table[orders_table["processor_result"] == "approved"]
-    assert orders == len(approved) == 20
+    assert orders == len(approved) == 24
     assert round(float(gmv) * 100) == int(approved["amount_cents"].sum())
     assert disputes == 5
-    assert failed == 12  # four written-off plans, three installments each
+    assert failed == 24  # eight written-off plans, three installments each
 
 
 @pytest.mark.reloads_mysql
@@ -164,9 +164,9 @@ def test_installment_outcomes_follow_payment_events(loaded) -> None:
     rows = dict(_query(
         connection,
         "SELECT outcome, COUNT(*) FROM installments GROUP BY outcome"))
-    # 4 written-off plans x 3 installments; mo's last two are still pending; ana's bounced
+    # 8 written-off plans x 3 installments; mo's last two are still pending; ana's bounced
     # installment was paid on retry after its due date
-    assert rows["written_off"] == 12
+    assert rows["written_off"] == 24
     assert rows["pending"] == 2
     assert rows["late"] == 1
 

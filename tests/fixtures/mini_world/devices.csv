@@ -13,5 +13,6 @@ device_id,created_at,fingerprint,ua_family
 12,2025-02-01 12:00:00,fp-d_fay,iOS
 13,2025-02-03 02:10:00,fp-d_ato,Chrome
 14,2025-02-14 01:00:00,fp-d_eve,Chrome
-15,2025-03-10 20:00:00,fp-d_farm,Android
-16,2025-05-20 15:00:00,fp-d_mo,iOS
+15,2025-03-03 11:00:00,fp-d_ring,Android
+16,2025-03-10 20:00:00,fp-d_farm,Android
+17,2025-05-20 15:00:00,fp-d_mo,iOS
