@@ -1,6 +1,7 @@
-"""The current simulator's loader and the world loader can replace each other's schema.
+"""The world loader enforces every reference, and the screener's installment view
+follows the cents that stand after reversals.
 
-These tests drop and reload the configured database (see tests/conftest.py).
+Tests marked reloads_mysql drop and reload the configured database (see tests/conftest.py).
 """
 
 from __future__ import annotations
@@ -25,34 +26,64 @@ def _module(name: str):
     return module
 
 
-def _kind(connection, name: str) -> str | None:
-    connection.commit()
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT table_type FROM information_schema.tables "
-                       "WHERE table_schema = DATABASE() AND table_name = %s", (name,))
-        row = cursor.fetchone()
-    return row[0] if row else None
+def _orphan(tables: dict[str, pd.DataFrame], column: str) -> dict[str, pd.DataFrame]:
+    """The mini world with its first approved order pointing at a nonexistent entity."""
+    changed = {name: frame.copy() for name, frame in tables.items()}
+    orders = changed["order_attempts"]
+    first = orders.index[orders["processor_result"] == "approved"][0]
+    orders.loc[first, column] = 999_999
+    return changed
+
+
+REFERENCES = ["device_id", "card_id", "ship_address_id", "user_id", "merchant_id"]
+
+
+@pytest.mark.parametrize("column", REFERENCES)
+def test_the_loader_refuses_a_world_with_a_missing_reference(column) -> None:
+    tables = _orphan(world.read_world(FIXTURE), column)
+    with pytest.raises(world.WorldError) as raised:
+        _module("load_world").load_tables(tables)  # refused before connecting
+    assert "missing_reference" in raised.value.checks
+
+
+def test_the_loader_refuses_a_payment_for_a_missing_plan() -> None:
+    tables = world.read_world(FIXTURE)
+    tables["payment_attempts"] = tables["payment_attempts"].copy()
+    tables["payment_attempts"].loc[0, "plan_id"] = 999_999
+    with pytest.raises(world.WorldError) as raised:
+        _module("load_world").load_tables(tables)
+    assert "missing_reference" in raised.value.checks
+
+
+def _count(table: str) -> int:
+    import pymysql
+
+    connection = pymysql.connect(**db_settings().pymysql_kwargs())
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(f"SELECT COUNT(*) FROM {table}")
+            return int(cursor.fetchone()[0])
+    finally:
+        connection.close()
 
 
 @pytest.mark.reloads_mysql
-def test_each_loader_replaces_either_schema() -> None:
+@pytest.mark.parametrize("column", ["device_id", "card_id", "ship_address_id"])
+def test_the_database_itself_refuses_orphaned_references(column) -> None:
+    """With the validator bypassed, foreign keys still refuse the orphan and the
+    whole load rolls back."""
     import pymysql
 
-    old, new = _module("load"), _module("load_world")
-    connection = pymysql.connect(**db_settings().pymysql_kwargs())
+    loader = _module("load_world")
+    tables = _orphan(world.read_world(FIXTURE), column)
     try:
-        old.create_schema(connection)
-        old.create_schema(connection)  # old over old
-        assert _kind(connection, "users") == "BASE TABLE"
-        new.load_world(FIXTURE)  # new over old
-        assert _kind(connection, "users") == "VIEW"
-        assert _kind(connection, "user_devices") is None
-        old.create_schema(connection)  # old over new
-        assert _kind(connection, "users") == "BASE TABLE"
-        assert _kind(connection, "order_attempts") is None
+        with pytest.raises(pymysql.err.IntegrityError, match="foreign key constraint"):
+            loader.load_tables(tables, validate=False)
+        assert _count("accounts") == 0
+        assert _count("order_attempts") == 0
     finally:
-        connection.close()
-        new.load_world(FIXTURE)
+        loader.load_world(FIXTURE)
+    assert _count("order_attempts") == len(world.read_world(FIXTURE)["order_attempts"])
 
 
 def _fay_plan(tables: dict[str, pd.DataFrame]) -> tuple[int, pd.Timestamp, int]:

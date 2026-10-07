@@ -125,7 +125,7 @@ CREATE TABLE latent_accounts (
   user_id INT NOT NULL COMMENT 'Account.',
   actor ENUM('legitimate', 'fraudster', 'synthetic_identity') NOT NULL COMMENT 'Who controls the account.',
   episode_id INT NULL COMMENT 'Episode the account belongs to.',
-  profile VARCHAR(40) NULL COMMENT 'Behaviour profile or benign mimic (traveller, mover, household, hardship, new_customer, sleeper, ...).',
+  profile VARCHAR(160) NULL COMMENT 'Behaviour profile or benign mimic (traveller, mover, household, hardship, new_customer, sleeper, ...).',
   PRIMARY KEY (user_id),
   CONSTRAINT fk_latent_accounts_user_id FOREIGN KEY (user_id) REFERENCES accounts (user_id),
   CONSTRAINT fk_latent_accounts_episode_id FOREIGN KEY (episode_id) REFERENCES latent_episodes (episode_id)
@@ -232,7 +232,7 @@ CREATE TABLE latent_orders (
   pattern_id ENUM('P-ATO', 'P-STOLEN', 'P-SYNTH', 'P-NEVERPAY', 'P-INR-ABUSE', 'P-PROMO', 'P-MERCH') NULL COMMENT 'Fraud pattern; null for legitimate orders.',
   episode_id INT NULL COMMENT 'Episode.',
   intent ENUM('legitimate', 'fraud', 'abuse') NOT NULL COMMENT 'Intent behind the order.',
-  mimic VARCHAR(40) NULL COMMENT 'Benign behaviour that resembles fraud, if any.',
+  mimic VARCHAR(160) NULL COMMENT 'Benign behaviour that resembles fraud, if any.',
   PRIMARY KEY (order_id),
   CONSTRAINT fk_latent_orders_order_id FOREIGN KEY (order_id) REFERENCES order_attempts (order_id),
   CONSTRAINT fk_latent_orders_episode_id FOREIGN KEY (episode_id) REFERENCES latent_episodes (episode_id)

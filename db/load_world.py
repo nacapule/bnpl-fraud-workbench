@@ -37,7 +37,7 @@ MYSQL_TYPES = {
     "bool": "BOOLEAN",
     "str": "VARCHAR(64)",
 }
-VARCHAR = {"email": 120, "name": 80, "ip": 45, "line_hash": 40, "profile": 40, "mimic": 40}
+VARCHAR = {"email": 120, "name": 80, "ip": 45, "line_hash": 40, "profile": 160, "mimic": 160}
 # References the column specs cannot express (composite or to a non-entity table).
 EXTRA_FOREIGN_KEYS = {
     "payment_attempts": [("plan_id, seq", "installment_schedule (plan_id, seq)")],
@@ -245,9 +245,17 @@ def _rows(name: str, frame: pd.DataFrame) -> list[tuple]:
     return out
 
 
-def load_tables(tables: dict[str, pd.DataFrame], settings: DbSettings | None = None) -> dict:
-    """Validate, recreate the schema and insert every table; return row counts loaded."""
-    world.validate_world(tables)
+def load_tables(tables: dict[str, pd.DataFrame], settings: DbSettings | None = None, *,
+                validate: bool = True) -> dict:
+    """Validate, recreate the schema and insert every table; return row counts loaded.
+
+    Rows go in with foreign keys enforced, in one transaction: a row naming a
+    missing account, device, card, address, order or plan is refused by MySQL
+    and nothing is loaded. ``validate=False`` skips the world validator (tests use
+    it to show the database enforces the references by itself).
+    """
+    if validate:
+        world.validate_world(tables)
     connection = _connect(settings or db_settings())
     counts: dict[str, int] = {}
     try:
