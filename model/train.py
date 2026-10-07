@@ -5,7 +5,6 @@ Run with ``python -m model.train`` from the repository root.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import joblib
@@ -97,10 +96,6 @@ def main() -> None:
         destination = ARTIFACT_DIR / MODEL_FILES[name]
         joblib.dump(model, destination)
         print(f"saved {name}: {destination.relative_to(REPO)}")
-
-    with (ARTIFACT_DIR / "feature_list.json").open("w") as handle:
-        json.dump(FEATURE_COLUMNS, handle, indent=2)
-        handle.write("\n")
 
 
 if __name__ == "__main__":

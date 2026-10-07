@@ -354,55 +354,24 @@ def _installment_history(
 
 
 def build_features(
+    *,
     orders: pd.DataFrame,
     users: pd.DataFrame,
-    devices: pd.DataFrame | None = None,
-    user_devices: pd.DataFrame | None = None,
-    cards: pd.DataFrame | None = None,
-    addresses: pd.DataFrame | None = None,
-    merchants: pd.DataFrame | None = None,
-    plans: pd.DataFrame | None = None,
-    installments: pd.DataFrame | None = None,
-    payments: pd.DataFrame | None = None,
-    account_events: pd.DataFrame | None = None,
-    promos: pd.DataFrame | None = None,
-    promo_redemptions: pd.DataFrame | None = None,
-    chargebacks: pd.DataFrame | None = None,
-    labels: pd.DataFrame | None = None,
-    *,
-    as_of: str = "per-order",
+    cards: pd.DataFrame,
+    addresses: pd.DataFrame,
+    merchants: pd.DataFrame,
+    plans: pd.DataFrame,
+    installments: pd.DataFrame,
+    account_events: pd.DataFrame,
+    promo_redemptions: pd.DataFrame,
+    labels: pd.DataFrame,
 ) -> pd.DataFrame:
     """Build one deterministic, point-in-time feature row per approved order.
 
-    Unused frames are accepted so callers can pass the complete CSV world as
-    keyword arguments.  Static dimensions are safe to join, while every
-    timestamped fact is filtered by an as-of search.
+    :func:`load_feature_frames` returns exactly these frames, so callers pass
+    its result as keyword arguments. Static dimensions are safe to join, while
+    every timestamped fact is filtered by an as-of search.
     """
-    del devices, user_devices, payments, promos, chargebacks
-    if as_of != "per-order":
-        raise ValueError("build_features only supports as_of='per-order'")
-    required = {
-        "cards": cards,
-        "addresses": addresses,
-        "merchants": merchants,
-        "plans": plans,
-        "installments": installments,
-        "account_events": account_events,
-        "promo_redemptions": promo_redemptions,
-        "labels": labels,
-    }
-    missing = [name for name, frame in required.items() if frame is None]
-    if missing:
-        raise ValueError(f"missing required frames: {', '.join(missing)}")
-    assert cards is not None
-    assert addresses is not None
-    assert merchants is not None
-    assert plans is not None
-    assert installments is not None
-    assert account_events is not None
-    assert promo_redemptions is not None
-    assert labels is not None
-
     base = orders.copy()
     base["ts"] = _datetime(base, "ts")
     if base["ts"].isna().any():
