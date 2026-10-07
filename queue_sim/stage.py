@@ -115,7 +115,8 @@ class Bench:
                       observed_until=pd.Timestamp(observed_until),
                       terms=ledger.ProductTerms.from_config())
         neighbours = asof.Neighbours.of(tables) if hasattr(asof, "Neighbours") else None
-        return cls(world, tables["latent_orders"], neighbours, policy_cfg, FrozenHistory(world))
+        return cls(world, tables["latent_orders"], neighbours, policy_cfg,
+                   FrozenHistory(world, neighbours=neighbours))
 
     def verification(self, rates: str = "verification") -> Verification:
         return Verification.from_config(self.world.seed, self.latent_orders, self.policy_cfg,

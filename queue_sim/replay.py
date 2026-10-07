@@ -69,6 +69,14 @@ class World:
     seed: int
     observed_until: pd.Timestamp
     terms: ledger.ProductTerms
+    scores: dict[tuple[str, str], pd.Series] = field(default_factory=dict, compare=False,
+                                                     repr=False)
+
+    def checkout_scores(self, signal: policies.Signal | None) -> None:
+        """Score every world-level checkout row once per signal (kept for every replay)."""
+        if signal is not None and signal.key not in self.scores:
+            self.scores[signal.key] = pd.Series(
+                signal(self.context), index=self.context["order_id"].to_numpy())
 
     def orders(self, start: pd.Timestamp, end: pd.Timestamp) -> pd.DataFrame:
         """Processor-approved attempts with checkout in [start, end), in arrival order."""
@@ -140,6 +148,8 @@ class FrozenHistory:
 
     world: World
     build: Callable[..., pd.DataFrame] | None = None  # default core.asof.build_context
+    neighbours: Any = None
+    rebuilt: np.ndarray | None = None  # rows of the last call that differ from approve-all
     _cache: dict[tuple[int, Any], dict[str, Any]] = field(default_factory=dict, repr=False)
 
     def rows(self, decisions: pd.DataFrame, so_far: SoFar | None,
@@ -156,12 +166,16 @@ class FrozenHistory:
             missing = [key not in self._cache for key in keys]
             if any(missing):
                 build = self.build or asof.build_context
-                built = build(self.world.tables, later.loc[missing].reset_index(drop=True))
+                extra = {} if self.neighbours is None else {
+                    "world_context": self.world.context, "neighbours": self.neighbours}
+                built = build(self.world.tables, later.loc[missing].reset_index(drop=True),
+                              **extra)
                 for record in built.to_dict("records"):
                     key = (int(record["order_id"]), pd.Timestamp(record["decision_at"]))
                     self._cache[key] = record
             parts.append(pd.DataFrame([self._cache[key] for key in keys], index=later.index))
         out = pd.concat(parts).loc[decisions.index, list(context.columns)]
+        self.rebuilt = np.zeros(len(out), dtype=bool)
         return out.reset_index(drop=True)
 
 
@@ -182,12 +196,14 @@ class PolicyHistory:
     policy_rows: Callable[..., pd.DataFrame] | None = None  # default core.asof.policy_rows
     frozen: FrozenHistory | None = None
     calls: int = 0
+    rebuilt: np.ndarray | None = None  # rows of the last call rebuilt under the policy
 
     def __post_init__(self) -> None:
-        self.frozen = self.frozen or FrozenHistory(self.world)
+        self.frozen = self.frozen or FrozenHistory(self.world, neighbours=self.neighbours)
 
     def rows(self, decisions: pd.DataFrame, so_far: SoFar, at: pd.Timestamp) -> pd.DataFrame:
         world_rows = self.frozen.rows(decisions, so_far, at)
+        self.rebuilt = np.zeros(len(world_rows), dtype=bool)
         changed = so_far.changed_users()
         if not len(changed):
             return world_rows
@@ -196,6 +212,7 @@ class PolicyHistory:
         mask = np.isin(world_rows["user_id"].to_numpy(np.int64), touched)
         if not mask.any():
             return world_rows
+        self.rebuilt = mask
         fates, blocks = so_far.fates(), so_far.blocks()
         realized = actions.realize(_world_before(self.world.tables, at), fates,
                                    self.world.terms)
@@ -328,6 +345,8 @@ def replay(
                                                   int(to_seconds(record.checkout_at)), ship)
     arrivals = list(sim.orders.values())
     needs_rows = policy.review is not None or policy.decline is not None
+    world.checkout_scores(policy.review)
+    world.checkout_scores(policy.decline)
     routes: list[pd.DataFrame] = []
     alert_rows: list[pd.DataFrame] = []
     cursor = 0
@@ -356,7 +375,9 @@ def replay(
             for o, record in zip(todays + waiting, records, strict=True):
                 o.row = record
             if todays:
-                routed = sim.route(todays, rows.iloc[:len(todays)])
+                rebuilt = getattr(history, "rebuilt", None)
+                fresh = None if rebuilt is None else np.asarray(rebuilt[:len(todays)], bool)
+                routed = sim.route(todays, rows.iloc[:len(todays)], fresh)
                 routes.append(routed)
                 flagged = routed["route"].to_numpy() != CheckoutRoute.APPROVE.value
                 if flagged.any():
@@ -447,12 +468,13 @@ class _Simulation:
                 if o.route == CheckoutRoute.REVIEW.value and o.final is None
                 and o.priority is not None and (o.decided is None or o.holding)]
 
-    def route(self, todays: list[_Order], rows: pd.DataFrame | None) -> pd.DataFrame:
+    def route(self, todays: list[_Order], rows: pd.DataFrame | None,
+              fresh: np.ndarray | None = None) -> pd.DataFrame:
         if rows is None:
             return pd.DataFrame({"order_id": [o.order_id for o in todays],
                                  "route": CheckoutRoute.APPROVE.value,
                                  "review_score": np.nan, "decline_score": np.nan})
-        routed = self.policy.route(rows)
+        routed = self.policy.route(rows, known=self.world.scores, fresh=fresh)
         review = routed["route"].to_numpy() == CheckoutRoute.REVIEW.value
         if review.any():
             entered = np.array([o.checkout for o in todays], dtype="datetime64[s]")[review]

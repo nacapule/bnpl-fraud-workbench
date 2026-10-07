@@ -63,6 +63,10 @@ class Signal:
     columns: tuple[str, ...]
     compute: Callable[[pd.DataFrame], np.ndarray] = field(compare=False, repr=False)
 
+    @property
+    def key(self) -> tuple[str, str]:
+        return (self.name, self.version)
+
     def __call__(self, rows: pd.DataFrame) -> np.ndarray:
         values = np.asarray(self.compute(rows), dtype=np.float64)
         if values.shape != (len(rows),):
@@ -92,7 +96,8 @@ def decline_benefit_cents(scorer: Scorer, terms: ledger.ProductTerms, ltv_cents:
         fee = rows["amount_cents"].to_numpy(dtype=float) * terms.merchant_discount_bps / 10_000
         return p * exposure - (1 - p) * (fee + ltv_cents)
 
-    return Signal(f"{scorer.name}.decline_benefit", scorer.version, columns, compute)
+    return Signal(f"{scorer.name}.decline_benefit@{ltv_cents}", scorer.version, columns,
+                  compute)
 
 
 @dataclass(frozen=True)
@@ -128,17 +133,32 @@ class Policy:
     def with_thresholds(self, review: float | None, decline: float | None) -> Policy:
         return replace(self, review_threshold=review, decline_threshold=decline)
 
-    def route(self, rows: pd.DataFrame) -> pd.DataFrame:
+    def route(self, rows: pd.DataFrame, *,
+              known: Mapping[tuple[str, str], pd.Series] | None = None,
+              fresh: np.ndarray | None = None) -> pd.DataFrame:
         """Each row's route and the review score that orders the queue.
 
         Every row is routed on its own values: the result for one order never depends
-        on which other rows are passed.
+        on which other rows are passed. ``known`` may hold each signal's scores of the
+        world-level checkout rows (by order id); they are reused for rows not marked
+        ``fresh`` (rows whose context differs from the world-level row are rescored).
         """
         n = len(rows)
-        review = (self.review(rows) if self.review is not None and n
-                  else np.full(n, np.nan))
-        decline = (self.decline(rows) if self.decline is not None and n
-                   else np.full(n, np.nan))
+
+        def values(signal: Signal | None) -> np.ndarray:
+            if signal is None or not n:
+                return np.full(n, np.nan)
+            if known is None or signal.key not in known:
+                return signal(rows)
+            out = known[signal.key].reindex(rows["order_id"].to_numpy()).to_numpy(
+                dtype=float, copy=True)
+            redo = np.isnan(out) if fresh is None else (np.isnan(out) | fresh)
+            if redo.any():
+                out[redo] = signal(rows.loc[redo])
+            return out
+
+        review = values(self.review)
+        decline = review if self.decline is self.review else values(self.decline)
         to_review = (np.zeros(n, dtype=bool) if self.review_threshold is None
                      else review >= self.review_threshold)
         to_decline = (np.zeros(n, dtype=bool) if self.decline_threshold is None
