@@ -176,6 +176,9 @@ def test_a_validation_window_without_known_labels_is_reported_not_evaluated(worl
     for name in ("rules", "tree", "logistic", "boosting"):
         for kind in ("average_precision", "brier"):
             assert result.metrics[f"detection.{name}.{kind}.validation"].value is None
+    tables = {"order_attempts": world["order_attempts"], "labels": labels}
+    sensitivity = shortcut_sensitivity(tables, context, PROTOCOL, result.scorers["boosting"])
+    assert all(metric.value is None for metric in sensitivity.values())
 
 
 def test_average_precision_and_brier_on_a_hand_case() -> None:

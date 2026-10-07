@@ -99,8 +99,10 @@ def shortcut_sensitivity(tables: Mapping[str, pd.DataFrame], context: pd.DataFra
     labels = valid["label"].to_numpy()
     population = _population("validation", valid)
     prefix = "detection.sensitivity"
+    present = len(valid) > 0  # the models refuse an empty frame
+    scores = full.score(valid) if present else np.empty(0)
     metrics = {f"{prefix}.full.average_precision.validation": _ap(
-        labels, full.score(valid), population=population, window="validation")}
+        labels, scores, population=population, window="validation")}
     for name, (kind, columns) in SHORTCUTS.items():
         if kind == "tree":
             model = DecisionTreeClassifier(max_depth=4, min_samples_leaf=20,
@@ -111,11 +113,11 @@ def shortcut_sensitivity(tables: Mapping[str, pd.DataFrame], context: pd.DataFra
                                                    random_state=RANDOM_STATE)
         with threadpool_limits(limits=1):
             model.fit(train[list(columns)], train["label"])
-            scores = model.predict_proba(valid[list(columns)])[:, 1]
+            shortcut = (model.predict_proba(valid[list(columns)])[:, 1] if present
+                        else np.empty(0))
         metrics[f"{prefix}.{name}.average_precision.validation"] = _ap(
-            labels, scores, population=population, window="validation")
+            labels, shortcut, population=population, window="validation")
 
-    scores = full.score(valid)
     cutoff = np.quantile(scores, 1 - TOP_SHARE) if len(scores) else np.nan
     first = valid[(valid["label"] == 0) & (valid["is_first_attempt_user"] == 1)]
     moved = first.assign(**PROFILE)
