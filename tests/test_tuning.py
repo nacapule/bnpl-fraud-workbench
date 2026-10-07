@@ -22,7 +22,7 @@ from queue_sim import outcomes, policies
 from queue_sim.replay import replay
 from queue_sim.reviewer import Reviewer
 from queue_sim.roster import Roster, Shift
-from rules.tuning import Grid, cut_point, tune
+from rules.tuning import Grid, Guardrail, cut_point, tune, tune_shortlist
 
 T = pd.Timestamp
 WHOLE = (T("2024-12-01"), T("2025-06-15"))
@@ -195,8 +195,8 @@ def test_a_boundary_is_flagged_when_the_widest_rate_gives_the_chosen_threshold()
     base = {"net_cents": 0, "friction_cost_cents": 0, "review_minutes_offered": 0,
             "available_minutes": 100, "fraud_declined_checkout": 0,
             "legitimate_declined_checkout": 0, "net_vs_approve_all_cents": 0,
-            "prevented_loss_cents": 0, "reviews": 0, "legitimate_declined": 0,
-            "legitimate_held": 0, "decided_after_shipping": 0}
+            "prevented_loss_cents": 0, "reviews": 0, "legitimate_orders": 8,
+            "legitimate_declined": 0, "legitimate_held": 0, "decided_after_shipping": 0}
 
     def evaluate(candidates):  # reviewing at 9 or more earns the most
         return [{**base, "net_cents": 100 if c.review_threshold == 9.0 else 0,
@@ -216,6 +216,106 @@ def test_the_tuned_policy_is_the_one_the_replay_evaluates() -> None:
     assert len(chosen_row) == 1
     assert float(chosen_row["decline_threshold"].iloc[0]) == pytest.approx(
         tuned.chosen.decline_threshold)
+
+
+ROW = {"net_cents": 0, "friction_cost_cents": 0, "review_minutes_offered": 0,
+       "available_minutes": 100, "fraud_declined_checkout": 0,
+       "legitimate_declined_checkout": 0, "net_vs_approve_all_cents": 0,
+       "prevented_loss_cents": 0, "reviews": 0, "legitimate_orders": 10_000,
+       "legitimate_declined": 0, "legitimate_held": 0, "decided_after_shipping": 0}
+SCORES = np.arange(100) / 100  # cut-points 0.99, 0.98, 0.95, 0.90, 0.80
+GRID = Grid((0.0, 0.01, 0.02, 0.05, 0.1, 0.2), (0.0, 0.01, 0.02, 0.05))
+
+
+def _index(threshold, cuts):
+    return 0 if threshold is None else cuts.index(round(threshold, 2))
+
+
+def _synthetic(net, *, held=lambda i, j: 0):
+    """Outcome rows from a net contribution and legitimate holds by grid position."""
+    review_cuts = [None, 0.99, 0.98, 0.95, 0.9, 0.8]
+    decline_cuts = [None, 0.99, 0.98, 0.95]
+    calls = []
+
+    def evaluate(candidates):
+        calls.append([c.version for c in candidates])
+        out = []
+        for c in candidates:
+            i = _index(c.review_threshold, review_cuts)
+            j = _index(c.decline_threshold, decline_cuts)
+            out.append({**ROW, "net_cents": net(i, j), "reviews": i,
+                        "legitimate_held": held(i, j)})
+        return out
+    return evaluate, calls
+
+
+def _position(frontier, version):
+    row = frontier.loc[frontier["policy_version"] == version].iloc[0]
+    return GRID.review_rates.index(row["review_rate"]), GRID.decline_rates.index(
+        row["decline_rate"])
+
+
+def test_the_shortlist_is_fixed_by_the_frozen_screen_and_the_choice_by_policy_history():
+    """Frozen history peaks at (2, 1); policy history (a policy that leans on repayment
+    history) prefers one more review step. The shortlist is the frozen winner, its
+    neighbours one step away on each threshold and the best k frozen points; only those
+    are replayed with policy history, and the choice is the best of them."""
+    frozen_eval, frozen_calls = _synthetic(lambda i, j: 100 - 10 * abs(i - 2) - 7 * abs(j - 1))
+    policy_eval, policy_calls = _synthetic(lambda i, j: 100 - 10 * abs(i - 3) - 7 * abs(j - 1))
+    scores = {"review": SCORES, "decline": SCORES}
+    tuned = tune_shortlist(scored_policy(None, None), scores, frozen_eval, policy_eval, GRID,
+                           k=5)
+    frozen_rows = tuned.frontier.loc[tuned.frontier["history"] == "frozen"]
+    policy_rows = tuned.frontier.loc[tuned.frontier["history"] == "policy"]
+    assert len(frozen_rows) == 24 and len(frozen_calls) == 1 and len(policy_calls) == 1
+    assert _position(frozen_rows, tuned.screened.version) == (2, 1)
+    shortlisted = {_position(frozen_rows, v) for v in tuned.shortlist}
+    neighbours = {(i, j) for i in (1, 2, 3) for j in (0, 1, 2)}
+    assert neighbours <= shortlisted  # the winner and its eight neighbours
+    ranked = frozen_rows.sort_values(["objective_cents", "reviews", "declines"],
+                                     ascending=[False, True, True], kind="stable")
+    best_five = {_position(frozen_rows, v) for v in ranked["policy_version"].head(5)}
+    assert shortlisted == neighbours | best_five
+    assert sorted(policy_calls[0]) == sorted(tuned.shortlist)
+    assert set(policy_rows["policy_version"]) == set(tuned.shortlist)
+    assert _position(policy_rows, tuned.chosen.version) == (3, 1)
+    assert "frozen approve-all" in tuned.rule and "best 5" in tuned.rule
+
+
+def test_the_guardrail_keeps_points_with_too_much_friction_out_of_the_choice():
+    """Holding legitimate customers earns more here, but past 30 per 10,000 the point is
+    out: of the shortlist's best k and of the choice."""
+    def held(i, j):
+        return 10 * i  # 10 legitimate holds per review step, of 10,000
+
+    frozen_eval, _ = _synthetic(lambda i, j: 10 * i - j, held=held)
+    policy_eval, _ = _synthetic(lambda i, j: 10 * i - j, held=held)
+    scores = {"review": SCORES, "decline": SCORES}
+    cap = Guardrail(held_per_10000=30)
+    tuned = tune_shortlist(scored_policy(None, None), scores, frozen_eval, policy_eval, GRID,
+                           k=2, guardrail=cap)
+    frontier = tuned.frontier
+    assert (frontier["within_guardrail"] == (frontier["legitimate_held_per_10000"] <= 30)).all()
+    assert _position(frontier, tuned.screened.version) == (3, 0)
+    assert _position(frontier, tuned.chosen.version) == (3, 0)
+    over = frontier.loc[~frontier["within_guardrail"]]
+    shortlisted = set(tuned.shortlist)
+    # beyond the winner's neighbours (review step 4), no point over the cap is replayed
+    assert not {v for v in over["policy_version"]
+                if _position(frontier, v)[0] > 4} & shortlisted
+    unbounded = tune(scored_policy(None, None), scores, frozen_eval, GRID)
+    assert _position(unbounded.frontier, unbounded.chosen.version) == (5, 0)
+
+
+def test_the_guardrail_reads_its_caps_from_the_tuning_settings() -> None:
+    assert Guardrail.from_config({"tuning": {}}) == Guardrail()
+    caps = {"legitimate_held_per_10000": 40, "legitimate_declined_per_10000": None}
+    assert Guardrail.from_config({"tuning": {"friction_guardrail": caps}}) == Guardrail(40.0)
+    row = {**ROW, "legitimate_held": 41, "legitimate_declined": 500}
+    assert Guardrail.from_config({"tuning": {"friction_guardrail": caps}}).rates(row) == (
+        41.0, 500.0)
+    assert not Guardrail(40.0).met(row) and Guardrail(41.0).met(row)
+    assert not Guardrail(None, 499.0).met(row)
 
 
 # ------------------------------------------------------------------ a follow-up as a policy variant

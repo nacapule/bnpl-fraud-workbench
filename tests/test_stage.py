@@ -87,8 +87,12 @@ def test_tuning_keeps_a_chosen_policy_for_each_of_the_seven(staged) -> None:
                           "boosting", "hybrid", "expected_loss"}
     chosen = pd.DataFrame(tuned.tables["tune.chosen"])
     assert len(chosen) == 6  # approve-all has nothing to tune
+    assert (chosen["tuning"] == "shortlist").all() and (chosen["history"] == "policy").all()
     frontier = pd.DataFrame(tuned.tables["tune.frontier"])
-    assert set(frontier.groupby("policy").size()) == {2, 4}  # expected loss tunes review only
+    by_history = frontier.groupby(["history", "policy"]).size()
+    # the whole grid with frozen history; on a 2 x 2 grid every point is the frozen
+    # winner's neighbour, so the shortlist is the grid again (expected loss: review only)
+    assert set(by_history["frozen"]) == set(by_history["policy"]) == {2, 4}
     assert frontier["feasible"].all()
 
 

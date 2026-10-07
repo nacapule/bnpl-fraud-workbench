@@ -99,3 +99,14 @@ tuning:
   # and "no decline" are in the grid, so a policy always has a feasible point.
   review_rates: [0.0, 0.005, 0.01, 0.02, 0.03, 0.05, 0.08, 0.12]
   decline_rates: [0.0, 0.001, 0.0025, 0.005, 0.01, 0.02]
+  # Legitimate friction a chosen point may cause, per 10,000 legitimate validation
+  # orders (null: no cap): orders held, and orders declined (at checkout, blocked, or
+  # after review). Set with the protocol's friction guardrail.
+  friction_guardrail:
+    legitimate_held_per_10000: null
+    legitimate_declined_per_10000: null
+  # The grid is replayed with frozen approve-all history; then the frozen winner, its
+  # neighbouring threshold pairs (one grid step on each threshold) and the best
+  # shortlist_best_k qualifying frozen points are replayed with policy-specific
+  # history, and the choice is the best qualifying point among them.
+  shortlist_best_k: 5

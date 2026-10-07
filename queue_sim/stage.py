@@ -440,10 +440,22 @@ class Replays:
 # ------------------------------------------------------------------------- stages
 
 
-def tune(run: Any, *, history: str = "policy") -> StageOutput:
-    """Each seed's policies tuned on its baseline world's validation window (base level)."""
+TUNING_HISTORIES = ("shortlist", "frozen", "policy")  # "shortlist": the protocol's procedure
+
+
+def tune(run: Any, *, history: str = "shortlist") -> StageOutput:
+    """Each seed's policies tuned on its baseline world's validation window (base level).
+
+    ``history`` is the tuning procedure: ``shortlist`` (the protocol's: the whole grid
+    with frozen approve-all history, the shortlist with policy-specific history),
+    ``frozen`` or ``policy`` (the whole grid with that history alone).
+    """
+    if history not in TUNING_HISTORIES:
+        raise ValueError(f"tuning history {history!r} is not one of {TUNING_HISTORIES}")
     policy_cfg = config.load("policy")
     grid = tuning.Grid.from_config(policy_cfg)
+    guardrail = tuning.Guardrail.from_config(policy_cfg)
+    best_k = int(policy_cfg["tuning"]["shortlist_best_k"])
     staff = base_staffing(policy_cfg)
     window = _window(run.protocol, "validation")
     frontier_rows, chosen_rows = [], []
@@ -451,24 +463,36 @@ def tune(run: Any, *, history: str = "policy") -> StageOutput:
         found = run.memory.setdefault("tuned", {}).setdefault(seed, {})
         with Replays(run, _baseline(run, seed), seed) as replays:
             bench = replays.bench
+
+            def evaluate(with_history: str, replays: Replays = replays):
+                def run_all(candidates: Sequence[policies.Policy]) -> list[dict[str, Any]]:
+                    tasks = [Task.of(c, window, staff, history=with_history)
+                             for c in candidates]
+                    return [out["row"] for out in replays.run(tasks)]
+                return run_all
+
+            def routed(c: policies.Policy, bench: Bench = bench) -> float:
+                return bench.routed_minutes(c, window)
+
             for name, policy in policies_for(run.memory["scorers"][seed], bench).items():
                 if not policy.tunable:
                     found[name] = policy
                     continue
-
-                def evaluate(candidates: Sequence[policies.Policy],
-                             replays: Replays = replays) -> list[dict[str, Any]]:
-                    tasks = [Task.of(c, window, staff, history=history) for c in candidates]
-                    return [out["row"] for out in replays.run(tasks)]
-
-                tuned = tuning.tune(
-                    policy, bench.checkout_scores(policy, window), evaluate, grid,
-                    routed_minutes=lambda c, bench=bench: bench.routed_minutes(c, window))
+                scores = bench.checkout_scores(policy, window)
+                if history == "shortlist":
+                    tuned = tuning.tune_shortlist(
+                        policy, scores, evaluate("frozen"), evaluate("policy"), grid,
+                        k=best_k, guardrail=guardrail, routed_minutes=routed)
+                else:
+                    tuned = tuning.tune(policy, scores, evaluate(history), grid,
+                                        routed_minutes=routed, guardrail=guardrail,
+                                        history=history)
                 found[name] = tuned.chosen
-                frontier_rows += [{"seed": seed, "policy": name, "history": history, **row}
+                frontier_rows += [{"seed": seed, "policy": name, "tuning": history, **row}
                                   for row in _records(tuned.frontier)]
                 chosen_rows.append({
-                    "seed": seed, "policy": name, "history": history,
+                    "seed": seed, "policy": name, "tuning": history,
+                    "history": "policy" if history == "shortlist" else history,
                     "feasible_points": tuned.feasible_points, "points": len(tuned.frontier),
                     "chosen_version": None if tuned.chosen is None else tuned.chosen.version,
                     "review_threshold": None if tuned.chosen is None
@@ -477,9 +501,14 @@ def tune(run: Any, *, history: str = "policy") -> StageOutput:
                     else tuned.chosen.decline_threshold,
                     "review_on_boundary": tuned.on_boundary["review"],
                     "decline_on_boundary": tuned.on_boundary["decline"],
+                    "screened_version": None if tuned.screened is None
+                    else tuned.screened.version,
+                    "shortlist": len(tuned.shortlist),
                 })
     return StageOutput(tables={"tune.frontier": frontier_rows, "tune.chosen": chosen_rows},
-                       notes=[f"tuning rule: {tuning.RULE}"])
+                       notes=[f"tuning rule: {tuning.SHORTLIST_RULE.format(k=best_k)}; "
+                              f"{tuning.RULE}" if history == "shortlist"
+                              else f"tuning rule ({history} history): {tuning.RULE}"])
 
 
 VARIANTS = (  # (history, reviewer, verification rates) at the base level
