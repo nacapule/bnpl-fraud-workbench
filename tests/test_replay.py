@@ -443,9 +443,11 @@ def test_a_held_then_cancelled_order_leaves_no_history_for_the_next(tables) -> N
         history=_policy_history(spy))
     realized, state, _ = next((r, s, d) for r, s, d in spy.calls
                               if 10 in set(d["order_id"]))
-    # order 1's plan is plan 1: only the checkout payment and installment remain
+    # order 1's plan is plan 1: only the checkout payment remains; the cancelled plan
+    # keeps its schedule, which the context stops counting from the void
     assert realized["payment_attempts"].query("plan_id == 1")["seq"].tolist() == [0]
-    assert realized["installment_schedule"].query("plan_id == 1")["seq"].tolist() == [0]
+    assert realized["installment_schedule"].query("plan_id == 1")["seq"].tolist() == [
+        0, 1, 2, 3]
     assert set(state.voided["order_id"]) == {1} and 1 not in set(state.approved["order_id"])
     refunds = realized["cash_events"].query("order_id == 1 and kind == 'refund'")
     assert refunds["amount_cents"].tolist() == [-3000]

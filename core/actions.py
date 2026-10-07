@@ -51,16 +51,24 @@ approve, review        the world's rows, unchanged (also after a post-shipment h
 shipment)
 auto_decline, blocked  the attempt only: no plan, schedule, payments, shipment, disputes,
                        reports or write-off
-voided at ``v``        rows that occurred by ``v`` (the checkout payment); the plan and
-(before shipment)      its checkout installment stay, later installments and every later
-                       event go; the ledger refunds each payment still standing at ``v``
-held at ``h`` before   shipment, delivery, disputes and victim reports move by ``r - h``;
-shipment, released     installments 1-3, their payments, reversals of them and the
-at ``r``               write-off move by ``r - checkout`` (the schedule starts at the
-                       release); events moved past the observation end are dropped
-held before shipment,  as voided at ``h`` for the tables (nothing after the hold has
-still pending          happened yet), but neither approved nor voided in the state
+voided at ``v``        rows that occurred by ``v`` (the checkout payment); the plan and its
+(before shipment)      whole schedule stay (the columns stop counting the plan from the
+                       void), every later event goes; the ledger refunds each payment
+                       still standing at ``v``
+held at ``h`` before   what occurred by ``h`` stands; shipment, delivery, disputes and
+shipment, released     victim reports after ``h`` move by ``r - h``; installments not yet
+at ``r``               due at ``h`` (schedule rows, their payments and reversals after
+                       ``h``) and a write-off after ``h`` move by ``r - checkout`` (the
+                       schedule starts at the release); events moved past the
+                       observation end are dropped
+held before shipment,  what occurred by ``h`` stands, nothing after it has happened yet,
+still pending          and installments not yet due at ``h`` are not scheduled (they do
+                       not fall due while the order is paused); neither approved nor
+                       voided in the state
 =====================  ===================================================================
+
+So an action never changes what was known before it: realizing the fates as decided
+at any moment gives the same rows up to that moment as realizing the final fates.
 """
 
 from __future__ import annotations
@@ -265,6 +273,24 @@ def _installment_rows(tables: Mapping[str, pd.DataFrame], name: str) -> np.ndarr
     return np.ones(len(frame), dtype=bool)  # plan_writeoffs
 
 
+def _due_of_rows(tables: Mapping[str, pd.DataFrame], name: str) -> np.ndarray:
+    """The due time of each row's installment (NaT for a write-off)."""
+    schedule = tables["installment_schedule"]
+    due = pd.Series(schedule["due_at"].to_numpy(dtype="datetime64[s]"),
+                    index=pd.MultiIndex.from_frame(schedule[["plan_id", "seq"]]))
+    frame = tables[name]
+    if name in ("installment_schedule", "payment_attempts"):
+        keys = frame[["plan_id", "seq"]]
+    elif name == "payment_reversals":
+        payments = tables["payment_attempts"].set_index("event_id")
+        keys = pd.DataFrame({"plan_id": frame["plan_id"].to_numpy(),
+                             "seq": frame["payment_event_id"].map(payments["seq"]).to_numpy()})
+    else:
+        return np.full(len(frame), np.datetime64("NaT", "s"), dtype="datetime64[s]")
+    return due.reindex(pd.MultiIndex.from_frame(keys.astype("int64"))).to_numpy(
+        dtype="datetime64[s]")
+
+
 def realize(
     tables: Mapping[str, pd.DataFrame],
     fates: pd.DataFrame,
@@ -298,10 +324,16 @@ def _realize_rows(
     by_order = fates.set_index("order_id")
     declined = set(by_order.index[by_order["route"].isin(DECLINED_AT_CHECKOUT)])
     cut_at = _cut_times(by_order)
+    pending = by_order.loc[by_order["hold_at"].notna() & by_order["hold_before_shipment"]
+                           & by_order["hold_outcome"].isna(), "hold_at"]
     released = by_order.loc[by_order["released_at"].notna()]
+    held_at = released["hold_at"]
     ship_shift = released["released_at"] - released["hold_at"]
     pay_shift = released["released_at"] - released["checkout_at"]
     limit = None if observed_until is None else np.datetime64(pd.Timestamp(observed_until), "s")
+
+    def per_row(order: np.ndarray, values: pd.Series, dtype: str) -> np.ndarray:
+        return pd.Series(order).map(values).to_numpy(dtype=dtype)
 
     out: dict[str, pd.DataFrame] = {}
     for name, frame in tables.items():
@@ -314,33 +346,43 @@ def _realize_rows(
             out[name] = frame.loc[keep].reset_index(drop=True)
             continue
         frame = frame.copy()
-        if len(cut_at):
-            cut = pd.Series(order).map(cut_at).to_numpy(dtype="datetime64[s]")
-            has_cut = ~np.isnat(cut)
-            if name == "installment_schedule":
-                keep &= ~(has_cut & _installment_rows(tables, name))
-            else:
-                happened = frame["occurred_at"].to_numpy(dtype="datetime64[s]") <= cut
-                keep &= ~has_cut | happened
-        if len(released) and name != "installment_schedule":
-            shift = ship_shift if name in _SHIP_TABLES else pay_shift
-            delta = pd.Series(order).map(shift).to_numpy(dtype="timedelta64[s]")
-            if name in _PAY_TABLES:
-                delta = np.where(_installment_rows(tables, name), delta, np.timedelta64("NaT", "s"))
-            moved = ~np.isnat(delta)
-            for column in _TIME_COLUMNS:
-                values = frame[column].to_numpy(dtype="datetime64[s]").copy()
-                values[moved] = values[moved] + delta[moved]
-                frame[column] = values
-            if limit is not None:  # observed by the end: known by then (and so occurred)
-                keep &= ~(moved & (frame["known_at"].to_numpy(dtype="datetime64[s]") > limit))
-        elif len(released):  # the schedule: installments 1..n start at the release
-            delta = pd.Series(order).map(pay_shift).to_numpy(dtype="timedelta64[s]")
-            delta = np.where(_installment_rows(tables, name), delta, np.timedelta64("NaT", "s"))
-            moved = ~np.isnat(delta)
+        schedule = name == "installment_schedule"
+        due = (_due_of_rows(tables, name) if name == "installment_schedule"
+               or name in _PAY_TABLES else None)
+        if schedule:
+            if len(pending):  # not yet due at a pending pre-shipment hold: not scheduled
+                hold = per_row(order, pending, "datetime64[s]")
+                keep &= ~(~np.isnat(hold) & _installment_rows(tables, name) & (due > hold))
+        elif len(cut_at):
+            cut = per_row(order, cut_at, "datetime64[s]")
+            happened = frame["occurred_at"].to_numpy(dtype="datetime64[s]") <= cut
+            keep &= np.isnat(cut) | happened
+        if not len(released):
+            out[name] = frame.loc[keep].reset_index(drop=True)
+            continue
+        hold = per_row(order, held_at, "datetime64[s]")
+        if schedule:  # installments not yet due at the hold start at the release
+            moved = ~np.isnat(hold) & _installment_rows(tables, name) & (due > hold)
+            delta = per_row(order, pay_shift, "timedelta64[s]")
             values = frame["due_at"].to_numpy(dtype="datetime64[s]").copy()
             values[moved] = values[moved] + delta[moved]
             frame["due_at"] = values
+            out[name] = frame.loc[keep].reset_index(drop=True)
+            continue
+        after = frame["occurred_at"].to_numpy(dtype="datetime64[s]") > hold
+        if name in _SHIP_TABLES:
+            moved = ~np.isnat(hold) & after
+            delta = per_row(order, ship_shift, "timedelta64[s]")
+        else:
+            not_due = (due > hold) if name != "plan_writeoffs" else np.ones(len(frame), bool)
+            moved = ~np.isnat(hold) & after & _installment_rows(tables, name) & not_due
+            delta = per_row(order, pay_shift, "timedelta64[s]")
+        for column in _TIME_COLUMNS:
+            values = frame[column].to_numpy(dtype="datetime64[s]").copy()
+            values[moved] = values[moved] + delta[moved]
+            frame[column] = values
+        if limit is not None:  # observed by the end: known by then (and so occurred)
+            keep &= ~(moved & (frame["known_at"].to_numpy(dtype="datetime64[s]") > limit))
         out[name] = frame.loc[keep].reset_index(drop=True)
     return out
 

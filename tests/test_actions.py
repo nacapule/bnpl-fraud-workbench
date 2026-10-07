@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -198,8 +199,11 @@ def test_fraud_voided_before_shipping_nets_zero(tables, terms, cause):
     _assert_others_unchanged(tables, realized, [18])
     assert _rows(tables, "plans", realized["plans"], [18])["plan_id"].tolist() == [16]
     schedule = _rows(tables, "installment_schedule", realized["installment_schedule"], [18])
-    assert _records(schedule, ["seq", "due_at", "amount_cents"]) == [
-        (0, T("2025-02-14 01:40"), 16_250)]
+    world_schedule = _rows(tables, "installment_schedule", tables["installment_schedule"], [18])
+    # a voided plan keeps its plan and its whole schedule (stopped from the void)
+    assert _records(schedule, ["seq", "due_at", "amount_cents"]) == _records(
+        world_schedule, ["seq", "due_at", "amount_cents"])
+    assert schedule["seq"].tolist() == [0, 1, 2, 3]
     payments = _rows(tables, "payment_attempts", realized["payment_attempts"], [18])
     assert payments["event_id"].tolist() == [153]
     for name in ("fulfilments", "deliveries", "dispute_openings", "dispute_resolutions",
@@ -462,7 +466,11 @@ def test_a_hold_that_ends_without_release_keeps_only_what_happened_by_the_hold(
     _assert_others_unchanged(tables, realized, [order])
     checkout = tables["order_attempts"].set_index("order_id").at[order, "known_at"]
     schedule = _rows(tables, "installment_schedule", realized["installment_schedule"], [order])
-    assert _records(schedule, ["seq", "due_at", "amount_cents"]) == [(0, checkout, down)]
+    world_schedule = _rows(tables, "installment_schedule", tables["installment_schedule"],
+                           [order])
+    assert _records(schedule, ["seq", "due_at", "amount_cents"]) == _records(
+        world_schedule, ["seq", "due_at", "amount_cents"])  # the voided plan keeps it
+    assert _records(schedule, ["seq", "due_at", "amount_cents"])[0] == (0, checkout, down)
     assert _rows(tables, "payment_attempts", realized["payment_attempts"], [order])[
         "event_id"].tolist() == [payment]
     for name in ("fulfilments", "deliveries", "dispute_openings", "victim_reports",
@@ -670,3 +678,233 @@ def _edit(fates, order, **values):
 def test_typed_fates_rejects_inconsistent_fates(tables, change, message):
     with pytest.raises(ValueError, match=message):
         actions.typed_fates(change(_fates(tables)))
+
+
+# ------------------------------------------------------------------ nothing known earlier changes
+#
+# An action never changes what was known before it: realizing the fates as decided at a
+# moment (``fates_as_of(cut + 1 s)``: everything decided up to the end of the cut's second)
+# gives the same observations up to the cut as realizing the final fates.
+
+SECOND = pd.Timedelta(seconds=1)
+
+
+def _shipped_at(tables) -> pd.Series:
+    return tables["fulfilments"].groupby("order_id")["occurred_at"].min()
+
+
+def _random_fates(tables, rng) -> pd.DataFrame:
+    """Every kind of fate, at random times that respect shipment (seeded)."""
+    attempts = tables["order_attempts"]
+    approved = attempts.loc[attempts["processor_result"] == "approved"]
+    ship = _shipped_at(tables)
+    changes = {}
+
+    def between(a, b):
+        return (a + (b - a) * rng.random()).floor("s")
+
+    for order, checkout in approved[["order_id", "known_at"]].itertuples(index=False):
+        shipped = ship.get(order, checkout + pd.Timedelta(days=60))
+        before = between(checkout + SECOND, shipped - SECOND)
+        u = rng.random()
+        if u < 0.4:
+            continue
+        if u < 0.5:
+            changes[order] = {"route": "auto_decline"}
+        elif u < 0.6:
+            changes[order] = {"route": "review", "void_at": before,
+                              "void_cause": str(rng.choice(["decline", "escalate"]))}
+        elif u < 0.72:
+            changes[order] = _hold(before, outcome="cleared",
+                                   release=between(before + SECOND, before + pd.Timedelta(hours=48)))
+        elif u < 0.8:
+            changes[order] = _hold(before, outcome="cancelled",
+                                   void=before + pd.Timedelta(hours=48), cause="hold_cancelled")
+        elif u < 0.88:
+            end = between(before + SECOND, before + pd.Timedelta(hours=48))
+            changes[order] = _hold(before, outcome="declined", void=end, cause="decline")
+        else:
+            after = between(shipped, shipped + pd.Timedelta(days=5))
+            changes[order] = _hold(after, before=False, outcome=str(rng.choice(
+                ["cleared", "declined"])), ended=after + pd.Timedelta(hours=6))
+    return _fates(tables, changes)
+
+
+def _paused(fates, cut) -> set:
+    pending = fates["hold_at"].notna() & fates["hold_before_shipment"] & fates[
+        "hold_outcome"].isna() & (fates["checkout_at"] <= cut)
+    return set(fates.loc[pending, "order_id"])
+
+
+def _known_by(tables, frame, name, cut, skip_orders) -> list[tuple]:
+    if name == "installment_schedule":
+        mine = frame.loc[(frame["due_at"] <= cut)
+                         & ~_order_of(tables, name, frame).isin(list(skip_orders))]
+        return sorted(_records(mine, ["plan_id", "seq", "due_at", "amount_cents"]))
+    if name == "plans":
+        return sorted(_records(frame.loc[frame["created_at"] <= cut], list(frame.columns)))
+    mine = frame.loc[frame["known_at"] <= cut]
+    return sorted(_records(mine, list(frame.columns)), key=repr)
+
+
+def _assert_prefix_invariant(tables, fates, terms, cuts) -> None:
+    final = actions.realize(tables, fates, terms)
+    for cut in cuts:
+        then = actions.fates_as_of(fates, cut + SECOND)
+        early = actions.realize(tables, then, terms)
+        paused = _paused(then, cut)
+        for name in (*ORDER_TABLES, "cash_events"):
+            assert _known_by(tables, early[name], name, cut, paused) == _known_by(
+                tables, final[name], name, cut, paused), (name, cut)
+
+
+def test_a_release_keeps_what_was_known_before_the_hold(tables, terms):
+    """dan's order 12 (checkout 02-03 02:20) draws a victim report five minutes later;
+    it is held at 03:20 and released a day later. The report stands at 02:25; only what
+    followed the hold (shipment 08:20) moves."""
+    world_ = {**tables, "victim_reports": tables["victim_reports"].copy()}
+    report = world_["victim_reports"]["event_id"] == 130
+    world_["victim_reports"].loc[report, ["occurred_at", "known_at"]] = T("2025-02-03 02:25")
+    fates = _fates(world_, {12: _hold("2025-02-03 03:20", outcome="cleared",
+                                      release="2025-02-04 03:20")})
+    realized = actions.realize(world_, fates, terms)
+    reports = _rows(world_, "victim_reports", realized["victim_reports"], [12])
+    assert _records(reports, ["event_id", "known_at"]) == [(130, T("2025-02-03 02:25"))]
+    shipped = _rows(world_, "fulfilments", realized["fulfilments"], [12])
+    assert shipped["occurred_at"].tolist() == [T("2025-02-04 08:20")]
+    _assert_prefix_invariant(world_, fates, terms,
+                             [T("2025-02-03 02:30"), T("2025-02-03 12:00"), T("2025-02-05")])
+
+
+def _late_shipment(tables, order, days) -> dict:
+    """The world with one order's shipment, delivery and settlement ``days`` later."""
+    out = dict(tables)
+    late = pd.Timedelta(days=days)
+    for name in ("fulfilments", "deliveries"):
+        frame = tables[name].copy()
+        mine = frame["order_id"] == order
+        frame.loc[mine, ["occurred_at", "known_at"]] += late
+        out[name] = frame
+    cash = tables["cash_events"].copy()
+    settled = (cash["order_id"] == order) & cash["kind"].isin(
+        ["merchant_settlement", "promotion_funding"])
+    cash.loc[settled, ["occurred_at", "known_at"]] += late
+    out["cash_events"] = cash
+    return out
+
+
+def test_a_void_keeps_the_plan_and_the_schedule_known_before_it(tables, terms):
+    """kim's order 9 (checkout 01-20 19:00) ships only after 40 days; installments 1 and
+    2 fall due and are paid; the order is declined on day 30, before shipment. The plan
+    and its whole schedule stay; payments by the void stay and are refunded."""
+    world_ = _late_shipment(tables, 9, 40)
+    void = T("2025-02-19 19:00")
+    fates = _fates(world_, {9: {"route": "review", "void_at": void, "void_cause": "decline"}})
+    realized = actions.realize(world_, fates, terms)
+    schedule = _rows(world_, "installment_schedule", realized["installment_schedule"], [9])
+    assert schedule["seq"].tolist() == [0, 1, 2, 3]
+    paid = _rows(world_, "payment_attempts", realized["payment_attempts"], [9])
+    assert (paid["occurred_at"] <= void).all() and set(paid["seq"]) == {0, 1, 2}
+    _assert_prefix_invariant(world_, fates, terms,
+                             [T("2025-02-05"), T("2025-02-18"), T("2025-02-25")])
+
+
+@pytest.mark.parametrize("seed", range(6))
+def test_realizing_what_was_decided_by_a_moment_changes_nothing_known_before_it(
+        tables, terms, seed):
+    rng = np.random.default_rng(seed)
+    world_ = _late_shipment(tables, int(rng.choice([4, 9, 13, 20])), 40)
+    fates = _random_fates(world_, rng)
+    start, end = T("2024-12-05"), T("2025-07-01")
+    cuts = [T(start + (end - start) * x).floor("s") for x in sorted(rng.random(6))]
+    holds = fates["hold_at"].dropna()
+    cuts += [T(h) + pd.Timedelta(hours=1) for h in holds.sample(min(3, len(holds)),
+                                                                  random_state=seed)]
+    _assert_prefix_invariant(world_, fates, terms, cuts)
+
+
+def _context_built() -> bool:
+    from core import asof
+
+    tables = world.read_world(FIXTURE)
+    try:
+        asof.outcome_columns(tables, PolicyState.approve_all(tables), pd.DataFrame({
+            "order_id": [1], "decision_at": np.array(["2024-12-06"], dtype="datetime64[s]")}))
+    except NotImplementedError:
+        return False
+    return True
+
+
+@pytest.mark.skipif(not _context_built(), reason="the as-of context is not built yet")
+@pytest.mark.parametrize("seed", range(4))
+def test_the_context_at_a_moment_is_the_same_from_the_final_fates(tables, terms, seed):
+    """core.asof's outcome columns, for decisions up to a moment, under the policy's state
+    then: the same from the tables realized from the fates decided by then as from the
+    tables realized from the final fates."""
+    from core import asof
+
+    rng = np.random.default_rng(100 + seed)
+    world_ = _late_shipment(tables, int(rng.choice([4, 9, 13, 20])), 40)
+    fates = _random_fates(world_, rng)
+    final = actions.realize(world_, fates, terms)
+    attempts = world_["order_attempts"]
+    start, end = T("2024-12-05"), T("2025-07-01")
+    cuts = [T(start + (end - start) * x).floor("s") for x in sorted(rng.random(4))]
+    cuts += [T(h) + pd.Timedelta(hours=1) for h in fates["hold_at"].dropna().head(2)]
+    for cut in cuts:
+        then = actions.fates_as_of(fates, cut + SECOND)
+        state = actions.policy_state(then, NO_BLOCKS)
+        early = actions.realize(world_, then, terms)
+        seen = attempts.loc[attempts["known_at"] <= cut, ["order_id", "known_at"]]
+        decisions = pd.concat([
+            seen.rename(columns={"known_at": "decision_at"}),
+            seen[["order_id"]].assign(decision_at=cut),
+        ], ignore_index=True).astype({"decision_at": "datetime64[s]"})
+        if decisions.empty:
+            continue
+        pd.testing.assert_frame_equal(asof.outcome_columns(early, state, decisions),
+                                      asof.outcome_columns(final, state, decisions),
+                                      obj=f"cut {cut}")
+
+
+def _with_attempt(tables, like, order, at) -> dict:
+    """The world with one more (processor-declined) attempt by ``like``'s account at ``at``."""
+    attempts = tables["order_attempts"]
+    row = attempts.loc[attempts["order_id"] == like].copy()
+    row["order_id"], row["event_id"] = order, int(attempts["event_id"].max()) + 1
+    row["occurred_at"] = row["known_at"] = T(at)
+    row["processor_result"] = "declined"
+    return {**tables, "order_attempts": pd.concat([attempts, row], ignore_index=True)}
+
+
+@pytest.mark.skipif(not _context_built(), reason="the as-of context is not built yet")
+def test_a_later_hold_or_void_leaves_an_earlier_decisions_context_alone(tables, terms):
+    """Two decisions, each before the action that follows it. (a) dan's order 12 draws a
+    victim report at 02:25; his next attempt comes at 02:30; order 12 is held at 03:20
+    and released a day later: the attempt still sees the report. (b) kim's order 9 ships
+    only after 40 days; her next attempt comes on day 20 with installment 1 due; order 9
+    is declined on day 30: the attempt still sees that installment."""
+    from core import asof
+
+    scenarios = []
+    world_a = _with_attempt(tables, 12, 98, "2025-02-03 02:30")
+    world_a["victim_reports"] = tables["victim_reports"].copy()
+    report = world_a["victim_reports"]["event_id"] == 130
+    world_a["victim_reports"].loc[report, ["occurred_at", "known_at"]] = T("2025-02-03 02:25")
+    scenarios.append((world_a, {12: _hold("2025-02-03 03:20", outcome="cleared",
+                                          release="2025-02-04 03:20")}, 98,
+                      "victim_reports_user"))
+    world_b = _with_attempt(_late_shipment(tables, 9, 40), 9, 97, "2025-02-09 12:00")
+    scenarios.append((world_b, {9: {"route": "review", "void_at": T("2025-02-19 19:00"),
+                                    "void_cause": "decline"}}, 97, "installments_due_user"))
+    for world_, changes, order, column in scenarios:
+        fates = _fates(world_, changes)
+        at = world_["order_attempts"].set_index("order_id").at[order, "known_at"]
+        then = actions.fates_as_of(fates, at + SECOND)
+        state = actions.policy_state(then, NO_BLOCKS)
+        decisions = pd.DataFrame({"order_id": [order],
+                                  "decision_at": np.array([at], dtype="datetime64[s]")})
+        early = asof.outcome_columns(actions.realize(world_, then, terms), state, decisions)
+        final = asof.outcome_columns(actions.realize(world_, fates, terms), state, decisions)
+        assert early[column].iloc[0] >= 1, column
+        pd.testing.assert_frame_equal(early, final, obj=column)
