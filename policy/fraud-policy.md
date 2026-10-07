@@ -139,8 +139,8 @@ retired; never reuse its id.
 **6.3** Earlier outcomes known at decision time settle the order: (a) an earlier order
 on the account had an `unauthorized` dispute resolved `lost` (§9(a)) and the account
 holder has not reported a takeover (§9(b)); (b) an earlier plan on the account met the
-never-pay determination (§8.3); (c) item-not-received abuse was determined on the
-account (§9(d)).
+never-pay determination (§8.3) and the account holder has not reported that plan's order
+as not theirs (§9(b)); (c) item-not-received abuse was determined on the account (§9(d)).
 
 **6.4** Households share devices and addresses. These exceptions apply to the family
 count of §6.6 only; priority (§7.1) uses the rules as they hold. (a) R02 does not count
@@ -227,8 +227,10 @@ cannot establish; the simulation counts them against hidden truth, for diagnosis
 
 These outcomes confirm fraud. Each is known when the last fact it rests on is known
 (§3.2); the Known column names that fact. Once known, they label orders to measure loss
-by pattern and to train models. A decision is still judged on the evidence known when it was
-made (§3.1), never by its outcome.
+by pattern and to train models. An order's label rests on the first of them to become
+known; a later victim report (b) does not withdraw a never-pay determination (c) on the
+same plan, but it stops that plan settling later orders (§6.3(b)). A decision is still
+judged on the evidence known when it was made (§3.1), never by its outcome.
 
 | | Outcome | Confirms | Known |
 |---|---|---|---|
