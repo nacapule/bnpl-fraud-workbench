@@ -31,7 +31,8 @@ declines AS (
   SELECT * FROM attempts WHERE processor_result = 'declined'
 ),
 card_window AS (
-  SELECT a.order_id, d.device_id, d.known_at
+  SELECT a.order_id, a.event_id AS approval_event_id, a.known_at AS approved_at, d.device_id,
+         d.known_at
   FROM approvals a
   JOIN declines d
     ON d.card_id = a.card_id
@@ -39,19 +40,20 @@ card_window AS (
    AND (d.known_at < a.known_at OR (d.known_at = a.known_at AND d.event_id < a.event_id))
 ),
 candidate_devices AS (
-  SELECT DISTINCT order_id, device_id FROM card_window
+  -- the approval's own device and every device its card was declined on
+  SELECT DISTINCT order_id, approval_event_id, approved_at, device_id FROM card_window
   UNION
-  SELECT order_id, device_id FROM approvals
+  SELECT order_id, event_id, known_at, device_id FROM approvals
 ),
 device_window AS (
   SELECT c.order_id, c.device_id, COUNT(*) AS declines, COUNT(DISTINCT d.card_id) AS cards,
          MIN(d.known_at) AS first_decline_at
   FROM candidate_devices c
-  JOIN approvals a ON a.order_id = c.order_id
   JOIN declines d
     ON d.device_id = c.device_id
-   AND d.known_at >= a.known_at - INTERVAL 24 HOUR
-   AND (d.known_at < a.known_at OR (d.known_at = a.known_at AND d.event_id < a.event_id))
+   AND d.known_at >= c.approved_at - INTERVAL 24 HOUR
+   AND (d.known_at < c.approved_at
+        OR (d.known_at = c.approved_at AND d.event_id < c.approval_event_id))
   GROUP BY c.order_id, c.device_id
 ),
 inventory AS (
