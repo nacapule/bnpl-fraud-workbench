@@ -7,8 +7,8 @@ on:
 
 jobs:
   pipeline-scaled:
-    # Smoke-runs every layer end-to-end at 5% scale in a scratch copy so the
-    # committed reports and README stay untouched.
+    # Smoke-runs every layer end-to-end at 5% scale. The job's checkout is
+    # disposable, so the scaled reports it writes are never committed.
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
@@ -36,30 +36,22 @@ jobs:
           .venv/bin/pip install -q -e ".[dev]"
       - name: Lint
         run: .venv/bin/ruff check .
-      - name: Copy tree to scratch
-        run: |
-          mkdir -p /tmp/scaled
-          cp -a . /tmp/scaled/
       - name: Generate scaled world + load
-        working-directory: /tmp/scaled
         env:
           SIM_SCALE: "0.05"
         run: |
           .venv/bin/python -m simulator.generate
           .venv/bin/python db/load.py
       - name: Rules engine + tuning (scaled)
-        working-directory: /tmp/scaled
         run: |
           .venv/bin/python -m rules.engine
           .venv/bin/python -m rules.tuning
       - name: Model + queue reports (scaled)
-        working-directory: /tmp/scaled
         run: |
           .venv/bin/python -m model.train
           .venv/bin/python -m model.evaluate
           .venv/bin/python -m queue_sim.simulate
       - name: Staffing frontier + uncertainty (scaled)
-        working-directory: /tmp/scaled
         run: |
           .venv/bin/python -m queue_sim.sweep
           .venv/bin/python -m analysis.uncertainty
@@ -100,6 +92,9 @@ jobs:
           .venv/bin/python db/load.py
           .venv/bin/python -m rules.engine
       - name: Tests
+        env:
+          BNPL_REQUIRE_MYSQL: "1"
+          BNPL_DB_DISPOSABLE: "1"
         run: .venv/bin/python -m pytest tests/ -q
       - name: Case selection + LLM eval (offline, committed cache — no keys)
         run: |
