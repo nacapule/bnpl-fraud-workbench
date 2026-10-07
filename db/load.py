@@ -86,7 +86,7 @@ def main() -> None:
     t0 = time.time()
     conn = connect(cfg)
     ddl = "\n".join(
-        line for line in (REPO / "db" / "schema.sql").read_text().splitlines()
+        line for line in (REPO / "db" / "legacy_schema.sql").read_text().splitlines()
         if not line.strip().startswith("--")
     )
     with conn.cursor() as cur:

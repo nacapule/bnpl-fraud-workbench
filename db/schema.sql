@@ -1,198 +1,378 @@
--- bnpl-fraud-workbench MySQL 8.4 schema. InnoDB, utf8mb4.
--- Loaded by db/load.py (drops + recreates: idempotent by design).
+-- bnpl-fraud-workbench MySQL 8.4 schema, generated from core/world.py by
+-- `python db/load_world.py --write-schema`; do not edit by hand.
+-- Latent tables are simulator truth for offline diagnostics only: analyst-facing
+-- queries, rules, packets and memos never read them or the labels.
 
-SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS labels, chargebacks, promo_redemptions, promos, account_events,
-  payments, installments, plans, orders, merchants, addresses, cards, user_devices,
-  devices, users, alerts;
-SET FOREIGN_KEY_CHECKS = 1;
+-- observable entity: One row per customer account.
+CREATE TABLE accounts (
+  user_id INT NOT NULL COMMENT 'Customer account id.',
+  created_at DATETIME NOT NULL COMMENT 'Signup time.',
+  email VARCHAR(120) NOT NULL COMMENT 'Login email as entered (normalised only in core.asof).',
+  email_domain VARCHAR(64) NOT NULL COMMENT 'Domain of the email, lower case.',
+  home_country VARCHAR(64) NOT NULL COMMENT 'Country of residence from KYC; drives the home IP country.',
+  dob_year INT NOT NULL COMMENT 'Year of birth.',
+  PRIMARY KEY (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
 
-CREATE TABLE users (
-  user_id      INT PRIMARY KEY,
-  signup_ts    DATETIME NOT NULL,
-  email        VARCHAR(120) NOT NULL,
-  email_domain VARCHAR(60) NOT NULL,
-  kyc_country  CHAR(2) NOT NULL,
-  dob_year     SMALLINT NOT NULL,
-  KEY idx_users_domain (email_domain),
-  KEY idx_users_signup (signup_ts)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE devices (
-  device_id   INT PRIMARY KEY,
-  fingerprint CHAR(16) NOT NULL,
-  ua_family   VARCHAR(20) NOT NULL,
-  KEY idx_devices_fp (fingerprint)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE user_devices (
-  user_id    INT NOT NULL,
-  device_id  INT NOT NULL,
-  first_seen DATETIME NOT NULL,
-  last_seen  DATETIME NOT NULL,
-  PRIMARY KEY (user_id, device_id, first_seen),
-  KEY idx_ud_device (device_id),
-  CONSTRAINT fk_ud_user FOREIGN KEY (user_id) REFERENCES users (user_id),
-  CONSTRAINT fk_ud_device FOREIGN KEY (device_id) REFERENCES devices (device_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE cards (
-  card_id     INT PRIMARY KEY,
-  user_id     INT NOT NULL,
-  bin_country CHAR(2) NOT NULL,
-  network     VARCHAR(10) NOT NULL,
-  last4       CHAR(4) NOT NULL,
-  KEY idx_cards_user (user_id),
-  CONSTRAINT fk_cards_user FOREIGN KEY (user_id) REFERENCES users (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE addresses (
-  address_id INT PRIMARY KEY,
-  user_id    INT NOT NULL,
-  line_hash  VARCHAR(20) NOT NULL,
-  city       VARCHAR(40) NOT NULL,
-  region     VARCHAR(10) NOT NULL,
-  country    CHAR(2) NOT NULL,
-  added_ts   DATETIME NOT NULL,
-  KEY idx_addr_user (user_id),
-  KEY idx_addr_line (line_hash),
-  CONSTRAINT fk_addr_user FOREIGN KEY (user_id) REFERENCES users (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
+-- observable entity: One row per merchant. A closed merchant takes no orders and cannot be charged back.
 CREATE TABLE merchants (
-  merchant_id  INT PRIMARY KEY,
-  name         VARCHAR(60) NOT NULL,
-  category     VARCHAR(30) NOT NULL,
-  risk_tier    TINYINT NOT NULL,
-  onboarded_ts DATETIME NOT NULL,
-  KEY idx_merch_cat (category)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  merchant_id INT NOT NULL COMMENT 'Merchant id.',
+  created_at DATETIME NOT NULL COMMENT 'Onboarding time.',
+  name VARCHAR(80) NOT NULL COMMENT 'Trading name.',
+  category VARCHAR(64) NOT NULL COMMENT 'Merchandise category.',
+  risk_tier INT NOT NULL COMMENT 'Onboarding risk tier, 1 (low) to 3 (high).',
+  fulfilment_median_hours DOUBLE NOT NULL COMMENT 'Median hours from approval to shipment.',
+  closed_at DATETIME NULL COMMENT 'When the merchant stopped trading and became unreachable.',
+  PRIMARY KEY (merchant_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
 
-CREATE TABLE orders (
-  order_id        INT PRIMARY KEY,
-  user_id         INT NOT NULL,
-  merchant_id     INT NOT NULL,
-  ts              DATETIME NOT NULL,
-  amount          DECIMAL(10,2) NOT NULL,
-  ip              VARCHAR(40) NOT NULL,
-  ip_country      CHAR(2) NOT NULL,
-  device_id       INT NOT NULL,
-  card_id         INT NOT NULL,
-  ship_address_id INT NOT NULL,
-  avs_result      CHAR(1) NOT NULL,
-  cvv_result      CHAR(1) NOT NULL,
-  status          ENUM('approved','declined','cancelled') NOT NULL,
-  KEY idx_orders_user_ts (user_id, ts),
-  KEY idx_orders_device (device_id),
-  KEY idx_orders_merchant_ts (merchant_id, ts),
-  KEY idx_orders_card (card_id),
-  KEY idx_orders_ship (ship_address_id),
-  CONSTRAINT fk_orders_user FOREIGN KEY (user_id) REFERENCES users (user_id),
-  CONSTRAINT fk_orders_merch FOREIGN KEY (merchant_id) REFERENCES merchants (merchant_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- observable entity: One row per physical device.
+CREATE TABLE devices (
+  device_id INT NOT NULL COMMENT 'Device id.',
+  created_at DATETIME NOT NULL COMMENT 'First time the device was seen on the platform.',
+  fingerprint VARCHAR(64) NOT NULL COMMENT 'Device fingerprint.',
+  ua_family VARCHAR(64) NOT NULL COMMENT 'Browser or OS family.',
+  PRIMARY KEY (device_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
 
-CREATE TABLE plans (
-  plan_id        INT PRIMARY KEY,
-  order_id       INT NOT NULL,
-  principal      DECIMAL(10,2) NOT NULL,
-  down_amount    DECIMAL(10,2) NOT NULL,
-  n_installments TINYINT NOT NULL,
-  KEY idx_plans_order (order_id),
-  CONSTRAINT fk_plans_order FOREIGN KEY (order_id) REFERENCES orders (order_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- observable entity: One row per physical address; households and drops share rows.
+CREATE TABLE addresses (
+  address_id INT NOT NULL COMMENT 'Physical address id.',
+  created_at DATETIME NOT NULL COMMENT 'First time any account registered the address.',
+  line_hash VARCHAR(40) NOT NULL COMMENT 'Hash of the normalised street line.',
+  city VARCHAR(64) NOT NULL COMMENT 'City.',
+  region VARCHAR(64) NOT NULL COMMENT 'State or province.',
+  country VARCHAR(64) NOT NULL COMMENT 'Country.',
+  PRIMARY KEY (address_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
 
-CREATE TABLE installments (
-  installment_id INT PRIMARY KEY,
-  plan_id        INT NOT NULL,
-  seq            TINYINT NOT NULL,
-  due_ts         DATETIME NOT NULL,
-  paid_ts        DATETIME NULL,
-  amount         DECIMAL(10,2) NOT NULL,
-  outcome        ENUM('pending','paid','late','failed','written_off') NOT NULL,
-  KEY idx_inst_plan_seq (plan_id, seq),
-  KEY idx_inst_due (due_ts),
-  CONSTRAINT fk_inst_plan FOREIGN KEY (plan_id) REFERENCES plans (plan_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- observable entity: Platform-funded promotions.
+CREATE TABLE promotions (
+  promo_id INT NOT NULL COMMENT 'Promotion id.',
+  code VARCHAR(64) NOT NULL COMMENT 'Promotion code.',
+  discount_bps INT NOT NULL COMMENT 'Discount on the merchant''s price, in basis points.',
+  first_purchase_only BOOLEAN NOT NULL COMMENT 'Only an account''s first approved order may use it.',
+  valid_from DATETIME NOT NULL COMMENT 'Start of validity (creation).',
+  valid_to DATETIME NOT NULL COMMENT 'End of validity (exclusive).',
+  PRIMARY KEY (promo_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
 
-CREATE TABLE payments (
-  payment_id     INT PRIMARY KEY,
-  plan_id        INT NOT NULL,
-  installment_id INT NULL,
-  ts             DATETIME NOT NULL,
-  amount         DECIMAL(10,2) NOT NULL,
-  method         VARCHAR(10) NOT NULL,
-  result         ENUM('success','fail') NOT NULL,
-  KEY idx_pay_plan (plan_id),
-  KEY idx_pay_ts (ts),
-  CONSTRAINT fk_pay_plan FOREIGN KEY (plan_id) REFERENCES plans (plan_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- latent truth: Simulator-only: fraud episodes (one actor or ring acting together).
+CREATE TABLE latent_episodes (
+  episode_id INT NOT NULL COMMENT 'Episode id.',
+  pattern_id ENUM('P-ATO', 'P-STOLEN', 'P-SYNTH', 'P-NEVERPAY', 'P-INR-ABUSE', 'P-PROMO', 'P-MERCH') NOT NULL COMMENT 'Fraud pattern.',
+  started_at DATETIME NOT NULL COMMENT 'First event of the episode.',
+  ended_at DATETIME NULL COMMENT 'Last event of the episode.',
+  PRIMARY KEY (episode_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'latent';
 
+-- observable entity: Payment cards on accounts.
+CREATE TABLE cards (
+  card_id INT NOT NULL COMMENT 'Card id (one per account registration).',
+  user_id INT NOT NULL COMMENT 'Account that registered the card.',
+  created_at DATETIME NOT NULL COMMENT 'When the card was added to the account.',
+  removed_at DATETIME NULL COMMENT 'When it was removed.',
+  bin_country VARCHAR(64) NOT NULL COMMENT 'Issuing country from the BIN.',
+  network VARCHAR(64) NOT NULL COMMENT 'Card network.',
+  last4 VARCHAR(64) NOT NULL COMMENT 'Last four digits.',
+  PRIMARY KEY (card_id),
+  CONSTRAINT fk_cards_user_id FOREIGN KEY (user_id) REFERENCES accounts (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
+
+-- observable entity: Device association: an account may use a device in [created_at, removed_at).
+CREATE TABLE device_links (
+  user_id INT NOT NULL COMMENT 'Account.',
+  device_id INT NOT NULL COMMENT 'Device.',
+  created_at DATETIME NOT NULL COMMENT 'First use of the device on this account.',
+  removed_at DATETIME NULL COMMENT 'When the device stopped being usable on the account.',
+  PRIMARY KEY (user_id, device_id, created_at),
+  CONSTRAINT fk_device_links_user_id FOREIGN KEY (user_id) REFERENCES accounts (user_id),
+  CONSTRAINT fk_device_links_device_id FOREIGN KEY (device_id) REFERENCES devices (device_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
+
+-- observable event: Logins and credential changes. Device and address additions are the link tables.
 CREATE TABLE account_events (
-  event_id  INT PRIMARY KEY,
-  user_id   INT NOT NULL,
-  ts        DATETIME NOT NULL,
-  kind      ENUM('login','password_change','email_change','address_add','device_add') NOT NULL,
-  ip        VARCHAR(40) NOT NULL,
-  device_id INT NOT NULL,
-  KEY idx_ev_user_ts (user_id, ts),
-  KEY idx_ev_kind (kind),
-  CONSTRAINT fk_ev_user FOREIGN KEY (user_id) REFERENCES users (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  event_id INT NOT NULL COMMENT 'World-unique event id, assigned in the global event order.',
+  occurred_at DATETIME NOT NULL COMMENT 'When the event happened.',
+  known_at DATETIME NOT NULL COMMENT 'When the platform could know it; as-of code filters on this.',
+  user_id INT NOT NULL COMMENT 'Account.',
+  kind ENUM('login', 'password_reset', 'password_change', 'email_change', 'phone_change') NOT NULL COMMENT 'Account activity.',
+  device_id INT NOT NULL COMMENT 'Device used; must be linked to the account at the time.',
+  ip VARCHAR(45) NOT NULL COMMENT 'IP address.',
+  ip_country VARCHAR(64) NOT NULL COMMENT 'IP geolocation country.',
+  PRIMARY KEY (event_id),
+  KEY ix_account_events_known_at (known_at),
+  KEY ix_account_events_1 (user_id, known_at),
+  CONSTRAINT fk_account_events_user_id FOREIGN KEY (user_id) REFERENCES accounts (user_id),
+  CONSTRAINT fk_account_events_device_id FOREIGN KEY (device_id) REFERENCES devices (device_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
 
-CREATE TABLE promos (
-  promo_id     INT PRIMARY KEY,
-  code         VARCHAR(20) NOT NULL,
-  discount_pct TINYINT NOT NULL,
-  valid_from   DATETIME NOT NULL,
-  valid_to     DATETIME NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- observable entity: Address association: an order may ship to an address linked and active at its time.
+CREATE TABLE address_links (
+  user_id INT NOT NULL COMMENT 'Account.',
+  address_id INT NOT NULL COMMENT 'Address.',
+  created_at DATETIME NOT NULL COMMENT 'When the account added the address.',
+  removed_at DATETIME NULL COMMENT 'When the account removed it (a move ends the old home).',
+  role ENUM('home', 'shipping') NOT NULL COMMENT 'home: the account''s residence while active; shipping: an extra delivery address (gift recipient, office, drop).',
+  PRIMARY KEY (user_id, address_id, created_at),
+  CONSTRAINT fk_address_links_user_id FOREIGN KEY (user_id) REFERENCES accounts (user_id),
+  CONSTRAINT fk_address_links_address_id FOREIGN KEY (address_id) REFERENCES addresses (address_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
 
-CREATE TABLE promo_redemptions (
-  redemption_id INT PRIMARY KEY,
-  promo_id      INT NOT NULL,
-  user_id       INT NOT NULL,
-  order_id      INT NOT NULL,
-  ts            DATETIME NOT NULL,
-  KEY idx_pr_user (user_id),
-  KEY idx_pr_order (order_id),
-  CONSTRAINT fk_pr_promo FOREIGN KEY (promo_id) REFERENCES promos (promo_id),
-  CONSTRAINT fk_pr_user FOREIGN KEY (user_id) REFERENCES users (user_id),
-  CONSTRAINT fk_pr_order FOREIGN KEY (order_id) REFERENCES orders (order_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- latent truth: Simulator-only: account truth. A taken-over account stays legitimate here.
+CREATE TABLE latent_accounts (
+  user_id INT NOT NULL COMMENT 'Account.',
+  actor ENUM('legitimate', 'fraudster', 'synthetic_identity') NOT NULL COMMENT 'Who controls the account.',
+  episode_id INT NULL COMMENT 'Episode the account belongs to.',
+  profile VARCHAR(40) NULL COMMENT 'Behaviour profile or benign mimic (traveller, mover, household, hardship, new_customer, sleeper, ...).',
+  PRIMARY KEY (user_id),
+  CONSTRAINT fk_latent_accounts_user_id FOREIGN KEY (user_id) REFERENCES accounts (user_id),
+  CONSTRAINT fk_latent_accounts_episode_id FOREIGN KEY (episode_id) REFERENCES latent_episodes (episode_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'latent';
 
-CREATE TABLE chargebacks (
-  chargeback_id INT PRIMARY KEY,
-  order_id      INT NOT NULL,
-  reason        ENUM('fraud','inr','not_as_described') NOT NULL,
-  opened_ts     DATETIME NOT NULL,
-  outcome       ENUM('lost','won','pending') NOT NULL,
-  KEY idx_cb_order (order_id),
-  KEY idx_cb_opened (opened_ts),
-  CONSTRAINT fk_cb_order FOREIGN KEY (order_id) REFERENCES orders (order_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- observable event: Every attempted checkout, with its potential outcomes under approve-all.
+CREATE TABLE order_attempts (
+  event_id INT NOT NULL COMMENT 'World-unique event id, assigned in the global event order.',
+  occurred_at DATETIME NOT NULL COMMENT 'When the event happened.',
+  known_at DATETIME NOT NULL COMMENT 'When the platform could know it; as-of code filters on this.',
+  order_id INT NOT NULL COMMENT 'Order id, increasing with occurred_at.',
+  user_id INT NOT NULL COMMENT 'Ordering account.',
+  merchant_id INT NOT NULL COMMENT 'Merchant.',
+  device_id INT NOT NULL COMMENT 'Device used.',
+  card_id INT NOT NULL COMMENT 'Card charged at checkout.',
+  ship_address_id INT NOT NULL COMMENT 'Delivery address.',
+  amount_cents BIGINT NOT NULL COMMENT 'Merchant''s price.',
+  promo_id INT NULL COMMENT 'Promotion used.',
+  promo_discount_cents BIGINT NOT NULL COMMENT 'Platform-funded discount (0 without promotion).',
+  ip VARCHAR(45) NOT NULL COMMENT 'Checkout IP address.',
+  ip_country VARCHAR(64) NOT NULL COMMENT 'IP geolocation country.',
+  avs_result ENUM('Y', 'N') NOT NULL COMMENT 'Address verification: Y match, N mismatch.',
+  cvv_result ENUM('M', 'N') NOT NULL COMMENT 'Card verification: M match, N mismatch.',
+  processor_result ENUM('approved', 'declined') NOT NULL COMMENT 'Processor decision; only processor declines happen inside the world.',
+  PRIMARY KEY (event_id),
+  UNIQUE KEY uq_order_attempts_order_id (order_id),
+  KEY ix_order_attempts_known_at (known_at),
+  KEY ix_order_attempts_1 (user_id, known_at),
+  KEY ix_order_attempts_2 (merchant_id, known_at),
+  CONSTRAINT fk_order_attempts_user_id FOREIGN KEY (user_id) REFERENCES accounts (user_id),
+  CONSTRAINT fk_order_attempts_merchant_id FOREIGN KEY (merchant_id) REFERENCES merchants (merchant_id),
+  CONSTRAINT fk_order_attempts_device_id FOREIGN KEY (device_id) REFERENCES devices (device_id),
+  CONSTRAINT fk_order_attempts_card_id FOREIGN KEY (card_id) REFERENCES cards (card_id),
+  CONSTRAINT fk_order_attempts_ship_address_id FOREIGN KEY (ship_address_id) REFERENCES addresses (address_id),
+  CONSTRAINT fk_order_attempts_promo_id FOREIGN KEY (promo_id) REFERENCES promotions (promo_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
 
--- Ground truth. Analyst-facing layers (queries Q01–Q10, rules, packets, memos)
--- must never join this table; offline evaluation only.
+-- observable entity: One pay-in-4 plan per processor-approved order (the approve-all potential outcome).
+CREATE TABLE plans (
+  plan_id INT NOT NULL COMMENT 'Plan id.',
+  order_id INT NOT NULL COMMENT 'The processor-approved order it finances.',
+  created_at DATETIME NOT NULL COMMENT 'Approval time (equals the order''s occurred_at).',
+  principal_cents BIGINT NOT NULL COMMENT 'Customer obligation: amount minus promotion discount.',
+  down_payment_cents BIGINT NOT NULL COMMENT 'Collected at approval (schedule seq 0).',
+  n_installments INT NOT NULL COMMENT 'Installments after the down payment.',
+  PRIMARY KEY (plan_id),
+  UNIQUE KEY uq_plans_order_id (order_id),
+  CONSTRAINT fk_plans_order_id FOREIGN KEY (order_id) REFERENCES order_attempts (order_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
+
+-- observable event: Merchant reports shipment; the merchant is settled then.
+CREATE TABLE fulfilments (
+  event_id INT NOT NULL COMMENT 'World-unique event id, assigned in the global event order.',
+  occurred_at DATETIME NOT NULL COMMENT 'When the event happened.',
+  known_at DATETIME NOT NULL COMMENT 'When the platform could know it; as-of code filters on this.',
+  order_id INT NOT NULL COMMENT 'Order shipped.',
+  PRIMARY KEY (event_id),
+  KEY ix_fulfilments_known_at (known_at),
+  CONSTRAINT fk_fulfilments_order_id FOREIGN KEY (order_id) REFERENCES order_attempts (order_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
+
+-- observable event: Carrier-confirmed delivery. A shipped order without one was not delivered.
+CREATE TABLE deliveries (
+  event_id INT NOT NULL COMMENT 'World-unique event id, assigned in the global event order.',
+  occurred_at DATETIME NOT NULL COMMENT 'When the event happened.',
+  known_at DATETIME NOT NULL COMMENT 'When the platform could know it; as-of code filters on this.',
+  order_id INT NOT NULL COMMENT 'Order delivered.',
+  PRIMARY KEY (event_id),
+  KEY ix_deliveries_known_at (known_at),
+  CONSTRAINT fk_deliveries_order_id FOREIGN KEY (order_id) REFERENCES order_attempts (order_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
+
+-- observable event: occurred_at: the customer files; known_at: the platform is notified.
+CREATE TABLE dispute_openings (
+  event_id INT NOT NULL COMMENT 'World-unique event id, assigned in the global event order.',
+  occurred_at DATETIME NOT NULL COMMENT 'When the event happened.',
+  known_at DATETIME NOT NULL COMMENT 'When the platform could know it; as-of code filters on this.',
+  dispute_id INT NOT NULL COMMENT 'Dispute id, increasing with known_at.',
+  order_id INT NOT NULL COMMENT 'Disputed order.',
+  reason ENUM('unauthorized', 'item_not_received', 'not_as_described') NOT NULL COMMENT 'Reason given by the customer.',
+  amount_cents BIGINT NOT NULL COMMENT 'Collected payments disputed (positive).',
+  PRIMARY KEY (event_id),
+  UNIQUE KEY uq_dispute_openings_dispute_id (dispute_id),
+  KEY ix_dispute_openings_known_at (known_at),
+  CONSTRAINT fk_dispute_openings_order_id FOREIGN KEY (order_id) REFERENCES order_attempts (order_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
+
+-- observable event: Account owner disowns orders after a takeover; one row per disowned order.
+CREATE TABLE victim_reports (
+  event_id INT NOT NULL COMMENT 'World-unique event id, assigned in the global event order.',
+  occurred_at DATETIME NOT NULL COMMENT 'When the event happened.',
+  known_at DATETIME NOT NULL COMMENT 'When the platform could know it; as-of code filters on this.',
+  user_id INT NOT NULL COMMENT 'Account owner reporting.',
+  order_id INT NOT NULL COMMENT 'Order the owner says they did not place.',
+  PRIMARY KEY (event_id),
+  KEY ix_victim_reports_known_at (known_at),
+  CONSTRAINT fk_victim_reports_user_id FOREIGN KEY (user_id) REFERENCES accounts (user_id),
+  CONSTRAINT fk_victim_reports_order_id FOREIGN KEY (order_id) REFERENCES order_attempts (order_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
+
+-- latent truth: Simulator-only: order truth. Repaid ring warm-ups stay episode members.
+CREATE TABLE latent_orders (
+  order_id INT NOT NULL COMMENT 'Order.',
+  pattern_id ENUM('P-ATO', 'P-STOLEN', 'P-SYNTH', 'P-NEVERPAY', 'P-INR-ABUSE', 'P-PROMO', 'P-MERCH') NULL COMMENT 'Fraud pattern; null for legitimate orders.',
+  episode_id INT NULL COMMENT 'Episode.',
+  intent ENUM('legitimate', 'fraud', 'abuse') NOT NULL COMMENT 'Intent behind the order.',
+  mimic VARCHAR(40) NULL COMMENT 'Benign behaviour that resembles fraud, if any.',
+  PRIMARY KEY (order_id),
+  CONSTRAINT fk_latent_orders_order_id FOREIGN KEY (order_id) REFERENCES order_attempts (order_id),
+  CONSTRAINT fk_latent_orders_episode_id FOREIGN KEY (episode_id) REFERENCES latent_episodes (episode_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'latent';
+
+-- adjudicated label: Adjudicated label history from core.world.adjudicate: at most one negative row (known when the horizon has passed) and one positive row (the first determination). An order has no label before its first row; use labels_as_of().
 CREATE TABLE labels (
-  order_id   INT NOT NULL,
-  user_id    INT NOT NULL,
-  pattern_id VARCHAR(15) NOT NULL,
-  PRIMARY KEY (order_id, pattern_id),
-  KEY idx_labels_user (user_id),
-  CONSTRAINT fk_labels_order FOREIGN KEY (order_id) REFERENCES orders (order_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  order_id INT NOT NULL COMMENT 'Processor-approved order.',
+  label INT NOT NULL COMMENT '1 = abusive order as determined, 0 = not.',
+  basis ENUM('third_party_fraud', 'account_takeover', 'never_pay', 'inr_abuse', 'promo_abuse', 'merchant_bustout', 'credit_loss', 'no_finding') NOT NULL COMMENT 'Determination behind the label.',
+  label_known_at DATETIME NOT NULL COMMENT 'When the determination was known.',
+  PRIMARY KEY (order_id, label_known_at),
+  CONSTRAINT fk_labels_order_id FOREIGN KEY (order_id) REFERENCES order_attempts (order_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'adjudicated';
 
--- Written by rules/engine.py (not the simulator); created here so FKs and
--- permissions are in one place.
-CREATE TABLE alerts (
-  alert_id    INT PRIMARY KEY,
-  order_id    INT NOT NULL,
-  user_id     INT NOT NULL,
-  ts          DATETIME NOT NULL,
-  score       INT NOT NULL,
-  band        ENUM('review','decline') NOT NULL,
-  fired_rules JSON NOT NULL,
-  KEY idx_alerts_order (order_id),
-  KEY idx_alerts_ts (ts),
-  CONSTRAINT fk_alerts_order FOREIGN KEY (order_id) REFERENCES orders (order_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- observable schedule: What each plan owes and when; known from the plan's creation.
+CREATE TABLE installment_schedule (
+  plan_id INT NOT NULL COMMENT 'Plan.',
+  seq INT NOT NULL COMMENT '0 = down payment due at approval; 1..n installments.',
+  due_at DATETIME NOT NULL COMMENT 'Due time.',
+  amount_cents BIGINT NOT NULL COMMENT 'Amount due (core.ledger.split_principal).',
+  PRIMARY KEY (plan_id, seq),
+  CONSTRAINT fk_installment_schedule_plan_id FOREIGN KEY (plan_id) REFERENCES plans (plan_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
+
+-- observable event: Plans written off after the last installment stays unpaid.
+CREATE TABLE plan_writeoffs (
+  event_id INT NOT NULL COMMENT 'World-unique event id, assigned in the global event order.',
+  occurred_at DATETIME NOT NULL COMMENT 'When the event happened.',
+  known_at DATETIME NOT NULL COMMENT 'When the platform could know it; as-of code filters on this.',
+  plan_id INT NOT NULL COMMENT 'Plan.',
+  outstanding_cents BIGINT NOT NULL COMMENT 'Unpaid balance written off (a status, not cash).',
+  PRIMARY KEY (event_id),
+  KEY ix_plan_writeoffs_known_at (known_at),
+  CONSTRAINT fk_plan_writeoffs_plan_id FOREIGN KEY (plan_id) REFERENCES plans (plan_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
+
+-- observable event: The platform's cash ledger (core.ledger). Loss over a horizon = -sum(amount_cents).
+CREATE TABLE cash_events (
+  event_id INT NOT NULL COMMENT 'World-unique event id, assigned in the global event order.',
+  occurred_at DATETIME NOT NULL COMMENT 'When the event happened.',
+  known_at DATETIME NOT NULL COMMENT 'When the platform could know it; as-of code filters on this.',
+  order_id INT NOT NULL COMMENT 'Order.',
+  plan_id INT NOT NULL COMMENT 'Plan.',
+  merchant_id INT NOT NULL COMMENT 'Merchant.',
+  kind ENUM('merchant_settlement', 'promotion_funding', 'customer_payment', 'payment_reversal', 'refund', 'dispute_debit', 'dispute_fee', 'dispute_won_credit', 'merchant_recourse', 'recovery') NOT NULL COMMENT 'Cash movement (core.ledger.CASH_KINDS).',
+  amount_cents BIGINT NOT NULL COMMENT 'Signed cents from the platform''s point of view.',
+  ref_event_id INT NOT NULL COMMENT 'World event that caused it (for action-caused cash, the payment it compensates).',
+  cause VARCHAR(64) NOT NULL COMMENT '''natural'', or the replay action that produced it.',
+  PRIMARY KEY (event_id),
+  KEY ix_cash_events_known_at (known_at),
+  KEY ix_cash_events_1 (order_id),
+  CONSTRAINT fk_cash_events_order_id FOREIGN KEY (order_id) REFERENCES order_attempts (order_id),
+  CONSTRAINT fk_cash_events_plan_id FOREIGN KEY (plan_id) REFERENCES plans (plan_id),
+  CONSTRAINT fk_cash_events_merchant_id FOREIGN KEY (merchant_id) REFERENCES merchants (merchant_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
+
+-- observable event: A dispute without a resolution is pending.
+CREATE TABLE dispute_resolutions (
+  event_id INT NOT NULL COMMENT 'World-unique event id, assigned in the global event order.',
+  occurred_at DATETIME NOT NULL COMMENT 'When the event happened.',
+  known_at DATETIME NOT NULL COMMENT 'When the platform could know it; as-of code filters on this.',
+  dispute_id INT NOT NULL COMMENT 'Dispute.',
+  outcome ENUM('won', 'lost') NOT NULL COMMENT 'won: resolved for the platform (against the customer); lost: for the customer.',
+  PRIMARY KEY (event_id),
+  UNIQUE KEY uq_dispute_resolutions_dispute_id (dispute_id),
+  KEY ix_dispute_resolutions_known_at (known_at),
+  CONSTRAINT fk_dispute_resolutions_dispute_id FOREIGN KEY (dispute_id) REFERENCES dispute_openings (dispute_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
+
+-- observable event: Collection attempts; the down payment is seq 0 at approval.
+CREATE TABLE payment_attempts (
+  event_id INT NOT NULL COMMENT 'World-unique event id, assigned in the global event order.',
+  occurred_at DATETIME NOT NULL COMMENT 'When the event happened.',
+  known_at DATETIME NOT NULL COMMENT 'When the platform could know it; as-of code filters on this.',
+  plan_id INT NOT NULL COMMENT 'Plan.',
+  seq INT NOT NULL COMMENT 'Schedule entry being paid.',
+  attempt_no INT NOT NULL COMMENT '1 for the first try, then retries.',
+  amount_cents BIGINT NOT NULL COMMENT 'Amount attempted.',
+  result ENUM('success', 'failed') NOT NULL COMMENT 'Collection result.',
+  PRIMARY KEY (event_id),
+  KEY ix_payment_attempts_known_at (known_at),
+  KEY ix_payment_attempts_1 (plan_id, known_at),
+  CONSTRAINT fk_payment_attempts_plan_id FOREIGN KEY (plan_id) REFERENCES plans (plan_id),
+  CONSTRAINT fk_payment_attempts_x1 FOREIGN KEY (plan_id, seq) REFERENCES installment_schedule (plan_id, seq)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
+
+-- observable event: Collections that bounced after succeeding.
+CREATE TABLE payment_reversals (
+  event_id INT NOT NULL COMMENT 'World-unique event id, assigned in the global event order.',
+  occurred_at DATETIME NOT NULL COMMENT 'When the event happened.',
+  known_at DATETIME NOT NULL COMMENT 'When the platform could know it; as-of code filters on this.',
+  payment_event_id INT NOT NULL COMMENT 'The successful payment attempt reversed.',
+  plan_id INT NOT NULL COMMENT 'Plan.',
+  amount_cents BIGINT NOT NULL COMMENT 'Amount reversed (positive).',
+  reason ENUM('bank_return', 'card_reversal') NOT NULL COMMENT 'Why the collection came back.',
+  PRIMARY KEY (event_id),
+  KEY ix_payment_reversals_known_at (known_at),
+  CONSTRAINT fk_payment_reversals_plan_id FOREIGN KEY (plan_id) REFERENCES plans (plan_id),
+  CONSTRAINT fk_payment_reversals_x1 FOREIGN KEY (payment_event_id) REFERENCES payment_attempts (event_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'observable';
+
+-- Compatibility surface for merchant-risk-screener: its 17 columns over the
+-- event tables. `orders.status` is the processor result ('approved' or
+-- 'declined'); `chargebacks` has one row per dispute dated when the platform
+-- learned of it; `installments` gives each installment's state at the end of
+-- observation (paid, late, failed, written_off or pending), the final-state
+-- view the screener reads. `plans` is a table above.
+CREATE VIEW users AS
+SELECT user_id, created_at AS signup_ts FROM accounts;
+
+CREATE VIEW orders AS
+SELECT order_id, user_id, merchant_id, occurred_at AS ts,
+       CAST(amount_cents / 100 AS DECIMAL(12, 2)) AS amount,
+       processor_result AS status
+FROM order_attempts;
+
+CREATE VIEW chargebacks AS
+SELECT dispute_id AS chargeback_id, order_id, reason, known_at AS opened_ts
+FROM dispute_openings;
+
+CREATE VIEW installments AS
+SELECT s.plan_id, s.seq, s.due_at AS due_ts,
+       CAST(s.amount_cents / 100 AS DECIMAL(12, 2)) AS amount,
+       CASE
+         WHEN paid.first_paid_at IS NOT NULL AND paid.first_paid_at <= s.due_at THEN 'paid'
+         WHEN paid.first_paid_at IS NOT NULL THEN 'late'
+         WHEN w.plan_id IS NOT NULL THEN 'written_off'
+         WHEN failed.plan_id IS NOT NULL THEN 'failed'
+         ELSE 'pending'
+       END AS outcome
+FROM installment_schedule s
+LEFT JOIN (
+  SELECT a.plan_id, a.seq, MIN(a.occurred_at) AS first_paid_at
+  FROM payment_attempts a
+  LEFT JOIN payment_reversals r ON r.payment_event_id = a.event_id
+  WHERE a.result = 'success' AND r.event_id IS NULL
+  GROUP BY a.plan_id, a.seq
+) paid ON paid.plan_id = s.plan_id AND paid.seq = s.seq
+LEFT JOIN (SELECT DISTINCT plan_id FROM plan_writeoffs) w ON w.plan_id = s.plan_id
+LEFT JOIN (
+  SELECT DISTINCT plan_id, seq FROM payment_attempts WHERE result = 'failed'
+) failed ON failed.plan_id = s.plan_id AND failed.seq = s.seq
+WHERE s.seq >= 1;
