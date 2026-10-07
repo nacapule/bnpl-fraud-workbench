@@ -130,6 +130,17 @@ class Policy:
         text = json.dumps(spec, sort_keys=True, default=repr)
         return hashlib.sha256(text.encode()).hexdigest()[:12]
 
+    @property
+    def review_band(self) -> bool:
+        """Whether some score can reach review: a review route that a decline at or
+        below its threshold on the same signal does not empty (decline comes first)."""
+        if self.review is None or self.review_threshold is None:
+            return False
+        if self.decline is None or self.decline_threshold is None:
+            return True
+        return not (self.decline.key == self.review.key
+                    and self.decline_threshold <= self.review_threshold)
+
     def with_thresholds(self, review: float | None, decline: float | None) -> Policy:
         return replace(self, review_threshold=review, decline_threshold=decline)
 

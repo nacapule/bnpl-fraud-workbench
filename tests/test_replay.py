@@ -241,6 +241,32 @@ def test_an_order_never_decided_misses_its_sla(tables) -> None:
     assert sum(row[f"sla_met_p{p}"] for p in range(4)) == 0
     assert row["review_band"] == 1
     assert row_of(*run(tables, scores=scores, review=None))["review_band"] == 0
+    # a decline at or below the review threshold on the same score empties the band
+    assert row_of(*run(tables, scores=scores, review=1.0, decline=1.0))["review_band"] == 0
+
+
+def test_the_review_band_is_empty_only_when_a_decline_on_the_same_signal_covers_it() -> None:
+    from replay_support import StubScorer
+
+    from queue_sim import policies
+
+    assert not scored_policy(0.5, 0.4).review_band and not scored_policy(0.5, 0.5).review_band
+    assert scored_policy(0.5, 0.9).review_band and scored_policy(0.5, None).review_band
+    assert not scored_policy(None, 0.9).review_band
+    two = policies.hybrid(StubScorer(name="rules"), StubScorer(name="boosting"))
+    assert two.with_thresholds(0.5, 0.4).review_band  # different signals
+
+
+def test_truth_counts_take_customers_of_a_fraudulent_merchant_as_legitimate(tables) -> None:
+    """Order 15 (P-MERCH) is a legitimate customer's order at a busting-out merchant; order
+    12 (P-ATO) was placed by whoever took the account over."""
+    found = set(outcomes.latent_legitimate(tables["latent_orders"]))
+    assert 15 in found and 12 not in found and 2 not in found and {1, 14, 26} <= found
+    result, world = run(tables, scores={15: 5.0, 12: 5.0}, review=None, decline=1.0)
+    row = row_of(result, world)
+    # both are declined at checkout; only order 15 is a legitimate customer in truth
+    assert row["legitimate_truth_declined_checkout"] == row["legitimate_truth_declined"] == 1
+    assert row["legitimate_truth_orders"] == len(found & set(result.fates["order_id"]))
 
 
 # ------------------------------------------------------------------ actions and their effects

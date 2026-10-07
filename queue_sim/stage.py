@@ -303,16 +303,26 @@ def _window(protocol: Any, name: str) -> tuple[pd.Timestamp, pd.Timestamp]:
     return window.start, window.end
 
 
-def _bench(run: Any, ref: Any) -> Bench:
+def _bench(run: Any, ref: Any, observed_until: pd.Timestamp | None = None) -> Bench:
+    """One world's bench, observed until ``observed_until`` (default: the end of
+    observation)."""
+    cut = pd.Timestamp(run.protocol.observed_until if observed_until is None
+                       else observed_until)
     cache = run.memory.setdefault("benches", {})
-    if ref not in cache:
+    key = ref if cut == pd.Timestamp(run.protocol.observed_until) else (ref, cut)
+    if key not in cache:
         tables = run.tables(ref)
         contexts = run.memory.setdefault("context", {})
         if ref not in contexts:
             contexts[ref] = asof.build_context(tables)
-        cache[ref] = Bench.of(tables, contexts[ref], seed=ref.seed,
-                              observed_until=run.protocol.observed_until)
-    return cache[ref]
+        cache[key] = Bench.of(tables, contexts[ref], seed=ref.seed, observed_until=cut)
+    return cache[key]
+
+
+def tuning_cut(protocol: Any) -> pd.Timestamp:
+    """What tuning may know: labels and cash known before the policy freeze (the replay
+    of the validation window stops there too)."""
+    return pd.Timestamp(protocol.freezes["policy"]) - pd.Timedelta(seconds=1)
 
 
 def _baseline(run: Any, seed: int) -> Any:
@@ -361,13 +371,15 @@ class Worker:
     policies: dict[str, policies.Policy]
     classes: pd.DataFrame
     latent_classes: pd.DataFrame
+    legitimate_truth: pd.Index
 
     @classmethod
     def of(cls, bench: Bench, scorers: Mapping[str, Any]) -> Worker:
         latent = bench.latent_orders[["order_id", "pattern_id"]].assign(
             pattern_id=lambda f: f["pattern_id"].fillna("legitimate"))
         return cls(bench, policies_for(scorers, bench),
-                   outcomes.truth(bench.world.tables, bench.world.observed_until), latent)
+                   outcomes.truth(bench.world.tables, bench.world.observed_until), latent,
+                   outcomes.latent_legitimate(bench.latent_orders))
 
     def run(self, task: Task) -> dict[str, Any]:
         policy = self.policies[task.policy].with_thresholds(task.review_threshold,
@@ -376,7 +388,8 @@ class Worker:
                                 reviewer=task.reviewer, rates=task.rates)
         out: dict[str, Any] = {"row": outcomes.outcome_row(
             result, self.bench.world, keys={**dict(task.keys), "policy_version": policy.version},
-            ltv_cents=self.bench.ltv_cents(), classes=self.classes)}
+            ltv_cents=self.bench.ltv_cents(), classes=self.classes,
+            legitimate_truth=self.legitimate_truth)}
         if task.detail and task.policy == INCUMBENT:
             out["incumbent"] = {"decisions": decision_rows(policy, result),
                                 "alerts": alerts(result, policy)}
@@ -419,8 +432,9 @@ class Replays:
     the process that ran it; results come back in task order.
     """
 
-    def __init__(self, run: Any, ref: Any, seed: int, count: int | None = None) -> None:
-        self.bench = _bench(run, ref)
+    def __init__(self, run: Any, ref: Any, seed: int, count: int | None = None, *,
+                 observed_until: pd.Timestamp | None = None) -> None:
+        self.bench = _bench(run, ref, observed_until)
         self.scorers = run.memory["scorers"][seed]
         self.count = workers(run) if count is None else count
         self.local: Worker | None = None
@@ -458,6 +472,8 @@ TUNING_HISTORIES = ("shortlist", "frozen", "policy")  # "shortlist": the protoco
 def tune(run: Any, *, history: str = "shortlist") -> StageOutput:
     """Each seed's policies tuned on its baseline world's validation window (base level).
 
+    Tuning knows what was known before the policy freeze (:func:`tuning_cut`): the
+    replay stops there, and outcome rows count only labels and cash known by then.
     ``history`` is the tuning procedure: ``shortlist`` (the protocol's: the whole grid
     with frozen approve-all history, the shortlist with policy-specific history),
     ``frozen`` or ``policy`` (the whole grid with that history alone).
@@ -473,7 +489,8 @@ def tune(run: Any, *, history: str = "shortlist") -> StageOutput:
     frontier_rows, chosen_rows = [], []
     for seed in sorted({ref.seed for ref in run.all_worlds}):
         found = run.memory.setdefault("tuned", {}).setdefault(seed, {})
-        with Replays(run, _baseline(run, seed), seed) as replays:
+        with Replays(run, _baseline(run, seed), seed,
+                     observed_until=tuning_cut(run.protocol)) as replays:
             bench = replays.bench
 
             def evaluate(with_history: str, replays: Replays = replays):
@@ -532,10 +549,17 @@ VARIANTS = (  # (history, reviewer, verification rates) at the base level
 
 
 def replay(run: Any) -> StageOutput:
-    """Every tuned policy and approve-all on every evaluation world's test window."""
+    """Every tuned policy and approve-all on every evaluation world's test window.
+
+    Each world is replayed at every staffing (capacity levels, the redesigned layout)
+    and with the variants at the base level; a world of a family in
+    ``run.base_only_families`` (sensitivity families) only at the base level on the
+    current layout, main variant.
+    """
     policy_cfg = config.load("policy")
     window = _window(run.protocol, "test")
     current = policy_cfg["roster"]["layout"]
+    base_only = set(getattr(run, "base_only_families", ()) or ())
     rows, confusion, latent, prevented = [], [], [], []
     for ref in run.worlds:
         tuned = run.memory["tuned"][ref.seed]
@@ -547,7 +571,10 @@ def replay(run: Any) -> StageOutput:
                 continue
             for staff in staffing(policy_cfg):
                 main = staff.level in ("base", "configured") and staff.layout == current
-                for history, reviewer, rates in (VARIANTS if main else VARIANTS[:1]):
+                if ref.family in base_only and not main:
+                    continue
+                variants = VARIANTS if main and ref.family not in base_only else VARIANTS[:1]
+                for history, reviewer, rates in variants:
                     tasks.append(Task.of(
                         policy, window, staff, history=history, reviewer=reviewer,
                         rates=rates, detail=main and (history, reviewer, rates) == VARIANTS[0],

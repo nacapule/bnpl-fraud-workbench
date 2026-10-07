@@ -45,7 +45,7 @@ class FakeRun:
             windows={"fit": window(start=T("2024-12-01"), end=T("2025-03-01")),
                      "validation": window(start=T("2024-12-01"), end=T("2025-03-01")),
                      "test": window(start=T("2025-03-01"), end=T("2025-06-15"))},
-            observed_until=T("2025-06-30 23:59:59"),
+            observed_until=T("2025-06-30 23:59:59"), freezes={"policy": T("2025-04-01")},
             order_start=T("2024-12-01"), order_end=T("2025-06-15"))
         scorers = {name: scorer(name=name) for name in ("rules", "tree", "logistic",
                                                         "boosting")}
@@ -112,6 +112,66 @@ def test_the_replay_stage_writes_one_integer_row_per_policy_and_variant(staged) 
     for column in outcomes.OUTCOME_COLUMNS:
         values = rows[column]
         assert values.map(lambda v: isinstance(v, int | np.integer)).all(), column
+
+
+def test_tuning_knows_only_the_labels_and_cash_known_before_the_policy_freeze() -> None:
+    """Validation orders 14, 15 and 18 are labelled in April, after the policy freeze
+    (2025-04-01): tuning counts them unknown, and leaves out cash known after it."""
+    tables = mini_tables()
+    stub = StubContext(tables, scores={order: order / 30
+                                       for order in tables["order_attempts"]["order_id"]})
+    run = FakeRun(tables, stub.build(tables))
+    cut = T("2025-04-01") - pd.Timedelta(seconds=1)
+    seen, rows = [], []
+    real = outcomes.outcome_row
+
+    def spy(result, world_, **kwargs):
+        seen.append(world_.observed_until)
+        rows.append(real(result, world_, **kwargs))
+        return rows[-1]
+
+    patch = pytest.MonkeyPatch()
+    patch.setattr(asof, "build_context", lambda t, d=None, **_: stub.build(t, d))
+    patch.setattr(asof, "policy_rows",
+                  lambda world_rows, *_, **__: world_rows.reset_index(drop=True),
+                  raising=False)
+    patch.setattr(tuning.Grid, "from_config",
+                  classmethod(lambda cls, cfg=None: cls((0.0,), (0.0,))))
+    patch.setattr(outcomes, "outcome_row", spy)
+    try:
+        tuned = stage.tune(run)
+    finally:
+        patch.undo()
+    assert seen and set(seen) == {cut}
+    assert len(tuned.tables["tune.frontier"]) == len(rows) == 2 * 6  # two histories
+    row = rows[0]
+    window = tables["order_attempts"]
+    window = window.loc[(window["known_at"] >= T("2024-12-01"))
+                        & (window["known_at"] < T("2025-03-01"))
+                        & (window["processor_result"] == "approved"), "order_id"]
+    unknown_then = set(window) - set(outcomes.truth(tables, cut).query(
+        "truth != 'unknown'")["order_id"])
+    unknown_at_end = set(window) - set(outcomes.truth(tables, T("2025-06-30")).query(
+        "truth != 'unknown'")["order_id"])
+    assert {14, 15, 18} <= unknown_then - unknown_at_end
+    assert row["unknown_orders"] == len(unknown_then)
+    cash = tables["cash_events"].loc[tables["cash_events"]["order_id"].isin(window)]
+    assert row["approve_all_net_cents"] == int(cash.loc[cash["known_at"] <= cut,
+                                                        "amount_cents"].sum())
+    assert row["approve_all_net_cents"] != int(cash["amount_cents"].sum())
+
+
+def test_a_sensitivity_family_is_replayed_at_the_base_level_only(staged) -> None:
+    run, _, _ = staged
+    run.base_only_families = ("baseline",)
+    try:
+        rows = pd.DataFrame(stage.replay(run).tables["replay.outcomes"])
+    finally:
+        del run.base_only_families
+    assert len(rows) == 7
+    assert set(zip(rows["capacity_level"], rows["layout"], rows["history"], rows["reviewer"],
+                   rows["verification"], strict=True)) == {
+        ("base", "current", "policy", "evidence", "verification")}
 
 
 def test_the_routing_frame_and_review_decisions_have_their_columns(staged) -> None:

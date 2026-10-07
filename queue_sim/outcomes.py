@@ -1,23 +1,28 @@
 """What a replay did, in integer counts and cents: one row per world, policy and staffing.
 
 Outcomes are measured on the orders whose checkout fell in the replay's window, with
-their cash followed to the end of observation. Money comes from the ledger
-(``core.actions.policy_cash`` against the world's own cash under approve-all). Which
-orders were fraud is the adjudicated label as known at the end of observation
-(``core.world.labels_as_of``): positive bases are fraud, ``no_finding`` and
+what is known of them by the row's observation cut (``World.observed_until``): the end
+of observation in evaluation, the policy freeze in tuning. Money comes from the ledger
+(``core.actions.policy_cash`` against the world's own cash under approve-all), the
+cash known by the cut. Which orders were fraud is the adjudicated label as known by the
+cut (``core.world.labels_as_of``): positive bases are fraud, ``no_finding`` and
 ``credit_loss`` are legitimate, and an order with no label yet is unknown, never
-legitimate. Latent truth appears only in the separate diagnostic table.
+legitimate. Latent truth appears only in the separate diagnostic table and in the
+``legitimate_truth_*`` counts reported beside the adjudicated friction counts (orders
+of legitimate customers in simulation truth: no latent pattern, or a customer of a
+fraudulent merchant).
 
 Review minutes are fraud-queue minutes from the shift allotment: review time and the
 senior review an escalation adds (``senior_minutes``, its share of the minutes offered).
 ``review_minutes_offered`` counts the work that reached the queue, ``review_minutes_used``
-the work begun (analysts keep working the queue after the window, until the end of
-observation). ``available_minutes`` is the allotment of the shifts inside the window,
-used or not. ``review_band`` is 1 when the policy has a review route at all;
-``scored_to_review`` counts the orders its scores sent to review, of which ``reviews``
-reached the queue (an earlier block declined the rest at checkout). Per priority, ``reviews_pN`` counts the orders
-that entered the queue and ``sla_met_pN`` those decided within the target service hours;
-an order still undecided at the end of observation is a miss.
+the work begun (analysts keep working the queue after the window, until the cut).
+``available_minutes`` is the allotment of the shifts inside the window, used or not.
+``review_band`` is 1 when some score can reach review (a review route that a decline at
+or below it on the same signal does not empty); ``scored_to_review`` counts the orders
+its scores sent to review, of which ``reviews`` reached the queue (an earlier block
+declined the rest at checkout). Per priority, ``reviews_pN`` counts the orders that
+entered the queue and ``sla_met_pN`` those decided within the target service hours; an
+order still undecided at the cut is a miss.
 
 :data:`OUTCOME_COLUMNS` are the stage's row (all integers except the key fields);
 ratios such as utilization (``review_minutes_used / available_minutes``) or loss in
@@ -51,6 +56,9 @@ OUTCOME_COLUMNS = (
     "legitimate_declined_checkout", "legitimate_blocked_checkout",
     "legitimate_declined_review", "legitimate_declined", "friction_cost_cents",
     "unknown_orders",
+    "legitimate_truth_orders", "legitimate_truth_held", "legitimate_truth_cancelled",
+    "legitimate_truth_declined_checkout", "legitimate_truth_blocked_checkout",
+    "legitimate_truth_declined_review", "legitimate_truth_declined",
     "fraud_declined_checkout", "fraud_stopped_before_shipping", "fraud_declined_after_shipping",
     "review_band", "scored_to_review",
     "reviews", "reviews_decided", "review_minutes_offered", "review_minutes_used",
@@ -76,24 +84,46 @@ def truth(tables: Mapping[str, pd.DataFrame], observed_until: pd.Timestamp) -> p
     return out[["order_id", "truth", "basis"]]
 
 
+TRUTH_LEGITIMATE_PATTERNS = ("P-MERCH",)  # customers of a fraudulent merchant
+
+
+def latent_legitimate(latent_orders: pd.DataFrame) -> pd.Index:
+    """Orders placed by a legitimate customer in simulation truth (a diagnostic only):
+    no latent pattern, or a customer of a fraudulent merchant."""
+    pattern = latent_orders["pattern_id"]
+    keep = pattern.isna() | pattern.isin(TRUTH_LEGITIMATE_PATTERNS)
+    return pd.Index(latent_orders.loc[keep, "order_id"].to_numpy(np.int64))
+
+
 def _net_by_order(cash: pd.DataFrame) -> pd.Series:
     return cash.groupby("order_id")["amount_cents"].sum()
 
 
 def outcome_row(result: ReplayResult, world_: World, *, keys: Mapping[str, Any],
-                ltv_cents: int, classes: pd.DataFrame | None = None) -> dict[str, Any]:
-    """The stage row for one replay: ``keys`` (KEY_COLUMNS) plus OUTCOME_COLUMNS."""
+                ltv_cents: int, classes: pd.DataFrame | None = None,
+                legitimate_truth: pd.Index | None = None) -> dict[str, Any]:
+    """The stage row for one replay: ``keys`` (KEY_COLUMNS) plus OUTCOME_COLUMNS.
+
+    Labels and cash are those known by ``world_.observed_until`` (the end of observation
+    for evaluation; the policy freeze for tuning). ``classes`` (:func:`truth`) and
+    ``legitimate_truth`` (:func:`latent_legitimate`) may be passed precomputed.
+    """
     fates = result.fates
     orders = fates["order_id"]
     classes = truth(world_.tables, world_.observed_until) if classes is None else classes
+    if legitimate_truth is None:
+        legitimate_truth = latent_legitimate(world_.tables["latent_orders"])
+    cut = pd.Timestamp(world_.observed_until)
     cls = orders.map(classes.set_index("order_id")["truth"]).fillna(UNKNOWN).to_numpy()
     basis = orders.map(classes.set_index("order_id")["basis"])
     amounts = orders.map(world_.tables["order_attempts"].set_index("order_id")["amount_cents"])
 
     policy_cash = actions.policy_cash(world_.tables, fates, world_.terms,
                                       observed_until=world_.observed_until)
+    policy_cash = policy_cash.loc[policy_cash["known_at"] <= cut]
     world_cash = world_.tables["cash_events"]
-    world_cash = world_cash.loc[world_cash["order_id"].isin(orders)]
+    world_cash = world_cash.loc[world_cash["order_id"].isin(orders)
+                                & (world_cash["known_at"] <= cut)]
     net = orders.map(_net_by_order(policy_cash)).fillna(0).to_numpy(np.int64)
     base = orders.map(_net_by_order(world_cash)).fillna(0).to_numpy(np.int64)
 
@@ -113,6 +143,7 @@ def outcome_row(result: ReplayResult, world_: World, *, keys: Mapping[str, Any],
     declined_review = (voided & np.isin(cause, ["decline", "escalate"])) | after_ship_decline
     cancelled = voided & (cause == "hold_cancelled")
     legit_declined = legit & (declined_checkout | blocked_checkout | declined_review)
+    truly = orders.isin(legitimate_truth).to_numpy()
 
     r = result.reviews
     decided = r["decided_at"].notna()
@@ -139,6 +170,14 @@ def outcome_row(result: ReplayResult, world_: World, *, keys: Mapping[str, Any],
         "legitimate_declined": int(legit_declined.sum()),
         "friction_cost_cents": int(ltv_cents * (legit_declined | (legit & cancelled)).sum()),
         "unknown_orders": int((cls == UNKNOWN).sum()),
+        "legitimate_truth_orders": int(truly.sum()),
+        "legitimate_truth_held": int((truly & held).sum()),
+        "legitimate_truth_cancelled": int((truly & cancelled).sum()),
+        "legitimate_truth_declined_checkout": int((truly & declined_checkout).sum()),
+        "legitimate_truth_blocked_checkout": int((truly & blocked_checkout).sum()),
+        "legitimate_truth_declined_review": int((truly & declined_review).sum()),
+        "legitimate_truth_declined": int(
+            (truly & (declined_checkout | blocked_checkout | declined_review)).sum()),
         "fraud_declined_checkout": int((fraud & (declined_checkout | blocked_checkout)).sum()),
         "fraud_stopped_before_shipping": int((fraud & voided).sum()),
         "fraud_declined_after_shipping": int((fraud & after_ship_decline).sum()),
