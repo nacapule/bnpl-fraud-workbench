@@ -675,8 +675,14 @@ def stage_replay(run: Run) -> StageOutput:
     output = stage_output(replay(run), "replay")
     if "replay.outcomes" not in output.tables:
         raise PipelineError("replay: no replay.outcomes table")
+    output.tables["replay.outcomes"] = full_rows(output.tables["replay.outcomes"])
     for ref in run.all_worlds:  # after the replay, whose incumbent runs they come from
         path = run.world_dir(ref) / REVIEW_DECISIONS
+        path.unlink(missing_ok=True)  # none kept from an earlier run
+        if not incumbent_fit(run, ref):
+            output.notes.append(f"no review decisions for {ref.name}: the incumbent has no "
+                                "feasible operating point on its seed")
+            continue
         frame = decisions(run, ref)
         if not isinstance(frame, pd.DataFrame):
             raise PipelineError(f"replay: review decisions of {ref.name} are not a data frame")
@@ -685,11 +691,25 @@ def stage_replay(run: Run) -> StageOutput:
     return output
 
 
+def full_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Rows with every column any row has, in order of first appearance; a row lacking
+    one (an outcome row of a policy that was not evaluated) holds None there."""
+    columns = list(dict.fromkeys(column for row in rows for column in row))
+    return [{column: row.get(column) for column in columns} for row in rows]
+
+
+def incumbent_fit(run: Run, ref: WorldRef) -> bool:
+    """Whether tuning found the incumbent rules a feasible operating point on the world's
+    seed (without one there are no review decisions or alerts to keep)."""
+    return run.memory["tuned"].get(ref.seed, {}).get(REFERENCES[1]) is not None
+
+
 def review_decisions(run: Run, ref: WorldRef) -> pd.DataFrame:
     """The incumbent's review decisions on one world, as the replay stage kept them."""
     path = run.world_dir(ref) / REVIEW_DECISIONS
     if not path.exists():
-        raise PipelineError(f"no review decisions for {ref.name}; run the replay stage")
+        raise PipelineError(f"no review decisions for {ref.name}: run the replay stage (its "
+                            "notes say when the incumbent had no feasible operating point)")
     return pd.read_pickle(path)
 
 
@@ -700,11 +720,18 @@ def stage_alerts(run: Run) -> StageOutput:
         return StageOutput(notes=["no world is loaded into MySQL in this run"])
     routing = entry("alerts", "queue_sim.stage", "routing_frame")
     _kept(run, "tuned", "tuned policies", "alerts", "tune")
-    frame = routing(run, ref)
+    notes = []
+    if incumbent_fit(run, ref):
+        frame = routing(run, ref)
+    else:  # no routing to show: the table is emptied, not left from an earlier run
+        frame = pd.DataFrame(columns=list(ALERT_COLUMNS))
+        notes.append(f"no alerts for {ref.name}: the incumbent has no feasible operating "
+                     "point on its seed")
     _require_mysql()
     written = write_alerts(frame)
     return StageOutput(
         metrics={"alerts.rows": _count(written, f"routing decisions, world {ref.name}")},
+        notes=notes,
     )
 
 
@@ -1052,15 +1079,20 @@ STAGES = (
     Stage("fit", stage_fit, ("world", "features", "protocol", "models"),
           "fit classifiers per seed",
           lambda run: _world_inputs([WorldRef(seed, BASELINE) for seed in run.fit_seeds])),
-    Stage("tune", stage_tune, ("world", "features", "policy", "protocol", "models"),
+    Stage("tune", stage_tune, ("world", "features", "policy", "protocol", "models", "tuning"),
           "choose thresholds on validation",
           lambda run: _all_worlds(run) + _repo_inputs("config/policy.yaml")),
-    Stage("replay", stage_replay, ("world", "features", "policy", "protocol", "models"),
+    # replay and alerts use the policies tune chose (in memory) and declare its result
+    Stage("replay", stage_replay,
+          ("world", "features", "policy", "protocol", "models", "tuning"),
           "replay every policy on every world",
-          lambda run: _all_worlds(run) + _repo_inputs("config/policy.yaml")),
-    Stage("alerts", stage_alerts, ("world", "policy", "models"), "routing decisions into MySQL",
-          lambda run: _database_world(run) + _repo_inputs("db/policy_tables.sql")),
-    Stage("evaluate", stage_evaluate, ("world", "features", "policy", "protocol"),
+          lambda run: _all_worlds(run) + _repo_inputs("config/policy.yaml")
+          + ["results/tune.json"]),
+    Stage("alerts", stage_alerts, ("world", "policy", "models", "tuning"),
+          "routing decisions into MySQL",
+          lambda run: _database_world(run) + _repo_inputs("db/policy_tables.sql")
+          + ["results/tune.json"]),
+    Stage("evaluate", stage_evaluate, ("world", "features", "policy", "protocol", "tuning"),
           "paired comparisons across seeds",
           lambda run: ["results/replay.json", *_repo_inputs("config/policy.yaml")]),
     Stage("llm", stage_llm, ("benchmark", "policy"), "offline LLM benchmark replay"),
@@ -1113,6 +1145,8 @@ def versions(run: Run, names: tuple[str, ...]) -> dict[str, str]:
             out[name] = world_version(run)
         elif name == "models":
             out[name] = models_version(run)
+        elif name == "tuning":  # the mode tune ran in; "default" when none was named
+            out[name] = tuning_history(run) or "default"
         elif name == "benchmark":
             manifests = sorted(
                 path.relative_to(REPO).as_posix()

@@ -341,7 +341,7 @@ def test_a_complete_run_assembles_its_summary_and_reruns_byte_for_byte(
     assert set(summary["stages"]) == set(pipeline.STAGE_NAMES)
     assert summary["metrics"]["evaluate.things"]["value"] == 7
     assert set(summary["versions"]) == {"world", "features", "policy", "protocol", "benchmark",
-                                        "models"}
+                                        "models", "tuning"}
     first = {path.name: path.read_bytes() for path in run.results_dir.iterdir()}
     first_lineage = (run.directory / "lineage.json").read_text()
     pipeline.execute(run, list(pipeline.STAGES), log=lambda _: None)
@@ -523,20 +523,28 @@ class OtherStageOutput:  # another module's stage output, with the same fields
     outputs: list = field(default_factory=list)
 
 
-def _stage_module(monkeypatch, calls: list) -> types.ModuleType:
-    """A stand-in for queue_sim.stage with its signatures, recording the calls."""
+def _stage_module(monkeypatch, calls: list, *, incumbent: object = "fitted") -> types.ModuleType:
+    """A stand-in for queue_sim.stage with its signatures, recording the calls;
+    ``incumbent`` None: tuning found the incumbent no feasible point."""
     module = types.ModuleType("queue_sim.stage")
     module.TUNING_HISTORIES = ("policy", "frozen", "shortlist")
 
     def tune(run, **options):
         calls.append(("tune", options))
-        run.memory["tuned"] = {0: {}}
+        run.memory["tuned"] = {0: {"approve_all": "fitted", "incumbent_rules": incumbent}}
         return OtherStageOutput(tables={"tune.chosen": []})
 
     def replay(run):
         calls.append(("replay",))
         run.memory["incumbent"] = {}
-        return OtherStageOutput(tables={"replay.outcomes": [outcome(0, "approve_all", 0)]})
+        unfit = {"seed": 0, "family": "baseline", "policy": "incumbent_rules",
+                 "capacity_level": "base", "evaluated": False}
+        return OtherStageOutput(tables={"replay.outcomes": [outcome(0, "approve_all", 0),
+                                                            unfit]})
+
+    def routing_frame(run, ref):
+        calls.append(("routing_frame", ref))
+        return pd.DataFrame(columns=list(pipeline.ALERT_COLUMNS))
 
     def review_decisions(run, ref):
         calls.append(("review_decisions", ref, "incumbent" in run.memory))
@@ -547,8 +555,71 @@ def _stage_module(monkeypatch, calls: list) -> types.ModuleType:
         })
 
     module.tune, module.replay, module.review_decisions = tune, replay, review_decisions
+    module.routing_frame = routing_frame
     monkeypatch.setitem(sys.modules, "queue_sim.stage", module)
     return module
+
+
+def test_a_policy_left_unevaluated_keeps_its_row_through_the_result_file(
+    tmp_path: Path, monkeypatch
+) -> None:
+    calls: list = []
+    _stage_module(monkeypatch, calls)
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
+    pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)
+    run.memory["scorers"] = {0: {}}
+    pipeline.execute(run, pipeline.select("tune", "replay"), log=lambda _: None)
+    rows = read_result(run.results_dir / "replay.json").tables["replay.outcomes"]
+    assert set(rows[0]) == set(rows[1]) and rows[1]["evaluated"] is False
+    assert rows[1]["net_cents"] is None and rows[1]["layout"] is None
+    # what the replay wrote is what evaluate reads
+    full = [outcome(seed, policy, 0) for seed in (1, 2) for policy in POLICIES
+            if (seed, policy) != (2, "hybrid")]
+    full.append({"seed": 2, "family": "baseline", "policy": "hybrid", "capacity_level": "base",
+                 "evaluated": False})
+    stored = pipeline.full_rows(full)
+    metrics, _ = evaluate(stored, seeds=(1, 2))
+    assert metrics["evaluate.net_contribution.baseline.base.hybrid"].value is None
+
+
+def test_an_incumbent_with_no_feasible_point_leaves_no_decisions_or_alerts(
+    tmp_path: Path, monkeypatch
+) -> None:
+    calls: list = []
+    _stage_module(monkeypatch, calls, incumbent=None)
+    written: list = []
+    monkeypatch.setattr(pipeline, "_require_mysql", lambda: None)
+    monkeypatch.setattr(pipeline, "write_alerts", lambda frame: written.append(frame) or 0)
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
+    pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)
+    stale = run.world_dir(run.worlds[0]) / pipeline.REVIEW_DECISIONS
+    stale.write_bytes(b"from an earlier run")
+    run.memory["scorers"] = {0: {}}
+    pipeline.execute(run, pipeline.select("tune", "alerts"), log=lambda _: None)
+    assert [call[0] for call in calls] == ["tune", "replay"]
+    assert not stale.exists()
+    assert any("no review decisions for 0-baseline" in note
+               for note in read_result(run.results_dir / "replay.json").notes)
+    with pytest.raises(pipeline.PipelineError, match="no feasible operating point"):
+        pipeline.review_decisions(run, run.worlds[0])
+    assert len(written) == 1 and written[0].empty  # the alerts table is emptied
+    assert list(written[0].columns) == list(pipeline.ALERT_COLUMNS)
+    assert read_result(run.results_dir / "alerts.json").notes[0].startswith("no alerts for")
+
+
+def test_replay_and_alerts_depend_on_the_tuning_they_used(tmp_path: Path, monkeypatch) -> None:
+    reads = {stage.name: stage.inputs for stage in pipeline.STAGES}
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
+    assert "results/tune.json" in reads["replay"](run)
+    assert "results/tune.json" in reads["alerts"](run)
+    _fake_stages(monkeypatch)
+    run = _dev_run(tmp_path)
+    pipeline.execute(run, list(pipeline.STAGES), log=lambda _: None)
+    retuned = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, seeds=[416],
+                                families=["baseline"], tuning_history="frozen")
+    pipeline.execute(retuned, pipeline.select("tune", "tune"), log=lambda _: None)
+    with pytest.raises(VersionMismatch, match="tuning"):  # the old replay cannot join it
+        pipeline.execute(retuned, pipeline.select("llm", "llm"), log=lambda _: None)
 
 
 def test_tune_and_replay_call_the_stage_module(tmp_path: Path, monkeypatch) -> None:
@@ -560,9 +631,15 @@ def test_tune_and_replay_call_the_stage_module(tmp_path: Path, monkeypatch) -> N
     pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)
     with pytest.raises(pipeline.PipelineError, match="fitted models are kept in memory"):
         pipeline.execute(run, pipeline.select("tune", "tune"), log=lambda _: None)
-    with pytest.raises(pipeline.PipelineError, match="tuned policies are kept in memory"):
+    with pytest.raises(pipeline.PipelineError, match="results/tune.json is missing"):
         pipeline.execute(run, pipeline.select("replay", "replay"), log=lambda _: None)
     run.memory["scorers"] = {0: {}}  # stand-in for the fit stage's models
+    pipeline.execute(run, pipeline.select("tune", "tune"), log=lambda _: None)
+    tuned = run.memory.pop("tuned")  # a later process has the result file, not the policies
+    with pytest.raises(pipeline.PipelineError, match="tuned policies are kept in memory"):
+        pipeline.execute(run, pipeline.select("replay", "replay"), log=lambda _: None)
+    run.memory["tuned"] = tuned
+    calls.clear()
     pipeline.execute(run, pipeline.select("tune", "replay"), log=lambda _: None)
     ref = run.worlds[0]
     # review decisions are asked for after the replay, which keeps the incumbent's runs
