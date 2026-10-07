@@ -17,7 +17,7 @@
   "tables": {
     "account_events": {
       "rows": 7,
-      "sha256": "418997e91044980ab66860a066318bd622852d2a38f0f61e42f6591ef79827c7"
+      "sha256": "c97af587e63c41725dbe88918bc8f64bab6b444b08883930d3cc6ba9ca7a9550"
     },
     "accounts": {
       "rows": 19,

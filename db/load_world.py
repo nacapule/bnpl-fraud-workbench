@@ -84,19 +84,31 @@ CREATE VIEW installments AS
 SELECT s.plan_id, s.seq, s.due_at AS due_ts,
        CAST(s.amount_cents / 100 AS DECIMAL(12, 2)) AS amount,
        CASE
-         WHEN paid.first_paid_at IS NOT NULL AND paid.first_paid_at <= s.due_at THEN 'paid'
-         WHEN paid.first_paid_at IS NOT NULL THEN 'late'
+         WHEN paid.paid_at IS NOT NULL AND paid.paid_at <= s.due_at THEN 'paid'
+         WHEN paid.paid_at IS NOT NULL THEN 'late'
          WHEN w.plan_id IS NOT NULL THEN 'written_off'
          WHEN failed.plan_id IS NOT NULL THEN 'failed'
          ELSE 'pending'
        END AS outcome
 FROM installment_schedule s
 LEFT JOIN (
-  SELECT a.plan_id, a.seq, MIN(a.occurred_at) AS first_paid_at
-  FROM payment_attempts a
-  LEFT JOIN payment_reversals r ON r.payment_event_id = a.event_id
-  WHERE a.result = 'success' AND r.event_id IS NULL
-  GROUP BY a.plan_id, a.seq
+  -- paid in full: when the standing cents (payments less their reversals) first
+  -- reach the scheduled amount
+  SELECT plan_id, seq, MIN(CASE WHEN standing >= amount_cents THEN occurred_at END) AS paid_at
+  FROM (
+    SELECT a.plan_id, a.seq, a.occurred_at, s2.amount_cents,
+           SUM(a.amount_cents - COALESCE(r.reversed_cents, 0)) OVER (
+             PARTITION BY a.plan_id, a.seq ORDER BY a.occurred_at, a.event_id
+           ) AS standing
+    FROM payment_attempts a
+    JOIN installment_schedule s2 ON s2.plan_id = a.plan_id AND s2.seq = a.seq
+    LEFT JOIN (
+      SELECT payment_event_id, SUM(amount_cents) AS reversed_cents
+      FROM payment_reversals GROUP BY payment_event_id
+    ) r ON r.payment_event_id = a.event_id
+    WHERE a.result = 'success'
+  ) running
+  GROUP BY plan_id, seq
 ) paid ON paid.plan_id = s.plan_id AND paid.seq = s.seq
 LEFT JOIN (SELECT DISTINCT plan_id FROM plan_writeoffs) w ON w.plan_id = s.plan_id
 LEFT JOIN (

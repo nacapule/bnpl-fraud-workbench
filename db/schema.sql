@@ -7,8 +7,8 @@
 CREATE TABLE accounts (
   user_id INT NOT NULL COMMENT 'Customer account id.',
   created_at DATETIME NOT NULL COMMENT 'Signup time.',
-  email VARCHAR(120) NOT NULL COMMENT 'Login email as entered (normalised only in core.asof).',
-  email_domain VARCHAR(64) NOT NULL COMMENT 'Domain of the email, lower case.',
+  email VARCHAR(120) NOT NULL COMMENT 'Signup email as entered (normalised only in core.asof); later addresses are email_change events.',
+  email_domain VARCHAR(64) NOT NULL COMMENT 'Domain of the signup email, lower case.',
   home_country VARCHAR(64) NOT NULL COMMENT 'Country of residence from KYC; drives the home IP country.',
   dob_year INT NOT NULL COMMENT 'Year of birth.',
   PRIMARY KEY (user_id)
@@ -100,6 +100,7 @@ CREATE TABLE account_events (
   device_id INT NOT NULL COMMENT 'Device used; must be linked to the account at the time.',
   ip VARCHAR(45) NOT NULL COMMENT 'IP address.',
   ip_country VARCHAR(64) NOT NULL COMMENT 'IP geolocation country.',
+  email VARCHAR(120) NULL COMMENT 'The new address of an email_change (null for other kinds).',
   PRIMARY KEY (event_id),
   KEY ix_account_events_known_at (known_at),
   KEY ix_account_events_1 (user_id, known_at),
@@ -130,7 +131,7 @@ CREATE TABLE latent_accounts (
   CONSTRAINT fk_latent_accounts_episode_id FOREIGN KEY (episode_id) REFERENCES latent_episodes (episode_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT 'latent';
 
--- observable event: Every attempted checkout, with its potential outcomes under approve-all.
+-- observable event: Every attempted checkout, with its potential outcomes under approve-all; known at the attempt (known_at = occurred_at).
 CREATE TABLE order_attempts (
   event_id INT NOT NULL COMMENT 'World-unique event id, assigned in the global event order.',
   occurred_at DATETIME NOT NULL COMMENT 'When the event happened.',
@@ -357,19 +358,31 @@ CREATE VIEW installments AS
 SELECT s.plan_id, s.seq, s.due_at AS due_ts,
        CAST(s.amount_cents / 100 AS DECIMAL(12, 2)) AS amount,
        CASE
-         WHEN paid.first_paid_at IS NOT NULL AND paid.first_paid_at <= s.due_at THEN 'paid'
-         WHEN paid.first_paid_at IS NOT NULL THEN 'late'
+         WHEN paid.paid_at IS NOT NULL AND paid.paid_at <= s.due_at THEN 'paid'
+         WHEN paid.paid_at IS NOT NULL THEN 'late'
          WHEN w.plan_id IS NOT NULL THEN 'written_off'
          WHEN failed.plan_id IS NOT NULL THEN 'failed'
          ELSE 'pending'
        END AS outcome
 FROM installment_schedule s
 LEFT JOIN (
-  SELECT a.plan_id, a.seq, MIN(a.occurred_at) AS first_paid_at
-  FROM payment_attempts a
-  LEFT JOIN payment_reversals r ON r.payment_event_id = a.event_id
-  WHERE a.result = 'success' AND r.event_id IS NULL
-  GROUP BY a.plan_id, a.seq
+  -- paid in full: when the standing cents (payments less their reversals) first
+  -- reach the scheduled amount
+  SELECT plan_id, seq, MIN(CASE WHEN standing >= amount_cents THEN occurred_at END) AS paid_at
+  FROM (
+    SELECT a.plan_id, a.seq, a.occurred_at, s2.amount_cents,
+           SUM(a.amount_cents - COALESCE(r.reversed_cents, 0)) OVER (
+             PARTITION BY a.plan_id, a.seq ORDER BY a.occurred_at, a.event_id
+           ) AS standing
+    FROM payment_attempts a
+    JOIN installment_schedule s2 ON s2.plan_id = a.plan_id AND s2.seq = a.seq
+    LEFT JOIN (
+      SELECT payment_event_id, SUM(amount_cents) AS reversed_cents
+      FROM payment_reversals GROUP BY payment_event_id
+    ) r ON r.payment_event_id = a.event_id
+    WHERE a.result = 'success'
+  ) running
+  GROUP BY plan_id, seq
 ) paid ON paid.plan_id = s.plan_id AND paid.seq = s.seq
 LEFT JOIN (SELECT DISTINCT plan_id FROM plan_writeoffs) w ON w.plan_id = s.plan_id
 LEFT JOIN (

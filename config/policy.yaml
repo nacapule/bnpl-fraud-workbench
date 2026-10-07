@@ -10,7 +10,7 @@ rules:
 costs:
   review_cost_usd: 2.50          # loaded cost per manual review (assumption)
   false_decline_ltv_usd: 15.00   # customer-lifetime proxy lost on a legitimate decline
-  analyst_loaded_hourly_usd: null  # set before the staffing comparison (Stage 2)
+  analyst_loaded_hourly_usd: null  # set before the staffing comparison
 
 actions:
   hold_max_hours: 48             # longest a hold pauses fulfilment and settlement

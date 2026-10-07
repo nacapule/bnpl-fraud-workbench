@@ -24,7 +24,7 @@ Orders run from 2024-12-05 to 2025-06-10; outcomes are observed until
 | jay, kim | Customers of a jewelry merchant that stops shipping and closes; jay's order was never delivered, kim's was | -36,600 (jay) | 1 merchant bust-out (jay); 0 (kim) |
 | lee | Travelling; orders from a French IP | +775 | 0 |
 | pf1-pf3 | Three new accounts on one device take FIRST10 and never order again without it | about -300 each | 0 at the horizon, then 1 promotion abuse 90 days after the third use |
-| mo | An order ten days before observation ends | -1,350 so far | none (unknown is not negative) |
+| mo | An order twenty days before observation ends | -1,350 so far | none (unknown is not negative) |
 
 Latent truth (episodes, account actors, order patterns and benign mimics) is in
 `latent_*.csv`; nothing that makes decisions may read it or `labels.csv`.

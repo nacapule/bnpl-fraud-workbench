@@ -135,7 +135,7 @@ def test_declined_attempts_have_no_plan_cash_or_label(tables) -> None:
                                    (1, "promo_abuse", "2025-06-10 21:20:00")]),
         ("pf3.0@gmail.com", 6000, [(0, "no_finding", "2025-05-11 21:20:00"),
                                    (1, "promo_abuse", "2025-06-10 21:20:00")]),
-        # too recent: no label by the end of observation
+        # ordered twenty days before observation ends: no label yet
         ("mo.97@outlook.com", 3000, []),
     ],
 )
@@ -178,6 +178,85 @@ def test_never_pay_ring_through_one_email_identity(tables) -> None:
     changed["device_links"] = links[~links["device_id"].isin(ring_device)]
     labels = _relabel(changed)
     assert _bases(labels, _order(tables, "nr1.98@gmail.com", 32000)) == ["never_pay"]
+
+
+def _plan(tables, email: str, amount: int) -> int:
+    plans = tables["plans"]
+    return int(plans.loc[plans["order_id"] == _order(tables, email, amount), "plan_id"].iloc[0])
+
+
+def _with_reversed_payment(tables, reversed_cents: int) -> dict:
+    """fay pays 100 cents on her first plan's first installment; a reversal takes some back."""
+    changed = dict(tables)
+    plan = _plan(tables, "fay.1@gmail.com", 52000)
+    schedule = tables["installment_schedule"]
+    due = schedule.loc[(schedule["plan_id"] == plan) & (schedule["seq"] == 1), "due_at"].iloc[0]
+    attempts = tables["payment_attempts"]
+    payment = attempts[attempts["plan_id"] == plan].iloc[[0]].assign(
+        event_id=10**6, occurred_at=due + pd.Timedelta(days=1), known_at=due + pd.Timedelta(days=1),
+        seq=1, attempt_no=9, amount_cents=100, result="success")
+    reversal = tables["payment_reversals"].iloc[[0]].assign(
+        event_id=10**6 + 1, occurred_at=due + pd.Timedelta(days=3),
+        known_at=due + pd.Timedelta(days=3), payment_event_id=10**6, plan_id=plan,
+        amount_cents=reversed_cents)
+    changed["payment_attempts"] = pd.concat([attempts, payment], ignore_index=True)
+    changed["payment_reversals"] = pd.concat([tables["payment_reversals"], reversal],
+                                             ignore_index=True)
+    return changed
+
+
+def test_a_partly_reversed_payment_still_counts_as_paid(tables) -> None:
+    fay1 = _order(tables, "fay.1@gmail.com", 52000)
+    assert "never_pay" not in _bases(_relabel(_with_reversed_payment(tables, 1)), fay1)
+    assert _bases(_relabel(_with_reversed_payment(tables, 100)), fay1) == ["never_pay"]
+
+
+def _dispute_at_the_horizon(tables, resolved: bool) -> tuple[dict, int]:
+    """ivy's claim is filed exactly when her order's label would mature."""
+    changed = dict(tables)
+    ivy = _order(tables, "ivy.84@gmail.com", 21000)
+    placed = tables["order_attempts"].set_index("order_id").loc[ivy, "occurred_at"]
+    openings = tables["dispute_openings"].copy()
+    mine = openings["order_id"] == ivy
+    horizon = placed + pd.Timedelta(days=_builder().HORIZON_DAYS)
+    openings.loc[mine, ["occurred_at", "known_at"]] = horizon
+    changed["dispute_openings"] = openings
+    if not resolved:
+        dispute = openings.loc[mine, "dispute_id"].iloc[0]
+        resolutions = tables["dispute_resolutions"]
+        changed["dispute_resolutions"] = resolutions[resolutions["dispute_id"] != dispute]
+    return changed, ivy
+
+
+def test_a_dispute_filed_at_the_horizon_keeps_the_label_unknown(tables) -> None:
+    changed, ivy = _dispute_at_the_horizon(tables, resolved=False)
+    assert _bases(_relabel(changed), ivy) == []
+    changed, ivy = _dispute_at_the_horizon(tables, resolved=True)
+    labels = _relabel(changed)
+    resolved_at = tables["dispute_resolutions"].merge(
+        tables["dispute_openings"][["dispute_id", "order_id"]], on="dispute_id"
+    ).set_index("order_id").loc[ivy, "known_at"]
+    assert labels.loc[labels["order_id"] == ivy, "label_known_at"].tolist() == [resolved_at]
+
+
+def test_an_email_change_links_accounts_from_when_it_is_known(tables) -> None:
+    """nr2 and nr3 move to variants of nr1's mailbox after they all defaulted."""
+    changed = dict(tables)
+    accounts = tables["accounts"].set_index("email")
+    ring = [accounts.loc[f"nr{n}.98@gmail.com", "user_id"] for n in (1, 2, 3)]
+    links = tables["device_links"]
+    changed["device_links"] = links[~links["user_id"].isin(ring)]
+    events = tables["account_events"]
+    moved = pd.Timestamp("2025-04-25 09:00")
+    changes = pd.DataFrame({
+        "event_id": [10**6, 10**6 + 1], "occurred_at": [moved] * 2, "known_at": [moved] * 2,
+        "user_id": ring[1:], "kind": "email_change", "device_id": events["device_id"].iloc[0],
+        "ip": "24.16.4.9", "ip_country": "US",
+        "email": ["N.R1.98+b@gmail.com", "nr1.98+c@googlemail.com"]})
+    changed["account_events"] = pd.concat([events, changes], ignore_index=True)
+    labels = _relabel(changed)
+    nr1 = labels[labels["order_id"] == _order(tables, "nr1.98@gmail.com", 32000)]
+    assert nr1[["basis", "label_known_at"]].values.tolist() == [["never_pay", moved]]
 
 
 def _with_plain_reorder(tables, email: str, amount: int, at: str) -> dict:

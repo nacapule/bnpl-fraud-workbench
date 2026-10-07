@@ -6,10 +6,13 @@ module outside ``core/`` computes history, linkage, repayment state or exposure
 never reads labels or latent truth.
 
 Decision point. A context row describes one order attempt at one decision time
-``decision_at`` (checkout by default: the attempt's own ``known_at``; a later
-review time for packets). It sees an event only if the event precedes the
-decision in the world's total order ``(known_at, kind rank, event_id)``; at
-checkout that means everything ordered before the attempt itself. Entities are
+``decision_at``. The fraud policy states its conditions relative to the order,
+so rules, ML, the reviewer, packets and the referee all read the checkout row
+(``decision_at`` = the attempt's own ``known_at``); a review adds only the
+outcomes of the checks run since (core.evidence). Other decision times are for
+analysis. A row sees an event only if the event precedes the decision in the
+world's total order ``(known_at, kind rank, event_id)``; at checkout that means
+everything ordered before the attempt itself. Entities are
 visible from their creation time. "Current" below means the attempt being
 decided; a column that includes it says so.
 
@@ -37,11 +40,15 @@ timestamps, leaves earlier rows unchanged) and a label-mutation test.
 Email identity has one rule, :func:`normalize_email`: lower-case; remove a
 ``+tag`` from the local part for every provider; remove dots from the local
 part only for Gmail (``gmail.com``, ``googlemail.com``, folded to ``gmail.com``);
-never strip digits.
+never strip digits. An account holds every address in its history
+(:func:`email_history`: the signup email, then each ``email_change``'s new
+address from its ``known_at``); two accounts share an email at a time when any
+addresses they held by then normalize alike. Its current email is the latest one.
 
-Implemented here: the specification, :class:`PolicyState` and
-:func:`normalize_email`. The builders raise ``NotImplementedError`` until the
-context is implemented from the point-in-time kernels in ``model/features.py``
+Implemented here: the specification, :class:`PolicyState`,
+:func:`normalize_email` and :func:`email_history`. The builders raise
+``NotImplementedError`` until the context is implemented from the
+point-in-time kernels in ``model/features.py``
 (``_asof_event_count``, ``_hours_since_event``, ``_rolling_distinct_accounts``,
 ``_installment_history``), which then move here.
 """
@@ -49,7 +56,7 @@ context is implemented from the point-in-time kernels in ``model/features.py``
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pandas as pd
 
@@ -116,11 +123,11 @@ COLUMNS: tuple[AsofColumn, ...] = (
     _col("night_order", A, "int8", "Checkout between 00:00 and 05:59 platform time.",
          "current attempt", "at the decision", True, "rules", "ml"),
     _col("email_domain_class", A, "int8",
-         "0 common provider, 1 other, 2 disposable (lists in this module).", "the account",
-         "at the decision", None, *ALL),
+         "Of the account's current email: 0 common provider, 1 other, 2 disposable (lists "
+         "in this module).", "the account", "at the decision", None, *ALL),
     _col("email_root_other_accounts", A, "int64",
-         "Other accounts whose normalized email equals this account's (normalize_email).",
-         "accounts created at or before the decision", "ever", False, *ALL),
+         "Other accounts sharing an email with this one (email_history, normalize_email).",
+         "addresses held at or before the decision", "ever", False, *ALL),
     _col("amount_over_category_median", A, "float64",
          "Amount over the median amount of earlier processor-approved attempts in the "
          "merchant's category.", "processor-approved attempts in the category",
@@ -128,7 +135,7 @@ COLUMNS: tuple[AsofColumn, ...] = (
     _col("amount_over_category_p95", A, "float64",
          "Amount over the 95th percentile of the same set.",
          "processor-approved attempts in the category", "ever, before the decision", False,
-         "rules", "ml"),
+         *ALL),
     # ---- velocity
     _col("attempts_user_1h", A, "int64", "Order attempts by the account.",
          "attempts of any processor result", "1h before the decision", True, "rules", "ml"),
@@ -142,7 +149,7 @@ COLUMNS: tuple[AsofColumn, ...] = (
     _col("amount_attempted_user_7d", A, "int64", "Sum of attempted amounts by the account.",
          "attempts of any processor result", "7 days before the decision", True, "ml"),
     _col("attempts_device_24h", A, "int64", "Order attempts on the device, any account.",
-         "attempts of any processor result", "24h before the decision", True, "rules", "ml"),
+         "attempts of any processor result", "24h before the decision", True, *ALL),
     _col("processor_declines_card_24h", A, "int64",
          "Processor-declined attempts with the same card.", "processor declines",
          "24h before the decision", False, *ALL),
@@ -154,8 +161,7 @@ COLUMNS: tuple[AsofColumn, ...] = (
     _col("geo_kmh_from_previous_attempt", A, "float64",
          "Implied km/h between the IP countries of the account's previous attempt and this "
          "one (0 when the same country or more than 12h apart).",
-         "the account's previous attempt", "12h before the decision", False, "rules", "ml",
-         "packets"),
+         "the account's previous attempt", "12h before the decision", False, *ALL),
     # ---- devices, addresses and cards on the account
     _col("device_link_age_hours", A, "float64",
          "Hours since the device was first used on this account.", "device_links",
@@ -220,10 +226,11 @@ COLUMNS: tuple[AsofColumn, ...] = (
          "Installments (seq >= 1) due before the decision on the account's live plans.",
          "plans of policy-approved orders", "ever, due before the decision", False, *ALL),
     _col("installments_paid_user", OC, "int64",
-         "Of those, paid by a successful attempt known before the decision and not reversed "
-         "by then.", "plans of policy-approved orders", "ever", False, *ALL),
+         "Of those, paid in full: successful attempts on the installment known before the "
+         "decision, less reversals of them known by then, reach its scheduled amount.",
+         "plans of policy-approved orders", "ever", False, *ALL),
     _col("installments_failed_user", OC, "int64",
-         "Of those, with a failed attempt known before the decision and no standing payment.",
+         "Of those, with a failed attempt known before the decision and not paid in full.",
          "plans of policy-approved orders", "ever", False, *ALL),
     _col("installments_paid_share_user", OC, "float64",
          "installments_paid_user / installments_due_user (0 when none due).",
@@ -295,20 +302,57 @@ def normalize_email(email: str) -> str:
     return f"{local}@{domain}"
 
 
+def email_history(accounts: pd.DataFrame, account_events: pd.DataFrame) -> pd.DataFrame:
+    """Every normalized address each account has held: user_id, email_root, since.
+
+    The signup email counts from the account's ``created_at``, each
+    ``email_change``'s new address from its ``known_at``; an address once held
+    stays in the history.
+    """
+    changes = account_events.loc[account_events["kind"] == "email_change",
+                                 ["user_id", "email", "known_at"]]
+    history = pd.concat([
+        accounts[["user_id", "email", "created_at"]].rename(columns={"created_at": "since"}),
+        changes.rename(columns={"known_at": "since"}),
+    ], ignore_index=True)
+    history["email_root"] = [normalize_email(email) for email in history["email"]]
+    return history.groupby(["user_id", "email_root"], as_index=False)["since"].min()
+
+
+def _frame(**columns: str) -> pd.DataFrame:
+    return pd.DataFrame({name: pd.Series(dtype=dtype) for name, dtype in columns.items()})
+
+
 @dataclass(frozen=True)
 class PolicyState:
-    """What one policy has done, for rebuilding outcome-derived columns.
+    """What one policy has done that its event tables do not show.
 
-    ``approved``: order_id, approved_at (when the order went through; a hold
-    shifts it). ``voided``: order_id, at (void, cancellation or abandonment before
-    shipping). ``blocked``: user_id, at. Under approve-all every
-    processor-approved order is approved at its checkout and nothing is voided
-    or blocked.
+    Outcome-derived columns are computed from the policy's realized tables (the
+    replay's output, in the world schema: an auto-declined order keeps its
+    attempt and nothing after it; a held order's shipment and schedule move to
+    after its release; a voided or cancelled order loses the events after the
+    void and gains its refunds) together with this state:
+
+    * ``approved``: order_id, approved_at, when the order went through (checkout,
+      or a hold's release);
+    * ``held``: order_id, held_at, released_at (NaT while the hold is pending),
+      outcome (``cleared``, ``cancelled`` or ``declined``; null while pending). A
+      held order counts as neither approved nor voided until it is released;
+    * ``voided``: order_id, at (decline, void, cancellation or abandonment before
+      shipping);
+    * ``blocked``: user_id, at.
+
+    Under approve-all the realized tables are the world's own, every
+    processor-approved order is approved at its checkout and nothing is held,
+    voided or blocked.
     """
 
     approved: pd.DataFrame
     voided: pd.DataFrame
     blocked: pd.DataFrame
+    held: pd.DataFrame = field(default_factory=lambda: _frame(
+        order_id="int64", held_at="datetime64[s]", released_at="datetime64[s]",
+        outcome="object"))
 
     @classmethod
     def approve_all(cls, tables: Mapping[str, pd.DataFrame]) -> PolicyState:
@@ -317,10 +361,8 @@ class PolicyState:
                               ["order_id", "known_at"]].rename(columns={"known_at": "approved_at"})
         return cls(
             approved=approved.reset_index(drop=True),
-            voided=pd.DataFrame({"order_id": pd.Series(dtype="int64"),
-                                 "at": pd.Series(dtype="datetime64[s]")}),
-            blocked=pd.DataFrame({"user_id": pd.Series(dtype="int64"),
-                                  "at": pd.Series(dtype="datetime64[s]")}),
+            voided=_frame(order_id="int64", at="datetime64[s]"),
+            blocked=_frame(user_id="int64", at="datetime64[s]"),
         )
 
 
@@ -342,5 +384,10 @@ def outcome_columns(
     state: PolicyState,
     decisions: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Outcome-derived columns (KEY_COLUMNS + OUTCOME_COLUMNS) under one policy's state."""
+    """Outcome-derived columns (KEY_COLUMNS + OUTCOME_COLUMNS) under one policy.
+
+    ``tables`` are that policy's realized observations and ``state`` what it did
+    (:class:`PolicyState`); under approve-all, the world's tables and
+    ``PolicyState.approve_all``.
+    """
     raise NotImplementedError("the as-of context is built in core/asof.py from the kernels")

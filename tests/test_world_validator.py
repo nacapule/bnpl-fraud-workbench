@@ -172,6 +172,51 @@ def resolution_before_opening(t) -> None:
     resolutions.loc[0, "known_at"] = pd.Timestamp("2024-12-01")
 
 
+def resolution_before_filing(t) -> None:
+    """Resolved (in the world) before the customer filed, though learned of afterwards."""
+    openings = t["dispute_openings"].set_index("dispute_id")
+    resolutions = t["dispute_resolutions"]
+    filed = openings.loc[resolutions.loc[0, "dispute_id"], "occurred_at"]
+    resolutions.loc[0, "occurred_at"] = filed - H(days=1)
+
+
+def order_known_late(t) -> None:
+    orders = t["order_attempts"]
+    orders.loc[0, "known_at"] = orders.loc[0, "occurred_at"] + H(hours=6)
+
+
+def email_change_without_address(t) -> None:
+    events = t["account_events"]
+    events.loc[events["kind"] == "email_change", "email"] = None
+
+
+def login_with_an_address(t) -> None:
+    events = t["account_events"]
+    events.loc[events["kind"] == "login", "email"] = "someone@example.com"
+
+
+def cash_missing(t) -> None:
+    t["cash_events"] = t["cash_events"].iloc[0:0]
+
+
+def cash_wrong_amount(t) -> None:
+    cash = t["cash_events"]
+    first = cash.index[cash["kind"] == "merchant_settlement"][0]
+    cash.loc[first, "amount_cents"] += 1
+
+
+def cash_extra(t) -> None:
+    cash = t["cash_events"]
+    extra = cash[cash["kind"] == "recovery"].iloc[[0]].assign(event_id=10**6)
+    t["cash_events"] = pd.concat([cash, extra], ignore_index=True)
+
+
+def fractional_cents(t) -> None:
+    cash = t["cash_events"]
+    cash["amount_cents"] = cash["amount_cents"].astype("float64")
+    cash.loc[0, "amount_cents"] += 0.5
+
+
 def delivery_before_shipment(t) -> None:
     deliveries = t["deliveries"]
     deliveries.loc[0, "occurred_at"] = deliveries.loc[0, "occurred_at"] - H(days=10)
@@ -204,6 +249,14 @@ OTHER_RULES = [
     ("cash_before_cause", cash_before_cause),
     ("writeoff_before_due", writeoff_before_due),
     ("resolution_before_opening", resolution_before_opening),
+    ("resolution_before_opening", resolution_before_filing),
+    ("order_known_late", order_known_late),
+    ("bad_value", email_change_without_address),
+    ("bad_value", login_with_an_address),
+    ("cash_mismatch", cash_missing),
+    ("cash_mismatch", cash_wrong_amount),
+    ("cash_mismatch", cash_extra),
+    ("schema", fractional_cents),
     ("delivery_before_fulfilment", delivery_before_shipment),
     ("schedule_mismatch", schedule_does_not_sum),
     ("label_before_order", label_before_order),

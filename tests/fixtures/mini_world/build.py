@@ -101,9 +101,10 @@ class MiniWorld:
         return self.next_event
 
     def account_event(self, user: str, kind: str, at: str, device: str | None = None,
-                      ip: str = "24.16.4.9", ip_country: str = "US") -> None:
+                      ip: str = "24.16.4.9", ip_country: str = "US",
+                      email: str | None = None) -> None:
         self.event("account_events", T(at), user_id=user, kind=kind,
-                   device_id=device or f"d_{user}", ip=ip, ip_country=ip_country)
+                   device_id=device or f"d_{user}", ip=ip, ip_country=ip_country, email=email)
 
     def order(self, key: str, user: str, merchant: str, at: str, amount_cents: int, *,
               device: str | None = None, card: str | None = None, address: str | None = None,
@@ -312,7 +313,7 @@ def build() -> dict[str, pd.DataFrame]:
     w.customer("cara", "2024-08-20 14:00")
     w.device("d_tablet", "2024-08-20 14:20", ua="Android")
     w.link_device("cara", "d_tablet", "2024-08-20 14:20")
-    w.account_event("cara", "email_change", "2025-01-02 08:30")
+    w.account_event("cara", "email_change", "2025-01-02 08:30", email="cara.home@outlook.com")
     w.account("ben", "2025-01-12 18:00", dob=1999)
     w.device("d_ben", "2025-01-12 18:00", ua="Android")
     w.link_device("ben", "d_ben", "2025-01-12 18:00")

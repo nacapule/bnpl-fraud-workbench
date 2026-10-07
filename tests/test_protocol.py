@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import shutil
+import subprocess
 from pathlib import Path
 
 import pandas as pd
@@ -105,14 +106,42 @@ def test_final_seed_refused_without_marker(tmp_path: Path, raw: dict) -> None:
         proto.check_seed(raw["seeds"]["final"][0], root)
 
 
-def test_final_seed_allowed_after_freeze_and_refused_after_a_change(
+def _commit(root: Path) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", "-C", str(root), "-c", "user.name=Test", "-c",
+                        "user.email=test@example.com", "-c", "commit.gpgsign=false", *args],
+                       check=True, capture_output=True)
+
+    if not (root / ".git").exists():
+        git("init", "-q")
+    git("add", "-A")
+    git("commit", "-q", "-m", "freeze")
+
+
+def test_final_seed_allowed_after_the_freeze_commit_and_refused_after_a_change(
     tmp_path: Path, raw: dict
 ) -> None:
     root = _frozen_copy(tmp_path, raw, complete=True)
     proto.write_freeze_marker(root)
+    _commit(root)
     proto.check_seed(raw["seeds"]["final"][0], root)
     (root / "config" / "world.yaml").write_text("changed: true\n")
     with pytest.raises(proto.FreezeError, match="changed since the freeze"):
+        proto.check_seed(raw["seeds"]["final"][0], root)
+
+
+def test_final_seed_refused_before_the_freeze_is_committed(tmp_path: Path, raw: dict) -> None:
+    root = _frozen_copy(tmp_path, raw, complete=True)
+    _commit(root)  # the inputs are committed, the marker is not
+    proto.write_freeze_marker(root)
+    with pytest.raises(proto.FreezeError, match="freeze not committed"):
+        proto.check_seed(raw["seeds"]["final"][0], root)
+
+
+def test_final_seed_refused_outside_a_repository(tmp_path: Path, raw: dict) -> None:
+    root = _frozen_copy(tmp_path, raw, complete=True)
+    proto.write_freeze_marker(root)
+    with pytest.raises(proto.FreezeError, match="freeze commit"):
         proto.check_seed(raw["seeds"]["final"][0], root)
 
 

@@ -17,6 +17,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import json
+import subprocess
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -228,7 +229,25 @@ def require_freeze(root: Path = REPO, protocol_path: Path | None = None) -> dict
     )
     if changed:
         raise FreezeError(f"files changed since the freeze: {changed}")
+    if uncommitted := _uncommitted(root, [spec["marker"], *sorted(spec["files"])]):
+        raise FreezeError(f"freeze not committed: {uncommitted}")
     return marker
+
+
+def _uncommitted(root: Path, paths: list[str]) -> list[str]:
+    """Paths that are not committed, unchanged, at the repository's HEAD."""
+    def git(*args: str) -> str:
+        try:
+            done = subprocess.run(["git", "-C", str(root), *args], capture_output=True,
+                                  text=True, check=True)
+        except (OSError, subprocess.CalledProcessError) as error:
+            raise FreezeError(f"cannot read the freeze commit: {error}") from error
+        return done.stdout
+
+    in_head = set(git("ls-tree", "-r", "--name-only", "HEAD", "--", *paths).splitlines())
+    dirty = {line[3:] for line in
+             git("status", "--porcelain", "--untracked-files=all", "--", *paths).splitlines()}
+    return sorted(path for path in paths if path not in in_head or path in dirty)
 
 
 def check_seed(seed: int, root: Path = REPO, protocol_path: Path | None = None) -> None:

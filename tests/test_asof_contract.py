@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pandas as pd
 import pytest
 
 from core import asof
@@ -23,7 +24,8 @@ def test_different_business_definitions_are_separate_columns() -> None:
 def test_repayment_dispute_and_block_history_is_outcome_derived() -> None:
     """A policy that prevented an order must not later see that order's outcomes."""
     for name in ("installments_due_user", "installments_paid_user", "open_balance_user_cents",
-                 "inr_claims_rejected_user", "promo_redemptions_user", "account_blocked"):
+                 "inr_claims_rejected_user", "promo_redemptions_user", "account_blocked",
+                 "unauthorized_disputes_lost_user", "victim_reports_user"):
         assert name in asof.OUTCOME_COLUMNS
 
 
@@ -53,3 +55,28 @@ def test_email_normalization(left: str, right: str, same: bool) -> None:
 def test_email_normalization_rejects_non_addresses() -> None:
     with pytest.raises(ValueError):
         asof.normalize_email("not-an-address")
+
+
+def test_email_history_keeps_every_address_from_when_it_was_known() -> None:
+    accounts = pd.DataFrame({"user_id": [1, 2], "email": ["Ann.B@gmail.com", "cy@outlook.com"],
+                             "created_at": pd.to_datetime(["2025-01-01", "2025-01-02"])})
+    events = pd.DataFrame({
+        "user_id": [2, 2, 1], "kind": ["email_change", "login", "email_change"],
+        "email": ["annb+x@googlemail.com", None, "ann@proton.me"],
+        "known_at": pd.to_datetime(["2025-02-01", "2025-02-02", "2025-03-01"])})
+    history = asof.email_history(accounts, events).sort_values(["user_id", "since"])
+    assert history.values.tolist() == [
+        [1, "annb@gmail.com", pd.Timestamp("2025-01-01")],
+        [1, "ann@proton.me", pd.Timestamp("2025-03-01")],
+        [2, "cy@outlook.com", pd.Timestamp("2025-01-02")],
+        [2, "annb@gmail.com", pd.Timestamp("2025-02-01")],
+    ]
+
+
+def test_policy_state_records_pending_holds() -> None:
+    state = asof.PolicyState.approve_all({"order_attempts": pd.DataFrame({
+        "order_id": [1, 2], "processor_result": ["approved", "declined"],
+        "known_at": pd.to_datetime(["2025-01-01", "2025-01-02"])})})
+    assert state.approved["order_id"].tolist() == [1]
+    assert list(state.held.columns) == ["order_id", "held_at", "released_at", "outcome"]
+    assert state.held.empty and state.voided.empty and state.blocked.empty

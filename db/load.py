@@ -81,10 +81,8 @@ def load_table(conn: pymysql.Connection, name: str) -> int:
     return n
 
 
-def main() -> None:
-    cfg = db_settings().pymysql_kwargs()
-    t0 = time.time()
-    conn = connect(cfg)
+def create_schema(conn: pymysql.Connection) -> None:
+    """Drop this schema and the world schema's objects, then create this schema."""
     ddl = "\n".join(
         line for line in (REPO / "db" / "legacy_schema.sql").read_text().splitlines()
         if not line.strip().startswith("--")
@@ -94,6 +92,13 @@ def main() -> None:
             if stmt.strip():
                 cur.execute(stmt)
     conn.commit()
+
+
+def main() -> None:
+    cfg = db_settings().pymysql_kwargs()
+    t0 = time.time()
+    conn = connect(cfg)
+    create_schema(conn)
 
     print(f"{'table':<20}{'csv':>10}{'db':>10}  ok")
     failures = 0

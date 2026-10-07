@@ -153,8 +153,9 @@ _add(TableSpec(
     "accounts", "observable", "entity", ("user_id",), (
         _c("user_id", "id", "Customer account id."),
         _c("created_at", "ts", "Signup time."),
-        _c("email", "str", "Login email as entered (normalised only in core.asof)."),
-        _c("email_domain", "str", "Domain of the email, lower case."),
+        _c("email", "str", "Signup email as entered (normalised only in core.asof); later "
+           "addresses are email_change events."),
+        _c("email_domain", "str", "Domain of the signup email, lower case."),
         _c("home_country", "str", "Country of residence from KYC; drives the home IP country."),
         _c("dob_year", "int", "Year of birth."),
     ),
@@ -277,6 +278,8 @@ _add(TableSpec(
            references="devices.device_id"),
         _c("ip", "str", "IP address."),
         _c("ip_country", "str", "IP geolocation country."),
+        _c("email", "str", "The new address of an email_change (null for other kinds).",
+           nullable=True),
     ),
     "Logins and credential changes. Device and address additions are the link tables.",
 ))
@@ -299,7 +302,8 @@ _add(TableSpec(
         _c("processor_result", "str", "Processor decision; only processor declines happen "
            "inside the world.", values=("approved", "declined")),
     ),
-    "Every attempted checkout, with its potential outcomes under approve-all.",
+    "Every attempted checkout, with its potential outcomes under approve-all; known at "
+    "the attempt (known_at = occurred_at).",
 ))
 _add(TableSpec(
     "payment_attempts", "observable", "event", ("event_id",), (
@@ -492,6 +496,8 @@ def coerce(name: str, frame: pd.DataFrame) -> pd.DataFrame:
             elif column.type == "str":
                 values = values.astype("str")
             else:
+                if values.dtype.kind == "f" and (values.notna() & (values % 1 != 0)).any():
+                    raise ValueError("fractional values in an integer column")
                 values = values.astype(column.dtype)
         except (ValueError, TypeError) as error:
             raise SchemaError(f"{name}.{column.name}: {error}") from error
@@ -704,16 +710,6 @@ def renumber_events(tables: Mapping[str, pd.DataFrame]) -> dict[str, pd.DataFram
 
 
 # ================================================================== labels
-def _standing_installment_payments(tables: Mapping[str, pd.DataFrame]) -> pd.DataFrame:
-    """Successful payments on installments (seq >= 1) with the time a reversal undid them."""
-    attempts = tables["payment_attempts"]
-    paid = attempts[(attempts["result"] == "success") & (attempts["seq"] >= 1)]
-    paid = paid[["event_id", "plan_id", "known_at"]]
-    reversals = tables["payment_reversals"]
-    undone = reversals.groupby("payment_event_id")["known_at"].min().rename("reversed_at")
-    return paid.join(undone, on="event_id")
-
-
 def adjudicate(
     tables: Mapping[str, pd.DataFrame],
     *,
@@ -761,7 +757,7 @@ def adjudicate(
     Every determination is dated by the last fact it rests on.
 
     Negative: known at ``order time + horizon_days`` when no positive is known by
-    then, postponed to the resolution of any dispute opened before that time;
+    then, postponed to the resolution of any dispute opened by that time;
     with a dispute still pending at ``observed_until`` the order stays unknown. The
     basis is ``credit_loss`` when a default or write-off is known by then, else
     ``no_finding``. A positive determined later adds a second row.
@@ -890,7 +886,7 @@ def adjudicate(
     negative = orders[["order_id", "occurred_at"]].copy()
     negative["label_known_at"] = negative["occurred_at"] + horizon
     pending = disputes.merge(negative[["order_id", "label_known_at"]], on="order_id")
-    pending = pending[pending["opened_known_at"] < pending["label_known_at"]]
+    pending = pending[pending["opened_known_at"] <= pending["label_known_at"]]
     unresolved = set(pending.loc[pending["resolved_known_at"].isna(), "order_id"])
     resolved = _map(negative["order_id"], pending.groupby("order_id")["resolved_known_at"].max())
     later = resolved > negative["label_known_at"]
@@ -923,17 +919,26 @@ def adjudicate(
 def _zero_effort_defaults(
     tables: Mapping[str, pd.DataFrame], plans: pd.DataFrame, grace_days: int
 ) -> pd.DataFrame:
-    """Plans whose seq 1 is unpaid ``grace_days`` after due, with nothing paid after seq 0."""
+    """Plans whose seq 1 is unpaid ``grace_days`` after due, with nothing paid after seq 0.
+
+    "Nothing paid" is judged at the default: successful installment payments (seq
+    >= 1) known by then, less the reversals of them known by then, total zero.
+    """
     schedule = tables["installment_schedule"]
     first_due = schedule[schedule["seq"] == 1][["plan_id", "due_at"]]
     state = plans.merge(first_due, on="plan_id", how="inner")
     state["default_at"] = state["due_at"] + pd.Timedelta(days=grace_days)
-    standing = _standing_installment_payments(tables).merge(
-        state[["plan_id", "default_at"]], on="plan_id"
-    )
-    paid = standing[(standing["known_at"] <= standing["default_at"])
-                    & ~(standing["reversed_at"] <= standing["default_at"])]
-    return state[~state["plan_id"].isin(set(paid["plan_id"]))].reset_index(drop=True)
+    cutoff = state.set_index("plan_id")["default_at"]
+    attempts = tables["payment_attempts"]
+    paid = attempts[(attempts["result"] == "success") & (attempts["seq"] >= 1)]
+    paid = paid[paid["known_at"] <= _map(paid["plan_id"], cutoff)]
+    reversals = tables["payment_reversals"]
+    reversals = reversals[reversals["payment_event_id"].isin(paid["event_id"])
+                          & (reversals["known_at"] <= _map(reversals["plan_id"], cutoff))]
+    standing = paid.groupby("plan_id")["amount_cents"].sum().sub(
+        reversals.groupby("plan_id")["amount_cents"].sum(), fill_value=0)
+    some_paid = set(standing.index[standing > 0])
+    return state[~state["plan_id"].isin(some_paid)].reset_index(drop=True)
 
 
 def _shared_accounts(
@@ -945,11 +950,11 @@ def _shared_accounts(
     Columns user_id, other_id, shared_at (when both sides of the earliest shared
     item were known).
     """
-    from core.asof import normalize_email
+    from core.asof import email_history
 
-    accounts = tables["accounts"]
-    emails = accounts[["user_id", "created_at"]].assign(
-        item="e" + accounts["email"].map(normalize_email))
+    emails = email_history(tables["accounts"], tables["account_events"])
+    emails = emails.rename(columns={"since": "created_at"}).assign(
+        item="e" + emails["email_root"])
     devices = tables["device_links"][["user_id", "device_id", "created_at"]]
     devices = devices.assign(item="d" + devices["device_id"].astype(str))
     frames = [emails, devices]
@@ -1057,9 +1062,16 @@ class _Checker:
 
 
 def check_world(
-    tables: Mapping[str, pd.DataFrame], *, require_all: bool = True
+    tables: Mapping[str, pd.DataFrame],
+    *,
+    require_all: bool = True,
+    terms: ledger.ProductTerms | None = None,
 ) -> list[Violation]:
-    """Every contract violation in ``tables`` (an empty list when the world is valid)."""
+    """Every contract violation in ``tables`` (an empty list when the world is valid).
+
+    ``terms`` are the product terms the cash events must follow (default:
+    ``config/world.yaml``).
+    """
     checker = _Checker()
     world: dict[str, pd.DataFrame] = {}
     for name in TABLES:
@@ -1083,14 +1095,19 @@ def check_world(
     _check_entities(checker, world)
     _check_orders(checker, world)
     _check_processes(checker, world)
-    _check_cash(checker, world)
+    _check_cash(checker, world, terms or ledger.ProductTerms.from_config())
     _check_labels(checker, world)
     return checker.violations
 
 
-def validate_world(tables: Mapping[str, pd.DataFrame], *, require_all: bool = True) -> None:
+def validate_world(
+    tables: Mapping[str, pd.DataFrame],
+    *,
+    require_all: bool = True,
+    terms: ledger.ProductTerms | None = None,
+) -> None:
     """Raise :class:`WorldError` listing every violation; return None for a valid world."""
-    violations = check_world(tables, require_all=require_all)
+    violations = check_world(tables, require_all=require_all, terms=terms)
     if violations:
         raise WorldError(violations)
 
@@ -1281,6 +1298,8 @@ def _check_orders(c: _Checker, w: dict[str, pd.DataFrame]) -> None:
            "order_id", "discount needs a promotion and must be below the amount")
     c.flag("non_positive_amount", "order_attempts", orders[orders["amount_cents"] <= 0],
            "order_id", "amount must be positive")
+    c.flag("order_known_late", "order_attempts", orders[orders["known_at"] != t], "order_id",
+           "an order attempt is known when it happens")
     events = w["account_events"]
     signup = _map(events["user_id"], _lookup(w["accounts"], "user_id", "created_at"))
     c.flag("account_event_before_account", "account_events", events[events["occurred_at"] < signup],
@@ -1288,6 +1307,9 @@ def _check_orders(c: _Checker, w: dict[str, pd.DataFrame]) -> None:
     ok = _active(events, "occurred_at", w["device_links"], ["user_id", "device_id"])
     c.flag("account_event_before_device_link", "account_events", events[~ok], "event_id",
            "device not linked to the account at the event time")
+    c.flag("bad_value", "account_events",
+           events[events["kind"].eq("email_change") != events["email"].notna()], "event_id",
+           "an email_change carries the new address and no other kind carries one")
 
 
 def _after(
@@ -1351,6 +1373,10 @@ def _check_processes(c: _Checker, w: dict[str, pd.DataFrame]) -> None:
            resolutions[resolutions["known_at"]
                        < _map(resolutions["dispute_id"], opened["known_at"])],
            "event_id", "resolved before the platform knew of the dispute")
+    c.flag("resolution_before_opening", "dispute_resolutions",
+           resolutions[resolutions["occurred_at"]
+                       < _map(resolutions["dispute_id"], opened["occurred_at"])],
+           "event_id", "resolved before the dispute was filed")
     c.flag("duplicate_outcome", "dispute_resolutions",
            resolutions[resolutions["dispute_id"].duplicated(keep=False)], "event_id",
            "a dispute resolves once")
@@ -1367,7 +1393,7 @@ def _check_processes(c: _Checker, w: dict[str, pd.DataFrame]) -> None:
            "written off before the last installment was due")
 
 
-def _check_cash(c: _Checker, w: dict[str, pd.DataFrame]) -> None:
+def _check_cash(c: _Checker, w: dict[str, pd.DataFrame], terms: ledger.ProductTerms) -> None:
     cash = w["cash_events"]
     expected = _map(cash["kind"], ledger.CASH_KINDS)
     c.flag("cash_sign", "cash_events", cash[np.sign(cash["amount_cents"]) != expected],
@@ -1382,6 +1408,24 @@ def _check_cash(c: _Checker, w: dict[str, pd.DataFrame]) -> None:
     c.flag("cash_plan_mismatch", "cash_events",
            cash[_map(cash["plan_id"], plans["order_id"]) != cash["order_id"]], "event_id",
            "plan does not belong to the order")
+    try:
+        derived = coerce("cash_events", ledger.derive_cash_events(w, terms).assign(event_id=0))
+    except (ValueError, SchemaError) as error:
+        c.violations.append(Violation("cash_mismatch", "cash_events", 1, [],
+                                      f"cash events cannot be derived: {error}"))
+        return
+    columns = [name for name in TABLES["cash_events"].column_names if name != "event_id"]
+    stored, expected = cash[columns].copy(), derived[columns].copy()
+    for frame in (stored, expected):  # a multiset: number repeated rows
+        frame["copy"] = frame.groupby(columns, dropna=False).cumcount()
+    both = stored.assign(_s=1).merge(expected.assign(_e=1), on=[*columns, "copy"], how="outer")
+    extra, missing = both[both["_e"].isna()], both[both["_s"].isna()]
+    if len(extra) or len(missing):
+        c.violations.append(Violation(
+            "cash_mismatch", "cash_events", len(extra) + len(missing),
+            [*extra["ref_event_id"].head(3).tolist(), *missing["ref_event_id"].head(3).tolist()],
+            f"{len(extra)} stored cash events the ledger does not derive, {len(missing)} "
+            "derived events missing (or amounts or times differ)"))
 
 
 def _check_labels(c: _Checker, w: dict[str, pd.DataFrame]) -> None:
