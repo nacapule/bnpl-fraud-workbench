@@ -25,21 +25,31 @@ Codex
   instructions (``model_instructions_file``); the reasoning effort set
   explicitly.
 Claude
-  ``--tools ""`` (no built-in tools), ``--strict-mcp-config`` without a
-  configuration (no MCP servers), ``--system-prompt`` in place of the CLI's
-  own prompt, ``--effort`` explicit, ``CLAUDE_CODE_DISABLE_CLAUDE_MDS=1`` and
-  an empty temporary working directory. The CLI still adds a short environment
-  note and the signed-in account's email address to the context, so callers
-  scan every response for private terms (:func:`private_matches`).
+  ``--setting-sources ""`` (no user, project or local settings, so none of
+  their hooks, plugins, permissions or environment), ``--tools ""`` (no
+  built-in tools), ``--strict-mcp-config`` without a configuration (no MCP
+  servers), ``--disable-slash-commands`` (no skills), ``--system-prompt`` in
+  place of the CLI's own prompt, ``--effort`` explicit, CLAUDE.md files and
+  auto-memory off, an empty temporary working directory and a minimal
+  environment (the process basics, the sign-in variables if set, and any
+  names listed in ``CLAUDE_CLI_ENV`` for a launcher that needs them). Hook
+  events are requested in the log and count as protocol failures. The CLI
+  still adds a short environment note and the signed-in account's email
+  address to the context, so callers scan every response for private terms
+  (:func:`private_matches`).
 
 Neither backend constrains decoding to a schema: the response format is part
 of the system prompt and is validated afterwards, the same way for both.
 
 Each call returns the response text, the full event log (kept outside the
 repository by the caller) and an :class:`EventSummary` (CLI version, model,
-effort, tools offered, tool and file events, tokens) that is stored with the
-response. A response whose log shows any tool, file or error event is a
-protocol failure (:attr:`EventSummary.protocol_ok`); the caller quarantines it.
+effort, tools offered, tool, file, hook and error events, tokens) that is stored
+with the response. A response whose log shows any tool, file, hook or error event,
+or an event the summary does not recognise, is a protocol failure
+(:attr:`EventSummary.protocol_ok`); the caller quarantines it.
+:meth:`CodexBackend.fingerprint` and :meth:`ClaudeBackend.fingerprint` give the
+CLI version and the hash of the isolation settings without a model call, so a
+caller can pin both before it looks anything up.
 """
 
 from __future__ import annotations
@@ -47,6 +57,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import tempfile
 import time
@@ -59,7 +70,13 @@ from typing import Any
 BACKENDS = ("codex", "claude")
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
 
-# Item types in a Codex event log that are the model's own output, not tool use.
+# Event types in a Codex event log (``codex exec --json``); anything else is not
+# recognised and fails the call.
+CODEX_EVENTS = frozenset({"thread.started", "turn.started", "turn.completed", "turn.failed",
+                          "item.started", "item.updated", "item.completed", "error"})
+CODEX_FAILURE_EVENTS = frozenset({"turn.failed", "error"})
+# Item types that are the model's own output, not tool use; every other item type
+# (web search, plans, unknown ones) counts as a tool event.
 CODEX_MESSAGE_ITEMS = frozenset({"agent_message", "reasoning"})
 CODEX_FILE_ITEMS = frozenset({"command_execution", "file_change", "mcp_tool_call"})
 
@@ -81,15 +98,35 @@ CODEX_FLAGS = (
     "--skip-git-repo-check", "--ephemeral", "--ignore-user-config", "--ignore-rules",
     "--sandbox", "read-only", "--json",
 )
-CLAUDE_FLAGS = ("-p", "--output-format", "stream-json", "--verbose", "--tools", "",
-                "--strict-mcp-config")
+CLAUDE_FLAGS = ("-p", "--output-format", "stream-json", "--verbose", "--include-hook-events",
+                "--setting-sources", "", "--tools", "", "--strict-mcp-config",
+                "--disable-slash-commands")
+CLAUDE_SETTINGS_ENV = {"CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1",
+                       "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"}
+# Event types in a Claude stream-json log; anything else is not recognised.
+CLAUDE_EVENTS = frozenset({"system", "assistant", "user", "result", "ping", "stream_event",
+                           "rate_limit_event"})
+CLAUDE_TEXT_BLOCKS = frozenset({"text", "thinking", "redacted_thinking"})
+CLAUDE_TOOL_BLOCKS = frozenset({"tool_use", "server_tool_use", "mcp_tool_use"})
 # Environment variables a CLI may need for the network, passed through when set.
 NETWORK_ENV = ("HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "https_proxy", "http_proxy",
                "no_proxy", "SSL_CERT_FILE", "SSL_CERT_DIR")
+# What a process needs to run at all, passed through when set.
+PROCESS_ENV = ("PATH", "HOME", "USER", "LOGNAME", "SHELL", "TMPDIR", "LANG", "LC_ALL",
+               "LC_CTYPE", "TERM")
+# Where Claude Code finds its sign-in when it is not in the default place.
+CLAUDE_AUTH_ENV = ("ANTHROPIC_API_KEY", "CLAUDE_CODE_OAUTH_TOKEN", "CLAUDE_CONFIG_DIR")
 
 
 class BackendError(RuntimeError):
-    """The CLI failed (transport, exit status, or no answer); never a scored outcome."""
+    """The CLI failed (transport, exit status, or no answer); never a scored outcome.
+
+    ``called`` is False when the failure came before the model was asked (the CLI's
+    own setup), so the call is not charged to a budget."""
+
+    def __init__(self, message: str, *, called: bool = True):
+        super().__init__(message)
+        self.called = called
 
 
 @dataclass(frozen=True)
@@ -125,11 +162,14 @@ class EventSummary:
     input_tokens: int | None = None
     output_tokens: int | None = None
     isolation: str = ""  # sha256 of the isolation settings used
+    n_hook_events: int = 0
+    n_unrecognized_events: int = 0
 
     @property
     def protocol_ok(self) -> bool:
         return (self.n_tool_events == 0 and self.n_file_events == 0
-                and self.n_error_events == 0 and not self.tools_offered)
+                and self.n_error_events == 0 and self.n_hook_events == 0
+                and self.n_unrecognized_events == 0 and not self.tools_offered)
 
     def as_dict(self) -> dict[str, Any]:
         return {**asdict(self), "event_counts": dict(sorted(self.event_counts.items())),
@@ -154,15 +194,17 @@ def canonical_json(value: Any) -> str:
 
 def _run(command: Sequence[str], *, env: Mapping[str, str] | None = None,
          cwd: Path | None = None, stdin: str | None = None,
-         timeout_s: int = 120) -> subprocess.CompletedProcess[str]:
+         timeout_s: int = 120, called: bool = False) -> subprocess.CompletedProcess[str]:
+    """Run a command; ``called`` says whether it asks the model (for the error)."""
     try:
         return subprocess.run(list(command), input=stdin, capture_output=True, text=True,
                               env=None if env is None else dict(env), cwd=cwd,
                               timeout=timeout_s, check=False)
     except subprocess.TimeoutExpired as error:
-        raise BackendError(f"{command[0]} timed out after {timeout_s}s") from error
+        raise BackendError(f"{command[0]} timed out after {timeout_s}s",
+                           called=called) from error
     except OSError as error:
-        raise BackendError(f"cannot run {command[0]}: {error}") from error
+        raise BackendError(f"cannot run {command[0]}: {error}", called=False) from error
 
 
 def _jsonl(stdout: str) -> list[dict[str, Any]]:
@@ -184,6 +226,11 @@ def private_matches(text: str, terms: Iterable[str]) -> list[str]:
     """The private terms (an author's name or address) that occur in ``text``."""
     lowered = text.lower()
     return sorted({term for term in terms if term and term.lower() in lowered})
+
+
+def _first_line(result: subprocess.CompletedProcess[str]) -> str:
+    lines = (result.stdout.strip() or result.stderr.strip()).splitlines()
+    return lines[0].strip() if lines else ""
 
 
 # ----------------------------------------------------------------------------- Codex
@@ -211,9 +258,14 @@ def isolated_catalog(catalog: Mapping[str, Any], model: str) -> dict[str, Any]:
     models = [dict(entry) for entry in catalog.get("models", [])]
     matches = [entry for entry in models if entry.get("slug") == model]
     if len(matches) != 1:
-        raise BackendError(f"model {model!r} is not in the CLI's bundled catalog")
+        raise BackendError(f"model {model!r} is not in the CLI's bundled catalog",
+                           called=False)
     matches[0].update(CODEX_MODEL_OVERRIDES)
     return {**catalog, "models": models}
+
+
+def _token_count(value: Any) -> int | None:
+    return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
 def summarize_codex(events: Sequence[Mapping[str, Any]], *, cli_version: str, model: str,
@@ -221,10 +273,19 @@ def summarize_codex(events: Sequence[Mapping[str, Any]], *, cli_version: str, mo
     counts: Counter[str] = Counter()
     item_types: dict[str, str] = {}  # item id -> type, from its start or completion
     usage: Mapping[str, Any] = {}
+    failures = unrecognized = 0
     for index, event in enumerate(events):
         kind = str(event.get("type"))
         item = event.get("item")
-        if isinstance(item, Mapping):
+        if kind not in CODEX_EVENTS:
+            unrecognized += 1
+        elif kind in CODEX_FAILURE_EVENTS:
+            failures += 1
+        if kind.startswith("item."):
+            if not isinstance(item, Mapping):
+                unrecognized += 1
+                counts[kind] += 1
+                continue
             item_type = str(item.get("type"))
             counts[f"{kind}:{item_type}"] += 1
             item_types[str(item.get("id", f"#{index}"))] = item_type
@@ -239,9 +300,10 @@ def summarize_codex(events: Sequence[Mapping[str, Any]], *, cli_version: str, mo
         n_tool_events=sum(t not in CODEX_MESSAGE_ITEMS | CODEX_FILE_ITEMS | {"error"}
                           for t in types),
         n_file_events=sum(t in CODEX_FILE_ITEMS for t in types),
-        n_error_events=types.count("error"),
-        input_tokens=usage.get("input_tokens"), output_tokens=usage.get("output_tokens"),
-        isolation=isolation,
+        n_error_events=types.count("error") + failures,
+        input_tokens=_token_count(usage.get("input_tokens")),
+        output_tokens=_token_count(usage.get("output_tokens")),
+        isolation=isolation, n_unrecognized_events=unrecognized,
     )
 
 
@@ -269,8 +331,13 @@ class CodexBackend:
         return env
 
     def version(self) -> str:
-        result = _run([self.binary, "--version"], timeout_s=60)
-        return result.stdout.strip() or result.stderr.strip()
+        return _first_line(_run([self.binary, "--version"], timeout_s=60))
+
+    def fingerprint(self, model: str, effort: str) -> dict[str, str]:
+        """The CLI version and the isolation hash a call with this model would have."""
+        with tempfile.TemporaryDirectory(prefix="memo-") as name:
+            *_, settings = self.prepare(Path(name), Request("codex", model, effort, "", ""))
+        return {"cli_version": self.version(), "isolation": sha256_text(canonical_json(settings))}
 
     def prepare(self, base: Path, request: Request) -> tuple[list[str], dict[str, str], Path,
                                                                dict[str, Any]]:
@@ -280,17 +347,19 @@ class CodexBackend:
         for directory in (home, codex_home, work, tmp):
             directory.mkdir()
         if not self.auth_file.is_file():
-            raise BackendError(f"no Codex credentials at {self.auth_file}")
+            raise BackendError(f"no Codex credentials at {self.auth_file}", called=False)
         (codex_home / "auth.json").symlink_to(self.auth_file.resolve())
         env = self._environment(home, codex_home, tmp)
 
         listing = _run([self.binary, "features", "list"], env=env, cwd=work)
         if listing.returncode != 0:
-            raise BackendError(f"codex features list failed: {listing.stderr[-300:]}")
+            raise BackendError(f"codex features list failed: {listing.stderr[-300:]}",
+                               called=False)
         disabled = features_to_disable(listing.stdout)
         bundled = _run([self.binary, "debug", "models", "--bundled"], env=env, cwd=work)
         if bundled.returncode != 0:
-            raise BackendError(f"codex debug models failed: {bundled.stderr[-300:]}")
+            raise BackendError(f"codex debug models failed: {bundled.stderr[-300:]}",
+                               called=False)
         catalog = isolated_catalog(json.loads(bundled.stdout), request.model)
         (base / "catalog.json").write_text(json.dumps(catalog))
         (base / "instructions.md").write_text(request.system_prompt)
@@ -318,7 +387,7 @@ class CodexBackend:
             command, env, work, settings = self.prepare(base, request)
             started = time.monotonic()
             result = _run(command, env=env, cwd=work, stdin=request.prompt,
-                          timeout_s=request.timeout_s)
+                          timeout_s=request.timeout_s, called=True)
             duration = int((time.monotonic() - started) * 1000)
         events = _jsonl(result.stdout)
         summary = summarize_codex(events, cli_version=version, model=request.model,
@@ -339,46 +408,45 @@ def summarize_claude(events: Sequence[Mapping[str, Any]], *, cli_version: str, m
                      effort: str, isolation: str) -> EventSummary:
     counts: Counter[str] = Counter()
     tools_offered: int | None = None
-    tool = file = error = 0
+    tool = file = error = hook = unrecognized = 0
     usage: Mapping[str, Any] = {}
-    reported_version, reported_model = cli_version, model
+    reported_model = model
     for event in events:
         kind = str(event.get("type"))
         subtype = event.get("subtype")
         counts[f"{kind}:{subtype}" if subtype else kind] += 1
-        if kind == "system" and subtype == "init":
+        message = event.get("message") if isinstance(event.get("message"), Mapping) else {}
+        content = message.get("content") or []
+        blocks = [block for block in content if isinstance(block, Mapping)] \
+            if isinstance(content, list) else []
+        if kind not in CLAUDE_EVENTS:
+            unrecognized += 1
+        elif kind == "system" and str(subtype).startswith("hook"):
+            hook += 1
+        elif kind == "system" and subtype == "init":
             offered = list(event.get("tools") or []) + list(event.get("mcp_servers") or [])
             tools_offered = len(offered)
-            if event.get("claude_code_version") not in (None, "", "unknown"):
-                reported_version = str(event["claude_code_version"])
         elif kind == "assistant":
-            if (event.get("message") or {}).get("model"):
-                reported_model = str(event["message"]["model"])
-            content = (event.get("message") or {}).get("content") or []
-            for block in content:
-                if isinstance(block, Mapping) and block.get("type") in (
-                        "tool_use", "server_tool_use", "mcp_tool_use"):
-                    tool += 1
+            if message.get("model"):
+                reported_model = str(message["model"])
+            tool += sum(block.get("type") in CLAUDE_TOOL_BLOCKS for block in blocks)
+            unrecognized += sum(block.get("type") not in CLAUDE_TOOL_BLOCKS | CLAUDE_TEXT_BLOCKS
+                                for block in blocks)
         elif kind == "user":
-            content = (event.get("message") or {}).get("content") or []
-            if isinstance(content, list):
-                file += sum(isinstance(block, Mapping) and block.get("type") == "tool_result"
-                            for block in content)
+            file += sum(block.get("type") == "tool_result" for block in blocks)
         elif kind == "result":
-            usage = event.get("usage") or {}
-            error += bool(event.get("is_error"))
-    input_tokens = None
-    if usage:
-        input_tokens = sum(int(usage.get(key) or 0) for key in (
-            "input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens"))
+            usage = event.get("usage") if isinstance(event.get("usage"), Mapping) else {}
+            error += bool(event.get("is_error")) or subtype not in (None, "success")
+    input_parts = [_token_count(usage.get(key)) for key in (
+        "input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens")]
     return EventSummary(
-        backend="claude", cli_version=reported_version, model=reported_model, effort=effort,
+        backend="claude", cli_version=cli_version, model=reported_model, effort=effort,
         n_events=len(events), event_counts=dict(counts), tools_offered=tools_offered,
         n_tool_events=tool, n_file_events=file, n_error_events=error,
-        input_tokens=input_tokens,
-        output_tokens=(int(usage["output_tokens"]) if usage.get("output_tokens") is not None
-                       else None),
-        isolation=isolation,
+        input_tokens=(sum(part or 0 for part in input_parts)
+                      if input_parts[0] is not None else None),
+        output_tokens=_token_count(usage.get("output_tokens")),
+        isolation=isolation, n_hook_events=hook, n_unrecognized_events=unrecognized,
     )
 
 
@@ -395,15 +463,39 @@ class ClaudeBackend:
         self.binary = binary or os.environ.get("CLAUDE_CLI_BIN", "claude")
 
     def version(self) -> str:
-        result = _run([self.binary, "--version"], timeout_s=60)
-        return (result.stdout.strip() or result.stderr.strip()).splitlines()[0]
+        """The Claude Code version that answers. When ``CLAUDE_CLI_BIN`` is a launcher
+        rather than Claude Code itself, the version is that of the ``claude`` on the
+        path, which the launcher runs, plus a hash of the launcher's own version line."""
+        own = _first_line(_run([self.binary, "--version"], timeout_s=60))
+        if "Claude Code" in own:
+            return own
+        code = "Claude Code not on the path"
+        if shutil.which("claude"):
+            code = _first_line(_run(["claude", "--version"], timeout_s=60))
+        return f"{code}; launcher {sha256_text(own)[:12]}"
+
+    def fingerprint(self, model: str, effort: str) -> dict[str, str]:
+        """The CLI version and the isolation hash a call with this model would have."""
+        *_, settings = self.prepare(Request("claude", model, effort, "", ""))
+        return {"cli_version": self.version(), "isolation": sha256_text(canonical_json(settings))}
+
+    @staticmethod
+    def _environment() -> tuple[dict[str, str], list[str]]:
+        extra = [name.strip() for name in os.environ.get("CLAUDE_CLI_ENV", "").split(",")
+                 if name.strip()]
+        names = [*PROCESS_ENV, *NETWORK_ENV, *CLAUDE_AUTH_ENV, *extra]
+        env = {name: os.environ[name] for name in names if name in os.environ}
+        env.update(CLAUDE_SETTINGS_ENV)
+        passed = sorted(name for name in env if name not in PROCESS_ENV)
+        return env, passed
 
     def prepare(self, request: Request) -> tuple[list[str], dict[str, str], dict[str, Any]]:
         command = [self.binary, *CLAUDE_FLAGS, "--model", request.model,
                    "--effort", request.effort, "--system-prompt", request.system_prompt]
-        env = {**os.environ, "CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1"}
+        env, passed = self._environment()
         settings = {"flags": list(CLAUDE_FLAGS), "system_prompt": "replaced",
-                    "environment": {"CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1"}}
+                    "environment": dict(CLAUDE_SETTINGS_ENV), "process": list(PROCESS_ENV),
+                    "passed": passed}
         return command, env, settings
 
     def complete(self, request: Request) -> Response:
@@ -412,7 +504,7 @@ class ClaudeBackend:
         with tempfile.TemporaryDirectory(prefix="memo-") as name:
             started = time.monotonic()
             result = _run(command, env=env, cwd=Path(name), stdin=request.prompt,
-                          timeout_s=request.timeout_s)
+                          timeout_s=request.timeout_s, called=True)
             duration = int((time.monotonic() - started) * 1000)
         events = _jsonl(result.stdout)
         summary = summarize_claude(events, cli_version=version, model=request.model,

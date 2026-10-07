@@ -33,7 +33,7 @@ CATALOG = {"models": [
 
 
 def fake_run(calls):
-    def run(command, *, env=None, cwd=None, stdin=None, timeout_s=120):
+    def run(command, *, env=None, cwd=None, stdin=None, timeout_s=120, called=False):
         calls.append(SimpleNamespace(command=list(command), env=env, cwd=cwd, stdin=stdin))
         if command[1:3] == ["features", "list"]:
             return SimpleNamespace(returncode=0, stdout=FEATURES, stderr="")
@@ -182,8 +182,8 @@ def claude_events(tools=(), blocks=("text",)):
 
 
 def test_claude_summary_reads_tools_offered_and_the_answering_model() -> None:
-    clean = client.summarize_claude(claude_events(), cli_version="2.1.0 (Claude Code)", model="m",
-                                    effort="high", isolation="i")
+    clean = client.summarize_claude(claude_events(), cli_version="2.1.0 (Claude Code)",
+                                    model="m", effort="high", isolation="i")
     assert clean.protocol_ok and clean.tools_offered == 0
     assert clean.model == "claude-opus-5-5" and clean.cli_version == "2.1.0 (Claude Code)"
     assert clean.input_tokens == 830 and clean.output_tokens == 300
@@ -206,6 +206,97 @@ def test_claude_call_has_no_tools_and_replaces_the_system_prompt(monkeypatch) ->
     assert command[command.index("--model") + 1] == "claude-opus-5-5"
     assert env["CLAUDE_CODE_DISABLE_CLAUDE_MDS"] == "1"
     assert "PACKET" not in command  # the packet goes on standard input
+
+
+def test_claude_call_loads_no_settings_hooks_plugins_or_skills(monkeypatch) -> None:
+    monkeypatch.setenv("SECRET_SETTING", "do-not-pass")
+    monkeypatch.setenv("CLAUDE_CODE_ENABLE_SOMETHING", "1")
+    monkeypatch.setenv("LAUNCHER_STATE", "kept")
+    monkeypatch.setenv("CLAUDE_CLI_ENV", "LAUNCHER_STATE")
+    command, env, settings = client.ClaudeBackend(binary="claude-cli").prepare(
+        client.Request("claude", "claude-opus-5-5", "high", "SYSTEM", "PACKET"))
+    assert command[command.index("--setting-sources") + 1] == ""  # no user/project/local
+    assert "--disable-slash-commands" in command and "--include-hook-events" in command
+    assert "--settings" not in command
+    assert env["CLAUDE_CODE_DISABLE_AUTO_MEMORY"] == "1"
+    assert "SECRET_SETTING" not in env and "CLAUDE_CODE_ENABLE_SOMETHING" not in env
+    assert env["LAUNCHER_STATE"] == "kept" and "LAUNCHER_STATE" in settings["passed"]
+    assert set(env) <= {*client.PROCESS_ENV, *client.NETWORK_ENV, *client.CLAUDE_AUTH_ENV,
+                        *client.CLAUDE_SETTINGS_ENV, "LAUNCHER_STATE"}
+
+
+@pytest.mark.parametrize("event", [
+    {"type": "system", "subtype": "hook_started", "hook_name": "SessionStart"},
+    {"type": "system", "subtype": "hook_response", "output": "context"},
+])
+def test_hook_events_fail_a_claude_call(event) -> None:
+    events = claude_events()
+    summary = client.summarize_claude([events[0], event, *events[1:]], cli_version="c",
+                                      model="m", effort="high", isolation="i")
+    assert summary.n_hook_events == 1 and not summary.protocol_ok
+
+
+@pytest.mark.parametrize("events", [
+    [{"type": "tool_progress"}],                                   # an unknown event type
+    [{"type": "assistant", "message": {"content": [{"type": "image"}]}}],  # unknown block
+    [{"type": "result", "subtype": "error_during_execution", "is_error": False}],
+])
+def test_unrecognised_or_failed_claude_events_fail_the_call(events) -> None:
+    summary = client.summarize_claude([*claude_events(), *events], cli_version="c",
+                                      model="m", effort="high", isolation="i")
+    assert not summary.protocol_ok
+
+
+@pytest.mark.parametrize("extra", [
+    {"type": "error", "message": "stream disconnected"},
+    {"type": "turn.failed", "error": {"message": "limit"}},
+    {"type": "exec.started"},                                       # not a known event
+    {"type": "item.completed"},                                     # an item without a body
+])
+def test_top_level_codex_failures_and_unknown_events_fail_the_call(extra) -> None:
+    events = [{"type": "thread.started"}, {"type": "turn.started"}, extra,
+              {"type": "item.completed", "item": {"id": "i0", "type": "agent_message",
+                                                  "text": "{}"}},
+              {"type": "turn.completed", "usage": {"input_tokens": 5, "output_tokens": 5}}]
+    summary = client.summarize_codex(events, cli_version="v", model="m", effort="high",
+                                     isolation="i")
+    assert not summary.protocol_ok
+    assert summary.n_error_events + summary.n_unrecognized_events == 1
+
+
+def test_claude_version_names_claude_code_and_hashes_a_launcher(monkeypatch) -> None:
+    def run(command, **_kwargs):
+        line = "2.1.9 (Claude Code)" if command[0] == "claude" else "some-launcher 0.3"
+        return SimpleNamespace(returncode=0, stdout=line + "\n", stderr="")
+    monkeypatch.setattr(client, "_run", run)
+    monkeypatch.setattr(client.shutil, "which", lambda name: "/bin/" + name)
+    assert client.ClaudeBackend(binary="claude").version() == "2.1.9 (Claude Code)"
+    wrapped = client.ClaudeBackend(binary="some-launcher").version()
+    assert wrapped.startswith("2.1.9 (Claude Code); launcher ")
+    assert "some-launcher" not in wrapped
+
+
+def test_fingerprints_match_the_calls_they_describe(monkeypatch, auth: Path) -> None:
+    monkeypatch.setattr(client, "_run", fake_run([]))
+    backend = client.CodexBackend(binary="codex", auth_file=auth)
+    response = backend.complete(client.Request("codex", "gpt-6.1-sol", "high", "S", "P"))
+    assert backend.fingerprint("gpt-6.1-sol", "high") == {
+        "cli_version": response.summary.cli_version, "isolation": response.summary.isolation}
+    claude = client.ClaudeBackend(binary="claude-cli")
+    *_, settings = claude.prepare(client.Request("claude", "m", "high", "S", "P"))
+    monkeypatch.setattr(claude, "version", lambda: "2.1.9 (Claude Code)")
+    assert claude.fingerprint("m", "high")["isolation"] == client.sha256_text(
+        client.canonical_json(settings))
+
+
+def test_setup_failures_are_not_charged_as_calls(tmp_path: Path) -> None:
+    base = tmp_path / "a"
+    base.mkdir()
+    with pytest.raises(client.BackendError) as raised:
+        client.CodexBackend(auth_file=tmp_path / "missing.json").prepare(
+            base, client.Request("codex", "gpt-6.1-sol", "high", "S", "P"))
+    assert raised.value.called is False
+    assert client.BackendError("exit 1").called is True
 
 
 def test_binaries_come_from_the_environment(monkeypatch) -> None:
