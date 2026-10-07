@@ -121,8 +121,9 @@ sensitivity:
   fulfilment_lag: TO_COMPLETE_AT_FREEZE
 
 # The final driver refuses to generate a final-seed world unless this marker
-# exists, every listed file matches its recorded SHA-256 and no
-# TO_COMPLETE_AT_FREEZE entry remains (core.protocol.require_freeze).
+# exists, every listed file matches its recorded SHA-256, the marker and the
+# files are committed unchanged, and no TO_COMPLETE_AT_FREEZE entry remains
+# (core.protocol.require_freeze).
 freeze:
   marker: experiments/FREEZE.json
   files:
