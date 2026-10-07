@@ -122,6 +122,34 @@ def test_world_and_validate_stages_on_a_given_world(tmp_path: Path) -> None:
     assert not (run.results_dir / "summary.json").exists()  # a partial run has no summary
 
 
+def test_a_given_world_cannot_name_a_path_as_its_family(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    source.mkdir()
+    manifest = json.loads((MINI_WORLD / "manifest.json").read_text())
+    for family in ("baseline/../../../../results", "Baseline", "unknown_family"):
+        (source / "manifest.json").write_text(json.dumps(manifest | {"family": family}))
+        with pytest.raises(pipeline.PipelineError):
+            pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path / "runs", world=source)
+    with pytest.raises(pipeline.PipelineError):
+        pipeline.WorldRef(416, "../results")
+
+
+def test_a_world_changed_after_it_was_written_is_refused(tmp_path: Path) -> None:
+    """Resuming after a world file changed must not mix it with earlier results."""
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
+    pipeline.execute(run, pipeline.select(until="validate"), log=lambda _: None)
+    ref = run.worlds[0]
+    path = run.world_dir(ref) / "order_attempts.csv"
+    path.write_text(path.read_text().replace(",", ", ", 1))  # one byte of difference
+    run.memory.clear()
+    assert pipeline.input_hash(run, "world:0-baseline") is None
+    assert pipeline.stale_inputs(run, [read_result(run.results_dir / "validate.json")])
+    with pytest.raises(pipeline.PipelineError, match="differ from its manifest"):
+        run.tables(ref)
+    path.unlink()
+    assert pipeline.input_hash(run, "world:0-baseline") is None
+
+
 def _given_world(tmp_path: Path) -> tuple[pipeline.Run, Path]:
     run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
     pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)
@@ -139,7 +167,7 @@ def test_validation_rejects_a_world_that_no_longer_matches_its_manifest(tmp_path
     tables = world_module.read_world(directory)
     _order_before_signup(tables)
     world_module.write_world({"order_attempts": tables["order_attempts"]}, directory)
-    with pytest.raises(ValueError, match="does not match its manifest"):
+    with pytest.raises(pipeline.PipelineError, match="differ from its manifest"):
         pipeline.execute(run, pipeline.select("validate", "validate"), log=lambda _: None)
 
 
@@ -349,13 +377,15 @@ def test_the_replay_keeps_each_worlds_review_decisions(tmp_path: Path, monkeypat
     module = types.ModuleType("queue_sim.replay")
     rows = [outcome(0, "approve_all", 0)]
     module.replay = lambda run: pipeline.StageOutput(tables={"replay.outcomes": rows})
-    module.review_decisions = lambda run, ref: pd.DataFrame({
+    module.review_decisions = lambda tables, context, scorers: pd.DataFrame({
         "order_id": [1, 2], "decision_at": pd.to_datetime(["2025-01-01 10:00", "2025-01-02 09:30"]),
         "disposition": ["hold", "clear"],
     })
     monkeypatch.setitem(sys.modules, "queue_sim.replay", module)
     run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
     pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)
+    run.memory["context"] = {run.worlds[0]: pd.DataFrame()}  # stand-ins for the
+    run.memory["scorers"] = {0: {}}  # in-memory context and models
     pipeline.execute(run, pipeline.select("replay", "replay"), log=lambda _: None)
     kept = pipeline.review_decisions(run, run.worlds[0])
     assert list(kept["disposition"]) == ["hold", "clear"]
@@ -391,8 +421,9 @@ def outcomes() -> list[dict]:
     return rows
 
 
-def evaluate(rows: list[dict], seeds=(1, 2, 3), families=("baseline",), policies=POLICIES):
-    return pipeline.evaluate_outcomes(rows, seeds, families, policies)
+def evaluate(rows: list[dict], seeds=(1, 2, 3), families=("baseline",), policies=POLICIES,
+             capacities=("base",)):
+    return pipeline.evaluate_outcomes(rows, seeds, families, policies, capacities)
 
 
 def test_evaluate_pairs_policies_by_seed() -> None:
@@ -449,9 +480,16 @@ def test_evaluate_refuses_incomplete_or_repeated_outcomes() -> None:
         evaluate(rows, families=("baseline", "fraud_mix_shift"))
     low = [r | {"capacity": "low"} for r in rows if r["policy"] != "hybrid"]
     with pytest.raises(pipeline.PipelineError, match="missing"):  # hybrid absent at low
-        evaluate(rows + low)
+        evaluate(rows + low, capacities=("low", "base"))
+    with pytest.raises(pipeline.PipelineError, match="missing"):  # a whole level absent
+        evaluate(rows, capacities=("low", "base", "high"))
     with pytest.raises(pipeline.PipelineError, match="unexpected"):
         evaluate(rows + [outcome(4, "hybrid", 0)])
+
+
+def test_capacity_levels_come_from_the_protocol() -> None:
+    protocol = proto.load_protocol()
+    assert pipeline.expected_capacities(protocol) == ("low", "base", "high", "redesigned_layout")
 
 
 def test_pooling_per_seed_metrics() -> None:

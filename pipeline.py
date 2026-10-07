@@ -95,14 +95,33 @@ class StageUnavailable(PipelineError):
 
 
 # ---------------------------------------------------------------- run setup
+FAMILY_NAME = re.compile(r"^[a-z0-9_]+$")
+
+
 @dataclass(frozen=True, order=True)
 class WorldRef:
+    """One world: a seed and a family (a lower-case name, never a path)."""
+
     seed: int
     family: str
+
+    def __post_init__(self) -> None:
+        if isinstance(self.seed, bool) or not isinstance(self.seed, int) or self.seed < 0:
+            raise PipelineError(f"a world's seed must be a non-negative int, got {self.seed!r}")
+        if not isinstance(self.family, str) or not FAMILY_NAME.fullmatch(self.family):
+            raise PipelineError(f"a world's family must be a lower-case name, "
+                                f"got {self.family!r}")
 
     @property
     def name(self) -> str:
         return f"{self.seed}-{self.family}"
+
+    @classmethod
+    def parse(cls, name: str) -> WorldRef:
+        seed, _, family = name.partition("-")
+        if not seed.isdigit():
+            raise PipelineError(f"{name!r} is not a world name")
+        return cls(int(seed), family)
 
 
 @dataclass(frozen=True)
@@ -157,7 +176,10 @@ class Run:
         return sorted(worlds)
 
     def world_dir(self, ref: WorldRef) -> Path:
-        return self.directory / "worlds" / ref.name
+        path = self.directory / "worlds" / ref.name
+        if not path.resolve().is_relative_to((self.directory / "worlds").resolve()):
+            raise PipelineError(f"world {ref.name!r} would leave the run directory")
+        return path
 
     def stage_dir(self, stage: str) -> Path:
         path = self.directory / stage
@@ -178,9 +200,12 @@ class Run:
         return fitted[seed]
 
     def tables(self, ref: WorldRef) -> dict[str, pd.DataFrame]:
+        """The world's tables, refused if any file differs from its manifest."""
         cache = self.memory.setdefault("tables", {})
         if ref not in cache:
-            self.manifest(ref)
+            if world_identity(self, ref) is None:
+                raise PipelineError(f"world {ref.name}'s files differ from its manifest; "
+                                    "rerun from the world stage")
             cache[ref] = world_module.read_world(self.world_dir(ref))
         return cache[ref]
 
@@ -196,7 +221,9 @@ def make_run(profile: Profile, *, name: str | None = None, seeds: list[int] | No
         if not manifest_path.exists():
             raise PipelineError(f"{world} holds no manifest.json")
         manifest = json.loads(manifest_path.read_text())
-        ref = WorldRef(int(manifest["seed"]), str(manifest["family"]))
+        ref = WorldRef(manifest.get("seed"), manifest.get("family"))
+        if ref.family not in protocol.family_starts:
+            raise PipelineError(f"{world}: unknown family {ref.family!r}")
         chosen_seeds, chosen_families, database = (ref.seed,), (ref.family,), ref
     else:
         default_seeds = {
@@ -209,6 +236,8 @@ def make_run(profile: Profile, *, name: str | None = None, seeds: list[int] | No
         unknown = sorted(set(chosen_families) - set(protocol.family_starts))
         if unknown:
             raise PipelineError(f"unknown families {unknown}")
+        if any(isinstance(seed, bool) or not isinstance(seed, int) for seed in chosen_seeds):
+            raise PipelineError("seeds must be integers")
         if BASELINE not in chosen_families:
             raise PipelineError("every run needs the baseline family (models are fitted on it)")
         canonical = WorldRef(protocol.canonical_seed, BASELINE)
@@ -298,12 +327,28 @@ def manifest_identity(manifest: Mapping[str, Any]) -> str:
     return hashlib.sha256(canonical_json(content).encode()).hexdigest()
 
 
+def world_identity(run: Run, ref: WorldRef) -> str | None:
+    """The world's manifest identity, or None if a table file is missing or differs.
+
+    Table files are written in the canonical form the manifest hashes
+    (``core.world.write_world``), so their bytes are checked without parsing.
+    """
+    directory = run.world_dir(ref)
+    path = directory / "manifest.json"
+    if not path.exists():
+        return None
+    manifest = json.loads(path.read_text())
+    for name, entry in manifest.get("tables", {}).items():
+        table_file = directory / f"{name}.csv"
+        if not table_file.is_file() or file_sha256(table_file) != entry.get("sha256"):
+            return None
+    return manifest_identity(manifest)
+
+
 def input_hash(run: Run, name: str) -> str | None:
     """The current SHA-256 of a stage input named as in :class:`StageOutput`; None if gone."""
     if name.startswith("world:"):
-        seed, _, family = name[len("world:"):].partition("-")
-        path = run.world_dir(WorldRef(int(seed), family)) / "manifest.json"
-        return manifest_identity(json.loads(path.read_text())) if path.exists() else None
+        return world_identity(run, WorldRef.parse(name[len("world:"):]))
     if name.startswith("results/"):
         path = run.results_dir / name[len("results/"):]
     else:
@@ -333,8 +378,10 @@ def stage_world(run: Run) -> StageOutput:
         else:
             generate(ref.seed, ref.family, target, scale=run.scale)
         manifest = run.manifest(ref)
-        if (int(manifest["seed"]), manifest["family"]) != (ref.seed, ref.family):
+        if (manifest.get("seed"), manifest.get("family")) != (ref.seed, ref.family):
             raise PipelineError(f"world {ref.name}: the manifest names another seed or family")
+        if world_identity(run, ref) is None:
+            raise PipelineError(f"world {ref.name}: its files do not match its manifest")
         tables = world_module.read_world(target, ["order_attempts", "labels", "accounts"])
         orders = tables["order_attempts"]
         rows.append({
@@ -504,7 +551,7 @@ def stage_replay(run: Run) -> StageOutput:
         raise PipelineError("replay: no replay.outcomes table")
     for ref in run.all_worlds:
         path = run.world_dir(ref) / REVIEW_DECISIONS
-        frame = decisions(run, ref)
+        frame = decisions(run.tables(ref), context_of(run, ref), run.scorers(ref.seed))
         if not isinstance(frame, pd.DataFrame):
             raise PipelineError(f"replay: review decisions of {ref.name} are not a data frame")
         frame.to_pickle(path)
@@ -642,10 +689,17 @@ def _column(name: str, unit: str) -> str:
     return name if name.endswith(f"_{unit}") else f"{name}_{unit}"
 
 
+def expected_capacities(protocol: protocol_module.Protocol) -> tuple[str, ...]:
+    """The capacity levels every policy is replayed at: the protocol's levels and,
+    when the protocol has one, the redesigned shift layout (``redesigned_layout``)."""
+    capacity = protocol.raw.get("capacity", {})
+    levels = tuple(capacity.get("levels", {}))
+    return levels + (("redesigned_layout",) if "redesigned_layout" in capacity else ())
+
+
 def _check_grid(frame: pd.DataFrame, seeds: tuple[int, ...], families: tuple[str, ...],
-                policies: tuple[str, ...]) -> None:
+                policies: tuple[str, ...], capacities: tuple[str, ...]) -> None:
     """Every family, policy and capacity level, each on exactly the run's seeds."""
-    capacities = sorted(frame["capacity"].astype(str).unique())
     expected = {
         (family, capacity, policy, seed)
         for family in families for capacity in capacities for policy in policies for seed in seeds
@@ -660,6 +714,7 @@ def _check_grid(frame: pd.DataFrame, seeds: tuple[int, ...], families: tuple[str
 
 def evaluate_outcomes(outcomes: list[dict[str, Any]], seeds: tuple[int, ...],
                       families: tuple[str, ...], policies: tuple[str, ...],
+                      capacities: tuple[str, ...],
                       window: str = "test") -> tuple[dict[str, Metric], list[dict[str, Any]]]:
     """Per-seed paired metrics from the replay's outcome rows.
 
@@ -667,8 +722,8 @@ def evaluate_outcomes(outcomes: list[dict[str, Any]], seeds: tuple[int, ...],
     with its per-seed spread, and the per-seed paired difference against
     approve-all and against the incumbent rules (both must be among
     ``policies``). Differences of shares and rates are in basis points. The
-    rows must cover every family, policy and capacity level on exactly the
-    run's seeds, once each.
+    rows must cover every family, policy and capacity level (``capacities``,
+    from the protocol) on exactly the run's seeds, once each.
     """
     missing_references = sorted(set(REFERENCES) - set(policies))
     if missing_references:
@@ -679,7 +734,9 @@ def evaluate_outcomes(outcomes: list[dict[str, Any]], seeds: tuple[int, ...],
         raise PipelineError(f"evaluate: the replay's outcome rows lack columns {missing}")
     if frame.duplicated(list(OUTCOME_KEYS)).any():
         raise PipelineError("evaluate: repeated outcome rows for a seed, family, capacity, policy")
-    _check_grid(frame, seeds, families, policies)
+    if not capacities:
+        raise PipelineError("evaluate: the protocol names no capacity levels")
+    _check_grid(frame, seeds, families, policies, capacities)
     frame["capacity"] = frame["capacity"].astype(str)
     metrics: dict[str, Metric] = {}
     table_rows: list[dict[str, Any]] = []
@@ -752,7 +809,8 @@ def stage_evaluate(run: Run) -> StageOutput:
     if outcomes is None:
         raise PipelineError("evaluate: the replay result has no replay.outcomes table")
     metrics, rows = evaluate_outcomes(outcomes, run.seeds, run.families,
-                                      tuple(run.protocol.raw["policies"]))
+                                      tuple(run.protocol.raw["policies"]),
+                                      expected_capacities(run.protocol))
     return StageOutput(metrics=metrics, tables={"evaluate.policies": rows},
                        inputs=["results/replay.json"])
 
