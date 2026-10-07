@@ -37,8 +37,11 @@ Claude
   its stored subscription). Managed settings, which no flag switches off, are
   refused: a call does not run while any managed settings file, managed
   preferences file or cached server-managed settings file exists
-  (:func:`managed_settings`), nor unless the signed-in plan is a personal one
-  (:func:`claude_plan`), for which the CLI fetches no server-managed settings.
+  (:func:`managed_settings`), nor unless the CLI's own sign-in report shows a
+  personal claude.ai subscription and no API key is stored
+  (:meth:`ClaudeBackend.sign_in`), for which the CLI fetches no server-managed
+  settings. An API key kept only in the system keychain does not show in that
+  report; the run's canary call (``llm.eval.harness``) checks the outcome.
   Hook events are requested in the log and count as protocol failures. The
   CLI still adds a short environment note and the signed-in account's email
   address to the context, so callers scan every response for private terms
@@ -111,7 +114,12 @@ CLAUDE_FLAGS = ("-p", "--output-format", "stream-json", "--verbose", "--include-
                 "--setting-sources", "", "--tools", "", "--strict-mcp-config",
                 "--disable-slash-commands")
 CLAUDE_SETTINGS_ENV = {"CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1",
-                       "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"}
+                       "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
+                       # no requests beyond those the token bound counts: no compaction,
+                       # no other model and no repeat of a broken stream without streaming
+                       "DISABLE_COMPACT": "1", "DISABLE_AUTO_COMPACT": "1",
+                       "CLAUDE_CODE_NO_MODEL_FALLBACK": "1",
+                       "CLAUDE_CODE_DISABLE_NONSTREAMING_FALLBACK": "1"}
 # Event types and system subtypes in a tool-less Claude stream-json log; anything else
 # (including any user event: a tool-less call has none) is not recognised.
 CLAUDE_EVENTS = frozenset({"system", "assistant", "result", "ping", "rate_limit_event"})
@@ -139,9 +147,11 @@ PROCESS_ENV = ("PATH", "HOME", "USER", "LOGNAME", "SHELL", "TMPDIR", "LANG", "LC
                "LC_CTYPE", "TERM")
 # Where Claude Code keeps its state and sign-in when not in the default place.
 CLAUDE_AUTH_ENV = ("CLAUDE_CONFIG_DIR",)
-# Personal subscription plans: the CLI fetches server-managed settings only for team and
-# enterprise plans, API keys and unknown plans.
-PERSONAL_PLANS = ("claude_max", "claude_pro")
+# What ``claude auth status --json`` must report: a personal claude.ai subscription signed in
+# directly, for which the CLI fetches no server-managed settings (it does for team and
+# enterprise plans, unknown plans, API keys and profile or gateway sign-in).
+PERSONAL_SIGN_IN = {"authMethod": ("claude.ai",), "apiProvider": ("firstParty",),
+                    "subscriptionType": ("max", "pro")}
 
 
 def environment_digest(env: Mapping[str, str]) -> dict[str, Any]:
@@ -292,19 +302,31 @@ def managed_settings() -> list[str]:
     return [str(path) for path in paths if path.exists()]
 
 
-def claude_plan() -> str | None:
-    """The signed-in account's plan as Claude Code recorded it (``claude_max``, ...),
-    or None when it cannot be read."""
+def claude_state_file() -> Path:
+    """The state file Claude Code reads: ``.config.json`` in its configuration directory
+    when that exists, else ``.claude.json`` in ``CLAUDE_CONFIG_DIR`` or the home folder."""
+    legacy = claude_config_dir() / ".config.json"
+    if legacy.exists():
+        return legacy
     if "CLAUDE_CONFIG_DIR" in os.environ:
-        state = claude_config_dir() / ".claude.json"
-    else:
-        state = Path.home() / ".claude.json"
-    try:
-        account = json.loads(state.read_text()).get("oauthAccount") or {}
-    except (OSError, ValueError, AttributeError):
-        return None
-    plan = account.get("organizationType") if isinstance(account, Mapping) else None
-    return plan if isinstance(plan, str) else None
+        return claude_config_dir() / ".claude.json"
+    return Path.home() / ".claude.json"
+
+
+def sign_in_problems(status: Any, state: Any) -> list[str]:
+    """Why a sign-in may receive server-managed settings: ``status`` is the parsed
+    ``claude auth status --json``, ``state`` the parsed state file."""
+    if not isinstance(status, Mapping):
+        return ["the CLI's sign-in status is not a JSON object"]
+    problems = [f"{key} is {status.get(key)!r}, not one of {allowed}"
+                for key, allowed in PERSONAL_SIGN_IN.items() if status.get(key) not in allowed]
+    if status.get("loggedIn") is not True:
+        problems.append("the CLI is not signed in")
+    if not isinstance(state, Mapping):
+        problems.append("the CLI's state file is not a JSON object")
+    elif state.get("primaryApiKey"):
+        problems.append("the CLI has a stored API key")
+    return problems
 
 
 def _first_line(result: subprocess.CompletedProcess[str]) -> str:
@@ -530,7 +552,8 @@ def summarize_claude(events: Sequence[Mapping[str, Any]], *, cli_version: str, m
             tool += sum(block.get("type") in CLAUDE_TOOL_BLOCKS for block in blocks)
             unrecognized += sum(block.get("type") not in CLAUDE_TOOL_BLOCKS | CLAUDE_TEXT_BLOCKS
                                 for block in blocks)
-            unrecognized += int(not isinstance(content, list) or len(blocks) != len(content))
+            unrecognized += int(not isinstance(content, list) or not content
+                                or len(blocks) != len(content))
         elif kind == "result":
             usage = event.get("usage") if isinstance(event.get("usage"), Mapping) else {}
             error += bool(event.get("is_error")) or subtype not in (None, "success")
@@ -560,17 +583,47 @@ class ClaudeBackend:
     def __init__(self, binary: str | None = None):
         self.binary = binary or os.environ.get("CLAUDE_CLI_BIN", "claude")
 
+    def _claude_code(self) -> tuple[str | None, str]:
+        """The Claude Code binary that answers and this binary's own version line: the
+        binary itself, or the ``claude`` on the path when it is a launcher."""
+        own = _first_line(_run([self.binary, "--version"], timeout_s=60))
+        if "Claude Code" in own:
+            return self.binary, own
+        return shutil.which("claude"), own
+
     def version(self) -> str:
         """The Claude Code version that answers. When ``CLAUDE_CLI_BIN`` is a launcher
         rather than Claude Code itself, the version is that of the ``claude`` on the
         path, which the launcher runs, plus a hash of the launcher's own version line."""
-        own = _first_line(_run([self.binary, "--version"], timeout_s=60))
-        if "Claude Code" in own:
+        code, own = self._claude_code()
+        if code == self.binary:
             return own
-        code = "Claude Code not on the path"
-        if shutil.which("claude"):
-            code = _first_line(_run(["claude", "--version"], timeout_s=60))
-        return f"{code}; launcher {sha256_text(own)[:12]}"
+        line = _first_line(_run([code, "--version"], timeout_s=60)) if code else (
+            "Claude Code not on the path")
+        return f"{line}; launcher {sha256_text(own)[:12]}"
+
+    def sign_in(self, env: Mapping[str, str]) -> dict[str, Any]:
+        """The sign-in facts the CLI reports (``claude auth status --json``, run with the
+        call's environment), refused unless they are a personal subscription."""
+        code, _ = self._claude_code()
+        if code is None:
+            raise BackendError("Claude Code is not on the path", called=False)
+        with tempfile.TemporaryDirectory(prefix="memo-") as name:
+            result = _run([code, "auth", "status", "--json"], env=env, cwd=Path(name),
+                          timeout_s=60)
+        try:
+            status = json.loads(result.stdout)
+        except ValueError:
+            status = None
+        try:
+            state = json.loads(claude_state_file().read_text())
+        except (OSError, ValueError):
+            state = None
+        problems = sign_in_problems(status, state)
+        if problems:
+            raise BackendError("the sign-in may receive server-managed settings: "
+                               + "; ".join(problems), called=False)
+        return {key: status[key] for key in PERSONAL_SIGN_IN}
 
     def fingerprint(self, model: str, effort: str,
                     max_output_tokens: int | None = None) -> dict[str, str]:
@@ -586,10 +639,6 @@ class ClaudeBackend:
         if managed:
             raise BackendError(f"managed Claude Code settings can add hooks or context "
                                f"that no flag removes: {managed}", called=False)
-        plan = claude_plan()
-        if plan not in PERSONAL_PLANS:
-            raise BackendError(f"the signed-in plan ({plan}) may receive server-managed "
-                               f"settings; memo calls need a personal plan", called=False)
         command = [self.binary, *CLAUDE_FLAGS, "--model", request.model,
                    "--effort", request.effort, "--system-prompt", request.system_prompt]
         fixed = dict(CLAUDE_SETTINGS_ENV)
@@ -598,8 +647,9 @@ class ClaudeBackend:
         env = {name: os.environ[name] for name in (*PROCESS_ENV, *NETWORK_ENV, *CLAUDE_AUTH_ENV)
                if name in os.environ}
         env.update(fixed)
+        sign_in = self.sign_in(env)
         settings = {"flags": list(CLAUDE_FLAGS), "system_prompt": "replaced",
-                    "environment": fixed, "managed_settings": managed, "plan": plan,
+                    "environment": fixed, "managed_settings": managed, "sign_in": sign_in,
                     **environment_digest({k: v for k, v in env.items()
                                           if k not in PROCESS_ENV})}
         return command, env, settings

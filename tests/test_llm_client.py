@@ -15,6 +15,10 @@ import pytest
 
 from llm import client
 
+SIGN_IN = client.ClaudeBackend.sign_in
+PERSONAL = {"loggedIn": True, "authMethod": "claude.ai", "apiProvider": "firstParty",
+            "subscriptionType": "max", "email": "someone@example.com", "orgName": "Someone"}
+
 FEATURES = """\
 apps                                     stable             true
 code_mode                                under development  false
@@ -57,7 +61,8 @@ def personal_plan(monkeypatch, tmp_path: Path) -> None:
     """Claude calls here run as if signed in to a personal plan with no managed settings."""
     monkeypatch.setattr(client, "MANAGED_SETTINGS", ())
     monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path / "claude-config"))
-    monkeypatch.setattr(client, "claude_plan", lambda: "claude_max")
+    monkeypatch.setattr(client.ClaudeBackend, "sign_in", lambda self, env: {
+        key: PERSONAL[key] for key in client.PERSONAL_SIGN_IN})
 
 
 @pytest.fixture
@@ -213,6 +218,10 @@ def test_claude_call_has_no_tools_and_replaces_the_system_prompt(monkeypatch) ->
     assert command[command.index("--effort") + 1] == "high"
     assert command[command.index("--model") + 1] == "claude-opus-5-5"
     assert env["CLAUDE_CODE_DISABLE_CLAUDE_MDS"] == "1"
+    # no requests beyond those a call's token bound counts
+    assert all(env[name] == "1" for name in ("DISABLE_COMPACT", "DISABLE_AUTO_COMPACT",
+                                              "CLAUDE_CODE_NO_MODEL_FALLBACK",
+                                              "CLAUDE_CODE_DISABLE_NONSTREAMING_FALLBACK"))
     assert "PACKET" not in command  # the packet goes on standard input
 
 
@@ -251,24 +260,71 @@ def test_managed_settings_stop_a_claude_call_before_it_runs(monkeypatch, tmp_pat
         backend.prepare(request)
 
 
-@pytest.mark.parametrize("plan", ["claude_team", "claude_enterprise", None])
-def test_a_plan_that_may_receive_server_managed_settings_is_refused(monkeypatch, tmp_path,
-                                                                    plan) -> None:
-    monkeypatch.undo()
-    monkeypatch.setattr(client, "MANAGED_SETTINGS", ())
-    config = tmp_path / "config"
-    config.mkdir()
-    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(config))
-    if plan:
-        (config / ".claude.json").write_text(json.dumps({"oauthAccount": {
-            "organizationType": plan}}))
+def sign_in_run(status: object, seen: list):
+    def run(command, **kwargs):
+        if command[-1] == "--version":
+            return SimpleNamespace(returncode=0, stdout="2.1.9 (Claude Code)\n", stderr="")
+        seen.append((command, kwargs))
+        stdout = status if isinstance(status, str) else json.dumps(status)
+        return SimpleNamespace(returncode=0, stdout=stdout, stderr="")
+    return run
+
+
+@pytest.mark.parametrize("status", [
+    {**PERSONAL, "subscriptionType": "team"}, {**PERSONAL, "subscriptionType": "enterprise"},
+    {**PERSONAL, "subscriptionType": None}, {**PERSONAL, "authMethod": "api_key"},
+    {**PERSONAL, "apiProvider": "bedrock"}, {**PERSONAL, "loggedIn": False},
+    {key: value for key, value in PERSONAL.items() if key != "subscriptionType"},
+    "not json", [PERSONAL]])
+def test_a_sign_in_that_may_receive_server_managed_settings_is_refused(monkeypatch, tmp_path,
+                                                                       status) -> None:
+    monkeypatch.setattr(client.ClaudeBackend, "sign_in", SIGN_IN)
+    seen: list = []
+    monkeypatch.setattr(client, "_run", sign_in_run(status, seen))
+    (tmp_path / "claude-config").mkdir()
+    (tmp_path / "claude-config" / ".claude.json").write_text("{}")
     with pytest.raises(client.BackendError) as raised:
-        client.ClaudeBackend(binary="claude-cli").prepare(
+        client.ClaudeBackend(binary="claude").prepare(
             client.Request("claude", "claude-opus-5-5", "high", "S", "P"))
     assert raised.value.called is False
-    (config / ".claude.json").write_text(json.dumps({"oauthAccount": {
-        "organizationType": "claude_max"}}))
-    assert client.claude_plan() == "claude_max"
+    assert seen and seen[0][0][1:] == ["auth", "status", "--json"]
+
+
+def test_a_personal_sign_in_is_recorded_without_the_account(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(client.ClaudeBackend, "sign_in", SIGN_IN)
+    seen: list = []
+    monkeypatch.setattr(client, "_run", sign_in_run(PERSONAL, seen))
+    (tmp_path / "claude-config").mkdir()
+    (tmp_path / "claude-config" / ".claude.json").write_text("{}")
+    backend = client.ClaudeBackend(binary="claude")
+    _, env, settings = backend.prepare(client.Request("claude", "m", "high", "S", "P"))
+    assert settings["sign_in"] == {"authMethod": "claude.ai", "apiProvider": "firstParty",
+                                   "subscriptionType": "max"}
+    assert "example.com" not in json.dumps(settings) and "Someone" not in json.dumps(settings)
+    assert seen[0][1]["env"] == env  # the same environment as the call
+
+
+def test_a_stored_api_key_is_refused_in_the_state_file_the_cli_reads(monkeypatch,
+                                                                     tmp_path) -> None:
+    monkeypatch.setattr(client.ClaudeBackend, "sign_in", SIGN_IN)
+    monkeypatch.setattr(client, "_run", sign_in_run(PERSONAL, []))
+    config = tmp_path / "claude-config"
+    config.mkdir()
+    (config / ".claude.json").write_text("{}")
+    request = client.Request("claude", "m", "high", "S", "P")
+    backend = client.ClaudeBackend(binary="claude")
+    backend.prepare(request)
+    (config / ".config.json").write_text(json.dumps({"primaryApiKey": "sk-test"}))
+    assert client.claude_state_file() == config / ".config.json"  # read in preference
+    with pytest.raises(client.BackendError, match="stored API key"):
+        backend.prepare(request)
+    (config / ".config.json").unlink()
+    (config / ".claude.json").write_text(json.dumps({"primaryApiKey": "sk-test"}))
+    with pytest.raises(client.BackendError, match="stored API key"):
+        backend.prepare(request)
+    monkeypatch.delenv("CLAUDE_CONFIG_DIR")
+    monkeypatch.setenv("HOME", str(tmp_path))
+    assert client.claude_state_file() == tmp_path / ".claude.json"
 
 
 @pytest.mark.parametrize("value", ["", "relative/config"])
@@ -345,6 +401,7 @@ def test_hook_events_fail_a_claude_call(event) -> None:
       "message": {"content": [{"type": "text", "text": "Overloaded"}]}}],
     [{"type": "assistant", "error": "rate_limit",
       "message": {"content": [{"type": "text", "text": "x"}]}}],
+    [{"type": "assistant", "message": {"content": []}}],
     [{"type": "assistant", "message": {"content": None}}],
     [{"type": "assistant", "message": {"content": ""}}],
     [{"type": "assistant", "message": {"content": {}}}],
@@ -376,7 +433,8 @@ def test_top_level_codex_failures_and_unknown_events_fail_the_call(extra) -> Non
 
 def test_claude_version_names_claude_code_and_hashes_a_launcher(monkeypatch) -> None:
     def run(command, **_kwargs):
-        line = "2.1.9 (Claude Code)" if command[0] == "claude" else "some-launcher 0.3"
+        line = "2.1.9 (Claude Code)" if Path(command[0]).name == "claude" else (
+            "some-launcher 0.3")
         return SimpleNamespace(returncode=0, stdout=line + "\n", stderr="")
     monkeypatch.setattr(client, "_run", run)
     monkeypatch.setattr(client.shutil, "which", lambda name: "/bin/" + name)
