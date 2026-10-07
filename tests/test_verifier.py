@@ -104,3 +104,34 @@ def test_memo_report_counts_claim_errors_and_unmatched_tokens() -> None:
     assert report["n_claims"] == 2 and report["n_claim_errors"] == 1
     assert report["claim_errors"][0]["status"] == "wrong_value"
     assert report["has_unmatched_token"]  # the memo's "41" appears nowhere in the packet
+
+
+@pytest.mark.parametrize("claimed,actual", [
+    ("1" + "0" * 400, 1),          # parses to infinity: once matched anything by tolerance
+    ("1e400", 1),
+    (10 ** 400, 1.0),              # a native integer too large for a float
+    (float("inf"), 1.0),
+    ("inf", 1.0),
+    ("1e-3", 0.002),
+    (7, 7.6),                      # an integer claim is written to no decimal places
+])
+def test_numbers_that_do_not_state_the_value_fail(claimed, actual) -> None:
+    assert not value_matches(claimed, actual)
+
+
+@pytest.mark.parametrize("claimed,actual", [
+    (1e-08, 1e-08),                # native scientific notation
+    ("1e-08", 1e-08),
+    ("1.5E-8", 1.5e-08),
+    (2.5e3, 2500),
+    (7, 7.4),                      # rounds to what the claim writes, like "7"
+    (89999, 89999),
+    (10 ** 400, 10 ** 400),        # exact integers stay exact
+])
+def test_native_and_scientific_numbers_are_compared_by_value(claimed, actual) -> None:
+    assert value_matches(claimed, actual)
+
+
+def test_a_huge_number_claim_is_a_wrong_value_not_a_match() -> None:
+    assert check_claim(claim("context.accounts_on_device_30d", "1" + "0" * 400),
+                       PACKET).status == "wrong_value"

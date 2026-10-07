@@ -25,7 +25,7 @@ from typing import Any
 from llm.eval import tokens
 
 PATH_PART = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)((?:\[\d+\])*)")
-NUMBER = re.compile(r"[-+]?\d+(?:\.\d+)?")
+NUMBER = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?")
 TRUE = {"1", "true", "yes"}
 FALSE = {"0", "false", "no"}
 MISSING = object()
@@ -47,12 +47,44 @@ def resolve(packet: Mapping[str, Any], path: str) -> Any:
 
 
 def _number(text: str) -> tuple[float, int] | None:
-    """A claimed number and its decimal places ('$1,234.50' -> (1234.5, 2))."""
+    """A claimed number and the decimal places it is written to ('$1,234.50' ->
+    (1234.5, 2), '1.5e-8' -> (1.5e-08, 9)); None for anything else, infinity and
+    numbers too large for a float included."""
     cleaned = text.strip().replace(",", "").replace("$", "").rstrip("%").strip()
     if not NUMBER.fullmatch(cleaned):
         return None
-    places = len(cleaned.split(".")[1]) if "." in cleaned else 0
-    return float(cleaned), places
+    mantissa, _, exponent = cleaned.lower().partition("e")
+    decimals = len(mantissa.split(".")[1]) if "." in mantissa else 0
+    value = float(cleaned)
+    if not math.isfinite(value):
+        return None
+    return value, max(0, decimals - int(exponent or 0))
+
+
+def _as_float(value: int | float) -> float | None:
+    try:
+        number = float(value)
+    except OverflowError:
+        return None
+    return number if math.isfinite(number) else None
+
+
+def _numbers_match(claimed: Any, actual: int | float) -> bool:
+    if isinstance(claimed, int) and not isinstance(claimed, bool) and isinstance(actual, int):
+        return claimed == actual
+    exact = _as_float(actual)
+    if exact is None:
+        return False
+    if isinstance(claimed, bool):
+        return exact == float(claimed)
+    text = repr(claimed) if isinstance(claimed, float) else str(claimed).strip()
+    parsed = _number(text)
+    if parsed is None:
+        lowered = text.lower()
+        return (lowered in TRUE and actual == 1) or (lowered in FALSE and actual == 0)
+    value, places = parsed
+    return (abs(round(exact, places) - value) < 10 ** -(places + 6)
+            or abs(exact - value) <= 1e-9 * max(1.0, abs(value)))
 
 
 def value_matches(claimed: Any, actual: Any) -> bool:
@@ -63,27 +95,16 @@ def value_matches(claimed: Any, actual: Any) -> bool:
         if isinstance(claimed, str):
             try:
                 claimed = json.loads(claimed)
-            except json.JSONDecodeError:
+            except (json.JSONDecodeError, RecursionError):
                 return False
         return claimed == actual
     if claimed is None or isinstance(claimed, dict | list):
         return False
-    text = str(claimed).strip()
     if isinstance(actual, bool):
-        return text.lower() in (TRUE if actual else FALSE)
+        return str(claimed).strip().lower() in (TRUE if actual else FALSE)
     if isinstance(actual, int | float):
-        if isinstance(claimed, bool):
-            return float(actual) == float(claimed)
-        parsed = _number(text)
-        if parsed is None:
-            lowered = text.lower()
-            return (lowered in TRUE and actual == 1) or (lowered in FALSE and actual == 0)
-        value, places = parsed
-        if not math.isfinite(float(actual)):
-            return False
-        return (abs(round(float(actual), places) - value) < 10 ** -(places + 6)
-                or abs(float(actual) - value) <= 1e-9 * max(1.0, abs(value)))
-    return text.casefold() == str(actual).strip().casefold()
+        return _numbers_match(claimed, actual)
+    return str(claimed).strip().casefold() == str(actual).strip().casefold()
 
 
 def recompute(operation: str, values: Sequence[Any]) -> float | None:

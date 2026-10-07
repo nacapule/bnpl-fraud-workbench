@@ -147,6 +147,10 @@ def validate(memo: Any) -> list[str]:
     return problems
 
 
+def _not_json(name: str) -> Any:
+    raise ValueError(f"{name} is not a JSON value")
+
+
 def parse(text: str) -> tuple[dict[str, Any] | None, list[str]]:
     """The memo in a response, or the problems that make it a failure.
 
@@ -158,8 +162,10 @@ def parse(text: str) -> tuple[dict[str, Any] | None, list[str]]:
     if fenced:
         body = fenced.group(1).strip()
     try:
-        memo = json.loads(body)
+        memo = json.loads(body, parse_constant=_not_json)
     except json.JSONDecodeError as error:
         return None, [f"not one JSON object: {error.msg} at {error.pos}"]
+    except (ValueError, RecursionError) as error:
+        return None, [f"not valid JSON: {error}"]
     problems = validate(memo)
     return (memo if not problems else None), problems

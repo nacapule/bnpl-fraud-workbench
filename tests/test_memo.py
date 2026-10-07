@@ -119,3 +119,14 @@ def test_shuffled_probe_reorders_facts_without_changing_them() -> None:
     shuffled = json.loads(memo.user_prompt(packet, shuffle_seed=3))
     assert shuffled["context"] == packet["context"]
     assert list(shuffled["context"]) != list(packet["context"])
+
+
+@pytest.mark.parametrize("text", [
+    json.dumps(VALID).replace('"12"', "NaN"),
+    json.dumps(VALID).replace('"12"', "Infinity"),
+    json.dumps(VALID).replace('"12"', "-Infinity"),
+    "[" * 100000 + "]" * 100000,
+])
+def test_non_standard_or_pathological_json_is_a_failure(text: str) -> None:
+    parsed, problems = memo.parse(text)
+    assert parsed is None and problems
