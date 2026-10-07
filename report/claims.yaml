@@ -1,8 +1,9 @@
 # Every directional sentence in the README and the operating review, with the
 # paired result and the test behind each comparison it makes
 # (report/claims.py). A claim fails when its sentence leaves the rendered
-# document, a clause names a policy, family or capacity level its check does
-# not test (names in report/lint.yaml), or a check stops holding.
+# document, a clause makes more than one comparison, the sentence names a
+# policy, metric, family or capacity level that no check covering it tests
+# (names in report/lint.yaml), or a check stops holding.
 #
 # - id: short-name
 #   document: README.md                       # rendered document path
@@ -20,4 +21,6 @@
 #       # keys: [only_first.key, only_second.key]   # mcnemar instead of key
 #       # alpha: 0.05                         # optional
 #       # margin: 50000                       # equivalent only, in the metric's unit
+#   # context: ["which ranks the queue with gradient boosting"]   # asides: named,
+#   #                                         # not compared
 claims: []

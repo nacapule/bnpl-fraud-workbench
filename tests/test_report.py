@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+import yaml
 
 from core.results import Interval, Metric, SeedSpread, StageResult, assemble_summary, metric
 from report import claims as claims_module
@@ -64,6 +65,12 @@ def summary() -> dict:
         "replay.mean_first": Metric(value=6.0, unit="count", population="cases", window="test"),
         "replay.mean_second": Metric(value=0.9, unit="count", population="cases",
                                      window="test"),
+        "replay.seed_mean_first": Metric(value=6, unit="count", population="cases",
+                                         window="test", seeds=SeedSpread(
+                                             {seed: 6 for seed in range(1, 11)})),
+        "replay.seed_mean_second": Metric(value=2, unit="count", population="cases",
+                                          window="test", seeds=SeedSpread(
+                                              {seed: 2 for seed in range(1, 11)})),
     }
     stage = StageResult(
         stage="replay",
@@ -263,11 +270,13 @@ def test_numbers_typed_into_a_template_are_flagged() -> None:
         "[^note]: Seed 416 only.\n"
         "Clause §84% and R01.5 are not identifiers.\n"
         "Nor are R84%, Q84%, FP-84%, P3% or CASE-84%.\n"
+        "Nor §84(a)%, §6.3(a)% or §6.3(a)(b)%, though §6.3(a)(b) is.\n"
     )
     findings = lint.number_findings("README.md", template)
     assert [(finding.line, finding.text) for finding in findings] == [
         (1, "12"), (1, "10"), (3, "3"), (4, "42"), (4, "7"), (5, "84"), (6, "416"),
         (7, "84"), (7, "01.5"), (8, "84"), (8, "84"), (8, "84"), (8, "3"), (8, "84"),
+        (9, "84"), (9, "6.3"), (9, "6.3"),
     ]
 
 
@@ -329,6 +338,30 @@ def test_code_blocks_and_headings_do_not_join_sentences() -> None:
         (7, "continued here."),
         (8, "Numbered item"),
     ]
+
+
+@pytest.mark.parametrize(("text", "expected"), [
+    (">     Hybrid earned more than incumbent rules.\n", []),  # code in a quote
+    ("- Item.\n\n        Hybrid earned more than incumbent rules.\n", ["Item."]),  # in a list
+    ("- Item.\n  - Nested.\n\n          Hybrid earned more.\n", ["Item.", "Nested."]),
+    ("- Item.\n\n  ```\n  Hybrid earned more.\n  ```\n", ["Item."]),  # fenced, in a list
+    ("> ```\n> Hybrid earned more.\n> ```\n", []),  # fenced, in a quote
+    ("# Results\n    Hybrid earned more.\n", ["Results"]),  # code after a heading
+    ("- Item.\n\n  Hybrid earned more than incumbent rules.\n",  # a list paragraph
+     ["Item.", "Hybrid earned more than incumbent rules."]),
+    ("> Hybrid earned more\n> than incumbent rules.\n",  # one quoted paragraph
+     ["Hybrid earned more than incumbent rules."]),
+    ("> Hybrid earned more\nthan incumbent rules.\n",  # continued without the mark
+     ["Hybrid earned more than incumbent rules."]),
+    ("**Claim.** Next sentence.\n", ["Claim.", "Next sentence."]),
+    ("Hybrid [earned more](x.md) than `rules`.\n", ["Hybrid earned more than rules."]),
+    ("* Hybrid earned more\n* than rules\n", ["Hybrid earned more", "than rules"]),
+    ("Results\n=======\nHybrid earned more.\n", ["Results", "Hybrid earned more."]),
+    ("The net_contribution_cents key.\n", ["The net_contribution_cents key."]),
+])
+def test_sentences_are_what_markdown_shows(text: str, expected: list[str]) -> None:
+    """Code inside quotes and lists is hidden; quotes, emphasis and links read as text."""
+    assert [sentence for _, sentence in lint.sentences(text)] == expected
 
 
 def test_published_documents_need_templates(tmp_path: Path) -> None:
@@ -417,14 +450,41 @@ def test_interval_and_paired_case_claims() -> None:
     assert "whole number of cases" in claims_module.support(means, results)
 
 
+@pytest.mark.parametrize("keys", [
+    ("replay.seed_mean_first", "replay.seed_mean_second"),  # means over seeds, whole numbers
+    ("replay.mean_first", "replay.only_second"),  # 6.0 is a mean, not a count of cases
+])
+def test_mcnemar_needs_counts_of_cases_not_means(keys: tuple[str, str]) -> None:
+    """Six against two on each of ten seeds is 60 against 20 cases, not six against two."""
+    no_difference = check(test="mcnemar", key=None, keys=keys,
+                          direction="no_detected_difference")
+    assert "whole number of cases" in claims_module.support(no_difference, summary())
+
+
 def claim(sentence: str = "The hybrid policy earned more than the incumbent rules.",
           **checks) -> claims_module.Claim:
     return claims_module.Claim(id="hybrid-earns-more", document="README.md", sentence=sentence,
                                checks=(check(**checks),))
 
 
-NAMES = {"hybrid": ["hybrid"], "incumbent": ["incumbent rules"],
-         "approve_all": ["approve-all"]}
+VOCABULARY = claims_module.Vocabulary.from_config({
+    "names": {
+        "policies": {"hybrid": ["hybrid"], "incumbent": ["incumbent rules"],
+                     "approve_all": ["approve-all"], "boosting": ["gradient boosting"],
+                     "expected_loss": ["expected loss"]},
+        "metrics": {"net": ["earned", "net contribution"], "loss": ["loss", "lost"]},
+        "families": {"surge": ["acquisition surge"]},
+    },
+    "references": ["incumbent", "approve_all"],
+    "directional_words": ["more", "less", "lower", "higher"],
+})
+
+
+def problems_of(sentence: str, *checks: dict, context: tuple[str, ...] = ()) -> list[str]:
+    claim_ = claims_module.Claim(id="c", document="README.md", sentence=sentence,
+                                 checks=tuple(check(**fields) for fields in checks),
+                                 context=context)
+    return claims_module.name_problems(claim_, VOCABULARY)
 
 
 def test_every_policy_named_in_a_claim_needs_a_check_against_it() -> None:
@@ -435,16 +495,110 @@ def test_every_policy_named_in_a_claim_needs_a_check_against_it() -> None:
     one = claims_module.Claim(id="c", document="README.md", sentence=sentence,
                               checks=(check(clause="The hybrid policy earned more than the "
                                             "incumbent rules"),))
-    problems = claims_module.check_claims([one], results, lambda _: document, NAMES)
+    problems = claims_module.check_claims([one], results, lambda _: document, VOCABULARY)
     assert problems == ["c: 'approve-all' (approve_all) is in no check's clause that tests it"]
     wrong = claims_module.Claim(id="c", document="README.md", sentence=sentence,
                                 checks=(check(clause=sentence[:-1]),))
     assert "c: check 1: its clause names approve_all, which its key does not test" in \
-        claims_module.check_claims([wrong], results, lambda _: document, NAMES)
+        claims_module.check_claims([wrong], results, lambda _: document, VOCABULARY)
     off = claims_module.Claim(id="c", document="README.md", sentence=sentence,
                               checks=(check(clause="earned less"),))
     assert "c: check 1: its clause is not in the sentence" in claims_module.check_claims(
-        [off], results, lambda _: document, NAMES)
+        [off], results, lambda _: document, VOCABULARY)
+
+
+def test_each_comparison_in_a_sentence_needs_its_own_check() -> None:
+    """An earnings result cannot stand behind a claim about loss in the same sentence."""
+    sentence = "Hybrid earned more than incumbent rules and had lower loss than incumbent rules."
+    whole = {"clause": sentence[:-1]}
+    assert problems_of(sentence, whole) == [
+        "check 1: its clause makes 2 comparisons (more, lower); give each its own check",
+        "check 1: its clause names loss, which its key does not test",
+        "'loss' (loss) is in no check's clause that tests it",
+    ]
+    earned = {"clause": "Hybrid earned more than incumbent rules"}
+    loss = {"clause": "had lower loss than incumbent rules", "direction": "negative",
+            "key": "replay.loss.vs_incumbent.hybrid"}
+    assert problems_of(sentence, earned, loss) == []
+    assert problems_of(sentence, earned, {**loss, "key": "replay.net.vs_incumbent.hybrid"}) == [
+        "check 2: its clause names loss, which its key does not test",
+        "'loss' (loss) is in no check's clause that tests it",
+    ]
+
+
+def test_a_check_tests_only_what_the_sentence_names() -> None:
+    """The policy, reference and metric of each check's key must be in the sentence."""
+    sentence = "Hybrid earned more and lost less than incumbent rules."
+    earned = {"clause": "Hybrid earned more", "key": "replay.net.vs_approve_all.hybrid"}
+    lost = {"clause": "lost less than incumbent rules", "direction": "negative",
+            "key": "replay.loss.vs_incumbent.hybrid"}
+    assert problems_of(sentence, earned, lost) == [
+        "check 1: its key tests approve_all, which the sentence does not name"]
+    assert problems_of(sentence, {**earned, "key": "replay.net.vs_incumbent.hybrid"}, lost) == []
+    other = {**lost, "key": "replay.loss.vs_incumbent.boosting"}
+    assert problems_of(sentence, {**earned, "key": "replay.net.vs_incumbent.hybrid"}, other) == [
+        "check 2: its key tests boosting, which the sentence does not name"]
+
+
+def test_a_policy_mentioned_in_passing_is_declared_as_context() -> None:
+    sentence = ("Hybrid, which ranks the queue with gradient boosting, earned more than "
+                "incumbent rules.")
+    clause = {"clause": sentence[:-1]}
+    aside = "which ranks the queue with gradient boosting"
+    assert problems_of(sentence, clause) == [
+        "check 1: its clause names boosting, which its key does not test",
+        "'gradient boosting' (boosting) is in no check's clause that tests it",
+    ]
+    assert problems_of(sentence, clause, context=(aside,)) == []
+    # An aside names no comparison and no reference, and is set off from the sentence.
+    compared = "Hybrid earned more than incumbent rules and gradient boosting."
+    assert problems_of(compared, {"clause": compared[:-1]}, context=("and gradient boosting",)) \
+        [0].startswith("context 'and gradient boosting' is not an aside")
+    assert problems_of(compared, {"clause": compared[:-1]}, context=("gradient boosting",)) \
+        [0].startswith("context 'gradient boosting' is not an aside")
+    loose = "Hybrid, earning more than gradient boosting, earned more than incumbent rules."
+    assert "context 'earning more than gradient boosting' makes a comparison (more)" in \
+        problems_of(loose, {"clause": loose[:-1]},
+                    context=("earning more than gradient boosting",))
+    reference = "Hybrid, unlike incumbent rules, earned more than approve-all."
+    assert "context 'unlike incumbent rules' names incumbent, which comparisons are against" in \
+        problems_of(reference, {"clause": reference[:-1],
+                                "key": "replay.net.vs_approve_all.hybrid"},
+                    context=("unlike incumbent rules",))
+    assert problems_of(sentence, clause, context=("not here",)) == [
+        "context 'not here' is not in the sentence",
+        "check 1: its clause names boosting, which its key does not test",
+        "'gradient boosting' (boosting) is in no check's clause that tests it",
+    ]
+
+
+def test_names_match_the_longest_phrase() -> None:
+    """"Expected loss" is a policy; "lost" alone is the loss metric."""
+    text = "The expected loss policy lost less in the acquisition surge."
+    assert [name for _, name in claims_module.mentions(VOCABULARY.names, text)] == [
+        "expected_loss", "loss", "surge"]
+
+
+def test_the_vocabulary_is_unambiguous() -> None:
+    with pytest.raises(ValueError, match="names both"):
+        claims_module.Vocabulary.from_config(
+            {"names": {"policies": {"a": ["x"]}, "metrics": {"b": ["X"]}}})
+    with pytest.raises(ValueError, match="listed twice"):
+        claims_module.Vocabulary.from_config(
+            {"names": {"policies": {"a": ["x"]}, "metrics": {"a": ["y"]}}})
+    with pytest.raises(ValueError, match="references must be policies"):
+        claims_module.Vocabulary.from_config(
+            {"names": {"metrics": {"a": ["y"]}}, "references": ["a"]})
+
+
+def test_the_documented_claim_example_passes_the_repository_vocabulary() -> None:
+    text = (REPO / "report" / "claims.yaml").read_text()
+    example = "\n".join(line[2:] for line in text.split("\n") if line.startswith("# ")
+                        and not line.startswith("# Every") and "#   #" not in line)
+    example = example[example.index("- id:"):]
+    [parsed] = claims_module.parse_claims({"claims": yaml.safe_load(example)})
+    vocabulary = claims_module.Vocabulary.from_config(lint.load_config())
+    assert claims_module.name_problems(parsed, vocabulary) == []
 
 
 def test_claims_fail_when_their_sentence_leaves_the_visible_document() -> None:

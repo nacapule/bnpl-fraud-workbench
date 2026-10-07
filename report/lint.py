@@ -44,13 +44,15 @@ EXEMPTION_BASELINE = frozenset({
     "cases/CASE-05-traveler-cleared.md",
 })
 END = r"(?![\d%]|[.,]\d)"  # an identifier is not followed by a digit, a percent or a decimal
+# Each identifier is matched whole (an atomic group) before the boundary is
+# checked, so a qualifier such as (a) cannot be dropped to exempt a prefix.
 IDENTIFIERS = (
-    rf"\bR\d{{2}}\b{END}",  # rule ids
-    rf"\bFP-\d+\b{END}",  # policy version
-    rf"§ ?\d+(?:\.\d+)*(?:\([a-z]\))*{END}",  # policy clauses
-    rf"\bP[0-3]\b{END}",  # queue priorities
-    rf"\bQ\d{{2}}\b{END}",  # SQL investigation queries
-    rf"\bCASE-\d{{2}}\b{END}",  # case files
+    rf"(?>\bR\d{{2}}\b){END}",  # rule ids
+    rf"(?>\bFP-\d+\b){END}",  # policy version
+    rf"(?>§ ?\d+(?:\.\d+)*(?:\([a-z]\))*){END}",  # policy clauses
+    rf"(?>\bP[0-3]\b){END}",  # queue priorities
+    rf"(?>\bQ\d{{2}}\b){END}",  # SQL investigation queries
+    rf"(?>\bCASE-\d{{2}}\b){END}",  # case files
 )
 FENCE = re.compile(r"^(```|~~~).*?^\1[^\n]*$", re.MULTILINE | re.DOTALL)
 INLINE_CODE = re.compile(r"`[^`\n]*`")
@@ -61,7 +63,19 @@ REFERENCE_TARGET = re.compile(r"^(\s*\[(?!\^)[^\]]+\]:)(\s*\S+.*)$", re.MULTILIN
 FOOTNOTE_MARKER = re.compile(r"\[\^[^\]\s]+\]")
 LIST_MARKER = re.compile(r"^(\s*)\d+[.)](?=\s)", re.MULTILINE)
 NUMBER = re.compile(r"\d[\d,.]*")
-LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s")
+LIST_ITEM = re.compile(r"^(\s*)(?:[-*+]|\d+[.)])(\s+)")
+QUOTE = re.compile(r"^ {0,3}> ?")
+FENCE_OPEN = re.compile(r"^(`{3,}|~{3,})")
+BREAK = re.compile(r"^ {0,3}(?:=+|-{2,}|\*{3,}|_{3,})\s*$")  # heading underline or rule
+INLINE = (  # Markdown that is not visible text, and what is shown instead
+    (re.compile(r"!\[([^\]]*)\]\([^)]*\)"), r"\1"),  # image: its alt text
+    (re.compile(r"\[([^\]]+)\]\([^)]*\)"), r"\1"),  # link: its text
+    (re.compile(r"\[([^\]]+)\]\[[^\]]*\]"), r"\1"),  # reference link: its text
+    (re.compile(r"\[\^[^\]\s]+\]"), ""),  # footnote marker
+    (re.compile(r"`([^`]*)`"), r"\1"),  # inline code: its content
+    (re.compile(r"</?[A-Za-z][^>\n]*>"), ""),  # inline HTML
+    (re.compile(r"(?<!\w)[*_]+|[*_]+(?!\w)"), ""),  # emphasis delimiters
+)
 BLOCK_START = re.compile(r"^\s*(?:#+|[-*+>]|\d+[.)])\s")
 LEAD = re.compile(r"^(?:#+|[-*+>]|\d+[.)])\s+")
 SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
@@ -89,7 +103,11 @@ def load_config(path: Path = CONFIG) -> dict[str, Any]:
         "directional": list(data.get("directional", [])),
         "directional_words": list(data.get("directional_words", [])),
         "allowed_sentences": list(data.get("allowed_sentences", [])),
-        "names": {str(key): list(value) for key, value in (data.get("names") or {}).items()},
+        "names": {
+            str(group): {str(name): list(phrases) for name, phrases in (entries or {}).items()}
+            for group, entries in (data.get("names") or {}).items()
+        },
+        "references": list(data.get("references", [])),
     }
 
 
@@ -121,32 +139,86 @@ def number_findings(name: str, template: str, allowed_phrases: Iterable[str] = (
     return findings
 
 
-def visible_lines(text: str) -> list[str]:
-    """Rendered Markdown's prose lines: comments, fenced and indented code, and table
-    rows become empty lines, so line numbers hold."""
-    text = FENCE.sub(_blank, COMMENT.sub(_blank, text))
-    out: list[str] = []
-    in_list = in_code = False
-    previous_blank = True
+def _indent(line: str) -> int:
+    expanded = line.replace("\t", "    ")
+    return len(expanded) - len(expanded.lstrip(" "))
+
+
+def visible_lines(text: str) -> list[tuple[int, str]]:
+    """Rendered Markdown's prose lines as (block-quote depth, text).
+
+    Comments, fenced code, indented code (four columns past the enclosing list
+    item's content, inside or outside block quotes), table rows, rules and
+    heading underlines become empty lines, so line numbers hold. Block-quote
+    marks are removed, and a quoted paragraph continued without its mark keeps
+    its depth, so a quoted paragraph reads as one.
+    """
+    text = COMMENT.sub(_blank, text)
+    out: list[tuple[int, str]] = []
+    # Per block-quote depth: after a blank line or a block's end; inside indented
+    # code; the open fence; the content columns of the open list items.
+    state: dict[int, dict[str, Any]] = {}
+    previous_depth, previous_prose = 0, False
     for line in text.split("\n"):
-        if not line.strip():
-            out.append("")
-            previous_blank = True
+        depth = 0
+        while QUOTE.match(line):
+            line = QUOTE.sub("", line, count=1)
+            depth += 1
+        stripped = line.strip()
+        if (depth < previous_depth and previous_prose and stripped
+                and not BLOCK_START.match(line) and not FENCE_OPEN.match(stripped)
+                and not BREAK.match(line) and not stripped.startswith("|")):
+            out.append((previous_depth, line))  # a lazy continuation of the quote
             continue
-        indented = line.startswith(("    ", "\t"))
-        if in_code and indented or (indented and previous_blank and not in_list):
-            in_code = True
-            out.append("")
-            previous_blank = False
+        for deeper in [key for key in state if key > depth]:
+            del state[deeper]
+        context = state.setdefault(
+            depth, {"blank": True, "code": False, "fence": None, "lists": []})
+        previous_depth, previous_prose = depth, False
+        if context["fence"]:
+            fence = context["fence"]
+            if stripped.startswith(fence) and set(stripped) == {fence[0]}:
+                context.update(fence=None, blank=True)
+            out.append((depth, ""))
             continue
-        in_code = False
-        if LIST_ITEM.match(line):
-            in_list = True
-        elif not indented:
-            in_list = False
-        out.append("" if line.lstrip().startswith("|") else line)
-        previous_blank = False
+        if not stripped:
+            context["blank"] = True
+            out.append((depth, ""))
+            continue
+        indent = _indent(line)
+        item = LIST_ITEM.match(line)
+        lists = context["lists"]
+        if context["blank"] or item:  # a new block belongs to the items it is indented under
+            while lists and lists[-1] > indent:
+                lists.pop()
+        threshold = (lists[-1] if lists else 0) + 4
+        if indent >= threshold and (context["code"] or context["blank"]):
+            context.update(code=True, blank=False)
+            out.append((depth, ""))
+            continue
+        context["code"] = False
+        if FENCE_OPEN.match(stripped):
+            context.update(fence=FENCE_OPEN.match(stripped).group(1), blank=False)
+            out.append((depth, ""))
+            continue
+        if BREAK.match(line) or stripped.startswith("|"):
+            context["blank"] = True
+            out.append((depth, ""))
+            continue
+        if item:
+            lists.append(len(item.group(0).replace("\t", "    ")))
+        # A heading ends its block: an indented line after it is code.
+        context["blank"] = stripped.startswith("#")
+        previous_prose = not context["blank"]
+        out.append((depth, line))
     return out
+
+
+def inline_text(line: str) -> str:
+    """A line's visible text: link and image text kept, markup removed."""
+    for pattern, replacement in INLINE:
+        line = pattern.sub(replacement, line)
+    return line
 
 
 def normalize(text: str) -> str:
@@ -163,20 +235,28 @@ def _protect(text: str) -> str:
 def sentences(text: str) -> list[tuple[int, str]]:
     """Visible prose sentences with their starting line.
 
-    A paragraph, a heading and each list item are separate blocks; sentences
+    Paragraphs, headings (each alone), list items and block quotes (lines of
+    one quoted paragraph joined) are separate blocks; within a block, sentences
     split at ``.``, ``!`` or ``?`` followed by space, except after common
-    abbreviations. List and heading marks are removed.
+    abbreviations. Markup is removed first (:func:`inline_text`), so emphasis
+    and links read as their text.
     """
     blocks: list[tuple[int, list[str]]] = []
-    for number, line in enumerate(visible_lines(text), start=1):
+    previous_depth = 0
+    for number, (depth, line) in enumerate(visible_lines(text), start=1):
+        marker = BLOCK_START.match(line)  # a list mark is not emphasis
+        line = line[:marker.end()] + inline_text(line[marker.end():]) if marker \
+            else inline_text(line)
         if not line.strip():
             blocks.append((number + 1, []))
-        elif BLOCK_START.match(line) or not blocks or not blocks[-1][1]:
+        elif (BLOCK_START.match(line) or not blocks or not blocks[-1][1]
+              or depth != previous_depth):
             blocks.append((number, [line]))
             if line.lstrip().startswith("#"):
                 blocks.append((number + 1, []))  # a heading stands alone
         else:
             blocks[-1][1].append(line)
+        previous_depth = depth
     out = []
     for start, lines in blocks:
         if not lines:

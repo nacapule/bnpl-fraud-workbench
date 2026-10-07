@@ -6,11 +6,25 @@ not listed). A claim names its document, the complete sentence as it appears
 in the rendered document's visible text, and its checks. Each check names the
 clause of the sentence it supports (an exact piece of it), a result and a
 test. Every comparative word must fall inside a check's clause (the lint),
-and the names in ``report/lint.yaml`` (policies, families, capacity levels)
-tie clauses to results: a name inside a clause must be part of that check's
-key, and every name in the sentence must fall inside the clause of a check
-whose key includes it. "More than the incumbent rules and approve-all" thus
-needs a check against each. The tests:
+and a clause holds at most one, so each comparison has its own check.
+
+The names in ``report/lint.yaml`` (policies, metrics, world families and
+capacity levels, each a result-key segment with the phrases documents use)
+tie clauses to results:
+
+* a name inside a check's clause must be part of that check's key, so "had
+  lower loss" cannot be supported by a net-contribution result;
+* every name in the sentence must be inside the clause of a check whose key
+  includes it, so "more than the incumbent rules and approve-all" needs a
+  check against each;
+* the policies and the metric a check's key tests must be named in the
+  sentence, so a check cannot test a policy the sentence does not mention.
+
+A policy mentioned without being compared ("Hybrid, which ranks the queue with
+gradient boosting, earned more ...") is declared in the claim's ``context``: a
+phrase of the sentence set off by commas, parentheses or dashes, holding no
+comparative word and no reference policy. Names inside it are not compared and
+count for none of the rules above. The tests:
 
 ``sign``
     a paired difference over seeds (a metric whose key has a ``vs_<reference>``
@@ -35,6 +49,7 @@ longer supported, so changed results cannot leave a stale sentence behind.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -90,18 +105,62 @@ class Claim:
     document: str
     sentence: str
     checks: tuple[Check, ...]
+    context: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not normalize(self.sentence):
             raise ValueError(f"claim {self.id}: the sentence is empty")
         if not self.checks:
             raise ValueError(f"claim {self.id}: needs at least one check")
+        if any(not isinstance(phrase, str) or not normalize(phrase) for phrase in self.context):
+            raise ValueError(f"claim {self.id}: a context phrase is empty")
+
+
+@dataclass(frozen=True)
+class Vocabulary:
+    """How documents name what results test: ``names``, ``references`` and the
+    comparative words of ``report/lint.yaml``."""
+
+    names: Mapping[str, tuple[str, ...]]  # result-key segment -> its phrases
+    must_name: frozenset[str]  # policies and metrics: named whenever a key tests them
+    references: frozenset[str]
+    comparatives: tuple[str, ...]
+
+    @classmethod
+    def from_config(cls, config: Mapping[str, Any]) -> Vocabulary:
+        groups = config.get("names") or {}
+        names: dict[str, tuple[str, ...]] = {}
+        owner: dict[str, str] = {}
+        for entries in groups.values():
+            for name, phrases in entries.items():
+                if name in names:
+                    raise ValueError(f"names: {name} is listed twice")
+                names[name] = tuple(phrases)
+                for phrase in phrases:
+                    key = normalize(phrase).lower()
+                    if key in owner:
+                        raise ValueError(f"names: {phrase!r} names both {owner[key]} and {name}")
+                    owner[key] = name
+        policies = set(groups.get("policies") or {})
+        references = frozenset(config.get("references") or ())
+        if not references <= policies:
+            raise ValueError(f"references must be policies: {sorted(references - policies)}")
+        return cls(names=names,
+                   must_name=frozenset(policies | set(groups.get("metrics") or {})),
+                   references=references,
+                   comparatives=tuple(config.get("directional_words") or ()))
+
+
+NO_VOCABULARY = Vocabulary(names={}, must_name=frozenset(), references=frozenset(),
+                           comparatives=())
 
 
 def parse_claims(data: Any) -> list[Claim]:
     claims = []
     for entry in (data or {}).get("claims") or []:
         entry = dict(entry)
+        if "context" in entry:
+            entry["context"] = tuple(entry["context"] or ())
         checks = []
         for item in entry.pop("checks", None) or []:
             item = dict(item)
@@ -166,8 +225,9 @@ def _mcnemar(check: Check, summary: Mapping[str, Any]) -> str | None:
     for key, item in zip(check.keys, (first, second), strict=True):
         if item.unit != "count" or not item.evaluated:
             return f"{key} must be an evaluated count"
-        if item.value < 0 or not float(item.value).is_integer():
-            return f"{key} must be a whole number of cases, got {item.value}"
+        # A count of cases is an int with no spread over seeds; a mean of counts is neither.
+        if type(item.value) is not int or item.value < 0 or item.seeds is not None:
+            return f"{key} must be a whole number of cases, not a mean, got {item.value!r}"
     only_first, only_second = int(first.value), int(second.value)
     p_value = mcnemar_exact(only_first, only_second)
     observed = f"{only_first} vs {only_second} discordant, p = {p_value:.4g}"
@@ -192,35 +252,88 @@ def key_names(check: Check) -> set[str]:
     return names
 
 
-def name_problems(claim: Claim, names: Mapping[str, Sequence[str]]) -> list[str]:
-    """Clauses that name what their check does not test, and names no check covers."""
-    sentence = normalize(claim.sentence)
+def mentions(names: Mapping[str, Sequence[str]], text: str) -> list[tuple[tuple[int, int], str]]:
+    """Where ``text`` names each name: whole words, case-insensitive, longest phrase first
+    (so "expected loss" is the policy, not the metric)."""
+    lookup = {normalize(phrase).lower(): name for name, phrases in names.items()
+              for phrase in phrases if normalize(phrase)}
+    if not lookup:
+        return []
+    pattern = re.compile(r"\b(" + "|".join(re.escape(phrase) for phrase in
+                                           sorted(lookup, key=len, reverse=True)) + r")\b",
+                         re.IGNORECASE)
+    return [(match.span(), lookup[normalize(match.group(0)).lower()])
+            for match in pattern.finditer(text)]
+
+
+OPENERS, CLOSERS = ",(—–;:", ",)—–;"
+CONNECTIVES = {"and", "or", "nor", "but", "than", "versus", "vs", "vs."}
+
+
+def _context_problems(phrase: str, sentence: str, start: int,
+                      vocabulary: Vocabulary) -> list[str]:
+    text = sentence[start:start + len(normalize(phrase))]
+    before, after = sentence[:start].rstrip(), sentence[start + len(text):].lstrip()
+    opened = text[0] in OPENERS or (before and before[-1] in OPENERS)
+    closed = text[-1] in CLOSERS or (after and after[0] in CLOSERS)
     problems = []
+    if not (opened and closed) or text.split()[0].lower() in CONNECTIVES:
+        problems.append(f"context {phrase!r} is not an aside set off by commas, parentheses "
+                        "or dashes")
+    if words := [text[a:b] for a, b in phrase_spans(vocabulary.comparatives, text)]:
+        problems.append(f"context {phrase!r} makes a comparison ({', '.join(words)})")
+    if references := sorted({name for _, name in mentions(vocabulary.names, text)}
+                            & vocabulary.references):
+        problems.append(f"context {phrase!r} names {', '.join(references)}, which comparisons "
+                        "are against")
+    return problems
+
+
+def name_problems(claim: Claim, vocabulary: Vocabulary) -> list[str]:
+    """How a claim's clauses fail to match what their checks test (see the module doc)."""
+    sentence = normalize(claim.sentence)
+    problems: list[str] = []
+    asides = []
+    for phrase in claim.context:
+        start = sentence.find(normalize(phrase))
+        if start < 0:
+            problems.append(f"context {phrase!r} is not in the sentence")
+            continue
+        problems += _context_problems(phrase, sentence, start, vocabulary)
+        asides.append((start, start + len(normalize(phrase))))
+    named = [(span, name) for span, name in mentions(vocabulary.names, sentence)
+             if not inside(span, asides)]
     clauses = []
     for index, check in enumerate(claim.checks, start=1):
         clause = normalize(check.clause)
         if clause not in sentence:
             problems.append(f"check {index}: its clause is not in the sentence")
             continue
-        clauses.append((clause_spans(sentence, [clause])[0], key_names(check)))
+        where = clause_spans(sentence, [clause])[0]
         tested = key_names(check)
-        for name, phrases in names.items():
-            if phrase_spans(phrases, clause) and name not in tested:
-                problems.append(f"check {index}: its clause names {name}, which its key "
-                                "does not test")
-    for name, phrases in names.items():
-        for span in phrase_spans(phrases, sentence):
-            if not any(inside(span, [where]) and name in tested for where, tested in clauses):
-                problems.append(f"{sentence[span[0]:span[1]]!r} ({name}) is in no check's "
-                                "clause that tests it")
+        clauses.append((where, tested))
+        words = [clause[a:b] for a, b in phrase_spans(vocabulary.comparatives, clause)]
+        if len(words) > 1:
+            problems.append(f"check {index}: its clause makes {len(words)} comparisons "
+                            f"({', '.join(words)}); give each its own check")
+        for name in sorted({name for span, name in named if inside(span, [where])} - tested):
+            problems.append(f"check {index}: its clause names {name}, which its key "
+                            "does not test")
+        for name in sorted((tested & vocabulary.must_name) - {name for _, name in named}):
+            problems.append(f"check {index}: its key tests {name}, which the sentence "
+                            "does not name")
+    for span, name in named:
+        if not any(inside(span, [where]) and name in tested for where, tested in clauses):
+            problems.append(f"{sentence[span[0]:span[1]]!r} ({name}) is in no check's "
+                            "clause that tests it")
     return problems
 
 
 def check_claims(claims: list[Claim], summary: Mapping[str, Any],
                  read_document: Callable[[str], str | None],
-                 names: Mapping[str, Sequence[str]] | None = None) -> list[str]:
-    """Problems with each claim: its sentence missing from the document, a clause
-    naming what its check does not test, or a check the results do not support."""
+                 vocabulary: Vocabulary = NO_VOCABULARY) -> list[str]:
+    """Problems with each claim: its sentence missing from the document, clauses
+    that do not match what their checks test, or a check the results do not support."""
     problems = []
     for claim in claims:
         text = read_document(claim.document)
@@ -229,7 +342,7 @@ def check_claims(claims: list[Claim], summary: Mapping[str, Any],
         elif normalize(claim.sentence) not in {sentence for _, sentence in sentences(text)}:
             problems.append(f"{claim.id}: its sentence is not a visible sentence of "
                             f"{claim.document}")
-        problems += [f"{claim.id}: {problem}" for problem in name_problems(claim, names or {})]
+        problems += [f"{claim.id}: {problem}" for problem in name_problems(claim, vocabulary)]
         for index, check in enumerate(claim.checks):
             try:
                 reason = support(check, summary)

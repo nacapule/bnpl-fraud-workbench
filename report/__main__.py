@@ -43,7 +43,8 @@ def check(summary_path: Path = SUMMARY, root: Path = REPO) -> list[str]:
         path = root / name
         return path.read_text() if path.exists() else None
 
-    problems += claims_module.check_claims(claims, sources.summary, read, config["names"])
+    vocabulary = claims_module.Vocabulary.from_config(config)
+    problems += claims_module.check_claims(claims, sources.summary, read, vocabulary)
     return problems
 
 
