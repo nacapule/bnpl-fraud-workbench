@@ -48,21 +48,32 @@ reviewer:
   response_hours: {median: 6.0, sigma: 1.0}   # lognormal delay to a check's answer
 
 capacity:
-  # Two parameters: coverage hours (the shift layout) and review minutes (analysts per
-  # shift, and each analyst's review minutes per shift: an analyst works the queue on
-  # shift until that shift's minutes are spent; omitted, the whole productive shift).
-  # Levels keep the current layout's coverage hours and are fixed at the "generator and
-  # capacity frozen" milestone (base: the incumbent's fit-window review minutes on the
-  # development worlds / 0.8; low about half, high about 1.5 times the base minutes).
-  # Until then the replay uses roster.analysts_per_shift as its only level
-  # ("configured").
-  review_minutes_per_1000_orders: null
-  # levels: {low: {analysts_per_shift: {early: n, late: n},
-  #                review_minutes_per_shift: {early: m, late: m}}, base: {...}, high: {...}}
-  levels: null
-  # redesigned: {layout: <name in roster.layouts>, analysts_per_shift: {...},
-  #              review_minutes_per_shift: {...}}
-  redesigned: null
+  # One analyst on every covered shift (coverage hours: the layout) and a fixed
+  # allotment of fraud-queue minutes per shift (review time and escalations' senior
+  # review), spent anywhere within the shift's coverage hours; work past it waits for
+  # the next shift. The allotment is the same in every family. Base: today's queue (the
+  # incumbent at rules.bands, replayed over the fit window of development worlds 416,
+  # 1041 and 2718 of the frozen generator: 4,481, 4,452 and 4,846 minutes, mean 4,593)
+  # / 0.8 / 174 shift instances = 33.0, rounded up to 33 minutes per shift; low and
+  # high about half and 1.5 times the base minutes (17 and 50: 0.52 and 1.52 times).
+  # Low binds on every development world (2,958 fit-window minutes against today's
+  # 4,452-4,846). Thresholds are tuned at the base and held at low and high.
+  levels:
+    low:
+      analysts_per_shift: {early: 1, late: 1}
+      review_minutes_per_shift: {early: 17, late: 17}
+    base:
+      analysts_per_shift: {early: 1, late: 1}
+      review_minutes_per_shift: {early: 33, late: 33}
+    high:
+      analysts_per_shift: {early: 1, late: 1}
+      review_minutes_per_shift: {early: 50, late: 50}
+  # The staffing comparison: the evening layout at the base's minutes (the same shift
+  # instances, so the same total minutes in every window).
+  redesigned:
+    layout: evening
+    analysts_per_shift: {early: 1, late: 1}
+    review_minutes_per_shift: {early: 33, late: 33}
 
 roster:
   layout: current

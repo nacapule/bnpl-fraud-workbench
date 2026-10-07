@@ -36,7 +36,7 @@ import pandas as pd
 from joblib.externals import cloudpickle
 
 from core import asof, config, evidence, ledger
-from core.actions import CheckoutRoute, Disposition
+from core.actions import CheckoutRoute
 from queue_sim import outcomes, policies
 from queue_sim.replay import FrozenHistory, PolicyHistory, ReplayResult, Settings, World
 from queue_sim.replay import replay as run_replay
@@ -114,10 +114,13 @@ STAFFED_FOR = 0.8  # the base is staffed so today's queue uses 80% of its minute
 def capacity_base(run: Any, refs: Sequence[Any]) -> dict[str, Any]:
     """The capacity base from development worlds, fixed before any policy comparison.
 
-    Today's rules at today's bands (``config/policy.yaml`` ``rules.bands``) route each
-    world's fit-window orders at checkout on the world-level context; their review
-    minutes (each order's review time) are today's queue. :func:`capacity_levels` sizes
-    the levels on the current layout from them.
+    Today's queue is the fraud-queue minutes today's rules at today's bands
+    (``config/policy.yaml`` ``rules.bands``) offer over each world's fit window, replayed
+    with policy history at the configured staffing (``roster.analysts_per_shift``, whole
+    productive shifts, far more than the queue needs): review time and escalations'
+    senior review. The minutes checkout routing alone would send are reported beside
+    them. :func:`capacity_levels` sizes the levels on the current layout from today's
+    queue.
     """
     policy_cfg = config.load("policy")
     bands = policy_cfg["rules"]["bands"]
@@ -126,14 +129,22 @@ def capacity_base(run: Any, refs: Sequence[Any]) -> dict[str, Any]:
     shifts = Roster.from_config(policy_cfg, layout=layout, analysts_per_shift={
         item["name"]: 1 for item in policy_cfg["roster"]["layouts"][layout]},
         review_minutes_per_shift={}).shifts
+    configured = Staffing("configured", layout, policy_cfg["roster"]["analysts_per_shift"])
     per_world = []
     for ref in refs:
         bench = _bench(run, ref)
         today = policies_for(run.memory["scorers"][ref.seed], bench)[INCUMBENT].with_thresholds(
             float(bands["review"]), float(bands["decline"]))
+        result = bench.run(today, window, configured, history="policy")
+        reviews = result.reviews
+        senior = float(reviews["senior_minutes"].sum())
         per_world.append({"seed": ref.seed, "family": ref.family,
                           "orders": len(bench.world.orders(*window)),
-                          "offered_minutes": bench.routed_minutes(today, window)})
+                          "offered_minutes": float(reviews["service_seconds"].sum()) / 60
+                          + senior,
+                          "senior_minutes": senior, "reviews": len(reviews),
+                          "routed_minutes": bench.routed_minutes(today, window),
+                          "configured_minutes": result.available_minutes})
     levels = capacity_levels(shifts, tuple(int(to_seconds(t)) for t in window),
                              [w["offered_minutes"] for w in per_world])
     return {"window": [str(window[0]), str(window[1])], "bands": dict(bands),
@@ -265,33 +276,17 @@ class Bench:
 
     def routed_minutes(self, policy: policies.Policy,
                        window: tuple[pd.Timestamp, pd.Timestamp]) -> float:
-        """Fraud-queue minutes the policy's checkout routing sends over ``window`` on the
-        world-level context (before any block): each routed order's review time, plus the
-        senior review minutes of those the reviewer escalates on that evidence."""
+        """Review minutes the policy's checkout routing sends to the queue over ``window``
+        on the world-level context (before any block), with each order's review time.
+        Escalations' senior minutes are not here: they follow decisions (the replay)."""
         orders = self.world.orders(*window)
         rows = self.world.context.set_index("order_id").reindex(orders["order_id"])
-        rows = rows.reset_index()
-        routed = policy.route(rows, known=self.world.scores)
-        review = (routed["route"] == CheckoutRoute.REVIEW.value).to_numpy()
-        ids = routed.loc[review, "order_id"].to_numpy(np.int64)
+        routed = policy.route(rows.reset_index(), known=self.world.scores)
+        ids = routed.loc[routed["route"] == CheckoutRoute.REVIEW.value, "order_id"]
         settings = Settings.from_config(self.policy_cfg)
-        seconds = service_seconds(self.world.seed, ids, settings.service_mean_minutes,
-                                  settings.service_sigma)
-        escalated = self._escalated(rows.loc[review])
-        return float(seconds.sum()) / 60 + settings.senior_minutes * int(escalated.sum())
-
-    def _escalated(self, rows: pd.DataFrame) -> np.ndarray:
-        """Whether the reviewer's first decision on each row (no checks) escalates."""
-        known = self.__dict__.setdefault("_escalates", {})
-        judge = Reviewer()
-        out = np.zeros(len(rows), dtype=bool)
-        for k, record in enumerate(rows.to_dict("records")):
-            order = int(record["order_id"])
-            if order not in known:
-                known[order] = judge.decide(order, record, ()).disposition \
-                    is Disposition.ESCALATE
-            out[k] = known[order]
-        return out
+        seconds = service_seconds(self.world.seed, ids.to_numpy(np.int64),
+                                  settings.service_mean_minutes, settings.service_sigma)
+        return float(seconds.sum()) / 60
 
     def checkout_scores(self, policy: policies.Policy,
                         window: tuple[pd.Timestamp, pd.Timestamp]) -> dict[str, np.ndarray]:

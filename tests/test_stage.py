@@ -99,7 +99,12 @@ def test_tuning_keeps_a_chosen_policy_for_each_of_the_seven(staged) -> None:
 def test_the_replay_stage_writes_one_integer_row_per_policy_and_variant(staged) -> None:
     _, _, replayed = staged
     rows = pd.DataFrame(replayed.tables["replay.outcomes"])
-    assert len(rows) == 7 * len(stage.VARIANTS)  # one configured level on the mini world
+    # the variants at the base level, and the main run at low, high and the evening layout
+    assert len(rows) == 7 * (len(stage.VARIANTS) + len(stage.staffing()) - 1) == 7 * 7
+    staffed = rows.loc[(rows["history"] == "policy") & (rows["reviewer"] == "evidence")
+                       & (rows["verification"] == "verification")]
+    assert set(zip(staffed["capacity_level"], staffed["layout"], strict=True)) == {
+        ("low", "current"), ("base", "current"), ("high", "current"), ("base", "evening")}
     assert not rows.duplicated(["seed", "family", "policy", "capacity_level", "layout",
                                 "history", "reviewer", "verification"]).any()
     assert list(rows.columns) == [*outcomes.KEY_COLUMNS, *outcomes.OUTCOME_COLUMNS]
@@ -139,9 +144,18 @@ def test_the_capacity_base_is_todays_queue_over_eighty_percent() -> None:
     # the fit window, order 15 is declined, order 19 is after the window
     stub = StubContext(tables, scores={3: 40.0, 6: 31.0, 12: 30.0, 15: 95.0, 19: 50.0})
     run = FakeRun(tables, stub.build(tables))
-    base = stage.capacity_base(run, [run.ref])
+    patch = pytest.MonkeyPatch()
+    patch.setattr(asof, "policy_rows",
+                  lambda world_rows, *_, **__: world_rows.reset_index(drop=True),
+                  raising=False)
+    try:
+        base = stage.capacity_base(run, [run.ref])
+    finally:
+        patch.undo()
     offered = service_seconds(416, np.array([3, 6, 12]), 7.0, 0.6).sum() / 60
-    assert base["worlds"][0]["offered_minutes"] == pytest.approx(offered)
+    world = base["worlds"][0]
+    assert world["offered_minutes"] == pytest.approx(offered) == world["routed_minutes"]
+    assert world["reviews"] == 3 and world["senior_minutes"] == 0
     assert base["needed_minutes_per_world"] == pytest.approx(offered / 0.8)
     days = pd.date_range("2024-12-01", "2025-02-28")
     shifts = int((days.dayofweek <= 4).sum() + (days.dayofweek >= 2).sum())  # early, late
@@ -371,4 +385,5 @@ def test_worker_processes_give_the_same_rows_as_one_process() -> None:
     (tuned_one, replayed_one), (tuned_two, replayed_two) = outputs
     assert tuned_one == tuned_two
     assert replayed_one == replayed_two
-    assert len(replayed_one["replay.outcomes"]) == 7 * len(stage.VARIANTS)
+    assert len(replayed_one["replay.outcomes"]) == 7 * (
+        len(stage.VARIANTS) + len(stage.staffing()) - 1)
