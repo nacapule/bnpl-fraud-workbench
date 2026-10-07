@@ -59,7 +59,6 @@ IDENTIFIERS = (
     rf"(?>\bCASE-\d{{2}}){END}",  # case files
 )
 INLINE_CODE = re.compile(r"`[^`\n]*`")
-COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
 LINK_TARGET = re.compile(r"\]\([^)]*\)")
 # A link reference definition: only its target is blanked; footnotes keep their text.
 REFERENCE_TARGET = re.compile(r"^(\s*\[(?!\^)[^\]]+\]:)(\s*\S+.*)$", re.MULTILINE)
@@ -67,6 +66,8 @@ FOOTNOTE_MARKER = re.compile(r"\[\^[^\]\s]+\]")
 NUMBER = re.compile(r"\d[\d,.]*")
 LIST_MARK = re.compile(r"[-+*]|(\d{1,9})[.)]")
 THEMATIC_BREAK = re.compile(r" {0,3}([-*_])(?:[ \t]*\1){2,}[ \t]*$")
+SETEXT_UNDERLINE = re.compile(r" {0,3}(?:=+|-+)[ \t]*$")
+COMMENT_BLOCK = re.compile(r" {0,3}<!--")
 HEADING = re.compile(r" {0,3}#{1,6}(?:[ \t]|$)")
 # A fence opens with three or more backticks (whose info string holds no
 # backtick: ```make final``` is inline code) or three or more tildes.
@@ -116,7 +117,7 @@ def _blank(match: re.Match[str]) -> str:
 def literal_text(template: str, allowed_phrases: Iterable[str] = ()) -> str:
     """The template's own words: placeholders, code, comments, links and identifiers blanked."""
     text = template
-    text = _visible_blocks(COMMENT.sub(_blank, text))
+    text = _visible_blocks(text)
     # A placeholder keeps its closing brace, so a sentence after it still starts one.
     text = PLACEHOLDER.sub(lambda match: _blank(match)[:-1] + "}", text)
     for pattern in (INLINE_CODE, LINK_TARGET, FOOTNOTE_MARKER):
@@ -172,21 +173,65 @@ def _new_container(rest: str, paragraph: bool) -> tuple[str, int] | None:
     return "item", mark.end() + (1 if empty or gap > 4 else gap)
 
 
+def _mask_inline(text: str, in_comment: bool) -> tuple[str, bool]:
+    """``text`` with its inline HTML comments blanked (code spans are not comments);
+    returns whether a comment is still open at the end of the line."""
+    out = list(text)
+    i = 0
+    while i < len(text):
+        if in_comment:
+            end = text.find("-->", i)
+            stop = len(text) if end < 0 else end + 3
+            out[i:stop] = " " * (stop - i)
+            i, in_comment = stop, end < 0
+        elif text[i] == "`":
+            run = len(text[i:]) - len(text[i:].lstrip("`"))
+            closer = re.compile(rf"(?<!`){'`' * run}(?!`)").search(text, i + run)
+            i = closer.end() if closer else i + run
+        elif text.startswith("<!--", i):
+            in_comment = True
+        else:
+            i += 1
+    return "".join(out), in_comment
+
+
 def _visible_blocks(text: str) -> str:
-    """The text with container marks, fenced code and indented code blanked.
+    """The text with container marks, comments, fenced code and indented code blanked.
 
     Block quotes and list items are matched line by line as CommonMark does: each
     open container in turn (a quote by its ``>``, a list item by its content
     indentation), then new ones; a line that does not match them all continues a
     paragraph lazily or closes them. Fences open and close at most three columns
     into their container's content and end with their container; lines four
-    columns in that do not continue a paragraph are indented code. Lines keep
-    their length, so positions and line numbers hold.
+    columns in that do not continue a paragraph are indented code. A comment
+    starting a line is a block to its ``-->``; one inside a paragraph is blanked
+    without ending the paragraph, and one never closed in its paragraph is text.
+    Lines keep their length, so positions and line numbers hold.
     """
     out: list[str] = []
     containers: list[tuple[str, int]] = []  # ("quote", 0) or ("item", content columns)
     fence: tuple[str, int] | None = None  # marker, how many containers it sits in
+    comment_block: int | None = None  # how many containers an open comment block sits in
     paragraph = False
+    inline: list[tuple[int, str]] = []  # lines of an inline comment not yet closed
+
+    def end_paragraph() -> None:
+        nonlocal paragraph
+        for index, original in inline:  # an unclosed comment was text after all
+            out[index] = original
+        inline.clear()
+        paragraph = False
+
+    def paragraph_line(prefix: int, rest: str) -> None:
+        nonlocal paragraph
+        masked, still_open = _mask_inline(rest, bool(inline))
+        if still_open:
+            inline.append((len(out), " " * prefix + rest))
+        else:
+            inline.clear()
+        out.append(" " * prefix + masked)
+        paragraph = True
+
     for raw in text.expandtabs(4).split("\n"):
         pos, matched = 0, 0
         for kind, width in containers:
@@ -203,19 +248,28 @@ def _visible_blocks(text: str) -> str:
             matched += 1
         rest = raw[pos:]
         if matched < len(containers):
-            lazy = (paragraph and fence is None and rest.strip()
-                    and _new_container(rest, False) is None and not _fence(rest.strip())
-                    and not THEMATIC_BREAK.match(rest) and not HEADING.match(rest))
-            if lazy:
-                out.append(" " * pos + rest)  # a paragraph continued without its marks
+            starts_block = (_new_container(rest, False) is not None
+                            or (_spaces(rest) <= 3 and _fence(rest.strip()))
+                            or THEMATIC_BREAK.match(rest) or HEADING.match(rest)
+                            or COMMENT_BLOCK.match(rest))
+            if paragraph and fence is None and comment_block is None and rest.strip() \
+                    and not starts_block:
+                paragraph_line(pos, rest)  # a paragraph continued without its marks
                 continue
             containers = containers[:matched]
-            paragraph = False
+            end_paragraph()
             if fence is not None and fence[1] > matched:
                 fence = None
+            if comment_block is not None and comment_block > matched:
+                comment_block = None
         if fence is not None:
             if _spaces(rest) <= 3 and _closes(fence[0], rest.strip()):
                 fence = None
+            out.append(" " * len(raw))
+            continue
+        if comment_block is not None:
+            if "-->" in rest:
+                comment_block = None
             out.append(" " * len(raw))
             continue
         while (opened := _new_container(rest, paragraph)) is not None:
@@ -223,21 +277,34 @@ def _visible_blocks(text: str) -> str:
             containers.append((kind, 0 if kind == "quote" else width))
             pos += min(width, len(rest))
             rest = raw[pos:]
-            paragraph = False
-        if not rest.strip():
-            paragraph = False
+            end_paragraph()
+        indent = _spaces(rest)
+        if not rest.strip() or (indent >= 4 and not paragraph):  # blank, or indented code
+            end_paragraph()
             out.append(" " * len(raw))
             continue
-        indent = _spaces(rest)
-        if indent >= 4 and not paragraph:  # indented code
+        if paragraph and SETEXT_UNDERLINE.match(rest):  # the paragraph was a heading
+            end_paragraph()
             out.append(" " * len(raw))
             continue
         if indent <= 3 and (marker := _fence(rest.strip())):
-            fence, paragraph = (marker, len(containers)), False
+            end_paragraph()
+            fence = (marker, len(containers))
             out.append(" " * len(raw))
             continue
-        paragraph = not (THEMATIC_BREAK.match(rest) or HEADING.match(rest))
-        out.append(" " * pos + rest)
+        if COMMENT_BLOCK.match(rest):
+            end_paragraph()
+            if "-->" not in rest[rest.index("<!--") + 4:]:
+                comment_block = len(containers)
+            out.append(" " * len(raw))
+            continue
+        if THEMATIC_BREAK.match(rest) or HEADING.match(rest):
+            end_paragraph()
+            masked, unclosed = _mask_inline(rest, False)  # a heading is one line
+            out.append(" " * pos + (rest if unclosed else masked))
+            continue
+        paragraph_line(pos, rest)
+    end_paragraph()
     return "\n".join(out)
 
 

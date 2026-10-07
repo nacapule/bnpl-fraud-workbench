@@ -303,6 +303,8 @@ def test_inline_code_with_three_backticks_does_not_open_a_fence() -> None:
     "- > ```text\n  > example 12\n  > ```\n  >\n  > Loss was 84% of GMV.\n",  # a quote in an item
     "- Item.\n\n        code 12\n\nLoss was 84% of GMV.\n",  # indented code in an item
     "- > > ```text\n  > > example 12\n  > > ```\n  > >\n  > > Loss was 84% of GMV.\n",
+    "Method\n===\n    example 12\n\nLoss was 84% of GMV.\n",  # code after a setext heading
+    "<!-- a note on 12 -->\nText <!-- and 12 --> here.\n\nLoss was 84% of GMV.\n",  # comments
 ])
 def test_a_fence_ends_with_its_closer_or_its_container(template: str) -> None:
     """Fence content is read as content first; a fence never outlives its container."""
@@ -316,6 +318,11 @@ def test_a_fence_ends_with_its_closer_or_its_container(template: str) -> None:
     "1. First.\n2. Loss was 84% of GMV.\n",  # the next item, not a continuation
     "- Item.\n\n  Loss was 84% of GMV.\n",
     "| a | b |\n|---|---|\n| Loss was 84% of GMV. | x |\n",
+    "> Method.\n    ```text\n    example\n    ```\n    Loss was 84% of GMV.\n",  # lazy, not code
+    "Context. <!-- editorial\nnote -->\n    Loss was 84% of GMV.\n",  # a comment inside text
+    "`<!--` Loss was 84% of GMV. `-->`\n",  # comment marks inside code spans
+    "<!--\n```\n-->\nLoss was 84% of GMV.\n",  # a fence mark inside a comment block
+    "Text <!-- never closed, so shown\nLoss was 84% of GMV.\n",
 ])
 def test_visible_text_is_never_taken_for_code(template: str) -> None:
     """Container marks are read as CommonMark reads them, so prose stays prose."""
