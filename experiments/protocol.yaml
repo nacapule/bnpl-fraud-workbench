@@ -1,0 +1,136 @@
+# Pre-registered evaluation protocol, read and checked by core/protocol.py.
+#
+# Dates are fixed now, before any final world exists. Entries set to
+# TO_COMPLETE_AT_FREEZE are completed in the freeze commit, before the final
+# driver generates any final-seed world; the driver refuses while any remain
+# (core.protocol.require_freeze). After the freeze only logged bug fixes are
+# allowed, each recorded with its before/after effect.
+
+version: 1
+
+# Label horizon of the adjudicated label (core.world.adjudicate): an order with
+# no determination known this many days after it is a known negative. Every
+# gap below is at least this long.
+label_horizon_days: 60
+
+# Half-open windows [start, end) in platform-local time, contiguous and in
+# order. Orders in gaps and the embargo still count as feature history.
+windows:
+  warm_up:      {start: 2025-01-01, end: 2025-04-01}  # history only
+  fit:          {start: 2025-04-01, end: 2025-08-01}  # classifiers
+  gap_1:        {start: 2025-08-01, end: 2025-10-01}  # fit labels mature
+  calibration:  {start: 2025-10-01, end: 2025-11-01}  # calibrator; never used to fit classifiers
+  gap_2:        {start: 2025-11-01, end: 2026-01-01}  # calibration labels mature
+  validation:   {start: 2026-01-01, end: 2026-04-01}  # bands, thresholds, policy choice
+  embargo:      {start: 2026-04-01, end: 2026-06-01}  # validation labels mature
+  test:         {start: 2026-06-01, end: 2026-09-01}  # frozen policies evaluated
+  follow_up:    {start: 2026-09-01, end: 2026-12-30}  # no new orders; outcomes mature (120 days)
+
+# Freeze instants (00:00 on the date). Training and tuning at a freeze use only
+# labels with label_known_at before it; negatives count only once known.
+freezes:
+  classifier: 2025-10-01   # >= fit end + horizon (2025-09-30), before calibration starts
+  calibrator: 2026-01-01   # >= calibration end + horizon (2025-12-31), before validation
+  policy: 2026-06-01       # >= validation end + horizon (2026-05-31), before test
+
+# Order attempts fall in [warm_up start, test end); outcomes are observed until
+# the end of follow-up. Accounts and merchants may be created before the start.
+world_horizon:
+  order_start: 2025-01-01
+  order_end: 2026-09-01
+  observed_end: 2026-12-30
+
+# Families share every event before their start, so each seed is fitted and
+# tuned once and tested on three futures. Parameters: config/world.yaml families.
+families:
+  baseline:
+    starts: null
+    description: the world as generated
+  acquisition_surge:
+    starts: 2026-06-01
+    description: about twice the inflow of new legitimate customers, with a first-purchase promotion
+  fraud_mix_shift:
+    starts: 2026-06-01
+    description: aged stolen-card sleeper accounts and a larger account-takeover share
+
+seeds:
+  canonical: 416             # loaded into MySQL for the SQL library, packets and cases
+  development: [416, 1041, 2718]   # fully open: support checks, development fits, tuning experiments
+  final: [35244829, 931592514, 2066792625, 1891170948, 1671034716,
+          200041300, 1260106251, 717729117, 793746605, 1629189384]
+  final_drawn: >-
+    2026-10-06, before any final world existed: ten draws of
+    secrets.randbelow(2**31) on Python 3.14.7, redrawing any value equal to a
+    development seed or an earlier draw.
+  minimum_final: 8           # if the runtime budget fails, speed up the generator; never fewer
+
+world_size:
+  target_orders: 120000      # config/world.yaml volume; fraud share held near 1% of orders
+  support:                   # checked on the development seeds; raise volume, never the fraud share
+    min_test_orders_per_checkout_pattern: 30
+    min_episodes_per_checkout_pattern: 2
+    windows: [validation, test]
+    report: per-pattern N and episode counts; "N=0 / not evaluated" where it applies
+
+policies:
+  approve_all: reference; every order approved
+  incumbent_rules: rules with review and decline bands tuned on validation
+  tree_depth3: depth-3 decision tree on at most four named features
+  logistic: logistic regression
+  boosting: HistGradientBoosting
+  hybrid: high-specificity rules auto-decline; boosting orders the review queue
+  expected_loss: calibrated probability times exposure against the cost of a false decline
+
+# Every policy uses the same as-of context, roster, reviewer, replay and ledger.
+tuning:
+  where: validation window, through the replay, over attainable score cut-points
+  report: best in the searched grid and the frontier; a flat result is published as flat
+  rule: TO_COMPLETE_AT_FREEZE
+
+capacity:
+  parameters: [coverage_hours, review_minutes_per_1000_orders]
+  base: TO_COMPLETE_AT_FREEZE   # incumbent's fit-window offered minutes on the development worlds / 0.8, whole analysts per shift
+  levels: {low: TO_COMPLETE_AT_FREEZE, base: TO_COMPLETE_AT_FREEZE, high: TO_COMPLETE_AT_FREEZE}
+  redesigned_layout: TO_COMPLETE_AT_FREEZE   # same total minutes, covering the evening arrival peak
+  analyst_loaded_hourly_usd: TO_COMPLETE_AT_FREEZE
+
+metrics:   # per family, across final seeds, paired by seed; counts beside dollars
+  - net_contribution_vs_approve_all
+  - net_contribution_vs_incumbent
+  - loss_bps_of_gmv
+  - legitimate_held_per_10k_legitimate_orders
+  - legitimate_declined_per_10k_legitimate_orders
+  - review_minutes_used_vs_available
+  - orders_decided_after_shipping
+  - wall_time_to_decision_p50_p90
+  - prevented_loss_by_pattern_with_n
+  - share_of_loss_unreachable_at_checkout
+  - capacity_level_results
+  - staffing_comparison_net_of_analyst_cost
+  - average_precision           # supporting row
+  - brier_score                 # supporting row
+
+reporting:
+  per_seed: differences with mean, min-max and sign count (for example 9/10)
+  recommendation_rule: TO_COMPLETE_AT_FREEZE
+  friction_guardrail: TO_COMPLETE_AT_FREEZE
+
+sensitivity:
+  reviewer_verification_rates: TO_COMPLETE_AT_FREEZE
+  ltv_proxy_usd: TO_COMPLETE_AT_FREEZE
+  fulfilment_lag: TO_COMPLETE_AT_FREEZE
+
+# The final driver refuses to generate a final-seed world unless this marker
+# exists, every listed file matches its recorded SHA-256 and no
+# TO_COMPLETE_AT_FREEZE entry remains (core.protocol.require_freeze).
+freeze:
+  marker: experiments/FREEZE.json
+  files:
+    - experiments/protocol.yaml
+    - config/world.yaml
+    - config/policy.yaml
+    - docs/methods.md
+    - policy/fraud-policy.md
+    - core/actions.py
+    - core/evidence.py
+    # plus the LLM referee module once it exists
