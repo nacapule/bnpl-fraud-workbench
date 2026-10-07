@@ -323,6 +323,10 @@ def test_a_fence_ends_with_its_closer_or_its_container(template: str) -> None:
     "`<!--` Loss was 84% of GMV. `-->`\n",  # comment marks inside code spans
     "<!--\n```\n-->\nLoss was 84% of GMV.\n",  # a fence mark inside a comment block
     "Text <!-- never closed, so shown\nLoss was 84% of GMV.\n",
+    "<!-- check the denominator --> Loss was 84% of GMV.\n",  # text after a comment block
+    "<!-- check\nthe denominator --> Loss was 84% of GMV.\n",
+    "Use ``a`b``. Loss was 84% of GMV. See ``c`d``.\n",  # code spans of two backticks
+    "[ref]: target\n===\n    Loss was 84% of GMV.\n",  # no heading text, so no heading
 ])
 def test_visible_text_is_never_taken_for_code(template: str) -> None:
     """Container marks are read as CommonMark reads them, so prose stays prose."""

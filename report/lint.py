@@ -58,7 +58,8 @@ IDENTIFIERS = (
     rf"(?>\bQ\d{{2}}){END}",  # SQL investigation queries
     rf"(?>\bCASE-\d{{2}}){END}",  # case files
 )
-INLINE_CODE = re.compile(r"`[^`\n]*`")
+# A code span: a run of backticks to the next run of the same length.
+INLINE_CODE = re.compile(r"(?<!`)(`+)(?!`).+?(?<!`)\1(?!`)")
 LINK_TARGET = re.compile(r"\]\([^)]*\)")
 # A link reference definition: only its target is blanked; footnotes keep their text.
 REFERENCE_TARGET = re.compile(r"^(\s*\[(?!\^)[^\]]+\]:)(\s*\S+.*)$", re.MULTILINE)
@@ -68,6 +69,7 @@ LIST_MARK = re.compile(r"[-+*]|(\d{1,9})[.)]")
 THEMATIC_BREAK = re.compile(r" {0,3}([-*_])(?:[ \t]*\1){2,}[ \t]*$")
 SETEXT_UNDERLINE = re.compile(r" {0,3}(?:=+|-+)[ \t]*$")
 COMMENT_BLOCK = re.compile(r" {0,3}<!--")
+REFERENCE_DEFINITION = re.compile(r" {0,3}\[[^\]]+\]:\s*\S")
 HEADING = re.compile(r" {0,3}#{1,6}(?:[ \t]|$)")
 # A fence opens with three or more backticks (whose info string holds no
 # backtick: ```make final``` is inline code) or three or more tildes.
@@ -195,6 +197,12 @@ def _mask_inline(text: str, in_comment: bool) -> tuple[str, bool]:
     return "".join(out), in_comment
 
 
+def _after_comment(rest: str, end: int) -> str:
+    """A comment block's last line: the comment blanked, the text after it kept."""
+    masked, unclosed = _mask_inline(rest[end:], False)
+    return " " * end + (rest[end:] if unclosed else masked)
+
+
 def _visible_blocks(text: str) -> str:
     """The text with container marks, comments, fenced code and indented code blanked.
 
@@ -204,8 +212,9 @@ def _visible_blocks(text: str) -> str:
     paragraph lazily or closes them. Fences open and close at most three columns
     into their container's content and end with their container; lines four
     columns in that do not continue a paragraph are indented code. A comment
-    starting a line is a block to its ``-->``; one inside a paragraph is blanked
-    without ending the paragraph, and one never closed in its paragraph is text.
+    starting a line is a block to its ``-->`` (text after the ``-->`` is shown);
+    one inside a paragraph is blanked without ending the paragraph, and one never
+    closed in its paragraph is text.
     Lines keep their length, so positions and line numbers hold.
     """
     out: list[str] = []
@@ -213,6 +222,7 @@ def _visible_blocks(text: str) -> str:
     fence: tuple[str, int] | None = None  # marker, how many containers it sits in
     comment_block: int | None = None  # how many containers an open comment block sits in
     paragraph = False
+    heading_text = False  # the paragraph holds text a setext underline could make a heading
     inline: list[tuple[int, str]] = []  # lines of an inline comment not yet closed
 
     def end_paragraph() -> None:
@@ -223,7 +233,9 @@ def _visible_blocks(text: str) -> str:
         paragraph = False
 
     def paragraph_line(prefix: int, rest: str) -> None:
-        nonlocal paragraph
+        nonlocal paragraph, heading_text
+        defines = REFERENCE_DEFINITION.match(rest) and not heading_text
+        heading_text = (heading_text if paragraph else False) or not defines
         masked, still_open = _mask_inline(rest, bool(inline))
         if still_open:
             inline.append((len(out), " " * prefix + rest))
@@ -270,7 +282,9 @@ def _visible_blocks(text: str) -> str:
         if comment_block is not None:
             if "-->" in rest:
                 comment_block = None
-            out.append(" " * len(raw))
+                out.append(" " * pos + _after_comment(rest, rest.index("-->") + 3))
+            else:
+                out.append(" " * len(raw))
             continue
         while (opened := _new_container(rest, paragraph)) is not None:
             kind, width = opened
@@ -283,7 +297,7 @@ def _visible_blocks(text: str) -> str:
             end_paragraph()
             out.append(" " * len(raw))
             continue
-        if paragraph and SETEXT_UNDERLINE.match(rest):  # the paragraph was a heading
+        if paragraph and heading_text and SETEXT_UNDERLINE.match(rest):  # it was a heading
             end_paragraph()
             out.append(" " * len(raw))
             continue
@@ -294,9 +308,12 @@ def _visible_blocks(text: str) -> str:
             continue
         if COMMENT_BLOCK.match(rest):
             end_paragraph()
-            if "-->" not in rest[rest.index("<!--") + 4:]:
+            close = rest.find("-->", rest.index("<!--") + 4)
+            if close < 0:
                 comment_block = len(containers)
-            out.append(" " * len(raw))
+                out.append(" " * len(raw))
+            else:  # text after the closer is shown
+                out.append(" " * pos + _after_comment(rest, close + 3))
             continue
         if THEMATIC_BREAK.match(rest) or HEADING.match(rest):
             end_paragraph()
