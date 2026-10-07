@@ -1,0 +1,1944 @@
+{
+ "arms": {
+  "memo_v1__claude-sonnet-5": {
+   "backend": "cli",
+   "case_set": "the first 200 cases of cases.json",
+   "cases": 200,
+   "final": {
+    "action_correct": {
+     "denominator": 200,
+     "numerator": 122,
+     "value": 0.61,
+     "wilson_95": [
+      0.540937,
+      0.674917
+     ]
+    },
+    "action_correct_valid_only": {
+     "denominator": 200,
+     "numerator": 122,
+     "value": 0.61,
+     "wilson_95": [
+      0.540937,
+      0.674917
+     ]
+    },
+    "cases": 200,
+    "citations_without_rule_id": 406,
+    "decline_precision": {
+     "denominator": 29,
+     "numerator": 27,
+     "value": 0.931034
+    },
+    "decline_recall": {
+     "denominator": 57,
+     "numerator": 27,
+     "value": 0.473684
+    },
+    "decline_recall_valid_only": {
+     "denominator": 57,
+     "numerator": 27,
+     "value": 0.473684
+    },
+    "derived_token_signals": {
+     "denominator": 2475,
+     "numerator": 46,
+     "value": 0.0185859
+    },
+    "failures": [],
+    "invalid_rule_citation_memos": 0,
+    "latency_p50_ms": 56534,
+    "non_verbatim_memos_archived_check": {
+     "denominator": 200,
+     "numerator": 90,
+     "value": 0.45
+    },
+    "pattern_named": {
+     "denominator": 200,
+     "numerator": 161,
+     "value": 0.805
+    },
+    "signals_changed_by_token_fixes": 0,
+    "signals_without_tokens": {
+     "denominator": 2475,
+     "numerator": 250,
+     "value": 0.10101
+    },
+    "strict_rejections": [],
+    "unmatched_token_memos": {
+     "denominator": 200,
+     "numerator": 67,
+     "value": 0.335
+    },
+    "unmatched_token_memos_any_text": {
+     "denominator": 200,
+     "numerator": 142,
+     "value": 0.71
+    },
+    "unmatched_token_memos_archived_check": {
+     "denominator": 200,
+     "numerator": 67,
+     "value": 0.335
+    },
+    "unmatched_token_signals": {
+     "denominator": 2475,
+     "numerator": 83,
+     "value": 0.0335354
+    },
+    "valid_outputs": {
+     "denominator": 200,
+     "numerator": 200,
+     "value": 1.0
+    }
+   },
+   "final_per_pattern": {
+    "account_takeover": {
+     "action_correct": {
+      "denominator": 28,
+      "numerator": 19,
+      "value": 0.678571
+     },
+     "pattern_named": {
+      "denominator": 28,
+      "numerator": 28,
+      "value": 1.0
+     }
+    },
+    "benign": {
+     "action_correct": {
+      "denominator": 60,
+      "numerator": 11,
+      "value": 0.183333
+     },
+     "pattern_named": {
+      "denominator": 60,
+      "numerator": 52,
+      "value": 0.866667
+     }
+    },
+    "inr_abuse": {
+     "action_correct": {
+      "denominator": 22,
+      "numerator": 22,
+      "value": 1.0
+     },
+     "pattern_named": {
+      "denominator": 22,
+      "numerator": 20,
+      "value": 0.909091
+     }
+    },
+    "merchant_bustout": {
+     "action_correct": {
+      "denominator": 3,
+      "numerator": 0,
+      "value": 0.0
+     },
+     "pattern_named": {
+      "denominator": 3,
+      "numerator": 0,
+      "value": 0.0
+     }
+    },
+    "never_pay": {
+     "action_correct": {
+      "denominator": 7,
+      "numerator": 0,
+      "value": 0.0
+     },
+     "pattern_named": {
+      "denominator": 7,
+      "numerator": 0,
+      "value": 0.0
+     }
+    },
+    "promo_abuse": {
+     "action_correct": {
+      "denominator": 23,
+      "numerator": 23,
+      "value": 1.0
+     },
+     "pattern_named": {
+      "denominator": 23,
+      "numerator": 6,
+      "value": 0.26087
+     }
+    },
+    "stolen_card": {
+     "action_correct": {
+      "denominator": 22,
+      "numerator": 12,
+      "value": 0.545455
+     },
+     "pattern_named": {
+      "denominator": 22,
+      "numerator": 20,
+      "value": 0.909091
+     }
+    },
+    "synthetic_ring": {
+     "action_correct": {
+      "denominator": 35,
+      "numerator": 35,
+      "value": 1.0
+     },
+     "pattern_named": {
+      "denominator": 35,
+      "numerator": 35,
+      "value": 1.0
+     }
+    }
+   },
+   "first_attempt": {
+    "action_correct": {
+     "denominator": 200,
+     "numerator": 122,
+     "value": 0.61,
+     "wilson_95": [
+      0.540937,
+      0.674917
+     ]
+    },
+    "action_correct_valid_only": {
+     "denominator": 200,
+     "numerator": 122,
+     "value": 0.61,
+     "wilson_95": [
+      0.540937,
+      0.674917
+     ]
+    },
+    "cases": 200,
+    "citations_without_rule_id": 406,
+    "decline_precision": {
+     "denominator": 29,
+     "numerator": 27,
+     "value": 0.931034
+    },
+    "decline_recall": {
+     "denominator": 57,
+     "numerator": 27,
+     "value": 0.473684
+    },
+    "decline_recall_valid_only": {
+     "denominator": 57,
+     "numerator": 27,
+     "value": 0.473684
+    },
+    "derived_token_signals": {
+     "denominator": 2475,
+     "numerator": 46,
+     "value": 0.0185859
+    },
+    "failures": [],
+    "invalid_rule_citation_memos": 0,
+    "latency_p50_ms": 56534,
+    "non_verbatim_memos_archived_check": {
+     "denominator": 200,
+     "numerator": 90,
+     "value": 0.45
+    },
+    "pattern_named": {
+     "denominator": 200,
+     "numerator": 161,
+     "value": 0.805
+    },
+    "signals_changed_by_token_fixes": 0,
+    "signals_without_tokens": {
+     "denominator": 2475,
+     "numerator": 250,
+     "value": 0.10101
+    },
+    "strict_rejections": [],
+    "unmatched_token_memos": {
+     "denominator": 200,
+     "numerator": 67,
+     "value": 0.335
+    },
+    "unmatched_token_memos_any_text": {
+     "denominator": 200,
+     "numerator": 142,
+     "value": 0.71
+    },
+    "unmatched_token_memos_archived_check": {
+     "denominator": 200,
+     "numerator": 67,
+     "value": 0.335
+    },
+    "unmatched_token_signals": {
+     "denominator": 2475,
+     "numerator": 83,
+     "value": 0.0335354
+    },
+    "valid_outputs": {
+     "denominator": 200,
+     "numerator": 200,
+     "value": 1.0
+    }
+   },
+   "model": "claude-sonnet-5",
+   "primary_responses_beyond_case_limit": 0,
+   "prompt_version": "memo_v1",
+   "retries": {
+    "cases": [],
+    "stored": 0,
+    "valid": 0
+   }
+  },
+  "memo_v2__claude-sonnet-5": {
+   "backend": "cli",
+   "case_set": "the first 200 cases of cases.json",
+   "cases": 200,
+   "final": {
+    "action_correct": {
+     "denominator": 200,
+     "numerator": 147,
+     "value": 0.735,
+     "wilson_95": [
+      0.669824,
+      0.791318
+     ]
+    },
+    "action_correct_valid_only": {
+     "denominator": 200,
+     "numerator": 147,
+     "value": 0.735,
+     "wilson_95": [
+      0.669824,
+      0.791318
+     ]
+    },
+    "cases": 200,
+    "citations_without_rule_id": 501,
+    "decline_precision": {
+     "denominator": 31,
+     "numerator": 30,
+     "value": 0.967742
+    },
+    "decline_recall": {
+     "denominator": 57,
+     "numerator": 30,
+     "value": 0.526316
+    },
+    "decline_recall_valid_only": {
+     "denominator": 57,
+     "numerator": 30,
+     "value": 0.526316
+    },
+    "derived_token_signals": {
+     "denominator": 2530,
+     "numerator": 27,
+     "value": 0.0106719
+    },
+    "failures": [],
+    "invalid_rule_citation_memos": 0,
+    "latency_p50_ms": 58275,
+    "non_verbatim_memos_archived_check": {
+     "denominator": 200,
+     "numerator": 26,
+     "value": 0.13
+    },
+    "pattern_named": {
+     "denominator": 200,
+     "numerator": 150,
+     "value": 0.75
+    },
+    "signals_changed_by_token_fixes": 0,
+    "signals_without_tokens": {
+     "denominator": 2530,
+     "numerator": 353,
+     "value": 0.139526
+    },
+    "strict_rejections": [],
+    "unmatched_token_memos": {
+     "denominator": 200,
+     "numerator": 9,
+     "value": 0.045
+    },
+    "unmatched_token_memos_any_text": {
+     "denominator": 200,
+     "numerator": 86,
+     "value": 0.43
+    },
+    "unmatched_token_memos_archived_check": {
+     "denominator": 200,
+     "numerator": 9,
+     "value": 0.045
+    },
+    "unmatched_token_signals": {
+     "denominator": 2530,
+     "numerator": 9,
+     "value": 0.00355731
+    },
+    "valid_outputs": {
+     "denominator": 200,
+     "numerator": 200,
+     "value": 1.0
+    }
+   },
+   "final_per_pattern": {
+    "account_takeover": {
+     "action_correct": {
+      "denominator": 28,
+      "numerator": 22,
+      "value": 0.785714
+     },
+     "pattern_named": {
+      "denominator": 28,
+      "numerator": 28,
+      "value": 1.0
+     }
+    },
+    "benign": {
+     "action_correct": {
+      "denominator": 60,
+      "numerator": 38,
+      "value": 0.633333
+     },
+     "pattern_named": {
+      "denominator": 60,
+      "numerator": 48,
+      "value": 0.8
+     }
+    },
+    "inr_abuse": {
+     "action_correct": {
+      "denominator": 22,
+      "numerator": 21,
+      "value": 0.954545
+     },
+     "pattern_named": {
+      "denominator": 22,
+      "numerator": 19,
+      "value": 0.863636
+     }
+    },
+    "merchant_bustout": {
+     "action_correct": {
+      "denominator": 3,
+      "numerator": 0,
+      "value": 0.0
+     },
+     "pattern_named": {
+      "denominator": 3,
+      "numerator": 0,
+      "value": 0.0
+     }
+    },
+    "never_pay": {
+     "action_correct": {
+      "denominator": 7,
+      "numerator": 0,
+      "value": 0.0
+     },
+     "pattern_named": {
+      "denominator": 7,
+      "numerator": 0,
+      "value": 0.0
+     }
+    },
+    "promo_abuse": {
+     "action_correct": {
+      "denominator": 23,
+      "numerator": 23,
+      "value": 1.0
+     },
+     "pattern_named": {
+      "denominator": 23,
+      "numerator": 0,
+      "value": 0.0
+     }
+    },
+    "stolen_card": {
+     "action_correct": {
+      "denominator": 22,
+      "numerator": 8,
+      "value": 0.363636
+     },
+     "pattern_named": {
+      "denominator": 22,
+      "numerator": 20,
+      "value": 0.909091
+     }
+    },
+    "synthetic_ring": {
+     "action_correct": {
+      "denominator": 35,
+      "numerator": 35,
+      "value": 1.0
+     },
+     "pattern_named": {
+      "denominator": 35,
+      "numerator": 35,
+      "value": 1.0
+     }
+    }
+   },
+   "first_attempt": {
+    "action_correct": {
+     "denominator": 200,
+     "numerator": 147,
+     "value": 0.735,
+     "wilson_95": [
+      0.669824,
+      0.791318
+     ]
+    },
+    "action_correct_valid_only": {
+     "denominator": 200,
+     "numerator": 147,
+     "value": 0.735,
+     "wilson_95": [
+      0.669824,
+      0.791318
+     ]
+    },
+    "cases": 200,
+    "citations_without_rule_id": 501,
+    "decline_precision": {
+     "denominator": 31,
+     "numerator": 30,
+     "value": 0.967742
+    },
+    "decline_recall": {
+     "denominator": 57,
+     "numerator": 30,
+     "value": 0.526316
+    },
+    "decline_recall_valid_only": {
+     "denominator": 57,
+     "numerator": 30,
+     "value": 0.526316
+    },
+    "derived_token_signals": {
+     "denominator": 2530,
+     "numerator": 27,
+     "value": 0.0106719
+    },
+    "failures": [],
+    "invalid_rule_citation_memos": 0,
+    "latency_p50_ms": 58275,
+    "non_verbatim_memos_archived_check": {
+     "denominator": 200,
+     "numerator": 26,
+     "value": 0.13
+    },
+    "pattern_named": {
+     "denominator": 200,
+     "numerator": 150,
+     "value": 0.75
+    },
+    "signals_changed_by_token_fixes": 0,
+    "signals_without_tokens": {
+     "denominator": 2530,
+     "numerator": 353,
+     "value": 0.139526
+    },
+    "strict_rejections": [],
+    "unmatched_token_memos": {
+     "denominator": 200,
+     "numerator": 9,
+     "value": 0.045
+    },
+    "unmatched_token_memos_any_text": {
+     "denominator": 200,
+     "numerator": 86,
+     "value": 0.43
+    },
+    "unmatched_token_memos_archived_check": {
+     "denominator": 200,
+     "numerator": 9,
+     "value": 0.045
+    },
+    "unmatched_token_signals": {
+     "denominator": 2530,
+     "numerator": 9,
+     "value": 0.00355731
+    },
+    "valid_outputs": {
+     "denominator": 200,
+     "numerator": 200,
+     "value": 1.0
+    }
+   },
+   "model": "claude-sonnet-5",
+   "primary_responses_beyond_case_limit": 0,
+   "prompt_version": "memo_v2",
+   "retries": {
+    "cases": [],
+    "stored": 0,
+    "valid": 0
+   }
+  },
+  "memo_v2__gpt-5.6-luna": {
+   "backend": "codex",
+   "case_set": "the first 200 cases of cases.json",
+   "cases": 200,
+   "final": {
+    "action_correct": {
+     "denominator": 200,
+     "numerator": 120,
+     "value": 0.6,
+     "wilson_95": [
+      0.530837,
+      0.665394
+     ]
+    },
+    "action_correct_valid_only": {
+     "denominator": 200,
+     "numerator": 120,
+     "value": 0.6,
+     "wilson_95": [
+      0.530837,
+      0.665394
+     ]
+    },
+    "cases": 200,
+    "citations_without_rule_id": 565,
+    "decline_precision": {
+     "denominator": 22,
+     "numerator": 22,
+     "value": 1.0
+    },
+    "decline_recall": {
+     "denominator": 57,
+     "numerator": 22,
+     "value": 0.385965
+    },
+    "decline_recall_valid_only": {
+     "denominator": 57,
+     "numerator": 22,
+     "value": 0.385965
+    },
+    "derived_token_signals": {
+     "denominator": 2138,
+     "numerator": 0,
+     "value": 0.0
+    },
+    "failures": [],
+    "invalid_rule_citation_memos": 0,
+    "latency_p50_ms": 39173,
+    "non_verbatim_memos_archived_check": {
+     "denominator": 200,
+     "numerator": 3,
+     "value": 0.015
+    },
+    "pattern_named": {
+     "denominator": 200,
+     "numerator": 131,
+     "value": 0.655
+    },
+    "signals_changed_by_token_fixes": 0,
+    "signals_without_tokens": {
+     "denominator": 2138,
+     "numerator": 536,
+     "value": 0.250702
+    },
+    "strict_rejections": [],
+    "unmatched_token_memos": {
+     "denominator": 200,
+     "numerator": 3,
+     "value": 0.015
+    },
+    "unmatched_token_memos_any_text": {
+     "denominator": 200,
+     "numerator": 17,
+     "value": 0.085
+    },
+    "unmatched_token_memos_archived_check": {
+     "denominator": 200,
+     "numerator": 3,
+     "value": 0.015
+    },
+    "unmatched_token_signals": {
+     "denominator": 2138,
+     "numerator": 3,
+     "value": 0.00140318
+    },
+    "valid_outputs": {
+     "denominator": 200,
+     "numerator": 200,
+     "value": 1.0
+    }
+   },
+   "final_per_pattern": {
+    "account_takeover": {
+     "action_correct": {
+      "denominator": 28,
+      "numerator": 15,
+      "value": 0.535714
+     },
+     "pattern_named": {
+      "denominator": 28,
+      "numerator": 28,
+      "value": 1.0
+     }
+    },
+    "benign": {
+     "action_correct": {
+      "denominator": 60,
+      "numerator": 19,
+      "value": 0.316667
+     },
+     "pattern_named": {
+      "denominator": 60,
+      "numerator": 26,
+      "value": 0.433333
+     }
+    },
+    "inr_abuse": {
+     "action_correct": {
+      "denominator": 22,
+      "numerator": 21,
+      "value": 0.954545
+     },
+     "pattern_named": {
+      "denominator": 22,
+      "numerator": 20,
+      "value": 0.909091
+     }
+    },
+    "merchant_bustout": {
+     "action_correct": {
+      "denominator": 3,
+      "numerator": 0,
+      "value": 0.0
+     },
+     "pattern_named": {
+      "denominator": 3,
+      "numerator": 0,
+      "value": 0.0
+     }
+    },
+    "never_pay": {
+     "action_correct": {
+      "denominator": 7,
+      "numerator": 0,
+      "value": 0.0
+     },
+     "pattern_named": {
+      "denominator": 7,
+      "numerator": 0,
+      "value": 0.0
+     }
+    },
+    "promo_abuse": {
+     "action_correct": {
+      "denominator": 23,
+      "numerator": 23,
+      "value": 1.0
+     },
+     "pattern_named": {
+      "denominator": 23,
+      "numerator": 0,
+      "value": 0.0
+     }
+    },
+    "stolen_card": {
+     "action_correct": {
+      "denominator": 22,
+      "numerator": 7,
+      "value": 0.318182
+     },
+     "pattern_named": {
+      "denominator": 22,
+      "numerator": 22,
+      "value": 1.0
+     }
+    },
+    "synthetic_ring": {
+     "action_correct": {
+      "denominator": 35,
+      "numerator": 35,
+      "value": 1.0
+     },
+     "pattern_named": {
+      "denominator": 35,
+      "numerator": 35,
+      "value": 1.0
+     }
+    }
+   },
+   "first_attempt": {
+    "action_correct": {
+     "denominator": 200,
+     "numerator": 119,
+     "value": 0.595,
+     "wilson_95": [
+      0.525797,
+      0.660622
+     ]
+    },
+    "action_correct_valid_only": {
+     "denominator": 199,
+     "numerator": 119,
+     "value": 0.59799,
+     "wilson_95": [
+      0.528635,
+      0.663634
+     ]
+    },
+    "cases": 200,
+    "citations_without_rule_id": 561,
+    "decline_precision": {
+     "denominator": 21,
+     "numerator": 21,
+     "value": 1.0
+    },
+    "decline_recall": {
+     "denominator": 57,
+     "numerator": 21,
+     "value": 0.368421
+    },
+    "decline_recall_valid_only": {
+     "denominator": 56,
+     "numerator": 21,
+     "value": 0.375
+    },
+    "derived_token_signals": {
+     "denominator": 2129,
+     "numerator": 0,
+     "value": 0.0
+    },
+    "failures": [
+     6188
+    ],
+    "invalid_rule_citation_memos": 0,
+    "latency_p50_ms": 39105,
+    "non_verbatim_memos_archived_check": {
+     "denominator": 199,
+     "numerator": 3,
+     "value": 0.0150754
+    },
+    "pattern_named": {
+     "denominator": 199,
+     "numerator": 130,
+     "value": 0.653266
+    },
+    "signals_changed_by_token_fixes": 0,
+    "signals_without_tokens": {
+     "denominator": 2129,
+     "numerator": 535,
+     "value": 0.251292
+    },
+    "strict_rejections": [],
+    "unmatched_token_memos": {
+     "denominator": 199,
+     "numerator": 3,
+     "value": 0.0150754
+    },
+    "unmatched_token_memos_any_text": {
+     "denominator": 199,
+     "numerator": 17,
+     "value": 0.0854271
+    },
+    "unmatched_token_memos_archived_check": {
+     "denominator": 199,
+     "numerator": 3,
+     "value": 0.0150754
+    },
+    "unmatched_token_signals": {
+     "denominator": 2129,
+     "numerator": 3,
+     "value": 0.00140911
+    },
+    "valid_outputs": {
+     "denominator": 200,
+     "numerator": 199,
+     "value": 0.995
+    }
+   },
+   "model": "gpt-5.6-luna",
+   "primary_responses_beyond_case_limit": 0,
+   "prompt_version": "memo_v2",
+   "retries": {
+    "cases": [
+     6188
+    ],
+    "stored": 1,
+    "valid": 1
+   }
+  },
+  "memo_v2__gpt-5.6-terra": {
+   "backend": "codex",
+   "case_set": "the first 86 cases of cases.json",
+   "cases": 86,
+   "final": {
+    "action_correct": {
+     "denominator": 86,
+     "numerator": 66,
+     "value": 0.767442,
+     "wilson_95": [
+      0.667904,
+      0.844109
+     ]
+    },
+    "action_correct_valid_only": {
+     "denominator": 86,
+     "numerator": 66,
+     "value": 0.767442,
+     "wilson_95": [
+      0.667904,
+      0.844109
+     ]
+    },
+    "cases": 86,
+    "citations_without_rule_id": 236,
+    "decline_precision": {
+     "denominator": 15,
+     "numerator": 14,
+     "value": 0.933333
+    },
+    "decline_recall": {
+     "denominator": 20,
+     "numerator": 14,
+     "value": 0.7
+    },
+    "decline_recall_valid_only": {
+     "denominator": 20,
+     "numerator": 14,
+     "value": 0.7
+    },
+    "derived_token_signals": {
+     "denominator": 821,
+     "numerator": 0,
+     "value": 0.0
+    },
+    "failures": [],
+    "invalid_rule_citation_memos": 0,
+    "latency_p50_ms": 27670,
+    "non_verbatim_memos_archived_check": {
+     "denominator": 86,
+     "numerator": 1,
+     "value": 0.0116279
+    },
+    "pattern_named": {
+     "denominator": 86,
+     "numerator": 62,
+     "value": 0.72093
+    },
+    "signals_changed_by_token_fixes": 0,
+    "signals_without_tokens": {
+     "denominator": 821,
+     "numerator": 196,
+     "value": 0.238733
+    },
+    "strict_rejections": [],
+    "unmatched_token_memos": {
+     "denominator": 86,
+     "numerator": 1,
+     "value": 0.0116279
+    },
+    "unmatched_token_memos_any_text": {
+     "denominator": 86,
+     "numerator": 6,
+     "value": 0.0697674
+    },
+    "unmatched_token_memos_archived_check": {
+     "denominator": 86,
+     "numerator": 1,
+     "value": 0.0116279
+    },
+    "unmatched_token_signals": {
+     "denominator": 821,
+     "numerator": 1,
+     "value": 0.00121803
+    },
+    "valid_outputs": {
+     "denominator": 86,
+     "numerator": 86,
+     "value": 1.0
+    }
+   },
+   "final_per_pattern": {
+    "account_takeover": {
+     "action_correct": {
+      "denominator": 8,
+      "numerator": 8,
+      "value": 1.0
+     },
+     "pattern_named": {
+      "denominator": 8,
+      "numerator": 8,
+      "value": 1.0
+     }
+    },
+    "benign": {
+     "action_correct": {
+      "denominator": 27,
+      "numerator": 18,
+      "value": 0.666667
+     },
+     "pattern_named": {
+      "denominator": 27,
+      "numerator": 18,
+      "value": 0.666667
+     }
+    },
+    "inr_abuse": {
+     "action_correct": {
+      "denominator": 11,
+      "numerator": 9,
+      "value": 0.818182
+     },
+     "pattern_named": {
+      "denominator": 11,
+      "numerator": 10,
+      "value": 0.909091
+     }
+    },
+    "merchant_bustout": {
+     "action_correct": {
+      "denominator": 3,
+      "numerator": 0,
+      "value": 0.0
+     },
+     "pattern_named": {
+      "denominator": 3,
+      "numerator": 0,
+      "value": 0.0
+     }
+    },
+    "never_pay": {
+     "action_correct": {
+      "denominator": 1,
+      "numerator": 0,
+      "value": 0.0
+     },
+     "pattern_named": {
+      "denominator": 1,
+      "numerator": 0,
+      "value": 0.0
+     }
+    },
+    "promo_abuse": {
+     "action_correct": {
+      "denominator": 10,
+      "numerator": 10,
+      "value": 1.0
+     },
+     "pattern_named": {
+      "denominator": 10,
+      "numerator": 0,
+      "value": 0.0
+     }
+    },
+    "stolen_card": {
+     "action_correct": {
+      "denominator": 11,
+      "numerator": 6,
+      "value": 0.545455
+     },
+     "pattern_named": {
+      "denominator": 11,
+      "numerator": 11,
+      "value": 1.0
+     }
+    },
+    "synthetic_ring": {
+     "action_correct": {
+      "denominator": 15,
+      "numerator": 15,
+      "value": 1.0
+     },
+     "pattern_named": {
+      "denominator": 15,
+      "numerator": 15,
+      "value": 1.0
+     }
+    }
+   },
+   "first_attempt": {
+    "action_correct": {
+     "denominator": 86,
+     "numerator": 66,
+     "value": 0.767442,
+     "wilson_95": [
+      0.667904,
+      0.844109
+     ]
+    },
+    "action_correct_valid_only": {
+     "denominator": 86,
+     "numerator": 66,
+     "value": 0.767442,
+     "wilson_95": [
+      0.667904,
+      0.844109
+     ]
+    },
+    "cases": 86,
+    "citations_without_rule_id": 236,
+    "decline_precision": {
+     "denominator": 15,
+     "numerator": 14,
+     "value": 0.933333
+    },
+    "decline_recall": {
+     "denominator": 20,
+     "numerator": 14,
+     "value": 0.7
+    },
+    "decline_recall_valid_only": {
+     "denominator": 20,
+     "numerator": 14,
+     "value": 0.7
+    },
+    "derived_token_signals": {
+     "denominator": 821,
+     "numerator": 0,
+     "value": 0.0
+    },
+    "failures": [],
+    "invalid_rule_citation_memos": 0,
+    "latency_p50_ms": 27670,
+    "non_verbatim_memos_archived_check": {
+     "denominator": 86,
+     "numerator": 1,
+     "value": 0.0116279
+    },
+    "pattern_named": {
+     "denominator": 86,
+     "numerator": 62,
+     "value": 0.72093
+    },
+    "signals_changed_by_token_fixes": 0,
+    "signals_without_tokens": {
+     "denominator": 821,
+     "numerator": 196,
+     "value": 0.238733
+    },
+    "strict_rejections": [],
+    "unmatched_token_memos": {
+     "denominator": 86,
+     "numerator": 1,
+     "value": 0.0116279
+    },
+    "unmatched_token_memos_any_text": {
+     "denominator": 86,
+     "numerator": 6,
+     "value": 0.0697674
+    },
+    "unmatched_token_memos_archived_check": {
+     "denominator": 86,
+     "numerator": 1,
+     "value": 0.0116279
+    },
+    "unmatched_token_signals": {
+     "denominator": 821,
+     "numerator": 1,
+     "value": 0.00121803
+    },
+    "valid_outputs": {
+     "denominator": 86,
+     "numerator": 86,
+     "value": 1.0
+    }
+   },
+   "model": "gpt-5.6-terra",
+   "primary_responses_beyond_case_limit": 8,
+   "prompt_version": "memo_v2",
+   "retries": {
+    "cases": [],
+    "stored": 0,
+    "valid": 0
+   }
+  }
+ },
+ "benchmark": "2026-08-dev",
+ "case_set": {
+  "alert_dates": {
+   "first": "2025-07-18",
+   "last": "2026-06-21"
+  },
+  "before_cutoff": {
+   "denominator": 200,
+   "numerator": 163,
+   "value": 0.815
+  },
+  "benign_min_tenure_days": 78,
+  "cases": 200,
+  "cutoff": "2026-04-01",
+  "description": "development set drawn from all dates",
+  "labelled_fraud": {
+   "denominator": 200,
+   "numerator": 140,
+   "value": 0.7
+  },
+  "labelled_fraud_among_all_alerts": {
+   "denominator": 9450,
+   "numerator": 1889,
+   "value": 0.199894
+  },
+  "stories_by_pattern": {
+   "account_takeover": 26,
+   "inr_abuse": 16,
+   "merchant_bustout": 2,
+   "never_pay": 7,
+   "promo_abuse": 2,
+   "stolen_card": 22,
+   "synthetic_ring": 3
+  },
+  "strata": {
+   "account_takeover": 28,
+   "benign": 60,
+   "inr_abuse": 22,
+   "merchant_bustout": 3,
+   "never_pay": 7,
+   "promo_abuse": 23,
+   "stolen_card": 22,
+   "synthetic_ring": 35
+  },
+  "terra_prefix": {
+   "before_cutoff": {
+    "denominator": 86,
+    "numerator": 68,
+    "value": 0.790698
+   },
+   "cases": 86,
+   "strata": {
+    "account_takeover": 8,
+    "benign": 27,
+    "inr_abuse": 11,
+    "merchant_bustout": 3,
+    "never_pay": 1,
+    "promo_abuse": 10,
+    "stolen_card": 11,
+    "synthetic_ring": 15
+   }
+  },
+  "user_or_story_groups": 137,
+  "users": 190,
+  "users_with_two_or_more_cases": 10
+ },
+ "consistency": {
+  "arms": {
+   "memo_v1__claude-sonnet-5": {
+    "agreement_with_original": {
+     "denominator": 47,
+     "numerator": 37,
+     "value": 0.787234,
+     "wilson_95": [
+      0.65096,
+      0.880103
+     ]
+    },
+    "complete_probe_sets": {
+     "denominator": 50,
+     "numerator": 47,
+     "value": 0.94
+    },
+    "incomplete_cases": [
+     1828,
+     2220,
+     4462
+    ],
+    "probe_agreement": {
+     "denominator": 47,
+     "numerator": 41,
+     "value": 0.87234,
+     "wilson_95": [
+      0.748261,
+      0.940154
+     ]
+    },
+    "probe_cases": 50,
+    "unanimous_probes_differing_from_original": [
+     3700,
+     3942,
+     6245,
+     8999
+    ]
+   },
+   "memo_v2__claude-sonnet-5": {
+    "agreement_with_original": {
+     "denominator": 50,
+     "numerator": 40,
+     "value": 0.8,
+     "wilson_95": [
+      0.669629,
+      0.887562
+     ]
+    },
+    "complete_probe_sets": {
+     "denominator": 50,
+     "numerator": 50,
+     "value": 1.0
+    },
+    "incomplete_cases": [],
+    "probe_agreement": {
+     "denominator": 50,
+     "numerator": 42,
+     "value": 0.84,
+     "wilson_95": [
+      0.714858,
+      0.916626
+     ]
+    },
+    "probe_cases": 50,
+    "unanimous_probes_differing_from_original": [
+     4069,
+     7909
+    ]
+   },
+   "memo_v2__gpt-5.6-luna": {
+    "agreement_with_original": {
+     "denominator": 0,
+     "numerator": 0,
+     "value": null
+    },
+    "complete_probe_sets": {
+     "denominator": 50,
+     "numerator": 0,
+     "value": 0.0
+    },
+    "incomplete_cases": [
+     235,
+     644,
+     727,
+     729,
+     775,
+     842,
+     987,
+     1043,
+     1376,
+     1433,
+     1828,
+     1883,
+     2028,
+     2220,
+     2466,
+     2655,
+     2951,
+     2980,
+     3034,
+     3164,
+     3477,
+     3495,
+     3700,
+     3942,
+     4000,
+     4069,
+     4147,
+     4462,
+     5097,
+     5198,
+     5511,
+     5568,
+     5787,
+     5929,
+     5979,
+     6245,
+     6732,
+     7146,
+     7180,
+     7290,
+     7390,
+     7909,
+     8282,
+     8353,
+     8548,
+     8669,
+     8704,
+     8866,
+     8999,
+     9092
+    ],
+    "probe_agreement": {
+     "denominator": 0,
+     "numerator": 0,
+     "value": null
+    },
+    "probe_cases": 50,
+    "unanimous_probes_differing_from_original": []
+   }
+  },
+  "common_complete_cases": {
+   "arms": {
+    "memo_v1__claude-sonnet-5": {
+     "agreement_with_original": {
+      "denominator": 47,
+      "numerator": 37,
+      "value": 0.787234
+     },
+     "probe_agreement": {
+      "denominator": 47,
+      "numerator": 41,
+      "value": 0.87234
+     }
+    },
+    "memo_v2__claude-sonnet-5": {
+     "agreement_with_original": {
+      "denominator": 47,
+      "numerator": 37,
+      "value": 0.787234
+     },
+     "probe_agreement": {
+      "denominator": 47,
+      "numerator": 39,
+      "value": 0.829787
+     }
+    }
+   },
+   "arms_compared": [
+    "memo_v1__claude-sonnet-5",
+    "memo_v2__claude-sonnet-5"
+   ],
+   "cases": 47
+  }
+ },
+ "definitions": {
+  "action_correct": "the recommended action is in the case's acceptable-action set from the archived cases.json (a referee that maps the simulator's hidden pattern to actions)",
+  "agreement_with_original": "share of complete probe sets whose three actions all equal the original memo's action",
+  "decline_precision_recall": "against the referee's primary action (the first of the acceptable set), as archived",
+  "final": "the output accepted after the study's single retry, when a retry was stored",
+  "first_attempt": "the first stored response only, as the archived results were replayed",
+  "probe_agreement": "share of complete probe sets (three probes, each with a valid output) whose three actions agree",
+  "unmatched_token_memos": "memos with at least one signals_observed entry whose concrete tokens the packet does not contain and that is not a count or sum over a named packet list; a token check, not semantic truth",
+  "unmatched_token_memos_any_text": "the same check over every memo text: signals, hypothesis reasoning, evidence gaps and the memo prose; thresholds quoted from the prompt (such as $2,000 and $500) count as unmatched, since they are not packet facts",
+  "user_bootstrap_95": "cluster bootstrap over users (2,000 resamples, seed 0)",
+  "user_or_story_bootstrap_95": "cluster bootstrap over injected stories, or users outside any story (2,000 resamples, seed 0)",
+  "valid_outputs": "outputs that pass the study's validator and the strict validation",
+  "wilson_95": "Wilson score interval, treating cases as independent"
+ },
+ "limitations": {
+  "category_ratio": {
+   "differs_from_median_before_alert": {
+    "denominator": 200,
+    "numerator": 200,
+    "value": 1.0
+   },
+   "equals_full_period_mean": {
+    "denominator": 200,
+    "numerator": 200,
+    "value": 1.0
+   }
+  },
+  "future_linkage_packets": {
+   "alert_ids": [
+    3942,
+    5929,
+    842,
+    8548,
+    3034,
+    2028,
+    5568,
+    5787,
+    5979,
+    7390,
+    8669,
+    5198,
+    2951,
+    1043,
+    2655,
+    775,
+    1433,
+    6732,
+    3415,
+    5830,
+    8702,
+    981,
+    8563,
+    848,
+    686,
+    882,
+    8407,
+    1233,
+    3419,
+    698,
+    5968,
+    5832,
+    3589,
+    1016,
+    8618,
+    8715,
+    3219,
+    508,
+    5978,
+    8668,
+    6784,
+    8508,
+    1412,
+    3369,
+    6470,
+    5565,
+    3240,
+    8747,
+    9145,
+    8404,
+    2994,
+    5615,
+    984,
+    5500,
+    910,
+    2894,
+    5275,
+    1080,
+    5625
+   ],
+   "count": 59
+  },
+  "negative_tenure_packets": {
+   "alert_ids": [
+    686,
+    698,
+    842,
+    848,
+    2655
+   ],
+   "count": 5
+  },
+  "order_id_ranges_in_sample": {
+   "cases_labelled_by_id_range": {
+    "denominator": 140,
+    "numerator": 118,
+    "value": 0.842857
+   },
+   "pure_patterns": [
+    "account_takeover",
+    "merchant_bustout",
+    "never_pay",
+    "promo_abuse",
+    "stolen_card",
+    "synthetic_ring"
+   ],
+   "ranges": {
+    "account_takeover": {
+     "cases": 28,
+     "high": 350256,
+     "low": 349809,
+     "other_cases_inside": 0
+    },
+    "inr_abuse": {
+     "cases": 22,
+     "high": 334878,
+     "low": 37565,
+     "other_cases_inside": 50
+    },
+    "merchant_bustout": {
+     "cases": 3,
+     "high": 352982,
+     "low": 352887,
+     "other_cases_inside": 0
+    },
+    "never_pay": {
+     "cases": 7,
+     "high": 352579,
+     "low": 352178,
+     "other_cases_inside": 0
+    },
+    "promo_abuse": {
+     "cases": 23,
+     "high": 352802,
+     "low": 352615,
+     "other_cases_inside": 0
+    },
+    "stolen_card": {
+     "cases": 22,
+     "high": 351274,
+     "low": 350326,
+     "other_cases_inside": 0
+    },
+    "synthetic_ring": {
+     "cases": 35,
+     "high": 352094,
+     "low": 351284,
+     "other_cases_inside": 0
+    }
+   }
+  },
+  "order_id_ranges_in_world": {
+   "patterns": {
+    "P-ATO": {
+     "alerts_inside": 465,
+     "alerts_inside_with_another_label": 0,
+     "high": 350271,
+     "labelled_orders": 465,
+     "low": 349807
+    },
+    "P-INR-ABUSE": {
+     "alerts_inside": 7344,
+     "alerts_inside_with_another_label": 7218,
+     "high": 334878,
+     "labelled_orders": 452,
+     "low": 19
+    },
+    "P-MERCH": {
+     "alerts_inside": 3,
+     "alerts_inside_with_another_label": 0,
+     "high": 352984,
+     "labelled_orders": 180,
+     "low": 352805
+    },
+    "P-NEVERPAY": {
+     "alerts_inside": 7,
+     "alerts_inside_with_another_label": 0,
+     "high": 352614,
+     "labelled_orders": 480,
+     "low": 352135
+    },
+    "P-PROMO": {
+     "alerts_inside": 183,
+     "alerts_inside_with_another_label": 0,
+     "high": 352804,
+     "labelled_orders": 190,
+     "low": 352615
+    },
+    "P-STOLEN": {
+     "alerts_inside": 262,
+     "alerts_inside_with_another_label": 0,
+     "high": 351279,
+     "labelled_orders": 634,
+     "low": 350272
+    },
+    "P-SYNTH": {
+     "alerts_inside": 843,
+     "alerts_inside_with_another_label": 0,
+     "high": 352134,
+     "labelled_orders": 855,
+     "low": 351280
+    }
+   },
+   "pure_patterns": [
+    "P-ATO",
+    "P-MERCH",
+    "P-NEVERPAY",
+    "P-PROMO",
+    "P-STOLEN",
+    "P-SYNTH"
+   ],
+   "selected_cases_labelled_by_id_range": {
+    "denominator": 140,
+    "numerator": 118,
+    "value": 0.842857
+   }
+  },
+  "packet_reconstruction": {
+   "linkage_equals_all_time_counts": {
+    "denominator": 200,
+    "numerator": 200,
+    "value": 1.0
+   },
+   "repayment_equals_final_outcomes": {
+    "denominator": 200,
+    "numerator": 200,
+    "value": 1.0
+   }
+  },
+  "payments_after_alert": {
+   "alert_ids": [
+    3682,
+    5279,
+    2587
+   ],
+   "count": 3
+  },
+  "r06_rationale_future_accounts": {
+   "alert_ids": [
+    5929,
+    842,
+    8548,
+    3034,
+    5568,
+    5787,
+    8669,
+    2951,
+    2655,
+    5830,
+    8702,
+    981,
+    8563,
+    848,
+    686,
+    882,
+    8407,
+    698,
+    5832,
+    1016,
+    8618,
+    8715,
+    3219,
+    8668,
+    8508,
+    5565,
+    8747,
+    8404,
+    5615,
+    984,
+    5500,
+    5625
+   ],
+   "denominator": 58,
+   "numerator": 32,
+   "value": 0.551724
+  },
+  "r06_rationale_vs_packet_linkage": {
+   "packets_with_r06": 58,
+   "rationale_differs_from_other_accounts_same_email_root": 58,
+   "rationale_equals_other_accounts_plus_one": 58
+  }
+ },
+ "paired": {
+  "prompt_v1_vs_v2_action": {
+   "both": 114,
+   "case_set": "all 200 cases; final outputs",
+   "cases": 200,
+   "difference_second_minus_first": {
+    "denominator": 200,
+    "numerator": 25,
+    "user_bootstrap_95": [
+     0.0682927,
+     0.188776
+    ],
+    "user_clusters": 190,
+    "user_or_story_bootstrap_95": [
+     0.0634824,
+     0.202454
+    ],
+    "user_or_story_clusters": 137,
+    "value": 0.125
+   },
+   "exact_mcnemar_p": 0.000112221,
+   "first": "memo_v1__claude-sonnet-5",
+   "first_rate": {
+    "denominator": 200,
+    "numerator": 122,
+    "user_bootstrap_95": [
+     0.537688,
+     0.680203
+    ],
+    "user_or_story_bootstrap_95": [
+     0.475301,
+     0.714894
+    ],
+    "value": 0.61,
+    "wilson_95": [
+     0.540937,
+     0.674917
+    ]
+   },
+   "neither": 45,
+   "only_first": 8,
+   "only_second": 33,
+   "outcome": "action in the acceptable set",
+   "second": "memo_v2__claude-sonnet-5",
+   "second_rate": {
+    "denominator": 200,
+    "numerator": 147,
+    "user_bootstrap_95": [
+     0.670102,
+     0.796137
+    ],
+    "user_or_story_bootstrap_95": [
+     0.632908,
+     0.814966
+    ],
+    "value": 0.735,
+    "wilson_95": [
+     0.669824,
+     0.791318
+    ]
+   }
+  },
+  "prompt_v1_vs_v2_unmatched_tokens": {
+   "both": 132,
+   "case_set": "all 200 cases; final outputs",
+   "cases": 200,
+   "difference_second_minus_first": {
+    "denominator": 200,
+    "numerator": 58,
+    "user_bootstrap_95": [
+     0.226589,
+     0.355
+    ],
+    "user_clusters": 190,
+    "user_or_story_bootstrap_95": [
+     0.216343,
+     0.368428
+    ],
+    "user_or_story_clusters": 137,
+    "value": 0.29
+   },
+   "exact_mcnemar_p": 1.05818e-16,
+   "first": "memo_v1__claude-sonnet-5",
+   "first_rate": {
+    "denominator": 200,
+    "numerator": 133,
+    "user_bootstrap_95": [
+     0.599009,
+     0.731359
+    ],
+    "user_or_story_bootstrap_95": [
+     0.577137,
+     0.739353
+    ],
+    "value": 0.665,
+    "wilson_95": [
+     0.597022,
+     0.726759
+    ]
+   },
+   "neither": 8,
+   "only_first": 1,
+   "only_second": 59,
+   "outcome": "no unmatched token in signals_observed (a memo with one fails)",
+   "second": "memo_v2__claude-sonnet-5",
+   "second_rate": {
+    "denominator": 200,
+    "numerator": 191,
+    "user_bootstrap_95": [
+     0.924991,
+     0.9801
+    ],
+    "user_or_story_bootstrap_95": [
+     0.920245,
+     0.981599
+    ],
+    "value": 0.955,
+    "wilson_95": [
+     0.916703,
+     0.976147
+    ]
+   }
+  },
+  "sonnet_vs_luna_action": {
+   "both": 115,
+   "case_set": "all 200 cases; final outputs (Luna's stored retry for alert 6188 included)",
+   "cases": 200,
+   "difference_second_minus_first": {
+    "denominator": 200,
+    "numerator": -27,
+    "user_bootstrap_95": [
+     -0.192893,
+     -0.080402
+    ],
+    "user_clusters": 190,
+    "user_or_story_bootstrap_95": [
+     -0.207871,
+     -0.074414
+    ],
+    "user_or_story_clusters": 137,
+    "value": -0.135
+   },
+   "exact_mcnemar_p": 7.42753e-06,
+   "first": "memo_v2__claude-sonnet-5",
+   "first_rate": {
+    "denominator": 200,
+    "numerator": 147,
+    "user_bootstrap_95": [
+     0.670102,
+     0.796137
+    ],
+    "user_or_story_bootstrap_95": [
+     0.632908,
+     0.814966
+    ],
+    "value": 0.735,
+    "wilson_95": [
+     0.669824,
+     0.791318
+    ]
+   },
+   "neither": 48,
+   "only_first": 32,
+   "only_second": 5,
+   "outcome": "action in the acceptable set",
+   "second": "memo_v2__gpt-5.6-luna",
+   "second_rate": {
+    "denominator": 200,
+    "numerator": 120,
+    "user_bootstrap_95": [
+     0.527638,
+     0.671609
+    ],
+    "user_or_story_bootstrap_95": [
+     0.466258,
+     0.707033
+    ],
+    "value": 0.6,
+    "wilson_95": [
+     0.530837,
+     0.665394
+    ]
+   }
+  },
+  "sonnet_vs_terra_action": {
+   "both": 62,
+   "case_set": "Terra's 86 cases (the first 86 of cases.json)",
+   "cases": 86,
+   "difference_second_minus_first": {
+    "denominator": 86,
+    "numerator": 1,
+    "user_bootstrap_95": [
+     -0.0465116,
+     0.0705882
+    ],
+    "user_clusters": 85,
+    "user_or_story_bootstrap_95": [
+     -0.0470616,
+     0.0735333
+    ],
+    "user_or_story_clusters": 64,
+    "value": 0.0116279
+   },
+   "exact_mcnemar_p": 1.0,
+   "first": "memo_v2__claude-sonnet-5",
+   "first_rate": {
+    "denominator": 86,
+    "numerator": 65,
+    "user_bootstrap_95": [
+     0.659091,
+     0.847059
+    ],
+    "user_or_story_bootstrap_95": [
+     0.637472,
+     0.857143
+    ],
+    "value": 0.755814,
+    "wilson_95": [
+     0.655371,
+     0.83438
+    ]
+   },
+   "neither": 17,
+   "only_first": 3,
+   "only_second": 4,
+   "outcome": "action in the acceptable set",
+   "second": "memo_v2__gpt-5.6-terra",
+   "second_rate": {
+    "denominator": 86,
+    "numerator": 66,
+    "user_bootstrap_95": [
+     0.674068,
+     0.858824
+    ],
+    "user_or_story_bootstrap_95": [
+     0.65,
+     0.862385
+    ],
+    "value": 0.767442,
+    "wilson_95": [
+     0.667904,
+     0.844109
+    ]
+   }
+  }
+ },
+ "replay": {
+  "archived_results_reproduced": {
+   "memo_v1__claude-sonnet-5": true,
+   "memo_v2__claude-sonnet-5": true,
+   "memo_v2__gpt-5.6-luna": true,
+   "memo_v2__gpt-5.6-terra": true
+  },
+  "cache_files": 997,
+  "cache_files_beyond_case_limits": 8,
+  "cache_files_in_chains": 980,
+  "cache_files_matching_no_protocol_prompt": 9,
+  "strict_validation": {
+   "accepted_outputs": 979,
+   "rejected": 0
+  }
+ },
+ "source_commit": "16d223cac72e19681d61f175943cf1e3277810bb"
+}
