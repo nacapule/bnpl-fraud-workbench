@@ -135,11 +135,12 @@ holder has not reported a takeover (§9(b)); (b) an earlier plan on the account 
 never-pay determination (§8.3); (c) item-not-received abuse was determined on the
 account (§9(d)).
 
-**6.4** Households share devices and addresses. (a) Exclude R02 when the device was first
-used on this account at least 90 days before the order and R02 counts at most 4
-accounts. (b) Exclude R08 when the shipping address is the account's current home
-address, registered on this account at least 90 days before the order, and R08 counts
-at most 4 accounts. Accounts sharing a device or home address for 90 days before
+**6.4** Households share devices and addresses. These exceptions apply to the family
+count of §6.6 only; priority (§7.1) uses the rules as they hold. (a) R02 does not count
+when the device was first used on this account at least 90 days before the order and R02
+counts at most 4 accounts. (b) R08 does not count when the shipping address is the
+account's current home address, registered on this account at least 90 days before the
+order, and R08 counts at most 4 accounts. Accounts sharing a device or home address for 90 days before
 acting are a known gap. Account age and repayment history alone explain nothing:
 they describe the account holder, not who ordered.
 
