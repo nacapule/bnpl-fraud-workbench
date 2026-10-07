@@ -21,7 +21,8 @@ claims: []
 
 # How sentences name things. A metric's more and less read "<policy> <more>
 # <reference>"; its noun names it in no-difference and equivalence sentences;
-# its format prints its differences (report/formats.py).
+# its format prints its differences (report/formats.py). A rate or share is
+# worded as one ("a larger share of"), never as a count.
 wording:
   policies:
     approve_all: "approve-all"
@@ -43,14 +44,14 @@ wording:
       noun: "loss as a share of GMV"
       format: "bps"
     legitimate_held_per_10k:
-      more: "held more legitimate orders than"
-      less: "held fewer legitimate orders than"
-      noun: "legitimate orders held per 10,000"
+      more: "held a larger share of legitimate orders than"
+      less: "held a smaller share of legitimate orders than"
+      noun: "legitimate orders held per 10,000 legitimate orders"
       format: "per_10k"
     legitimate_declined_per_10k:
-      more: "declined more legitimate orders than"
-      less: "declined fewer legitimate orders than"
-      noun: "legitimate orders declined per 10,000"
+      more: "declined a larger share of legitimate orders than"
+      less: "declined a smaller share of legitimate orders than"
+      noun: "legitimate orders declined per 10,000 legitimate orders"
       format: "per_10k"
     review_minutes_used_share:
       more: "used a larger share of review minutes than"

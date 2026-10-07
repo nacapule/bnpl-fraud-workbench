@@ -298,6 +298,8 @@ def test_inline_code_with_three_backticks_does_not_open_a_fence() -> None:
     "> ```\n> code 12\n\nLoss was 84% of GMV.\n",  # the quote, and its fence, ended
     "- Example:\n\n  ```text\n  code 12\n    ```\n\nLoss was 84% of GMV.\n",  # in an item
     "> ```markdown\n> > ```\n> example 12\n> ```\n>\n> Loss was 84% of GMV.\n",  # a > in code
+    "- - ```text\n    code 12\n    ```\n\n    Loss was 84% of GMV.\n",  # two list marks
+    "    ```text\n    example\n    ```\n\nLoss was 84% of GMV.\n",  # indented code, no fence
 ])
 def test_a_fence_ends_with_its_closer_or_its_container(template: str) -> None:
     """Fence content is read as content first; a fence never outlives its container."""
@@ -334,6 +336,16 @@ def test_comparisons_typed_into_a_template_are_flagged() -> None:
     allowed = ["A lower threshold holds more orders for review."]
     assert [f.line for f in lint.directional_findings("README.md", template, words,
                                                       allowed_sentences=allowed)] == [3, 7]
+    # an allowed sentence exempts itself whole, and nothing longer
+    for text, lines in [
+        ("Intro. A lower threshold holds more orders for review. Next.\n", []),
+        ("A lower threshold holds more orders for review than the incumbent rules.\n", [1, 1]),
+        ("So A lower threshold holds more orders for review.\n", [1, 1]),
+    ]:
+        assert [f.line for f in lint.directional_findings(
+            "README.md", text, words, allowed_sentences=allowed)] == lines
+    with pytest.raises(ValueError, match="full stop"):
+        lint.directional_findings("README.md", "x", words, allowed_sentences=["No stop"])
 
 
 def test_the_lint_configuration_is_text(tmp_path: Path) -> None:
@@ -599,8 +611,12 @@ def test_the_repository_wording_covers_what_the_evaluation_compares() -> None:
     assert set(protocol.raw["families"]) <= set(wording.families)
     assert set(pipeline.expected_capacities(protocol)) <= set(wording.capacities)
     for name, words in wording.metrics.items():  # each difference prints in its own unit
-        unit = pipeline._difference_unit(pipeline.OUTCOME_METRICS[name][0])
-        formats.apply(words["format"], formats.Value(plain=1, unit=unit, contrast=True), [])
+        unit, _, denominator, _ = pipeline.OUTCOME_METRICS[name]
+        formats.apply(words["format"], formats.Value(
+            plain=1, unit=pipeline._difference_unit(unit), contrast=True), [])
+        if denominator:  # a rate is worded as a rate, not as a count
+            assert all("share" in words[side] or "rate" in words[side]
+                       for side in ("more", "less")), name
 
 
 # ---------------------------------------------------------------- the repository

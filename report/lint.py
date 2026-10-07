@@ -94,7 +94,7 @@ def _words(value: Any, where: str) -> list[str]:
 
 def load_config(path: Path = CONFIG) -> dict[str, Any]:
     data = yaml.safe_load(path.read_text()) or {}
-    return {
+    config = {
         "documents": list(data.get("documents", [])),
         "not_yet_templated": list(data.get("not_yet_templated", [])),
         "allowed_phrases": _words(data.get("allowed_phrases"), "allowed_phrases"),
@@ -102,6 +102,10 @@ def load_config(path: Path = CONFIG) -> dict[str, Any]:
         "comparatives": _words(data.get("comparatives"), "comparatives"),
         "allowed_sentences": _words(data.get("allowed_sentences"), "allowed_sentences"),
     }
+    if unfinished := [text for text in config["allowed_sentences"]
+                      if not text.strip() or text.strip()[-1] not in ".!?"]:
+        raise ValueError(f"allowed_sentences: {unfinished} must each end with its full stop")
+    return config
 
 
 def _blank(match: re.Match[str]) -> str:
@@ -174,6 +178,8 @@ def _blank_fences(text: str) -> str:
     quote marks it opened in; it ends at its closer (indented at most three
     columns past the content column of the list item it is in) or where its
     container ends (fewer quote marks, or a line indented less than that column).
+    An opener indented four columns or more past its container is indented code,
+    not a fence.
     """
     out: list[str] = []
     fence: tuple[str, int, int] | None = None  # marker, quote depth, content column
@@ -196,17 +202,19 @@ def _blank_fences(text: str) -> str:
             out.append(line)
             continue
         indent = _indent(rest)
-        item = LIST_ITEM.match(rest)
-        if blank or item:  # a new block belongs to the items it is indented under
+        if blank or LIST_ITEM.match(rest):  # a new block belongs to the items it is under
             while lists and lists[-1] > indent:
                 lists.pop()
-        if item:
-            lists.append(len(item.group(0).replace("\t", "    ")))
+        content, offset = rest, 0
+        while item := LIST_ITEM.match(content):  # every list mark on the line: "- - text"
+            offset += len(item.group(0).replace("\t", "    "))
+            lists.append(offset)
+            content = content[item.end():]
         blank = False
-        content = (rest[item.end():] if item else rest).strip()
-        if opened := _fence(content):
-            column = lists[-1] if lists and (item or indent >= lists[-1]) else 0
-            fence = (opened, depth, column)
+        base = lists[-1] if lists and (offset or indent >= lists[-1]) else 0
+        opened = _fence(content.strip())
+        if opened and (offset or indent - base <= 3):
+            fence = (opened, depth, base)
             out.append(" " * len(line))
         else:
             out.append(line)
@@ -228,15 +236,35 @@ def phrase_spans(phrases: Iterable[str], text: str) -> list[tuple[int, int]]:
     return [match.span() for match in pattern.finditer(text)]
 
 
+def _sentence_start(text: str, start: int) -> bool:
+    """Whether ``start`` begins a sentence: the start of a line (after list, quote or
+    heading marks) or after a full stop, question mark, exclamation mark or placeholder."""
+    line = text[text.rfind("\n", 0, start) + 1:start]
+    if re.fullmatch(r"\s*(?:(?:[-*+>]|\d+[.)]|#+)\s+)*", line):
+        return True
+    before = text[:start].rstrip()
+    return not before or before[-1] in ".!?}"
+
+
 def directional_findings(name: str, template: str, words: Iterable[str],
                          allowed_phrases: Iterable[str] = (),
                          allowed_sentences: Iterable[str] = ()) -> list[Finding]:
-    """Comparative words in a template's own text, outside the allowed sentences."""
+    """Comparative words in a template's own text, outside the allowed sentences.
+
+    An allowed sentence exempts only itself, whole: from the start of a sentence
+    to its own full stop (it must end with ``.``, ``?`` or ``!``).
+    """
     text = literal_text(template, allowed_phrases)
     for allowed in allowed_sentences:
-        words_of = [re.escape(word) for word in normalize(allowed).split()]
-        if words_of:
-            text = re.sub(r"\s+".join(words_of), _blank, text)
+        allowed = normalize(allowed)
+        if not allowed or allowed[-1] not in ".!?":
+            raise ValueError(f"allowed sentence {allowed!r} must end with its full stop")
+        pattern = r"\s+".join(re.escape(word) for word in allowed.split())
+
+        def blank_whole(match: re.Match[str], text: str = text) -> str:
+            return _blank(match) if _sentence_start(text, match.start()) else match.group(0)
+
+        text = re.sub(pattern, blank_whole, text)
     findings = []
     for number, line in enumerate(text.split("\n"), start=1):
         for start, end in phrase_spans(words, line):
