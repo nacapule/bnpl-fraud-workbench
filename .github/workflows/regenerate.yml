@@ -1,0 +1,48 @@
+name: regenerate
+
+# The full final run from a clean checkout: every final-seed world, every
+# stage, the results and the documents. The regenerated files must equal the
+# committed ones byte for byte. Manual, and weekly.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * 1"
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  BNPL_DB_HOST: 127.0.0.1
+  BNPL_DB_PORT: "3306"
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: rootpw
+          MYSQL_DATABASE: bnpl
+          MYSQL_USER: fraud
+          MYSQL_PASSWORD: fraudpw
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -ufraud -pfraudpw"
+          --health-interval 5s --health-timeout 3s --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements.lock
+      - name: Install the locked environment
+        run: make venv
+      - name: Final run (refused unless the protocol is frozen)
+        run: make final
+      - name: Regenerated results and documents equal the committed ones
+        run: |
+          git status --porcelain
+          git diff --stat --exit-code
+          test -z "$(git status --porcelain)"

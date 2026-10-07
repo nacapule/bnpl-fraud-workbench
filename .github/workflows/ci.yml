@@ -5,61 +5,16 @@ on:
     branches: [main]
   pull_request:
 
-jobs:
-  pipeline-scaled:
-    # Smoke-runs every layer end-to-end at 5% scale. The job's checkout is
-    # disposable, so the scaled reports it writes are never committed.
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    services:
-      mysql:
-        image: mysql:8.4
-        env:
-          MYSQL_ROOT_PASSWORD: rootpw
-          MYSQL_DATABASE: bnpl
-          MYSQL_USER: fraud
-          MYSQL_PASSWORD: fraudpw
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd "mysqladmin ping -h 127.0.0.1 -ufraud -pfraudpw"
-          --health-interval 5s --health-timeout 3s --health-retries 30
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-      - name: Install
-        run: |
-          python -m venv .venv
-          .venv/bin/pip install -q -e ".[dev]"
-      - name: Lint
-        run: .venv/bin/ruff check .
-      - name: Generate scaled world + load
-        env:
-          SIM_SCALE: "0.05"
-        run: |
-          .venv/bin/python -m simulator.generate
-          .venv/bin/python db/load.py
-      - name: Rules engine + tuning (scaled)
-        run: |
-          .venv/bin/python -m rules.engine
-          .venv/bin/python -m rules.tuning
-      - name: Model + queue reports (scaled)
-        run: |
-          .venv/bin/python -m model.train
-          .venv/bin/python -m model.evaluate
-          .venv/bin/python -m queue_sim.simulate
-      - name: Staffing frontier + uncertainty (scaled)
-        run: |
-          .venv/bin/python -m queue_sim.sweep
-          .venv/bin/python -m analysis.uncertainty
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  BNPL_DB_HOST: 127.0.0.1
+  BNPL_DB_PORT: "3306"
 
-  tests-full:
-    # Regenerates the full-scale world (deterministic, seed 416), loads it, and
-    # runs the complete test suite plus the offline LLM evaluation against the
-    # committed reports and frozen eval artifacts.
+jobs:
+  checks:
+    # Lint, every unit and fixture test (MySQL included), the documents
+    # against the committed results, and the archived LLM benchmark replayed
+    # offline from its stored responses (no model calls, no keys).
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
@@ -79,24 +34,52 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
           cache: pip
-      - name: Install
-        run: |
-          python -m venv .venv
-          .venv/bin/pip install -q -e ".[dev]"
-      - name: Generate full-scale world
-        run: .venv/bin/python -m simulator.generate
-      - name: Load + rules (full scale)
-        run: |
-          .venv/bin/python db/load.py
-          .venv/bin/python -m rules.engine
-      - name: Tests
+          cache-dependency-path: requirements.lock
+      - name: Install the locked environment
+        run: make venv
+      - name: Lint
+        run: make lint
+      - name: Tests, MySQL required
+        run: make test-mysql
+      - name: Documents match the results; claims hold; no typed numbers
+        run: make docs-check
+      - name: Archived LLM benchmark replayed offline
+        run: make llm-history
+
+  small-world:
+    # One small world through every stage: the run must complete (a result
+    # from every stage and a summary whose versions agree), the world must pass
+    # the contract validator (chronology included) and load into the MySQL
+    # schema. The run writes only to runs/ci, never to the committed results.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      mysql:
+        image: mysql:8.4
         env:
-          BNPL_REQUIRE_MYSQL: "1"
-          BNPL_DB_DISPOSABLE: "1"
-        run: .venv/bin/python -m pytest tests/ -q
-      - name: Case selection + LLM eval (offline, committed cache — no keys)
+          MYSQL_ROOT_PASSWORD: rootpw
+          MYSQL_DATABASE: bnpl
+          MYSQL_USER: fraud
+          MYSQL_PASSWORD: fraudpw
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -ufraud -pfraudpw"
+          --health-interval 5s --health-timeout 3s --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements.lock
+      - name: Install the locked environment
+        run: make venv
+      - name: Small world, every stage
+        run: make ci-world
+      - name: The run is complete and left the repository unchanged
         run: |
-          .venv/bin/python -m llm.eval.select_cases
-          .venv/bin/python -m llm.eval.harness --offline --no-consistency
+          test -f runs/ci/results/summary.json
+          test -z "$(git status --porcelain)"

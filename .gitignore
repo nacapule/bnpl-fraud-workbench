@@ -10,3 +10,5 @@ mysql-data/
 reports/*.tmp
 .DS_Store
 runs/
+*.egg-info/
+build/

@@ -1,9 +1,10 @@
 [project]
 name = "bnpl-fraud-workbench"
-version = "0.1.0"
-description = "End-to-end BNPL fraud operation in miniature: simulator, MySQL investigation layer, rules engine, queue/SLA simulation, ML detection, Claude-powered triage with a measured eval harness. All data synthetic."
+version = "0.2.0"
+description = "How a small BNPL fraud team should spend limited review capacity: rules, machine-learning and hybrid policies compared on a synthetic pay-in-4 world with late-arriving evidence, a shipping deadline and the cost of turning away good customers."
 requires-python = ">=3.11"
 license = {text = "MIT"}
+# Ranges for installing; requirements.lock pins the versions results are produced with.
 dependencies = [
     "pandas>=2.2",
     "numpy>=1.26",
@@ -15,8 +16,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.6"]
-api = ["anthropic>=0.40"]
+dev = ["pytest>=8.0", "ruff>=0.6", "scipy>=1.11"]  # scipy: an independent check in the tests
 
 [tool.ruff]
 line-length = 100
@@ -29,4 +29,5 @@ select = ["E", "F", "I", "W", "UP", "B"]
 testpaths = ["tests"]
 
 [tool.setuptools]
-packages = ["core", "simulator", "rules", "queue_sim", "model", "llm"]
+packages = ["core", "simulator", "rules", "queue_sim", "model", "llm", "report"]
+py-modules = ["pipeline"]
