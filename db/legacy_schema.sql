@@ -1,7 +1,13 @@
 -- bnpl-fraud-workbench MySQL 8.4 schema. InnoDB, utf8mb4.
 -- Loaded by db/load.py (drops + recreates: idempotent by design).
 
+-- The world schema (db/schema.sql) shares this database: drop its views and tables too.
 SET FOREIGN_KEY_CHECKS = 0;
+DROP VIEW IF EXISTS users, orders, installments, chargebacks;
+DROP TABLE IF EXISTS accounts, device_links, address_links, promotions,
+  installment_schedule, order_attempts, payment_attempts, fulfilments, deliveries,
+  payment_reversals, dispute_openings, dispute_resolutions, victim_reports,
+  plan_writeoffs, cash_events, latent_episodes, latent_accounts, latent_orders;
 DROP TABLE IF EXISTS labels, chargebacks, promo_redemptions, promos, account_events,
   payments, installments, plans, orders, merchants, addresses, cards, user_devices,
   devices, users, alerts;
