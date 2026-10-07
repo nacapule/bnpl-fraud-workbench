@@ -1,151 +1,252 @@
 # Fraud Operations Policy
 
-**Document:** FP-1 · **Applies to:** consumer and merchant transaction review on the
-simulated BNPL platform · **Review cadence:** quarterly, or after any rule/threshold change
+**Document:** FP-2 (replaces FP-1) · **Applies to:** checkout decisions and analyst review
+of consumer orders on the simulated pay-in-4 platform · **Changes:** §12
 
-This is the internal policy that governs how alerts are investigated and actioned in this
-workbench. Analyst memos, the Claude triage layer, and the written case files all cite it
-by section and rule id (e.g. FP-1 §4, R03). It is written for a pay-in-4 product: the
-platform pays the merchant up front and collects 25% at checkout plus three
-biweekly installments, so the platform holds both the fraud risk and the credit risk of
-every approved order.
+This policy governs order decisions. The simulated review procedure and memo checks
+implement each clause; every adverse action cites its clause and facts, for example
+"FP-2 §6.6(b), R01".
 
----
+## 1. Scope
 
-## 1. Definitions and loss taxonomy
+**1.1** Customers pay 25% at checkout, the rest in three fortnightly installments.
+The platform pays merchants when they report shipment, net of their fee, and carries
+fraud and credit risk on every approved order. Merchants ship within hours; decisions
+after shipment cannot prevent the order's loss.
 
-**Fraud loss** — loss caused by a party who never intended to be the accountholder or
-never intended to repay *at the moment of the transaction*, or a merchant complicit in
-extracting funds. Third-party fraud (stolen card, account takeover, synthetic identity)
-and first-party fraud (never-pay, friendly fraud / INR abuse, promo abuse, merchant
-bust-out) are both fraud.
+**1.2** This policy covers checkout routing, analyst review, verification, queue priority
+and later determinations. Merchant-level actions, such as payout freezes, belong to
+merchant risk.
 
-**Credit loss** — loss from a genuine customer who intended to repay and could not.
-Distinguishing marks: partial repayment effort (some installments paid or retried
-successfully before failure), stable device/IP/address history, no post-order account
-manipulation, order size consistent with history. Credit losses are **not** actioned under
-this policy beyond standard dunning; misclassifying hardship as fraud (or vice versa) is a
-reportable QA error. See §6.3 and CASE-04.
+## 2. Definitions
 
-**Abuse** — policy exploitation that may not be chargeable fraud: repeated
-item-not-received (INR) disputes on delivered goods, multi-account promo redemption.
-Actioned under this policy with account-level remedies (§5), not order declines alone.
+**2.1 Fraud** is loss caused by someone other than the legitimate account holder or
+cardholder (third-party: stolen card, account takeover, synthetic identity), an account
+holder who never intended to repay or keep the terms (first-party: never-pay,
+item-not-received abuse, promotion abuse), or a complicit merchant (merchant bust-out).
 
-**Insult** — a false decline of a legitimate customer. Insults carry a measured cost
-(config `costs.false_decline_*`) and a reputational cost; §6 exists to keep them rare.
+**2.2 Credit loss** is unpaid money without evidence of intent not to repay (§8.4).
 
-## 2. Evidence standards
+**2.3 Friction** is any hold, cancellation or decline affecting a legitimate customer,
+including orders refused for account blocks.
 
-1. Every action stronger than *clear* must cite at least one fired rule (R01–R12) **and**
-   the underlying observable facts (rows, timestamps, linkage counts). "Score was high" is
-   not a finding.
-2. Facts must come from the case packet or from queries an analyst ran; memos quote them
-   verbatim. For LLM-drafted memos, the eval verifier performs a token-boundary check over
-   concrete numeric, id, timestamp, and money tokens in `signals_observed`, with a narrow
-   derived-list classification. This is a mechanical grounding check, not semantic-truth
-   verification.
-3. Alternative benign explanations (§6) must be considered and explicitly rejected in any
-   memo recommending `decline_block`. A memo that never weighs the benign hypothesis is
-   incomplete.
-4. Labels/ground truth (simulator artifacts) are **never** available to analysts, the rules
-   engine, or the triage layer; they exist only in offline evaluation. Any workflow found
-   reading them is invalid.
+**2.4 Decision time** is checkout for routing; the analyst's decision for review.
 
-## 3. Action ladder
+**2.5 Linked accounts** are other accounts with orders from the order's device or
+shipments to its address within R02 and R08 windows, as known at decision time.
 
-| Action | Meaning | Reversibility |
+## 3. What is known when
+
+**3.1** Make and judge each decision using only evidence known at its decision time.
+
+**3.2** Evidence arrives at different times:
+
+| Evidence | Known |
+|---|---|
+| Account opening; password, email, device and address changes | when they happen |
+| Order attempts, processor declines, AVS and CVV results, IP, device, card, address, promotion use | at the attempt |
+| Verification outcomes (§5) | at check completion |
+| Installment payments and failures | each due or retry date, from two weeks after checkout |
+| Default (§8.2) | 30 days after a missed due date |
+| Disputes | reason (`unauthorized`, `item_not_received`, `not_as_described`) at opening; outcome (`won`: decided against the customer; `lost`) at resolution, weeks later |
+| Victim reports | when filed |
+
+**3.3** Simulation truth and outcome labels are unavailable to analysts, rules, the review
+procedure and memo drafter. Any workflow reading them is invalid.
+
+**3.4** An order whose outcomes are not yet known is unknown, not legitimate.
+
+## 4. Actions
+
+**4.1** Automatic checkout routing follows score bands fixed before use in the active
+detection policy (`config/policy.yaml`). An `auto_decline` records no fraud finding and
+blocks no account.
+
+**4.2** Analysts resolve reviewed orders with `clear`, `hold`, `decline` or `escalate`.
+Only `decline` and `escalate` block accounts, only under §6.
+
+**4.3** `needs_check` is a memo recommendation, not an action: the evidence does not
+decide the order, and the memo names the §5.1 check that would. The analyst carries it
+out as a `hold` with that check. It is correct under §6.6(b) and wrong under §6.6(a) and
+(c).
+
+| Action | Order | Customer | Analyst time |
+|---|---|---|---|
+| `approve` | ships | none | none |
+| `review` | ships unless held or declined first | none unless held or declined | one review at §7 priority |
+| `auto_decline` | not created; no money moves | declined, not blocked | none |
+| `clear` | ships | none | review |
+| `hold` | shipment and merchant payment paused up to 48 h for checks; after shipment, checks run without pausing | verification requested; released if verified, otherwise cancelled and checkout payment refunded | review and checks |
+| `decline` | before shipment: voided and refunded; after shipment (decline after fulfilment): loss stands | blocked; later orders declined | review |
+| `escalate` | as `decline` | as `decline`; all linked accounts also blocked | review and senior review |
+
+## 5. Verification
+
+**5.1** Two checks, each available at most once per order, establish who is ordering,
+never repayment intent, promotion entitlement or the truth of delivery claims.
+
+- (a) `contact`: ask the account holder to confirm they placed the order, using contact
+  details on the account before any change in the 30 days before the order.
+- (b) `id_check`: the customer authenticates the payment with the card's issuer and
+  verifies the identity on the account, which establishes that they hold both.
+
+Each check returns `passed`, `failed` (account holder disowns the order, or
+authentication or identity verification fails) or `no_response` (including technical
+errors).
+
+**5.2** Families present (§6.2) require `contact` for Account access and `id_check` for
+Card, Velocity and Linkage. Run both when both are required.
+
+**5.3** (a) All required checks `passed`: `clear`. (b) Any check `failed`: `decline`, or
+`escalate` if Linkage is present; cite the failure. (c) No response within 48 hours:
+cancel and refund without blocking accounts. After shipment, a failed check means
+`decline` (the loss stands and the account is blocked); a pass or no response changes
+nothing.
+
+## 6. Evidence standards
+
+**6.1** Every `hold`, `decline`, `escalate` or memo recommending one cites the clause
+permitting it and supporting facts: values, times and counts known at decision time.
+
+**6.2** Each rule is an evidence condition in one family, evaluated at decision time.
+The four adverse families can support `hold` or `decline`; Context conditions cannot,
+alone or together, because no check resolves what they suggest. R12 (a vendor score) is
+retired; never reuse its id.
+
+| Rule | Condition | Family | Intent |
+|---|---|---|---|
+| R01 | password or email changed in the 48 h before the order; account at least 90 days old; and device first seen on the account within 72 h of the order | Account access | takeover leaves a trail |
+| R11 | previous account order from another country under 12 h earlier, implying over 900 km/h | Account access | two places at once |
+| R03 | card issuing and IP countries differ, and AVS or CVV failed | Card | stolen card details |
+| R07 | 3 or more processor declines on this card or device in the prior 24 h | Card | testing stolen cards |
+| R05 | more than 3 order attempts on the account or more than 5 on the device in the 24 h up to the order | Velocity | faster than ordinary shopping |
+| R02 | 3 or more accounts ordered from this device in the past 30 days | Linkage | shared devices tie rings |
+| R08 | 3 or more accounts shipped to this address in the past 30 days | Linkage | goods land somewhere |
+| R06(b) | normalized email matches another account's | Linkage | duplicated identities |
+| R10 | order uses a promotion and its device or address has 3 or more promotion uses | Linkage | multi-account promotion use |
+| R06(a) | disposable email domain | Context | cheap identity |
+| R04 | account's first order; amount above its category's 95th percentile of amounts so far; and account under 7 days old | Context | front-loaded exposure |
+| R09 | 2 or more `item_not_received` disputes opened on earlier account orders | Context | repeated claims |
+
+**6.3** Earlier outcomes known at decision time settle the order: (a) an earlier order
+on the account had an `unauthorized` dispute resolved `lost` (§9(a)) and the account
+holder has not reported a takeover (§9(b)); (b) an earlier plan on the account met the
+never-pay determination (§8.3); (c) item-not-received abuse was determined on the
+account (§9(d)).
+
+**6.4** Households share devices and addresses. (a) Exclude R02 when the device was first
+seen on the account at least 90 days before the order and at most 4 accounts ordered
+from it in the past 30 days. (b) Exclude R08 when the address is the account's home
+address, registered at least 90 days before the order, and at most 4 accounts shipped
+there in the past 30 days. Accounts sharing a device or home address for 90 days before
+acting are a known gap. Account age and repayment history alone explain nothing:
+they describe the account holder, not who ordered.
+
+**6.5** These never support `hold`, `decline` or `escalate`; memos weigh them as benign
+explanations or context:
+
+- (a) AVS or CVV failure without R03's geography. Legitimate simulated orders have 4.0%
+  AVS and 2.0% CVV failure rates.
+- (b) New devices or addresses, travel, password resets after new phones, or shipping
+  away from home. Travellers, movers, new phones and gift buyers explain these; when
+  they trigger a rule, the check settles it.
+- (c) First or large orders outside R04, time of day, or IP range.
+- (d) Model scores, rule scores or resemblance to fraud patterns.
+- (e) Merchant evidence belongs to merchant risk.
+- (f) Other plans' repayment history, good or bad, except §6.3(b).
+
+**6.6** A family is present when one of its conditions holds without a §6.4 exception.
+Use the first applicable row; **Standard** is the review procedure's action. After a check,
+apply §5.3.
+
+| | Evidence | Standard | Also permitted | Prohibited |
+|---|---|---|---|---|
+| (a) | an earlier outcome settles it (§6.3) | `decline`; `escalate` if Linkage is present | none | `clear`, `hold`, `needs_check` |
+| (b) | one or more adverse families | `hold` with the §5.2 checks | `decline` when two or more families are present | `clear` before every required check passes; `decline` with one family, or `escalate`, before a check fails |
+| (c) | no adverse family | `clear` | none | `hold`, `decline`, `escalate`, `needs_check` |
+
+`escalate` requires Linkage because it blocks linked accounts. R06(b) supports Linkage
+but extends no block beyond §2.5.
+
+## 7. Queue priority and service targets
+
+**7.1** Assign priority automatically at queue entry from facts known then; it never
+changes. Orders already shipped or cancelled at entry are P3; otherwise, use the first
+applicable row. The detection policy orders each priority's queue.
+
+| Priority | Assigned when | Target |
 |---|---|---|
-| `clear` | Alert closed as benign; order proceeds; no customer contact | — |
-| `hold_contact` | Order/installment plan paused pending customer verification (step-up: email/SMS confirm, card re-auth). Auto-releases in 48h if verified | Fully reversible |
-| `decline_block` | Order declined (or plan frozen if post-fulfillment); account blocked from new orders pending manual review | Reversible pre-fulfillment; loss-bearing after |
-| `escalate` | Suspected ring, merchant complicity, or ≥ $2,000 aggregate exposure: hand to senior review with linkage evidence | — |
+| P0 | the merchant's median fulfilment time leaves under 2 h before shipment, or R05 or R07 holds | 1 service hour |
+| P1 | the amount is at least $500, or R02, R08 or R10 holds | 4 service hours |
+| P2 | any other order | 8 service hours |
+| P3 | the order had shipped or been cancelled when it entered the queue | 24 service hours |
 
-Priorities: **P0** — fulfillment imminent (< 2h) or active burst in progress; **P1** —
-high-exposure single account (> $500) or growing linkage cluster; **P2** — standard queue;
-**P3** — post-loss documentation / no live exposure. SLA targets: P0 ≤ 1 business hour,
-P1 ≤ 4, P2 ≤ 8, P3 ≤ 24 (see queue simulation).
+**7.2** Service hours follow the fixed `config/policy.yaml` calendar, independent of
+the staffing roster. Clock time to decision, and whether the decision preceded shipment,
+are reported alongside the target.
 
-## 4. Rules and their intent
+## 8. Credit versus fraud
 
-Thresholds live in `config.yaml` and `rules/definitions.py`; this section records intent
-and rationale so threshold changes don't silently change meaning. Score = Σ weights of
-fired rules; bands (config `rules.bands`): below review band → auto-approve, review band →
-analyst queue, decline band → auto-decline pending review.
+**8.1** First plans lack repayment history, so repayment cannot be judged at checkout.
+If no account installment was due before decision time, actions, determinations and memo
+recommendations cannot cite non-payment or never-pay; apply §6 alone. Memos may still
+name never-pay as a hypothesis.
 
-| Rule | Intent | Primary pattern |
-|---|---|---|
-| **R01** credential/contact change ≤ 48h before order on a ≥ 90-day account, from a new device | Account takeover leaves a manipulation trail before the money moves | ATO |
-| **R02** ≥ 3 accounts sharing one device in 30d | Device reuse is the cheapest ring signal | Synthetic, promo |
-| **R03** card BIN country ≠ IP country **and** AVS or CVV mismatch | Geography plus verification failure compounds; either alone is noise (§6.1) | Stolen card |
-| **R04** first order > category P95 with account age < 7d | New accounts that start at the top of the amount distribution front-load risk | Stolen, never-pay |
-| **R05** order burst: > 3 orders/24h per user or > 5 per device | Velocity beyond organic shopping rhythm | Stolen, ATO |
-| **R06** disposable email domain, or plus-addressed duplicate of an existing account | Identity cost reduction is a precondition of scaled abuse | Synthetic, promo |
-| **R07** decline burst then success on the same card/device | The card-testing signature: validate stolen credentials cheaply, then spend | Stolen |
-| **R08** ship-to address shared by ≥ 3 unlinked accounts | Goods have to land somewhere; drops collapse rings | Synthetic |
-| **R09** ≥ 2 prior INR chargebacks | Repeat INR disputes are the implemented account-level abuse signal | INR abuse |
-| **R10** promo redemption inside a device/address cluster ≥ 3 | Promo economics attract multi-accounting | Promo |
-| **R11** impossible geo-velocity between consecutive events | Two locations faster than travel allows means two actors or proxying | ATO, stolen |
-| **R12** vendor email/IP risk score ≥ threshold | Independent external signal on identity infrastructure (leased IPs, abuse-listed ranges, throwaway mailboxes) | Stolen, synthetic |
+**8.2** A plan is a zero-effort default when its first installment after the checkout
+payment remains unpaid 30 days past due and no full or partial payment has been made
+on the plan after the checkout payment.
 
-Rule weights encode *specificity*, not severity: R01 and R09 are heavily weighted because
-their trigger conditions are rare among legitimate customers; R03's components are
-individually common, so it earns weight only in conjunction.
+**8.3** A zero-effort default is never-pay (first-party fraud) only with an intent marker:
+(a) another plan on the account, opened within 7 days of it, is also a zero-effort
+default; or
+(b) the account shares a device, shipping address or normalized email with two or more
+other accounts whose plans became zero-effort defaults within 30 days of it. The
+determination becomes known when its last qualifying default is known and is final;
+record later payments as recoveries.
 
-## 5. Standard resolutions by confirmed pattern
+**8.4** Every other default, including zero-effort defaults without a marker, is credit
+loss. Continue collections, record no fraud label and take no fraud-operations action.
+Non-payment alone cannot establish intent. Some are never-pay fraud the evidence cannot
+establish; the simulation counts these against hidden truth for diagnosis only.
 
-- **ATO:** decline_block open orders; force credential reset; restore account to victim;
-  refund/void manipulated orders; P0/P1.
-- **Stolen card:** decline_block; block device fingerprint and card token; report
-  chargeback-certain orders to loss accounting immediately (don't wait for the dispute).
-- **Synthetic ring:** escalate with linkage map; block all member accounts and shared
-  devices/addresses; sweep for not-yet-transacted members via R02/R08 linkage.
-- **Never-pay:** decline_block future orders; existing plan to collections path; document
-  the credit-vs-fraud determination per §6.3.
-- **INR abuse:** hold_contact; require signature confirmation on future deliveries;
-  ≥ 3 confirmed abusive disputes → account closure per terms of service.
-- **Promo abuse:** void unredeemed promos across the cluster; decline_block only the
-  coordinating accounts; small-value organic members may be cleared with promo forfeiture.
-- **Merchant bust-out:** freeze settlement, hold pending payouts, escalate to merchant
-  risk (see companion screener project); consumer-side orders from the merchant enter
-  enhanced review.
+## 9. Confirmed outcomes
 
-## 6. False-positive guidance — the benign explanations that mimic fraud
+These outcomes confirm fraud. Once known (§3.4), they label orders to measure loss by
+pattern and to train models. A decision is still judged on the evidence known when it was
+made (§3.1), never by its outcome.
 
-Analysts must check these before any decline:
+| | Outcome | Confirms | Known |
+|---|---|---|---|
+| (a) | an `unauthorized` dispute resolved `lost` | third-party fraud on that order | at resolution |
+| (b) | account holder reports orders they did not place | account takeover on those orders | at the report |
+| (c) | never-pay determination (§8.3) | first-party fraud on that plan | as in §8.3 |
+| (d) | two `item_not_received` disputes on the account resolved `won` (the claim rejected) | item-not-received abuse on those orders | at the second resolution |
+| (e) | three or more accounts sharing a device or normalized email used the same first-purchase promotion, and none reordered without a promotion within 90 days | promotion abuse on those uses | 90 days after the third use |
+| (f) | an `item_not_received` dispute resolved `lost` on an order its merchant reported shipped, after that merchant stopped trading | merchant bust-out on that order | at resolution |
 
-1. **Travelers** mimic ATO/stolen geography: foreign IP, sometimes a new device — but no
-   credential changes, shipping unchanged, amounts in habitual range, and the window is
-   contiguous then reverts (CASE-05 is the canonical exoneration).
-2. **Movers** mimic ring/drop signals: new address plus shipping shift — but single
-   account per address, old address activity stops, no device sharing.
-3. **Gift buyers** mimic drop shipping: ship-to ≠ home — but the recipient address has no
-   account cluster and the buyer's history is otherwise stable.
-4. **Benign hardship defaulters** mimic never-pay: installments fail — but there is
-   partial payment effort, tenure, and no first-order concentration (§6.3).
-5. **Typos** mimic verification failure: AVS/CVV mismatch base rate among legitimate
-   orders is ~3%; a mismatch is corroborating, never sufficient (pairs with R03's design).
-6. **New phones** mimic ATO device changes: an organic device_add without credential
-   changes or address changes, followed by normal-pattern orders, is not takeover.
+## 10. Memos
 
-**6.3 Credit-vs-fraud determination (required for every never-pay recommendation):** state
-tenure, payment effort (count and amounts of successful/retried payments), order-size
-ratio to history/category, and post-order account activity. Zero-effort + first-order-heavy
-+ oversized → fraud path; any genuine repayment effort or tenure → credit path with
-dunning, **never** a fraud label.
+Memos are advisory. They trigger no order action alone and set no queue priority. Each states
+facts tied individually to packet fields; competing hypotheses, including the most plausible
+benign one (§6.5); applicable clauses; a disposition (`clear`, `hold`, `decline`,
+`escalate` or `needs_check`) permitted by §6.6; and the cheapest next check that would
+most change the decision, or none when the evidence decides.
 
-## 7. Memo format
+## 11. Assumptions
 
-Every reviewed alert produces a memo with exactly these fields: `signals_observed`
-(verbatim facts), `hypotheses` (each candidate pattern **including the benign one**, with
-likelihood low/med/high and reasoning), `policy_citations` (rule ids + sections),
-`recommended_action` (§3 ladder), `priority` (P0–P3), `evidence_gaps` (the cheapest query
-or check that would most change the decision), `memo_markdown` (prose for the case file).
-Machine-drafted memos follow the same schema and are advisory: **the analyst owns the
-decision**; auto-actions occur only at the score bands of §4, never from a memo alone.
+Review minutes, check and response times, senior review time, friction cost (merchant
+fee and customer-lifetime-value proxy lost on declined or cancelled legitimate orders)
+and analysts' hourly cost are assumptions in `config/policy.yaml`, not measurements.
+Verification pass rates are simulation assumptions. The AVS and CVV rates
+in §6.5(a) come from the simulated world's generator.
 
-## 8. Change control
+## 12. Changes
 
-Rule/threshold changes require: the motivating case (what was missed or falsely flagged),
-the proposed change, and its measured effect on the holdout months (alert volume, recall
-by pattern, insult rate, net $ under the cost model). Case files end with exactly this
-analysis in their "Prevention follow-up" section.
+**12.1** Rule, threshold or clause changes state their supporting case and replay effects
+on validation windows (alerts, prevented loss by pattern, friction, review minutes,
+net contribution), measured before seeing any test-window result.
+
+**12.2** Rule thresholds (`rules/definitions.py`) and score bands (`config/policy.yaml`)
+must match this document. Each change creates a new version, recorded by the review
+procedure, memo checks and stored memos. Clause ids are permanent; removed ids are
+retired, never reused.
