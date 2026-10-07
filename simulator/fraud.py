@@ -312,7 +312,8 @@ class Fraud:
             who.card = b.card(a, who.user, when, pop.pick(rng, pop.STOLEN_CARD_ISSUERS),
                               pop.card_network(rng), pop.last4(rng))
             when += session_gap(rng, 2)
-        orders = []
+        orders: list[tuple[Order, int | None]] = []
+        blocked: int | None = None
         n = int(pop.pick(rng, tuple(p["orders"].items())))
         for k in range(n):
             if k:
@@ -320,21 +321,25 @@ class Fraud:
                         else self.clock.after(rng, when, 0.3, 2.0))
             if not self._in_horizon(when):
                 break
-            orders.append(self._order(
+            blocked_now = blocked is not None and when >= blocked
+            o = self._order(
                 a, who, when, pattern="P-STOLEN", episode=ep,
                 categories=pop.RESALE_CATEGORIES if rng.random() < p["resale"] else None,
                 multiplier=tuple(p["amount_multiplier"]), avs_fail=p["avs_fail"],
-                cvv_fail=p["cvv_fail"]))
-        if not orders:
-            return
-        # The cardholder notices: the card is blocked some days after its first misuse,
-        # or when the first charge is disputed if that is sooner, and collections on it
-        # fail from then on; each charge is disputed or not.
-        filed = [self.clock.after(rng, o.t, *p["dispute_days"]) if rng.random() < p["disputed"]
-                 else None for o in orders]
-        blocked = min([self.clock.after(rng, orders[0].t, *p["blocked_days"])]
-                      + [f for f in filed if f is not None])
-        for o, f in zip(orders, filed, strict=True):
+                cvv_fail=p["cvv_fail"], approved=not blocked_now)
+            if blocked_now:  # the blocked card is declined at checkout; the run ends
+                break
+            # The cardholder notices: the card is blocked some days after its first
+            # misuse, or when a charge is disputed if that is sooner; checkouts and
+            # collections on it fail from then on. Each charge is disputed or not.
+            f = self.clock.after(rng, o.t, *p["dispute_days"]) \
+                if rng.random() < p["disputed"] else None
+            if blocked is None:
+                blocked = self.clock.after(rng, o.t, *p["blocked_days"])
+            if f is not None:
+                blocked = min(blocked, f)
+            orders.append((o, f))
+        for o, f in orders:
             self.out.fulfil(a, o)
             self.out.collect(a, o, "paid", stop_at=blocked)
             if f is not None:

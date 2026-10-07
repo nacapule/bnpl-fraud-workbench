@@ -12,6 +12,7 @@ import os
 from collections import defaultdict
 from collections.abc import Mapping
 from pathlib import Path
+from unittest import mock
 
 import numpy as np
 import pandas as pd
@@ -540,6 +541,32 @@ def test_collections_on_a_card_stop_for_good_once_it_is_blocked(fraud_heavy) -> 
     later = pays[(pays["result"] == "success")
                  & (pays["occurred_at"] > pays["card_id"].map(first_failure))]
     assert first_failure.size >= 20 and later.empty
+
+
+def test_a_blocked_stolen_card_is_declined_at_checkout() -> None:
+    cfg = config.load("world")
+    p = cfg["fraud"]["P-STOLEN"]
+    p["episodes_per_100k_orders"] *= 10
+    p["blocked_days"] = [0.01, 0.05]  # blocked within about an hour of the first misuse
+    p["orders"] = {3: 1.0}
+    stops: list[tuple[int, int, int]] = []
+    collect = Outcomes.collect
+
+    def recording(self, a, o, plan="paid", **kw):
+        if o.pattern == "P-STOLEN" and kw.get("stop_at") is not None:
+            stops.append((o.card, o.t, kw["stop_at"]))
+        return collect(self, a, o, plan, **kw)
+
+    with mock.patch.object(Outcomes, "collect", recording):
+        tables = build_world(SEED, "baseline", scale=0.02, cfg=cfg)[0]
+    blocked: dict[int, int] = {}
+    for card, _, stop in stops:
+        blocked[card] = min(blocked.get(card, stop), stop)
+    assert len(blocked) >= 20
+    assert all(t < blocked[card] for card, t, _ in stops)
+    orders = _orders(tables)
+    stolen = orders[orders["pattern_id"] == "P-STOLEN"]
+    assert (stolen["processor_result"] == "declined").sum() > 0
 
 
 def test_account_holders_are_adults_at_signup(base, fraud_heavy) -> None:
