@@ -17,7 +17,7 @@ import pandas as pd
 import pytest
 from replay_support import ColumnScorer, StubContext, StubScorer, mini_tables
 
-from core import actions, asof, ledger
+from core import actions, asof, ledger, results
 from queue_sim import outcomes, stage
 from queue_sim.replay import PolicyHistory, World
 from rules import tuning
@@ -103,6 +103,7 @@ def test_the_replay_stage_writes_one_integer_row_per_policy_and_variant(staged) 
     assert not rows.duplicated(["seed", "family", "policy", "capacity_level", "layout",
                                 "history", "reviewer", "verification"]).any()
     assert list(rows.columns) == [*outcomes.KEY_COLUMNS, *outcomes.OUTCOME_COLUMNS]
+    assert all(results.NAME_PATTERN.match(column) for column in rows.columns)
     for column in outcomes.OUTCOME_COLUMNS:
         values = rows[column]
         assert values.map(lambda v: isinstance(v, int | np.integer)).all(), column

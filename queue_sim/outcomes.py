@@ -46,7 +46,8 @@ OUTCOME_COLUMNS = (
     "coverage_minutes", "senior_minutes", "decided_after_shipping", "holds",
     "holds_before_shipping", "checks_run", "escalations", "accounts_blocked",
     "wait_p50_minutes", "wait_p90_minutes", "max_backlog",
-    *(f"reviews_{p}" for p in PRIORITIES), *(f"sla_met_{p}" for p in PRIORITIES),
+    *(f"reviews_{p.lower()}" for p in PRIORITIES),
+    *(f"sla_met_{p.lower()}" for p in PRIORITIES),
 )
 
 
@@ -148,8 +149,8 @@ def outcome_row(result: ReplayResult, world_: World, *, keys: Mapping[str, Any],
     for p in PRIORITIES:
         in_p = r["priority"] == p
         met = decided & in_p & (r["service_hours_to_decision"] <= SLA_TARGETS[p])
-        row[f"reviews_{p}"] = int(in_p.sum())
-        row[f"sla_met_{p}"] = int(met.sum())
+        row[f"reviews_{p.lower()}"] = int(in_p.sum())
+        row[f"sla_met_{p.lower()}"] = int(met.sum())
     return {**dict(keys), **{column: row[column] for column in OUTCOME_COLUMNS}}
 
 
