@@ -16,13 +16,16 @@ packets never carry it.
 * Independence: cases linked through an account or an episode form one group (the
   cluster for intervals), and at most two cases per group are eligible; development
   and final cohorts share no account and no episode.
-* Balance and weights: selection has two phases with known probabilities. First, at
-  most two cases are drawn at random from each linked group; then an equal share per
-  stratum (a challenge set) is drawn at random from those. A case's weight is the
-  inverse of its inclusion probability (its group's size over the cases drawn from it,
-  times its stratum's drawn cases over its quota), so weighted rates estimate the rate
-  over all eligible review decisions. A pool that cannot fill the requested size is
-  refused.
+* Balance and weights: selection is two-phase sampling. Phase one draws at most two
+  cases at random from each linked group, so a case is drawn with probability
+  (cases drawn from its group) / (its group's size); phase two draws an equal share per
+  stratum (a challenge set) at random from phase one's cases, so, given phase one, a
+  case is kept with probability (its stratum's quota) / (its stratum's phase-one
+  cases). A case's weight is the inverse of the product of the two. These are
+  sequential two-phase weights, not marginal inclusion probabilities (phase two's
+  denominators depend on phase one), and the weighted rate is the two-phase Hájek
+  estimator of the rate over all eligible review decisions. A pool that cannot fill
+  the requested size is refused.
 
 :func:`write_benchmark` then fixes the benchmark: packets, the referee's view of each,
 the definition with every hash (policy, prompt, scoring code, packets, views) and the
@@ -141,8 +144,9 @@ def select(pool: pd.DataFrame, total: int, *, rng_seed: int,
            exclude_accounts: Iterable[str] = (), exclude_episodes: Iterable[str] = ()
            ) -> pd.DataFrame:
     """A stratified sample of exactly ``total`` cases from ``pool`` (rows of
-    :func:`candidates`), with ``cluster`` (the linked group), ``inclusion`` (the
-    probability the design gave the case) and ``weight`` (its inverse).
+    :func:`candidates`), with ``cluster`` (the linked group), ``first_phase`` and
+    ``second_phase`` (the case's phase-one probability and its phase-two probability
+    given phase one) and ``weight`` (the inverse of their product).
 
     Excluded accounts and episodes (another cohort's) are removed first. Phase one
     draws at most :data:`MAX_PER_CLUSTER` cases at random from every linked group;
@@ -176,7 +180,8 @@ def select(pool: pd.DataFrame, total: int, *, rng_seed: int,
     first = groups.map(lambda group: min(MAX_PER_CLUSTER, group_size[group])
                        / group_size[group])
     second = chosen["stratum"].map(lambda stratum: quota[stratum] / available[stratum])
-    chosen = chosen.assign(inclusion=first * second, weight=1.0 / (first * second))
+    chosen = chosen.assign(first_phase=first, second_phase=second,
+                           weight=1.0 / (first * second))
     return chosen.sort_values("case_id").reset_index(drop=True)
 
 
@@ -244,7 +249,8 @@ def write_benchmark(directory: Path, *, benchmark_id: str, phase: str,
              "account": row.account_key,
              "episode": None if pd.isna(row.episode_key) else row.episode_key,
              "stratum": row.stratum, "cluster": row.cluster, "weight": float(row.weight),
-             "inclusion": float(getattr(row, "inclusion", 1.0 / float(row.weight))),
+             "phase_probabilities": [float(getattr(row, "first_phase", 1.0)),
+                                     float(getattr(row, "second_phase", 1.0))],
              "packet_sha256": packet_hashes[row.case_id],
              "latent": {"class": row.latent_class,
                         "pattern": None if pd.isna(row.pattern_id) else row.pattern_id}}

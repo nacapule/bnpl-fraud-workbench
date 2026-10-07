@@ -29,9 +29,12 @@ A benchmark lives in ``llm/eval/benchmarks/<id>/`` and is fixed before any call:
     error messages and full event logs go to ``--log-dir`` too, outside the repository.
 
 ``ledger.json`` beside the benchmarks keeps every arm's spend across benchmarks and
-invocations. Before each call the harness checks the arm's configured caps (calls and,
-where set, tokens), keeping ``call_token_reserve`` tokens free for the call; a call whose
-usage the log does not report is charged the reserve.
+invocations. Each call is bounded before it is made: its input by the bytes of its
+prompts plus ``input_overhead_tokens`` (a token covers at least one byte), its output by
+``max_output_tokens``, which the backend enforces (a token cap is refused for a backend
+that cannot). That bound is reserved in the ledger, on disk, before the call and must fit
+under the arm's configured caps; afterwards the reservation becomes the reported usage,
+or stays charged in full when the usage is unknown or the run was interrupted.
 
 Scoring replays the cache only, after checking that the policy, prompt, packets, the
 referee's views and the scoring code still have their recorded hashes (a scoring change
@@ -51,6 +54,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import sys
 from collections import Counter, defaultdict
 from collections.abc import Callable, Mapping, Sequence
@@ -279,34 +283,62 @@ def pin_arm(directory: Path, arm: Arm, fingerprint: Mapping[str, str]) -> dict[s
 
 
 class Ledger:
-    """An arm's spend across every benchmark and invocation, written after each call."""
+    """An arm's spend across every benchmark and invocation. A call's bound is reserved
+    on disk before it is made and settled after it, so an interrupted call stays
+    charged in full."""
 
-    def __init__(self, path: Path, arm: str, *, calls: int | None, tokens: int | None,
-                 reserve: int):
-        self.path, self.arm, self.reserve = path, arm, int(reserve)
+    def __init__(self, path: Path, arm: str, *, calls: int | None, tokens: int | None):
+        self.path, self.arm = path, arm
         self.caps = {"calls": calls, "tokens": tokens}
         self.data = json.loads(path.read_text()) if path.exists() else {"arms": {}}
         self.entry = self.data["arms"].setdefault(arm, {
             "calls": 0, "charged_tokens": 0, "input_tokens": 0, "output_tokens": 0,
-            "unknown_usage_calls": 0, "by_benchmark": {}})
+            "unknown_usage_calls": 0, "interrupted_calls": 0, "by_benchmark": {},
+            "pending": {}})
+        pending = self.entry.setdefault("pending", {})
+        for key in sorted(pending):  # reserved by a run that never settled them
+            benchmark, amount = pending[key]["benchmark"], pending[key]["tokens"]
+            self.entry["interrupted_calls"] = self.entry.get("interrupted_calls", 0) + 1
+            self._charge(benchmark, amount, None, None)
+            del pending[key]
+        _write_json(self.path, self.data)
 
-    def refusal(self) -> str | None:
-        """Why another call would break a cap, or None."""
+    def refusal(self, bound: int) -> str | None:
+        """Why a call with this token bound would break a cap, or None."""
         if self.caps["calls"] is not None and self.entry["calls"] + 1 > self.caps["calls"]:
             return f"arm {self.arm} has used {self.entry['calls']} of {self.caps['calls']} calls"
         if (self.caps["tokens"] is not None
-                and self.entry["charged_tokens"] + self.reserve > self.caps["tokens"]):
+                and self.entry["charged_tokens"] + bound > self.caps["tokens"]):
             return (f"arm {self.arm} has charged {self.entry['charged_tokens']} of "
-                    f"{self.caps['tokens']} tokens, less than one call's reserve "
-                    f"({self.reserve}) left")
+                    f"{self.caps['tokens']} tokens; the next call may use up to {bound}")
         return None
 
-    def charge(self, benchmark: str, input_tokens: int | None, output_tokens: int | None
-               ) -> int:
-        """Record one call; unknown usage is charged the reserve. Returns the charge."""
-        known = (input_tokens or 0) + (output_tokens or 0)
+    def reserve(self, benchmark: str, bound: int) -> str:
+        """Record, before a call, that it may use up to ``bound`` tokens."""
+        key = f"{benchmark}:{os.getpid()}:{len(self.entry['pending'])}:{os.urandom(4).hex()}"
+        self.entry["pending"][key] = {"benchmark": benchmark, "tokens": int(bound)}
+        _write_json(self.path, self.data)
+        return key
+
+    def release(self, key: str) -> None:
+        """A reservation for a call that never reached the model."""
+        del self.entry["pending"][key]
+        _write_json(self.path, self.data)
+
+    def settle(self, key: str, input_tokens: int | None, output_tokens: int | None) -> int:
+        """Replace a reservation by the call's reported usage, or charge it in full when
+        the usage is unknown. Returns the charge."""
+        reservation = self.entry["pending"].pop(key)
+        charged = self._charge(reservation["benchmark"], reservation["tokens"], input_tokens,
+                               output_tokens)
+        _write_json(self.path, self.data)
+        return charged
+
+    def _charge(self, benchmark: str, bound: int, input_tokens: int | None,
+                output_tokens: int | None) -> int:
         unknown = input_tokens is None or output_tokens is None
-        charged = max(known, self.reserve) if unknown else known
+        known = (input_tokens or 0) + (output_tokens or 0)
+        charged = max(known, bound) if unknown else known
         self.entry["calls"] += 1
         self.entry["charged_tokens"] += charged
         self.entry["input_tokens"] += input_tokens or 0
@@ -316,8 +348,14 @@ class Ledger:
                                                                   "charged_tokens": 0})
         spent["calls"] += 1
         spent["charged_tokens"] += charged
-        _write_json(self.path, self.data)
         return charged
+
+
+def call_bound(system_prompt: str, user_prompt: str) -> int:
+    """The most tokens one call can use: its prompts' bytes plus the CLI's own input
+    and the output limit."""
+    return (len(system_prompt.encode()) + len(user_prompt.encode())
+            + int(SIZES["input_overhead_tokens"]) + int(SIZES["max_output_tokens"]))
 
 
 # --------------------------------------------------------------------- live runs
@@ -328,6 +366,36 @@ def _contaminated(summary: client.EventSummary) -> bool:
                 or summary.n_unrecognized_events or summary.tools_offered)
 
 
+_ESCAPE = re.compile(r"\\u([0-9a-fA-F]{4})")
+
+
+def _strings(value: Any) -> list[str]:
+    if isinstance(value, Mapping):
+        return [text for key, item in value.items() for text in (*_strings(key), *_strings(item))]
+    if isinstance(value, list | tuple):
+        return [text for item in value for text in _strings(item)]
+    return [value] if isinstance(value, str) else [str(value)] if value is not None else []
+
+
+def private_terms_in(value: Any, terms: Sequence[str]) -> list[str]:
+    """The private terms in any string of ``value``, also after decoding the JSON
+    escapes a model may write (``@`` for ``@``) and the JSON a response holds."""
+    found: set[str] = set()
+    for text in _strings(value):
+        variants = [text, _ESCAPE.sub(lambda match: chr(int(match.group(1), 16)), text)]
+        body = text.strip()
+        fenced = memo.FENCE.match(body)
+        try:
+            decoded = json.loads(fenced.group(1) if fenced else body)
+        except (ValueError, RecursionError):
+            decoded = None
+        if isinstance(decoded, dict | list):
+            variants += _strings(decoded)
+        for variant in variants:
+            found.update(client.private_matches(variant, terms))
+    return sorted(found)
+
+
 def run_live(directory: Path, arm_name: str, *, log_dir: Path, private_terms: Sequence[str],
              max_calls: int, max_tokens: int | None = None, ledger_path: Path | None = None,
              backend_factory: Callable[[str], Any] = client.backend) -> dict[str, Any]:
@@ -335,10 +403,11 @@ def run_live(directory: Path, arm_name: str, *, log_dir: Path, private_terms: Se
 
     The benchmark's shape and hashes are checked and the arm's CLI version and
     isolation pinned first. At most one retry per case, for a transport failure or an
-    error event in the log; none for format. Stops before a call would exceed
-    ``max_calls`` or ``max_tokens`` in this run, or the arm's configured caps across
-    runs (:class:`Ledger`), and after :data:`CONSECUTIVE_FAILURES` cases in a row fail
-    in transport.
+    error event in the log; none for format. Each call's token bound
+    (:func:`call_bound`) is reserved in the arm's :class:`Ledger` before the call, and a
+    call is not made if its bound would exceed ``max_calls`` or ``max_tokens`` in this
+    run or the arm's configured caps across runs. Stops after
+    :data:`CONSECUTIVE_FAILURES` cases in a row fail in transport.
     """
     terms = [term for term in private_terms if term.strip()]
     if not terms:
@@ -347,15 +416,22 @@ def run_live(directory: Path, arm_name: str, *, log_dir: Path, private_terms: Se
     check_shape(definition)
     check_frozen(directory, definition)
     arm = definition["arms"][arm_name]
-    if client.private_matches(json.dumps([definition["id"], arm.__dict__], ensure_ascii=False),
-                              terms):
+    if private_terms_in([definition["id"], arm.__dict__], terms):
         raise ValueError("the benchmark id or the arm names a private term")
     system_prompt = memo.system_prompt(definition["prompt"]["version"])
     backend = backend_factory(arm.backend)
-    pin = pin_arm(directory, arm, backend.fingerprint(arm.model, arm.effort))
     caps = CAPS.get(arm.name, {})
+    bounded = bool(getattr(backend, "bounds_output", False))
+    if (caps.get("tokens") is not None or max_tokens is not None) and not bounded:
+        raise ValueError(f"a token cap needs a backend that bounds its output; "
+                         f"{arm.backend} does not")
+    max_output = int(SIZES["max_output_tokens"]) if bounded else None
+    fingerprint = backend.fingerprint(arm.model, arm.effort, max_output)
+    if private_terms_in(fingerprint, terms):
+        raise ValueError("the CLI's version or isolation names a private term")
+    pin = pin_arm(directory, arm, fingerprint)
     ledger = Ledger(ledger_path or LEDGER, arm.name, calls=caps.get("calls"),
-                    tokens=caps.get("tokens"), reserve=SIZES["call_token_reserve"])
+                    tokens=caps.get("tokens"))
     cache = directory / "cache"
     cache.mkdir(exist_ok=True)
     logs = log_dir / definition["id"] / arm.name
@@ -366,12 +442,12 @@ def run_live(directory: Path, arm_name: str, *, log_dir: Path, private_terms: Se
                             "transport_failures": 0, "stopped": None}
     failures_in_a_row = 0
 
-    def refusal() -> str | None:
+    def refusal(bound: int) -> str | None:
         if used["calls"] + 1 > max_calls:
             return f"this run's cap of {max_calls} calls"
-        if max_tokens is not None and used["tokens"] + ledger.reserve > max_tokens:
+        if max_tokens is not None and used["tokens"] + bound > max_tokens:
             return f"this run's cap of {max_tokens} tokens"
-        return ledger.refusal()
+        return ledger.refusal(bound)
 
     for case_id, probe in required_calls(definition):
         packet = json.loads((directory / "packets" / f"{case_id}.json").read_text())
@@ -381,31 +457,39 @@ def run_live(directory: Path, arm_name: str, *, log_dir: Path, private_terms: Se
         path = cache / f"{cache_key(identity)}.json"
         if path.exists():
             continue
+        bound = call_bound(system_prompt, user_prompt)
         stem = f"{case_id}-{probe}"
         errors: list[str] = []
         response = None
         attempts = 0
         for _attempt in range(2):
-            if reason := refusal():
+            if reason := refusal(bound):
                 used["stopped"] = reason
                 print(f"stopped before a call: {reason}", file=sys.stderr)
                 return used
             attempts += 1
+            reservation = ledger.reserve(definition["id"], bound)
             try:
                 response = backend.complete(client.Request(
-                    arm.backend, arm.model, arm.effort, system_prompt, user_prompt))
+                    arm.backend, arm.model, arm.effort, system_prompt, user_prompt,
+                    max_output_tokens=max_output))
             except client.BackendError as error:
                 errors.append(str(error))
                 if error.called:
                     used["calls"] += 1
-                    used["tokens"] += ledger.charge(definition["id"], None, None)
+                    used["tokens"] += ledger.settle(reservation, None, None)
+                else:
+                    ledger.release(reservation)
                 response = None
                 continue
             used["calls"] += 1
-            used["tokens"] += ledger.charge(definition["id"], response.summary.input_tokens,
-                                            response.summary.output_tokens)
+            charged = ledger.settle(reservation, response.summary.input_tokens,
+                                    response.summary.output_tokens)
+            used["tokens"] += charged
             (logs / f"{stem}.attempt{attempts}.events.jsonl").write_text(
                 "".join(json.dumps(event) + "\n" for event in response.events))
+            if charged > bound:
+                raise BudgetError(f"a call used {charged} tokens, more than its bound {bound}")
             if (response.summary.cli_version != pin["cli_version"]
                     or response.summary.isolation != pin["isolation"]):
                 raise FrozenError(f"the CLI or its isolation changed during the run "
@@ -434,8 +518,7 @@ def run_live(directory: Path, arm_name: str, *, log_dir: Path, private_terms: Se
             record.update(summary=response.summary.as_dict(),
                           duration_ms=response.duration_ms, outcome="response",
                           text=response.text)
-            if not reasons and client.private_matches(json.dumps(record, ensure_ascii=False),
-                                                      terms):
+            if not reasons and private_terms_in(record, terms):
                 reasons.append("names a private term")
             if reasons:
                 used["quarantined"] += 1
@@ -444,6 +527,8 @@ def run_live(directory: Path, arm_name: str, *, log_dir: Path, private_terms: Se
                 record = {"identity": identity, "attempts": attempts,
                           "failed_attempts": len(errors), "outcome": "protocol_failure",
                           "quarantined": reasons}
+        if private_terms_in(record, terms):  # only the identity can remain; it was checked
+            raise ValueError(f"the record for {stem} names a private term")
         _write_json(path, record)
         used["recorded"] += 1
         if failures_in_a_row >= CONSECUTIVE_FAILURES:
@@ -520,8 +605,8 @@ def _rate(numerator: int, denominator: int) -> dict[str, Any]:
 def summarize_arm(definition: Mapping[str, Any], rows: Mapping[tuple[str, str], dict[str, Any]]
                   ) -> dict[str, Any]:
     """Rates over the primary cases (failures count as not acceptable), per stratum, the
-    rate reweighted to the eligible review decisions by the inverse inclusion
-    probabilities, cluster counts and invariance agreement."""
+    rate reweighted to the eligible review decisions (the two-phase Hájek estimate with
+    the selection's weights), cluster counts and invariance agreement."""
     cases = definition["cases"]
     primary = [rows[(case["case_id"], "primary")] for case in cases]
     n = len(cases)

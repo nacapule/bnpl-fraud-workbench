@@ -1,7 +1,6 @@
 """Benchmark case selection: strata for every pattern and benign behaviour, at most two
-cases per linked group of accounts and episodes, weights from the inclusion
-probabilities, phases held to their seeds, and development and final cohorts kept
-apart."""
+cases per linked group of accounts and episodes, two-phase sampling weights, phases
+held to their seeds, and development and final cohorts kept apart."""
 
 from __future__ import annotations
 
@@ -106,7 +105,23 @@ def test_weights_undo_the_cluster_cap_inside_a_stratum() -> None:
     assert (~chosen["passes"]).sum() == 2
     weighted = (chosen["weight"] * chosen["passes"]).sum() / chosen["weight"].sum()
     assert abs(weighted - 0.5) < 1e-12  # the population rate, not 100/102
-    assert abs((1 / chosen["inclusion"] - chosen["weight"]).abs().max()) < 1e-12
+    product = chosen["first_phase"] * chosen["second_phase"]
+    assert (1 / product - chosen["weight"]).abs().max() < 1e-12
+
+
+def test_two_phase_weights_estimate_totals_when_a_group_spans_strata() -> None:
+    """A1, A2 and B1 share an account (capped at two), B2 is alone; two cases are drawn,
+    one per stratum. Over many draws, the weighted counts average the true counts."""
+    rows = [{"case_id": name, "account_key": "5:1" if name != "B2" else "5:2",
+             "episode_key": None, "stratum": name[0]} for name in ("A1", "A2", "B1", "B2")]
+    frame = pd.DataFrame(rows)
+    totals = {"A": [], "B": []}
+    for seed in range(3000):
+        chosen = select(frame, 2, rng_seed=seed)
+        for stratum in totals:
+            totals[stratum].append(chosen.loc[chosen["stratum"] == stratum, "weight"].sum())
+    assert abs(sum(totals["A"]) / 3000 - 2) < 0.1  # two A cases in the pool
+    assert abs(sum(totals["B"]) / 3000 - 2) < 0.1
 
 
 def test_excluded_accounts_and_episodes_never_appear() -> None:

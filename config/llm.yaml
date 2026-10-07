@@ -18,7 +18,8 @@ benchmark:
   max_cases_per_cluster: 2          # per account and per episode
   probe_cases: 40                   # invariance probes on final cases
   probe_kinds: [shuffled, renamed]  # context facts reordered; fresh placeholder names
-  call_token_reserve: 60000         # kept free before each call; charged when usage is unknown
+  max_output_tokens: 32000          # per call, enforced by the backend where it can be
+  input_overhead_tokens: 4000       # the CLI's own input beyond the prompts, at most
 
 caps:                               # hard limits per arm across benchmarks, retries included
   sol: {calls: 400}
