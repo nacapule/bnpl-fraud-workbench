@@ -35,7 +35,7 @@ Analyst dispositions, applied when the review or a check completes:
   Either way the account is blocked and its later orders are declined.
 * ``escalate``: a decline that also blocks the accounts linked to the order
   (FP-2 §2.5, ``core.asof.linked_accounts`` as known at the decision), plus senior
-  review minutes.
+  review minutes of fraud-queue work (``queue_sim.replay``).
 
 Verification checks (at most two per order, FP-2 §5.1): ``contact`` and ``id_check``,
 with outcomes ``passed``, ``failed`` or ``no_response``. The memo drafter may suggest

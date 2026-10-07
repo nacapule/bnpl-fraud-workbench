@@ -307,6 +307,42 @@ def test_escalation_blocks_the_linked_accounts(tables) -> None:
     assert row_of(result, world)["escalations"] == 1
 
 
+def _escalated(tables, roster):
+    def linked(world_tables, decisions):
+        return pd.DataFrame({"order_id": [23], "decision_at": decisions["decision_at"][0],
+                             "user_id": [17]})
+
+    shared = {"accounts_on_device_30d": 3, "device_link_age_hours": 10.0}
+    result, world = run(tables, scores={23: 5.0}, overrides={23: shared}, roster=roster,
+                        checks=FAIL_ID_CHECK, classes={23: "third_party"}, linked=linked)
+    review = result.reviews.set_index("order_id").loc[23]
+    assert review["final"] == "escalate" and review["senior_minutes"] == 20
+    return result, world, review
+
+
+def test_an_escalations_senior_review_is_fraud_queue_work(tables) -> None:
+    """The escalation adds 20 senior review minutes, taken by the free analyst at once,
+    and counted with the review in the minutes offered and used."""
+    result, world, review = _escalated(tables, always_on_roster())
+    assert review["senior_started_at"] == review["senior_entered_at"] == review["final_at"]
+    assert review["senior_done_at"] - review["senior_started_at"] == pd.Timedelta(minutes=20)
+    row = row_of(result, world)
+    minutes = round(review["service_seconds"] / 60 + 20)
+    assert row["review_minutes_offered"] == row["review_minutes_used"] == minutes
+    assert row["senior_minutes"] == 20
+
+
+def test_an_escalations_senior_review_draws_on_the_shift_allotment(tables) -> None:
+    """With 10 fraud-queue minutes a day, the 20 senior minutes cannot fit in one day:
+    what is past the day's allotment waits for the next shift."""
+    roster = Roster((Shift("all", tuple(range(7)), 0, 24 * 60),), {"all": 1}, {"all": 10})
+    result, world, review = _escalated(tables, roster)
+    started, done = review["senior_started_at"], review["senior_done_at"]
+    assert done.floor("D") > started.floor("D")
+    assert row_of(result, world)["review_minutes_used"] == round(
+        review["service_seconds"] / 60 + 20)
+
+
 def test_the_routes_show_an_order_of_a_blocked_account_as_blocked(tables) -> None:
     """Order 11 is declined on settled evidence and its account blocked: order 13 of the
     same account scored for review, but it was declined at checkout."""

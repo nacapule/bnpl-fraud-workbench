@@ -8,6 +8,11 @@ orders were fraud is the adjudicated label as known at the end of observation
 ``credit_loss`` are legitimate, and an order with no label yet is unknown, never
 legitimate. Latent truth appears only in the separate diagnostic table.
 
+Review minutes are fraud-queue minutes from the shift allotment: review time and the
+senior review an escalation adds (``senior_minutes``, its share of the minutes offered).
+``review_minutes_offered`` counts the work that reached the queue, ``review_minutes_used``
+the work begun.
+
 :data:`OUTCOME_COLUMNS` are the stage's row (all integers except the key fields);
 ratios such as utilization (``review_minutes_used / available_minutes``) or loss in
 basis points of GMV (``loss_cents / gmv_cents``) are left to the reader of the row so
@@ -131,8 +136,11 @@ def outcome_row(result: ReplayResult, world_: World, *, keys: Mapping[str, Any],
         "fraud_stopped_before_shipping": int((fraud & voided).sum()),
         "fraud_declined_after_shipping": int((fraud & after_ship_decline).sum()),
         "reviews": len(r), "reviews_decided": int(decided.sum()),
-        "review_minutes_offered": int(round(r["service_seconds"].sum() / 60)),
-        "review_minutes_used": int(round(r.loc[started, "service_seconds"].sum() / 60)),
+        "review_minutes_offered": int(round(
+            r["service_seconds"].sum() / 60 + r["senior_minutes"].sum())),
+        "review_minutes_used": int(round(
+            r.loc[started, "service_seconds"].sum() / 60
+            + r.loc[r["senior_started_at"].notna(), "senior_minutes"].sum())),
         "available_minutes": int(round(result.available_minutes)),
         "coverage_minutes": int(round(result.coverage_minutes)),
         "senior_minutes": int(round(r["senior_minutes"].sum())),

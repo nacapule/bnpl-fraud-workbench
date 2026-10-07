@@ -36,7 +36,7 @@ import pandas as pd
 from joblib.externals import cloudpickle
 
 from core import asof, config, evidence, ledger
-from core.actions import CheckoutRoute
+from core.actions import CheckoutRoute, Disposition
 from queue_sim import outcomes, policies
 from queue_sim.replay import FrozenHistory, PolicyHistory, ReplayResult, Settings, World
 from queue_sim.replay import replay as run_replay
@@ -265,16 +265,33 @@ class Bench:
 
     def routed_minutes(self, policy: policies.Policy,
                        window: tuple[pd.Timestamp, pd.Timestamp]) -> float:
-        """Review minutes the policy's checkout routing sends to the queue over ``window``
-        on the world-level context (before any block), with each order's review time."""
+        """Fraud-queue minutes the policy's checkout routing sends over ``window`` on the
+        world-level context (before any block): each routed order's review time, plus the
+        senior review minutes of those the reviewer escalates on that evidence."""
         orders = self.world.orders(*window)
         rows = self.world.context.set_index("order_id").reindex(orders["order_id"])
-        routed = policy.route(rows.reset_index(), known=self.world.scores)
-        ids = routed.loc[routed["route"] == CheckoutRoute.REVIEW.value, "order_id"]
+        rows = rows.reset_index()
+        routed = policy.route(rows, known=self.world.scores)
+        review = (routed["route"] == CheckoutRoute.REVIEW.value).to_numpy()
+        ids = routed.loc[review, "order_id"].to_numpy(np.int64)
         settings = Settings.from_config(self.policy_cfg)
-        seconds = service_seconds(self.world.seed, ids.to_numpy(np.int64),
-                                  settings.service_mean_minutes, settings.service_sigma)
-        return float(seconds.sum()) / 60
+        seconds = service_seconds(self.world.seed, ids, settings.service_mean_minutes,
+                                  settings.service_sigma)
+        escalated = self._escalated(rows.loc[review])
+        return float(seconds.sum()) / 60 + settings.senior_minutes * int(escalated.sum())
+
+    def _escalated(self, rows: pd.DataFrame) -> np.ndarray:
+        """Whether the reviewer's first decision on each row (no checks) escalates."""
+        known = self.__dict__.setdefault("_escalates", {})
+        judge = Reviewer()
+        out = np.zeros(len(rows), dtype=bool)
+        for k, record in enumerate(rows.to_dict("records")):
+            order = int(record["order_id"])
+            if order not in known:
+                known[order] = judge.decide(order, record, ()).disposition \
+                    is Disposition.ESCALATE
+            out[k] = known[order]
+        return out
 
     def checkout_scores(self, policy: policies.Policy,
                         window: tuple[pd.Timestamp, pd.Timestamp]) -> dict[str, np.ndarray]:

@@ -6,7 +6,10 @@ context row; an account blocked by an earlier decline or escalation has its late
 orders declined at checkout. Orders routed to review wait in one queue, by FP-2 §7.1
 priority and then by the policy's review score. Analysts on the roster
 (``queue_sim.roster``) take the next order whenever they are free and on shift; a
-review lasts a service time drawn for that order. When it ends, the reviewer
+review lasts a service time drawn for that order. An escalation adds senior review
+minutes of fraud-queue work, taken before the next review, first come first served; it
+draws on the same shift allotment as reviews and changes nothing about the order (the
+decision has acted already). When it ends, the reviewer
 (``queue_sim.reviewer``) decides on the evidence known then; a hold runs the checks,
 whose answers arrive later and are evaluated as they come, and a hold with no
 answer after ``actions.hold_max_hours`` is cancelled (before shipment) or changes
@@ -35,6 +38,7 @@ much policy-specific history matters.
 from __future__ import annotations
 
 import heapq
+from collections import deque
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any, Protocol
@@ -50,7 +54,7 @@ from queue_sim.reviewer import Decision, Verification, service_seconds
 from queue_sim.roster import DAY, Roster, ServiceCalendar, to_seconds
 
 # Event kinds, in the order simultaneous events are processed.
-ARRIVAL, REVIEW_DONE, CHECK_DONE, HOLD_EXPIRE, WAKE = range(5)
+ARRIVAL, REVIEW_DONE, CHECK_DONE, HOLD_EXPIRE, WAKE, SENIOR_DONE = range(6)
 PRIORITY_RANK = {name: rank for rank, name in enumerate(policies.PRIORITIES)}
 
 
@@ -317,7 +321,10 @@ class _Order:
     void_cause: str | None = None
     final: str | None = None
     final_at: int | None = None
-    senior_minutes: float = 0.0
+    senior_minutes: float = 0.0  # senior review minutes an escalation added
+    senior_entered: int | None = None
+    senior_started: int | None = None
+    senior_done: int | None = None
 
     @property
     def holding(self) -> bool:
@@ -479,6 +486,7 @@ class _Simulation:
         self.events: list[tuple[int, int, int, int, int]] = []
         self.seq = 0
         self.queue: list[tuple[int, float, int, int]] = []
+        self.senior: deque[int] = deque()  # escalated orders whose senior review waits
         self.blocked: dict[int, tuple[int, str, int]] = {}  # user -> (at, cause, order)
         self.log: list[tuple[int, int, str, int]] = []  # at, seq, kind, order
         names = roster.analysts
@@ -556,6 +564,9 @@ class _Simulation:
                     self.hold_expired(self.orders[a], at)
                 elif kind == WAKE:
                     self.wake_at[a] = None
+                elif kind == SENIOR_DONE:
+                    self.busy[b] = False
+                    self.orders[a].senior_done = at
             self.dispatch(now)
 
     def arrive(self, o: _Order, at: int) -> None:
@@ -573,7 +584,7 @@ class _Simulation:
 
     def dispatch(self, now: int) -> None:
         for i, clock in enumerate(self.clocks):
-            if not self.queue:
+            if not self.queue and not self.senior:
                 return
             if self.busy[i]:
                 continue
@@ -584,6 +595,9 @@ class _Simulation:
                 if self.wake_at[i] != on:
                     self.wake_at[i] = on
                     self.push(on, WAKE, i)
+                continue
+            if self.senior:  # an escalation's senior review comes before the next review
+                self.take_senior(i, clock, now)
                 continue
             _, _, _, order = heapq.heappop(self.queue)
             o = self.orders[order]
@@ -596,6 +610,16 @@ class _Simulation:
             o.started, o.analyst = now, i
             self.note(now, "start", order)
             self.push(finish, REVIEW_DONE, order, i)
+
+    def take_senior(self, i: int, clock: Any, now: int) -> None:
+        o = self.orders[self.senior[0]]
+        finish = clock.take(now, int(round(o.senior_minutes * 60)))
+        if finish is None:  # no shift left to finish it: it stays undone
+            return
+        self.senior.popleft()
+        self.busy[i] = True
+        o.senior_started = now
+        self.push(finish, SENIOR_DONE, o.order_id, i)
 
     def review_done(self, o: _Order, at: int) -> None:
         o.decided = at
@@ -639,7 +663,9 @@ class _Simulation:
                 o.hold_outcome, o.hold_ended = "declined", at
             self.block(o.user_id, at, disposition.value, o.order_id)
             if disposition is Disposition.ESCALATE:
-                o.senior_minutes += self.settings.senior_minutes
+                if self.settings.senior_minutes > 0:
+                    o.senior_minutes, o.senior_entered = self.settings.senior_minutes, at
+                    self.senior.append(o.order_id)
                 for user in self.linked_users(o, at):
                     self.block(user, at, "linked", o.order_id)
             o.final, o.final_at = disposition.value, at
@@ -739,13 +765,16 @@ class _Simulation:
                 "checks_started": len(o.started_checks),
                 "hold_before_shipment": o.hold_at is not None and o.hold_before_shipment,
                 "final": o.final, "final_at": o.final_at, "senior_minutes": o.senior_minutes,
+                "senior_entered_at": o.senior_entered, "senior_started_at": o.senior_started,
+                "senior_done_at": o.senior_done,
             })
         frame = pd.DataFrame(rows, columns=[
             "order_id", "priority", "entered_at", "started_at", "decided_at", "analyst",
             "service_seconds", "first_disposition", "table_row", "families", "rules",
             "shipped_at_decision", "checks", "check_results", "checks_started",
             "hold_before_shipment",
-            "final", "final_at", "senior_minutes"])
+            "final", "final_at", "senior_minutes", "senior_entered_at", "senior_started_at",
+            "senior_done_at"])
         decided = frame["decided_at"].notna()
         service = np.full(len(frame), np.nan)
         if decided.any():
@@ -753,7 +782,8 @@ class _Simulation:
                 frame.loc[decided, "entered_at"].to_numpy(dtype=np.int64),
                 frame.loc[decided, "decided_at"].to_numpy(dtype=np.int64))
         frame["service_hours_to_decision"] = service
-        for column in ("entered_at", "started_at", "decided_at", "final_at"):
+        for column in ("entered_at", "started_at", "decided_at", "final_at",
+                       "senior_entered_at", "senior_started_at", "senior_done_at"):
             frame[column] = _stamps(frame[column])
         return frame
 

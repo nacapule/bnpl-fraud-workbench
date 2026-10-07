@@ -17,7 +17,7 @@ costs:
 
 actions:
   hold_max_hours: 48             # longest a hold pauses fulfilment and settlement (FP-2 §4, §5.3(c))
-  senior_review_minutes: 20      # extra minutes an escalation takes, outside the analyst roster
+  senior_review_minutes: 20      # fraud-queue minutes an escalation adds, from the shift allotment
 
 reviewer:
   # The simulated analyst follows FP-2 through core/evidence.py and runs the checks it
