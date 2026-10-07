@@ -29,6 +29,8 @@ class Builder:
         self.schedule: list[dict] = []
         self.payments: list[dict] = []
         self.reports: list[dict] = []
+        self.openings: list[dict] = []
+        self.resolutions: list[dict] = []
 
     def account(self, user_id: int, email: str, created: pd.Timestamp, *, country: str = "US",
                 address: int | None = None) -> None:
@@ -73,6 +75,17 @@ class Builder:
         self.reports.append({"event_id": len(self.reports) + 1, "occurred_at": at,
                              "known_at": at, "user_id": order["user_id"],
                              "order_id": order_id})
+
+    def dispute(self, order_id: int, reason: str, opened: pd.Timestamp,
+                resolved: pd.Timestamp, outcome: str) -> None:
+        """A dispute on the order, opened and resolved as given."""
+        dispute_id = len(self.openings) + 1
+        self.openings.append({"event_id": dispute_id, "occurred_at": opened, "known_at": opened,
+                              "dispute_id": dispute_id, "order_id": order_id,
+                              "reason": reason, "amount_cents": 2_500})
+        self.resolutions.append({"event_id": dispute_id, "occurred_at": resolved,
+                                 "known_at": resolved, "dispute_id": dispute_id,
+                                 "outcome": outcome})
 
     def tables(self) -> dict[str, pd.DataFrame]:
         accounts = pd.DataFrame(self.accounts)
@@ -125,7 +138,9 @@ class Builder:
         }
         for name, rows in (("plans", self.plans), ("installment_schedule", self.schedule),
                            ("payment_attempts", self.payments),
-                           ("victim_reports", self.reports)):
+                           ("victim_reports", self.reports),
+                           ("dispute_openings", self.openings),
+                           ("dispute_resolutions", self.resolutions)):
             if rows:
                 frames[name] = pd.DataFrame(rows)
         tables = {name: world.coerce(name, frame) for name, frame in frames.items()}
@@ -329,15 +344,42 @@ def test_a_voided_plan_defaults_only_while_it_is_owed(voided_after: pd.Timedelta
     assert row["never_pay_determined_user"] == determined
 
 
-def test_never_pay_is_seen_when_victim_reports_label_the_orders_first() -> None:
-    """Victim reports on both plans' orders do not settle the account (they are
-    reports, not lost disputes), so the never-pay determination must still show."""
+def test_never_pay_is_seen_when_another_determination_labels_the_orders_first() -> None:
+    """Unauthorized-use disputes lost on both plans' orders before their defaults label
+    them third-party fraud first; the never-pay determination must still show."""
+    b = zero_effort_household()
+    for order_id in (110, 111):
+        b.dispute(order_id, "unauthorized", T0 + pd.Timedelta(days=2),
+                  T0 + pd.Timedelta(days=3), "lost")
+    row = context_of(b).loc[112]
+    assert row["unauthorized_disputes_lost_user"] == 2
+    assert row["never_pay_determined_user"] == 1
+
+
+@pytest.mark.parametrize(("reported", "decided", "determined"), [
+    (2, 60, 0),  # reported before the determination (day 45)
+    (50, 47, 1),  # determined, not yet reported
+    (50, 60, 0),  # reported after the determination
+])
+def test_a_plan_the_holder_reported_is_not_never_pay(reported: int, decided: int,
+                                                     determined: int) -> None:
+    """The holder reports both plans' orders as not theirs on day ``reported``: from
+    then on neither determination counts. Order 113 (day 46) is decided at day 47."""
+    b = zero_effort_household()
+    b.order(113, 1, T0 + pd.Timedelta(days=46))
+    for order_id in (110, 111):
+        b.report(order_id, T0 + pd.Timedelta(days=reported))
+    decisions = pd.DataFrame({"order_id": [112 if decided == 60 else 113],
+                              "decision_at": [T0 + pd.Timedelta(days=decided)]})
+    row = asof.build_context(b.tables(), decisions).iloc[0]
+    assert row["victim_reports_user"] == int(reported < decided) * 2
+    assert row["never_pay_determined_user"] == determined
+
+
+def test_a_report_on_one_plan_leaves_the_other_never_pay() -> None:
     b = zero_effort_household()
     b.report(110, T0 + pd.Timedelta(days=2))
-    b.report(111, T0 + pd.Timedelta(days=2))
-    row = context_of(b).loc[112]
-    assert row["victim_reports_user"] == 2
-    assert row["never_pay_determined_user"] == 1
+    assert context_of(b).loc[112, "never_pay_determined_user"] == 1
 
 
 def held_until(tables: dict[str, pd.DataFrame], order_id: int, held: pd.Timestamp,

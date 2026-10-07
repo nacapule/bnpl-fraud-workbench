@@ -487,7 +487,9 @@ class Oracle:
             d.reason == INR and r.outcome == "won"
             and any(v.event(x) for x in self.deliveries[a.order_id]) for a, d, r in resolved)
         c["never_pay_determined_user"] = int(any(
-            v.derived(self.never_pay.get(a.order_id)) for a in through))
+            v.derived(self.never_pay.get(a.order_id))
+            and not any(r.user_id == user and v.event(r) for r in self.reports[a.order_id])
+            for a in through))  # a plan whose order the holder reported does not count
         c["promo_uses_linked_accounts"] = self.promo_uses(o, v)
 
         c["shipped_at_decision"] = int(any(v.event(f) for f in self.fulfilments[o.order_id]))

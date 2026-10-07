@@ -286,9 +286,11 @@ COLUMNS: tuple[AsofColumn, ...] = (
          "disputes on policy-approved orders", "ever", False, *ALL),
     _col("never_pay_determined_user", OC, "int8",
          "A never-pay determination on one of the account's earlier plans was known before "
-         "the decision; computed from payments with core.world.adjudicate's rule, never by "
-         "reading labels. A voided or cancelled plan defaults only before it stops; another "
-         "determination on the same order does not hide this one.",
+         "the decision, other than on a plan whose order the holder had reported as not "
+         "theirs by then (a victim report); computed from payments with "
+         "core.world.never_pay_determinations, never by reading labels. A voided or "
+         "cancelled plan defaults only before it stops; another determination on the same "
+         "order does not hide this one.",
          "plans of policy-approved orders", "ever", False, *ALL),
     _col("promo_redemptions_user", OC, "int64", "Promotions used on the account's orders.",
          "policy-approved orders", "ever, before the decision", False, "rules", "ml"),
@@ -1062,12 +1064,19 @@ def outcome_columns(
                       & (on_card["opened"] < on_card["cut"])]
     c["unauthorized_disputes_on_card"] = _per(on_card, n)
 
-    # never-pay determinations on the account's earlier plans (core.world.adjudicate's rule)
+    # never-pay determinations on the account's earlier plans (fraud policy §8.3), except
+    # on plans whose orders the holder reported as not theirs by the decision (§6.3(b))
     determined = _never_pay(tables, a_order[went_through], s["approved"][went_through],
                             s["stopped"][went_through], other["order_id"].unique(),
                             d.decision_sec.max())
-    known = other.merge(determined, on="order_id")
-    c["never_pay_determined_user"] = _per(known[known["determined"] < known["cut"]], n) > 0
+    known = through[["position", "user_id", "order_id", "cut"]].merge(determined, on="order_id")
+    first_report = pd.Series(keys["victim_reports"], index=pd.MultiIndex.from_arrays(
+        [reports["user_id"].to_numpy(np.int64), reports["order_id"].to_numpy(np.int64)]))
+    disowned = _lookup(first_report.groupby(level=[0, 1]).min() if len(first_report)
+                       else first_report, known["user_id"].to_numpy(np.int64),
+                       known["order_id"].to_numpy(np.int64), _NEVER)
+    known = known[(known["determined"] < known["cut"]) & ~(disowned < known["cut"])]
+    c["never_pay_determined_user"] = _per(known, n) > 0
 
     c["promo_uses_linked_accounts"] = _linked_promo_uses(tables, attempts, d, s, user)
 
@@ -1238,18 +1247,15 @@ def _never_pay(tables: Mapping[str, pd.DataFrame], went_through: np.ndarray,
     when each went through and ``stopped`` when it was voided or cancelled (keys, the
     maximum when never). Labels are never read.
 
-    The rule is core.world.adjudicate's, run on these tables with three changes. An
-    order counts from when the policy let it through, so a shipping address an order
-    released from a hold goes to is shared from the release, not the attempt. A
-    voided or cancelled plan owes nothing after it stops, so it defaults (and supplies
-    a marker) only when its default came before that. And the labelling function
-    keeps one determination per order, the first known, so the evidence of every
-    other determination (disputes, victim reports, first-purchase promotions) is
-    withheld: the never-pay rule reads none of it, and a plan that meets §8.3 is
-    reported even when, say, a victim report labelled its order first. Without a
-    zero-effort default among the asked plans nothing is computed."""
+    The rule is core.world.never_pay_determinations, run on these tables with two
+    changes. An order counts from when the policy let it through, so a shipping
+    address is shared from then. A voided or cancelled plan owes nothing after it
+    stops, so it defaults (and supplies a marker) only when its default came before
+    that. Nothing is computed when no asked plan defaults by the latest decision,
+    since a determination comes no earlier than its plan's default."""
     none = pd.DataFrame({"order_id": np.empty(0, np.int64), "determined": np.empty(0, np.int64)})
     rules = config.load("world")["labels"]
+    grace = rules["default_grace_days"] * _DAY
     plans = tables["plans"]
     plans = plans[plans["order_id"].isin(went_through)]
     stop_sec = pd.Series(stopped >> SUB_BITS, index=went_through)
@@ -1258,29 +1264,27 @@ def _never_pay(tables: Mapping[str, pd.DataFrame], went_through: np.ndarray,
     if len(stop_sec):
         stop = _take(stop_sec, _take(plans.set_index("plan_id")["order_id"],
                                      schedule["plan_id"].to_numpy(np.int64), -1), _NEVER)
-        default = _seconds(schedule["due_at"]) + rules["default_grace_days"] * _DAY
+        default = _seconds(schedule["due_at"]) + grace
         schedule = schedule[(schedule["seq"] < 1).to_numpy() | (default < stop)]
-    mine = plans[plans["order_id"].isin(asked)][["plan_id", "order_id", "created_at"]].merge(
-        tables["order_attempts"][["order_id", "user_id"]], on="order_id")
-    observed = {**tables, "installment_schedule": schedule}
-    if mine.empty or world._zero_effort_defaults(
-            observed, mine, rules["default_grace_days"]).empty:
+    first_due = schedule[(schedule["seq"] == 1).to_numpy() & schedule["plan_id"].isin(
+        plans.loc[plans["order_id"].isin(asked), "plan_id"]).to_numpy()]
+    if not len(first_due) or _seconds(first_due["due_at"]).min() + grace > latest_sec:
         return none
-    orders = tables["order_attempts"].copy()
-    through = _take(pd.Series(approved >> SUB_BITS, index=went_through),
-                    orders["order_id"].to_numpy(np.int64), -1)
-    orders["processor_result"] = np.where(through >= 0, "approved", "declined")
-    orders["occurred_at"] = np.where(through >= 0, through.astype("datetime64[s]"),
-                                     orders["occurred_at"].to_numpy("datetime64[s]"))
-    withheld = {name: world.empty(name) for name in (
-        "dispute_openings", "dispute_resolutions", "victim_reports")}
-    labels = world.adjudicate(
-        {**observed, **withheld, "order_attempts": orders,
-         "promotions": tables["promotions"].assign(first_purchase_only=False)},
-        horizon_days=0, observed_until=pd.Timestamp(latest_sec, unit="s"), **rules)
-    labels = labels[(labels["basis"] == "never_pay") & labels["order_id"].isin(asked)]
-    return pd.DataFrame({"order_id": labels["order_id"].to_numpy(np.int64),
-                         "determined": _derived_key(_seconds(labels["label_known_at"]))})
+    attempts = tables["order_attempts"]
+    attempts = attempts[attempts["order_id"].isin(went_through)]
+    since = _take(pd.Series(approved >> SUB_BITS, index=went_through),
+                  attempts["order_id"].to_numpy(np.int64), -1)
+    orders = pd.DataFrame({"order_id": attempts["order_id"].to_numpy(np.int64),
+                           "user_id": attempts["user_id"].to_numpy(np.int64),
+                           "occurred_at": since.astype("datetime64[s]")})
+    found = world.never_pay_determinations(
+        {**tables, "installment_schedule": schedule}, orders,
+        default_grace_days=rules["default_grace_days"],
+        linked_plan_days=rules["linked_plan_days"],
+        shared_default_days=rules["shared_default_days"])
+    found = found[found["order_id"].isin(asked)]
+    return pd.DataFrame({"order_id": found["order_id"].to_numpy(np.int64),
+                         "determined": _derived_key(_seconds(found["label_known_at"]))})
 
 
 def _linked_promo_uses(tables: Mapping[str, pd.DataFrame], attempts: pd.DataFrame,
@@ -1299,7 +1303,7 @@ def _linked_promo_uses(tables: Mapping[str, pd.DataFrame], attempts: pd.DataFram
     out = uses.astype(np.int64)
     if not uses.any():
         return out
-    pairs = world._shared_accounts(tables, attempts, shipping=False)
+    pairs = world.shared_accounts(tables, attempts, shipping=False)
     asked = pd.DataFrame({"position": np.flatnonzero(uses), "user_id": user[uses],
                           "promo": pd.Series(promo[uses]).astype(np.int64).to_numpy(),
                           "decision_sec": d.decision_sec[uses], "cut": d.cut[uses]})
