@@ -23,9 +23,11 @@ ARMS = {"a": {"backend": "codex", "model": "gpt-6.1-sol", "effort": "high"},
 PRIVATE = ["Jane Example", "jane@example.invalid", "Zoë Q"]
 SIZES = {"development_cases": 3, "final_cases": 3, "min_final_seeds": 1,
          "max_cases_per_cluster": 2, "probe_cases": 1, "probe_kinds": ["shuffled", "renamed"],
-         "max_output_tokens": 500, "input_overhead_tokens": 0}
+         "max_output_tokens": 500, "input_overhead_tokens": 0, "context_tokens": 200000,
+         "token_stop_margin": 0}
 BOUND = 1000  # every stand-in call's token bound
 CALL_BOUND = harness.call_bound
+CHECK_ISOLATION = harness.check_isolation
 
 
 @pytest.fixture(autouse=True)
@@ -33,6 +35,7 @@ def small_benchmarks(monkeypatch) -> None:
     monkeypatch.setattr(harness, "SIZES", SIZES)
     monkeypatch.setattr(harness, "CAPS", {})
     monkeypatch.setattr(harness, "call_bound", lambda system, user: BOUND)
+    monkeypatch.setattr(harness, "check_isolation", lambda *args, **kwargs: None)
 
 
 def make_benchmark(directory: Path) -> list[str]:
@@ -97,16 +100,25 @@ class StandIn:
 
     def __init__(self, name: str, failures: dict | None = None, answers: dict | None = None,
                  version: str = "cli 1", error: str = "connection reset",
-                 bounds_output: bool = True, interrupt_after: int | None = None):
+                 bounds_output: bool = True, interrupt_after: int | None = None,
+                 check: tuple[str, dict] | BaseException = ("NO", {})):
         self.name, self.calls, self.failures = name, [], dict(failures or {})
         self.answers, self.version, self.error = dict(answers or {}), version, error
         self.bounds_output, self.interrupt_after = bounds_output, interrupt_after
+        self.check, self.checks = check, []
 
     def fingerprint(self, model: str, effort: str, max_output_tokens=None) -> dict[str, str]:
         assert (max_output_tokens is not None) is self.bounds_output
         return {"cli_version": self.version, "isolation": "iso 1"}
 
     def complete(self, request: client.Request) -> client.Response:
+        if request.system_prompt == harness.CANARY_SYSTEM:  # the run's isolation check
+            self.checks.append(request)
+            if isinstance(self.check, BaseException):
+                raise self.check
+            text, changes = self.check
+            return client.Response(text=text, summary=summary(request, **changes),
+                                   duration_ms=5, events=({"type": "result"},))
         self.calls.append(request)
         if self.interrupt_after is not None and len(self.calls) > self.interrupt_after:
             raise KeyboardInterrupt  # the run is stopped while the model works
@@ -309,11 +321,109 @@ def test_an_interrupted_call_stays_charged_in_full(bench: Path, tmp_path: Path,
     ledger = json.loads((tmp_path / "ledger.json").read_text())["arms"]["a"]
     assert ledger["interrupted_calls"] == 1 and ledger["pending"] == {}
     assert ledger["calls"] == 2 + 1 + 3 and ledger["charged_tokens"] == 5 * 150 + BOUND
+    # the records account for the same spend: the lost attempt is in its case's record
+    usage = [record["usage"] for record in records(bench)]
+    assert sum(u["calls"] for u in usage) == ledger["calls"]
+    assert sum(u["charged_tokens"] for u in usage) == ledger["charged_tokens"]
+    assert not list((bench / "cache").glob("*.started.json"))
+
+
+def test_a_case_stopped_before_its_retry_keeps_its_attempt(bench: Path, tmp_path: Path,
+                                                           monkeypatch) -> None:
+    monkeypatch.setattr(harness, "CAPS", {"a": {"calls": 1}})
+    used, _ = run(bench, "a", tmp_path, failures={(0, 0): 1})
+    assert used["calls"] == 1 and used["stopped"]
+    assert len(list((bench / "cache").glob("*.started.json"))) == 1
+    monkeypatch.setattr(harness, "CAPS", {"a": {"calls": 100}})
+    _, backend = run(bench, "a", tmp_path, backend=StandIn("a", failures={(0, 0): 1}))
+    [first] = [r for r in records(bench) if r["identity"]["case"].endswith("5012-20250703T140500")
+               and r["identity"]["probe"] == "primary"]
+    assert first["outcome"] == "transport_failure"  # its one retry also failed
+    assert first["attempts"] == 2 and first["usage"]["charged_tokens"] == 2 * BOUND
+    ledger = json.loads((tmp_path / "ledger.json").read_text())["arms"]["a"]
+    assert sum(r["usage"]["charged_tokens"] for r in records(bench)) == ledger["charged_tokens"]
+
+
+def test_a_setup_failure_stops_the_run_and_is_not_charged(bench: Path, tmp_path: Path) -> None:
+    class Unready(StandIn):
+        def complete(self, request):
+            raise client.BackendError("no credentials", called=False)
+
+    used, _ = run(bench, "a", tmp_path, backend=Unready("a"))
+    assert used["calls"] == 0 and "before asking the model" in used["stopped"]
+    assert not list((bench / "cache").glob("*.json"))
+    ledger = json.loads((tmp_path / "ledger.json").read_text())["arms"]["a"]
+    assert ledger["calls"] == 0 and ledger["pending"] == {}
+
+
+def test_two_arms_pinning_at_once_keep_both_pins(bench: Path, monkeypatch) -> None:
+    import threading
+    import time
+
+    read = harness.read_pins
+
+    def slow(directory):
+        pins = read(directory)
+        time.sleep(0.2)  # both runs read before either writes, without the lock
+        return pins
+
+    monkeypatch.setattr(harness, "read_pins", slow)
+    definition = harness.load_benchmark(bench)
+    threads = [threading.Thread(target=harness.pin_arm, args=(
+        bench, definition["arms"][name], {"cli_version": "cli 1", "isolation": "iso 1"}))
+        for name in ("a", "b")]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert set(read(bench)) == {"a", "b"}
 
 
 def test_a_call_is_bounded_over_every_request_the_cli_may_send() -> None:
-    # 3 prompt bytes; output 500 per request; request k carries k earlier outputs
-    assert CALL_BOUND("ab", "c") == sum(3 + k * 500 + 500 for k in range(5)) == 7515
+    # 3 prompt bytes; output 500 per request; request k carries k earlier outputs and the
+    # CLI's message before it; ten requests: 1 + 3 continuations + a retry that restarts
+    # the count + 3 more + a nudge + a retry after a refusal
+    assert harness.REQUESTS_PER_CALL == 10
+    later = 500 + harness.NUDGE_TOKENS
+    assert CALL_BOUND("ab", "c") == sum(3 + k * later + 500 for k in range(10)) == 72530
+    assert harness.largest_input("ab", "c") == 3 + 9 * later
+
+
+def test_the_real_bound_keeps_every_request_inside_the_context_window() -> None:
+    sizes = harness.load("llm")["benchmark"]
+    packet = json.loads(json.dumps(build_packet(
+        {**CASE["context_row"], **R03}, CASE["order"], merchant_category="electronics",
+        card_bin_country="GB", home_country="US"), default=str))
+    prompts = memo.system_prompt(), memo.user_prompt(packet)
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(harness, "SIZES", sizes)
+        assert harness.largest_input(*prompts) <= sizes["context_tokens"]
+
+
+def test_a_call_that_could_outgrow_the_context_window_is_not_made(
+        bench: Path, tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(harness, "SIZES", {**SIZES, "context_tokens": 1000})
+    with pytest.raises(harness.BudgetError, match="context window"):
+        run(bench, "a", tmp_path)
+    ledger = json.loads((tmp_path / "ledger.json").read_text())["arms"]["a"]
+    assert ledger["calls"] == 0 and ledger["pending"] == {}
+    used, _ = run(bench, "a", tmp_path, backend=StandIn("a", bounds_output=False))
+    assert used["calls"] == 5  # no output bound, so nothing to keep inside the window
+
+
+def test_token_caps_stop_admitting_calls_a_margin_below_them(bench: Path, tmp_path: Path,
+                                                            monkeypatch) -> None:
+    monkeypatch.setattr(harness, "SIZES", {**SIZES, "token_stop_margin": 500})
+    monkeypatch.setattr(harness, "CAPS", {"a": {"calls": 100, "tokens": 1500}})
+    used, backend = run(bench, "a", tmp_path)
+    assert len(backend.calls) == 1  # 150 + the next bound of 1000 + 500 > 1500
+    assert "short of the cap" in used["stopped"]
+    monkeypatch.setattr(harness, "CAPS", {})
+    fresh = tmp_path / "fresh" / "test-bench"
+    make_benchmark(fresh)
+    used, backend = run(fresh, "a", tmp_path, max_tokens=1600,
+                        ledger_path=tmp_path / "other.json")
+    assert len(backend.calls) == 1 and "short of" in used["stopped"]
 
 
 def test_one_live_run_per_arm_and_no_lost_updates_between_arms(tmp_path: Path) -> None:
@@ -347,10 +457,84 @@ def test_an_escaped_surrogate_is_a_format_failure_and_results_are_written(
     assert harness.main(["--benchmark", bench.name]) == 0
 
 
-def test_a_call_over_its_bound_stops_the_run(bench: Path, tmp_path: Path) -> None:
+def test_a_call_over_its_bound_parks_the_arm(bench: Path, tmp_path: Path) -> None:
     greedy = StandIn("a", answers={(0, 0): (None, {"output_tokens": 2000})})
     with pytest.raises(harness.BudgetError):
         run(bench, "a", tmp_path, backend=greedy)
+    path = tmp_path / "ledger.json"
+    assert "more than its bound" in json.loads(path.read_text())["arms"]["a"]["parked"]
+    used, backend = run(bench, "a", tmp_path)  # a later run makes no call
+    assert used["calls"] == 0 and not backend.calls and "parked" in used["stopped"]
+    [started] = (bench / "cache").glob("*.started.json")  # the spend stays with its case
+    assert json.loads(started.read_text())["usage"]["charged_tokens"] == 2100
+    data = json.loads(path.read_text())
+    del data["arms"]["a"]["parked"]  # resolved by hand
+    path.write_text(json.dumps(data))
+    used, _ = run(bench, "a", tmp_path)
+    assert used["recorded"] == 5
+
+
+@pytest.fixture
+def checked(monkeypatch) -> None:
+    monkeypatch.setattr(harness, "check_isolation", CHECK_ISOLATION)
+
+
+@pytest.mark.usefixtures("checked")
+def test_each_run_checks_its_isolation_once_before_its_first_call(bench: Path,
+                                                                  tmp_path: Path) -> None:
+    used, backend = run(bench, "a", tmp_path)
+    assert len(backend.checks) == 1 and len(backend.calls) == 5 and used["calls"] == 6
+    request = backend.checks[0]
+    assert (request.model, request.effort, request.max_output_tokens) == (
+        "gpt-6.1-sol", "high", 500)  # the arm's own model, effort and output bound
+    ledger = json.loads((tmp_path / "ledger.json").read_text())["arms"]["a"]
+    assert ledger["calls"] == 6 and "parked" not in ledger
+    [entry] = json.loads((bench / "canaries.json").read_text())
+    assert entry == {"arm": "a", "cli_version": "cli 1", "isolation": "iso 1",
+                     "verdict": "no", "passed": True, "input_tokens": 100,
+                     "output_tokens": 50}
+    again, backend = run(bench, "a", tmp_path)  # nothing left to call: no check either
+    assert again["calls"] == 0 and not backend.checks
+    assert list((tmp_path / "logs" / "test-bench" / "a").glob("canary-*.text.txt"))
+
+
+@pytest.mark.usefixtures("checked")
+@pytest.mark.parametrize("check", [("YES", {}), ("Yes, the style notes.", {}),
+                                   ("NO", {"n_hook_events": 1}),
+                                   ("NO", {"n_unrecognized_events": 1}),
+                                   ("NO", {"model": "another-model"})])
+def test_a_failed_isolation_check_parks_the_arm_before_any_memo_call(
+        bench: Path, tmp_path: Path, check) -> None:
+    with pytest.raises(harness.IsolationError):
+        run(bench, "a", tmp_path, backend=StandIn("a", check=check))
+    ledger = json.loads((tmp_path / "ledger.json").read_text())["arms"]["a"]
+    assert ledger["calls"] == 1 and "isolation check" in ledger["parked"]
+    [entry] = json.loads((bench / "canaries.json").read_text())
+    assert entry["passed"] is False and "style" not in json.dumps(entry)
+    used, backend = run(bench, "a", tmp_path)
+    assert used["calls"] == 0 and not backend.calls and not backend.checks
+    assert not list((bench / "cache").glob("*.json"))
+
+
+@pytest.mark.usefixtures("checked")
+def test_an_isolation_check_that_fails_in_transport_stops_without_parking(
+        bench: Path, tmp_path: Path) -> None:
+    used, backend = run(bench, "a", tmp_path,
+                        backend=StandIn("a", check=client.BackendError("reset")))
+    assert used["calls"] == 1 and not backend.calls and "isolation check" in used["stopped"]
+    used, backend = run(bench, "a", tmp_path, backend=StandIn("a", check=("NO", {
+        "n_error_events": 1})))
+    assert not backend.calls and "error events" in used["stopped"]
+    ledger = json.loads((tmp_path / "ledger.json").read_text())["arms"]["a"]
+    assert "parked" not in ledger and ledger["calls"] == 2
+    used, _ = run(bench, "a", tmp_path)
+    assert used["recorded"] == 5
+
+
+def test_only_a_plain_no_passes_the_isolation_check() -> None:
+    assert [harness.canary_verdict(text) for text in ("NO", "No.", " no\n", "YES", "yes!",
+                                                       "Nope", "NO, but", "")] == [
+        "no", "no", "no", "yes", "yes", "unclear", "unclear", "unclear"]
 
 
 def test_one_retry_for_transport_or_error_events_then_a_recorded_failure(

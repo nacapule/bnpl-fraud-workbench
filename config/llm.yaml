@@ -18,9 +18,11 @@ benchmark:
   max_cases_per_cluster: 2          # per account and per episode
   probe_cases: 40                   # invariance probes on final cases
   probe_kinds: [shuffled, renamed]  # context facts reordered; fresh placeholder names
-  max_output_tokens: 32000          # per call, enforced by the backend where it can be
+  max_output_tokens: 16000          # per request, enforced by the backend where it can be
   input_overhead_tokens: 4000       # the CLI's own input beyond the prompts, at most
+  context_tokens: 200000            # smallest context window of the bounded arms' models
+  token_stop_margin: 1000000        # a token cap stops admitting calls this far below it
 
-caps:                               # hard limits per arm across benchmarks, retries included
+caps:                               # per arm across benchmarks, retries and checks included
   sol: {calls: 400}
   opus: {calls: 330, tokens: 10000000}
