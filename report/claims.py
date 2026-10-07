@@ -3,8 +3,14 @@
 ``report/claims.yaml`` lists every directional sentence in the README and the
 operating review (``report/lint.py`` flags any comparative sentence that is
 not listed). A claim names its document, the complete sentence as it appears
-in the rendered document's visible text, and one check per comparison the
-sentence makes. Each check names a result and a test:
+in the rendered document's visible text, and its checks. Each check names the
+clause of the sentence it supports (an exact piece of it), a result and a
+test. Every comparative word must fall inside a check's clause (the lint),
+and the names in ``report/lint.yaml`` (policies, families, capacity levels)
+tie clauses to results: a name inside a clause must be part of that check's
+key, and every name in the sentence must fall inside the clause of a check
+whose key includes it. "More than the incumbent rules and approve-all" thus
+needs a check against each. The tests:
 
 ``sign``
     a paired difference over seeds (a metric whose key has a ``vs_<reference>``
@@ -29,7 +35,7 @@ longer supported, so changed results cannot leave a stale sentence behind.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -38,7 +44,7 @@ import yaml
 
 from core.results import metric
 from core.stats import mcnemar_exact, sign_test
-from report.lint import normalize, sentences
+from report.lint import clause_spans, inside, normalize, phrase_spans, sentences
 from report.render import REPO, is_contrast
 
 CLAIMS = REPO / "report" / "claims.yaml"
@@ -48,6 +54,7 @@ TESTS = ("sign", "interval", "mcnemar")
 
 @dataclass(frozen=True)
 class Check:
+    clause: str
     test: str
     direction: str
     key: str | None = None
@@ -56,6 +63,8 @@ class Check:
     margin: float | None = None
 
     def __post_init__(self) -> None:
+        if not isinstance(self.clause, str) or not normalize(self.clause):
+            raise ValueError("a check needs the clause of the sentence it supports")
         if self.test not in TESTS:
             raise ValueError(f"test must be one of {TESTS}, got {self.test!r}")
         if self.direction not in DIRECTIONS:
@@ -157,6 +166,8 @@ def _mcnemar(check: Check, summary: Mapping[str, Any]) -> str | None:
     for key, item in zip(check.keys, (first, second), strict=True):
         if item.unit != "count" or not item.evaluated:
             return f"{key} must be an evaluated count"
+        if item.value < 0 or not float(item.value).is_integer():
+            return f"{key} must be a whole number of cases, got {item.value}"
     only_first, only_second = int(first.value), int(second.value)
     p_value = mcnemar_exact(only_first, only_second)
     observed = f"{only_first} vs {only_second} discordant, p = {p_value:.4g}"
@@ -172,9 +183,44 @@ def _mcnemar(check: Check, summary: Mapping[str, Any]) -> str | None:
     return None
 
 
+def key_names(check: Check) -> set[str]:
+    """The segments of a check's keys, with ``vs_<reference>`` read as the reference."""
+    names = set()
+    for key in (check.key,) if check.key else check.keys:
+        for part in key.split("."):
+            names.add(part[len("vs_"):] if part.startswith("vs_") else part)
+    return names
+
+
+def name_problems(claim: Claim, names: Mapping[str, Sequence[str]]) -> list[str]:
+    """Clauses that name what their check does not test, and names no check covers."""
+    sentence = normalize(claim.sentence)
+    problems = []
+    clauses = []
+    for index, check in enumerate(claim.checks, start=1):
+        clause = normalize(check.clause)
+        if clause not in sentence:
+            problems.append(f"check {index}: its clause is not in the sentence")
+            continue
+        clauses.append((clause_spans(sentence, [clause])[0], key_names(check)))
+        tested = key_names(check)
+        for name, phrases in names.items():
+            if phrase_spans(phrases, clause) and name not in tested:
+                problems.append(f"check {index}: its clause names {name}, which its key "
+                                "does not test")
+    for name, phrases in names.items():
+        for span in phrase_spans(phrases, sentence):
+            if not any(inside(span, [where]) and name in tested for where, tested in clauses):
+                problems.append(f"{sentence[span[0]:span[1]]!r} ({name}) is in no check's "
+                                "clause that tests it")
+    return problems
+
+
 def check_claims(claims: list[Claim], summary: Mapping[str, Any],
-                 read_document: Callable[[str], str | None]) -> list[str]:
-    """Problems with each claim: its sentence missing from the document, or a check failing."""
+                 read_document: Callable[[str], str | None],
+                 names: Mapping[str, Sequence[str]] | None = None) -> list[str]:
+    """Problems with each claim: its sentence missing from the document, a clause
+    naming what its check does not test, or a check the results do not support."""
     problems = []
     for claim in claims:
         text = read_document(claim.document)
@@ -183,6 +229,7 @@ def check_claims(claims: list[Claim], summary: Mapping[str, Any],
         elif normalize(claim.sentence) not in {sentence for _, sentence in sentences(text)}:
             problems.append(f"{claim.id}: its sentence is not a visible sentence of "
                             f"{claim.document}")
+        problems += [f"{claim.id}: {problem}" for problem in name_problems(claim, names or {})]
         for index, check in enumerate(claim.checks):
             try:
                 reason = support(check, summary)
@@ -193,9 +240,11 @@ def check_claims(claims: list[Claim], summary: Mapping[str, Any],
     return problems
 
 
-def sentences_by_document(claims: list[Claim]) -> dict[str, dict[str, int]]:
-    """For the lint: each document's claim sentences and how many checks each has."""
-    out: dict[str, dict[str, int]] = {}
+def clauses_by_document(claims: list[Claim]) -> dict[str, dict[str, list[str]]]:
+    """For the lint: each document's claim sentences and their checks' clauses."""
+    out: dict[str, dict[str, list[str]]] = {}
     for claim in claims:
-        out.setdefault(claim.document, {})[normalize(claim.sentence)] = len(claim.checks)
+        out.setdefault(claim.document, {})[normalize(claim.sentence)] = [
+            check.clause for check in claim.checks
+        ]
     return out

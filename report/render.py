@@ -109,7 +109,8 @@ def is_contrast(key: str) -> bool:
 
 
 def _setting(value: Any, dotted: str) -> Value:
-    return Value(plain=value, unit=formats.unit_from_name(dotted.rsplit(".", 1)[-1]))
+    return Value(plain=value, unit=formats.unit_from_name(dotted.rsplit(".", 1)[-1]),
+                 setting=True)
 
 
 def _metric(key: str, sources: Sources) -> Metric:
@@ -142,7 +143,8 @@ def render_table(body: str, sources: Sources) -> str:
     """Render ``table:name | column "Header" format, ...`` as a Markdown table.
 
     A cell's unit comes from its column name's suffix (``net_cents``,
-    ``held_share``, ...); raises :class:`RenderError` listing every problem.
+    ``held_share``, ...), and a column with ``_vs_`` in its name holds paired
+    differences; raises :class:`RenderError` listing every problem.
     """
     head, _, spec = body.partition("|")
     name = head.strip()[len("table:"):].strip()
@@ -177,7 +179,8 @@ def render_table(body: str, sources: Sources) -> str:
             elif isinstance(cell, bool):
                 cells.append("yes" if cell else "no")
             else:
-                resolved = Value(plain=cell, unit=formats.unit_from_name(column))
+                resolved = Value(plain=cell, unit=formats.unit_from_name(column),
+                                 contrast="_vs_" in column)
                 try:
                     cells.append(formats.apply(format_name, resolved, args))
                 except FormatError as error:

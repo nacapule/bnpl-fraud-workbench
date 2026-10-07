@@ -61,6 +61,9 @@ def summary() -> dict:
         "replay.mean_cases": Metric(value=2.5, unit="count", population="cases", window="test"),
         "replay.only_first": count(32),
         "replay.only_second": count(5),
+        "replay.mean_first": Metric(value=6.0, unit="count", population="cases", window="test"),
+        "replay.mean_second": Metric(value=0.9, unit="count", population="cases",
+                                     window="test"),
     }
     stage = StageResult(
         stage="replay",
@@ -69,9 +72,9 @@ def summary() -> dict:
         metrics=metrics,
         tables={"replay.policies": [
             {"policy": "approve_all", "net_cents": 0, "held_share": 0.0, "evaluated": True,
-             "held_bps": 50, "seeds": 10},
+             "held_bps": 50, "seeds": 10, "used_share_vs_rules_bps": 0},
             {"policy": "hybrid", "net_cents": 1_234_567, "held_share": 0.0123,
-             "evaluated": False, "held_bps": 12.5, "seeds": 10},
+             "evaluated": False, "held_bps": 12.5, "seeds": 10, "used_share_vs_rules_bps": 2500},
         ]},
     )
     return assemble_summary([stage])
@@ -209,6 +212,12 @@ def test_generated_tables_take_units_from_column_names(sources: Sources) -> None
     assert "does not fit unit 'bps'" in message  # 50 bps is not 5,000%
     with pytest.raises(RenderError, match="no declared unit"):
         render("{{ table:replay.policies | seeds pct }}", sources)
+    # a paired difference in a table prints as points, never as a percent
+    assert render("{{ table:replay.policies | used_share_vs_rules_bps pp }}",
+                  sources).split("\n")[2:] == ["| 0.0 pp |", "| +25.0 pp |"]
+    for form in ("bps_pct", "pct"):
+        with pytest.raises(RenderError):
+            render(f"{{{{ table:replay.policies | used_share_vs_rules_bps {form} }}}}", sources)
 
 
 def _repo(tmp_path: Path, template: str) -> tuple[Path, Path]:
@@ -253,11 +262,12 @@ def test_numbers_typed_into_a_template_are_flagged() -> None:
         "[^1]: Accuracy is 84%.\n"
         "[^note]: Seed 416 only.\n"
         "Clause §84% and R01.5 are not identifiers.\n"
+        "Nor are R84%, Q84%, FP-84%, P3% or CASE-84%.\n"
     )
     findings = lint.number_findings("README.md", template)
     assert [(finding.line, finding.text) for finding in findings] == [
         (1, "12"), (1, "10"), (3, "3"), (4, "42"), (4, "7"), (5, "84"), (6, "416"),
-        (7, "84"), (7, "01.5"),
+        (7, "84"), (7, "01.5"), (8, "84"), (8, "84"), (8, "84"), (8, "3"), (8, "84"),
     ]
 
 
@@ -274,7 +284,7 @@ def test_identifiers_code_links_and_list_markers_are_not_numbers() -> None:
     assert [f.text for f in lint.number_findings("README.md", template)] == ["4"]
 
 
-def test_directional_sentences_need_a_claim_with_a_check_per_comparison() -> None:
+def test_directional_sentences_need_a_claim_whose_clauses_cover_them() -> None:
     rendered = (
         "# Results\n\n"
         "The hybrid policy earned more than the incumbent rules on 9/10 seeds. "
@@ -289,16 +299,36 @@ def test_directional_sentences_need_a_claim_with_a_check_per_comparison() -> Non
         (3, "The hybrid policy earned more than the incumbent rules on 9/10 seeds."),
         (9, "Lower friction for new customers came at no cost."),
     ]
-    claimed = {"The hybrid policy earned more than the incumbent rules on 9/10 seeds.": 1}
+    sentence = "The hybrid policy earned more than the incumbent rules on 9/10 seeds."
+    claimed = {sentence: ["earned more than the incumbent rules"]}
     allowed = ["Lower friction for new customers came at no cost."]
     assert lint.directional_findings("README.md", rendered, claimed, words, allowed) == []
-    # a claim's sentence covers only itself, and only as many comparisons as it checks
     two = "Hybrid earned more than rules and had lower loss than rules."
-    assert lint.directional_findings("README.md", two, {two: 1}, words)[0].text.endswith(
-        "(2 comparative words, 1 checks)")
-    assert lint.directional_findings("README.md", two, {two: 2}, words) == []
-    longer = two.replace(".", ", and better recall.")
-    assert lint.directional_findings("README.md", longer, {two: 2}, words) != []
+    [finding] = lint.directional_findings("README.md", two, {two: ["earned more than rules"]},
+                                          words)
+    assert finding.text.endswith("(no check covers: lower)")
+    assert lint.directional_findings(
+        "README.md", two, {two: ["earned more than rules", "had lower loss than rules"]},
+        words) == []
+
+
+def test_code_blocks_and_headings_do_not_join_sentences() -> None:
+    text = (
+        "# Results\n"
+        "Hybrid earned more than rules, i.e. by a margin.\n\n"
+        "    Hybrid earned more than everything.\n\n"
+        "- First item. Second sentence.\n"
+        "    continued here.\n"
+        "1. Numbered item\n"
+    )
+    assert lint.sentences(text) == [
+        (1, "Results"),
+        (2, "Hybrid earned more than rules, i.e. by a margin."),
+        (6, "First item."),
+        (6, "Second sentence."),
+        (7, "continued here."),
+        (8, "Numbered item"),
+    ]
 
 
 def test_published_documents_need_templates(tmp_path: Path) -> None:
@@ -323,7 +353,8 @@ def test_published_documents_need_templates(tmp_path: Path) -> None:
 
 # ---------------------------------------------------------------- claims
 def check(**fields) -> claims_module.Check:
-    base = {"test": "sign", "direction": "positive", "key": "replay.net.vs_incumbent.hybrid"}
+    base = {"clause": "earned more than the incumbent rules", "test": "sign",
+            "direction": "positive", "key": "replay.net.vs_incumbent.hybrid"}
     base.update(fields)
     return claims_module.Check(**base)
 
@@ -382,12 +413,38 @@ def test_interval_and_paired_case_claims() -> None:
     reversed_arms = check(test="mcnemar", key=None,
                           keys=("replay.only_second", "replay.only_first"))
     assert "not positive" in claims_module.support(reversed_arms, results)
+    means = check(test="mcnemar", key=None, keys=("replay.mean_first", "replay.mean_second"))
+    assert "whole number of cases" in claims_module.support(means, results)
 
 
 def claim(sentence: str = "The hybrid policy earned more than the incumbent rules.",
           **checks) -> claims_module.Claim:
     return claims_module.Claim(id="hybrid-earns-more", document="README.md", sentence=sentence,
                                checks=(check(**checks),))
+
+
+NAMES = {"hybrid": ["hybrid"], "incumbent": ["incumbent rules"],
+         "approve_all": ["approve-all"]}
+
+
+def test_every_policy_named_in_a_claim_needs_a_check_against_it() -> None:
+    """"More than the incumbent rules and approve-all" makes two comparisons."""
+    results = summary()
+    sentence = "The hybrid policy earned more than the incumbent rules and approve-all."
+    document = sentence
+    one = claims_module.Claim(id="c", document="README.md", sentence=sentence,
+                              checks=(check(clause="The hybrid policy earned more than the "
+                                            "incumbent rules"),))
+    problems = claims_module.check_claims([one], results, lambda _: document, NAMES)
+    assert problems == ["c: 'approve-all' (approve_all) is in no check's clause that tests it"]
+    wrong = claims_module.Claim(id="c", document="README.md", sentence=sentence,
+                                checks=(check(clause=sentence[:-1]),))
+    assert "c: check 1: its clause names approve_all, which its key does not test" in \
+        claims_module.check_claims([wrong], results, lambda _: document, NAMES)
+    off = claims_module.Claim(id="c", document="README.md", sentence=sentence,
+                              checks=(check(clause="earned less"),))
+    assert "c: check 1: its clause is not in the sentence" in claims_module.check_claims(
+        [off], results, lambda _: document, NAMES)
 
 
 def test_claims_fail_when_their_sentence_leaves_the_visible_document() -> None:
@@ -408,7 +465,8 @@ def test_claims_fail_when_their_sentence_leaves_the_visible_document() -> None:
 
 @pytest.mark.parametrize(
     "fields",
-    [{"test": "t"}, {"direction": "up"}, {"test": "mcnemar"}, {"keys": ("a", "b")},
+    [{"clause": " "}, {"test": "t"}, {"direction": "up"}, {"test": "mcnemar"},
+     {"keys": ("a", "b")},
      {"alpha": 1.5}, {"direction": "equivalent"}, {"margin": 5.0},
      {"test": "mcnemar", "key": None, "keys": ("a", "b"), "direction": "equivalent",
       "margin": 1.0}],
@@ -420,7 +478,8 @@ def test_malformed_checks_are_rejected(fields: dict) -> None:
 
 def test_claims_parse_and_ids_are_unique() -> None:
     entry = {"id": "a", "document": "README.md", "sentence": "x.",
-             "checks": [{"test": "sign", "direction": "positive", "key": "r.vs_a.k"}]}
+             "checks": [{"clause": "x", "test": "sign", "direction": "positive",
+                         "key": "r.vs_a.k"}]}
     [parsed] = claims_module.parse_claims({"claims": [entry]})
     assert parsed.checks[0].key == "r.vs_a.k"
     with pytest.raises(ValueError, match="unique"):

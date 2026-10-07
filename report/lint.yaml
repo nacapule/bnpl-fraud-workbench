@@ -32,3 +32,23 @@ directional_words:
 
 # Comparative sentences that state no result (exact sentence text).
 allowed_sentences: []
+
+# Names that tie a claim's clauses to its checks (report/claims.py): a name
+# inside a check's clause must be a segment of that check's key (vs_<name>
+# counts), and every name in a claim's sentence must fall inside the clause
+# of a check whose key includes it. Keys are the result-key segments.
+names:
+  approve_all: [approve-all, approve all, approving everything]
+  incumbent_rules: [incumbent rules, incumbent]
+  tree_depth3: [depth-3 tree, decision tree, shallow tree]
+  logistic: [logistic regression, logistic]
+  boosting: [gradient boosting, boosting]
+  hybrid: [hybrid]
+  expected_loss: [expected-loss, expected loss]
+  baseline: [baseline family, baseline world]
+  acquisition_surge: [acquisition surge, surge]
+  fraud_mix_shift: [fraud-mix shift, fraud mix shift, mix shift]
+  low: [low capacity, low staffing]
+  base: [base capacity, base staffing]
+  high: [high capacity, high staffing]
+  redesigned_layout: [redesigned layout, redesigned shift layout, evening layout]

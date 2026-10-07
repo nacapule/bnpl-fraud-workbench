@@ -54,10 +54,11 @@ def unit_from_name(name: str) -> str | None:
 class Value:
     """What a placeholder resolved to.
 
-    ``metric`` is a result metric (``contrast`` when its key has a
-    ``vs_<reference>`` segment, i.e. a paired difference); otherwise ``plain``
-    is a setting or a table cell with its declared ``unit`` (or none), and
-    ``difference`` says it was computed as ``a - b`` of two metrics of ``unit``.
+    ``metric`` is a result metric; otherwise ``plain`` is a table cell, or a
+    protocol or configuration value (``setting``), with its declared ``unit``
+    (or none). ``contrast`` marks a paired difference: a metric key with a
+    ``vs_<reference>`` segment, or a table column with ``_vs_`` in its name.
+    ``difference`` marks ``a - b`` of two metrics of ``unit``.
     """
 
     metric: Metric | None = None
@@ -65,6 +66,7 @@ class Value:
     unit: str | None = None
     difference: bool = False
     contrast: bool = False
+    setting: bool = False
 
     @property
     def number(self) -> int | float:
@@ -322,7 +324,7 @@ def bps_pct(resolved: Value, args: list[str]) -> str:
 
     Only for configured settings; result metrics print as ``bps``, ``per_10k`` or ``pp``.
     """
-    if resolved.metric is not None or resolved.is_difference:
+    if not resolved.setting or resolved.is_difference:
         raise FormatError("the bps_pct format is for configured settings, not results")
     _unit(resolved, ("bps",), "bps_pct")
     decimals, _ = _options(args, 0)
