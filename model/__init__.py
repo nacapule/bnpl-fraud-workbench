@@ -1,5 +1,1 @@
-"""Point-in-time fraud model package."""
-
-from model.features import FEATURE_COLUMNS, build_features, load_feature_frames
-
-__all__ = ["FEATURE_COLUMNS", "build_features", "load_feature_frames"]
+"""Detection models fitted on the as-of context (``model.train.fit``) and their metrics."""

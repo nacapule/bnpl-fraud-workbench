@@ -19,7 +19,7 @@ SCANNED = ("rules", "model", "queue_sim", "llm", "analysis", "report", "pipeline
 HISTORY = re.compile(
     r"merge_asof|searchsorted|\.rolling\(|\.expanding\(|cumcount"
     r"|_asof_event_count|_hours_since_event|_rolling_distinct_accounts|_installment_history"
-    r"|_windowed_distinct_users|_trailing_count"
+    r"|_windowed_distinct_users|_trailing_count|\.shift\(|\.cumsum\(|\.diff\(|merge_ordered"
     r"|COUNT\(DISTINCT|FROM installments|FROM payments|JOIN installments|JOIN payments"
     r"|\bprincipal\b|\bcollected\b"
 )
@@ -27,8 +27,6 @@ HISTORY = re.compile(
 LEGACY = {
     "analysis/followups.py",
     "llm/packet.py",
-    "model/evaluate.py",
-    "model/features.py",
     "queue_sim/simulate.py",
     "rules/tuning.py",
 }

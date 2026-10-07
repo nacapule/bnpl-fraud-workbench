@@ -1,598 +1,139 @@
-"""Offline evaluation for the chronological fraud-model holdout.
+"""Supporting detection metrics and the construction-shortcut sensitivity.
 
-Run after training with ``python -m model.evaluate``.
+Average precision (of each raw score) and the Brier score (of each calibrated
+probability) are supporting rows; the policy comparison itself is the replay's.
+The shortcut sensitivity asks whether a few construction features explain most of
+the full model's ranking: shallow models on account age, first-attempt, address
+and amount features against the full boosting model, and how the full model's
+scores move when legitimate first orders are given a new-account profile. It is a
+reported check on the world, not a target for it.
 """
 
 from __future__ import annotations
 
-import json
-import math
-import os
-import tempfile
-import time
-from pathlib import Path
+from collections.abc import Mapping
 
-os.environ.setdefault("MPLCONFIGDIR", str(Path(tempfile.gettempdir()) / "bnpl-matplotlib"))
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.metrics import average_precision_score
+from sklearn.tree import DecisionTreeClassifier
+from threadpoolctl import threadpool_limits
 
-import joblib  # noqa: E402
-import matplotlib  # noqa: E402
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-from sklearn.isotonic import IsotonicRegression  # noqa: E402
-from sklearn.metrics import average_precision_score, precision_recall_curve  # noqa: E402
+from core.protocol import Protocol
+from core.results import Metric
+from model.features import checkout_rows, labelled
+from model.train import CLASS_WEIGHT, RANDOM_STATE, Scorer
 
-from model.features import FEATURE_COLUMNS, build_features, load_feature_frames  # noqa: E402
-from model.train import ARTIFACT_DIR, MODEL_FILES, chronological_split, load_config  # noqa: E402
-
-matplotlib.use("Agg")
-matplotlib.rcParams["svg.hashsalt"] = "bnpl-model-416"
-import matplotlib.pyplot as plt  # noqa: E402
-
-REPO = Path(__file__).resolve().parent.parent
-REPORT_DIR = REPO / "reports"
-
-
-def _markdown_table(frame: pd.DataFrame) -> str:
-    """Render the small result frames without an optional tabulate dependency."""
-    display = frame.copy()
-    headers = [str(column) for column in display.columns]
-    rows = [[str(value) for value in row] for row in display.itertuples(index=False, name=None)]
-
-    def clean(value: str) -> str:
-        return value.replace("|", "\\|").replace("\n", " ")
-
-    lines = [
-        "| " + " | ".join(clean(value) for value in headers) + " |",
-        "| " + " | ".join("---" for _ in headers) + " |",
-    ]
-    lines.extend("| " + " | ".join(clean(value) for value in row) + " |" for row in rows)
-    return "\n".join(lines)
+SHORTCUTS: dict[str, tuple[str, tuple[str, ...]]] = {
+    "age_tree": ("tree", ("account_age_days",)),
+    "construction_tree": ("tree", ("account_age_days", "is_first_attempt_user",
+                                   "ship_address_link_age_hours",
+                                   "amount_over_category_median")),
+    "three_feature_boosting": ("boosting", ("account_age_days", "hours_since_credential_change",
+                                            "accounts_on_address_ever")),
+}
+# The new-account profile given to legitimate first orders in the perturbation.
+PROFILE = {"account_age_days": 5.0, "amount_over_category_median": 1.3}
+TOP_SHARE = 0.01  # the cutoff is the validation window's top 1% of full-model scores
 
 
-def _ranked_selection(order_ids: pd.Series, scores: np.ndarray, capacity: int) -> set[int]:
-    ranking = pd.DataFrame({"order_id": order_ids.to_numpy(), "score": scores})
-    ranking = ranking.sort_values(["score", "order_id"], ascending=[False, True], kind="stable")
-    return set(ranking.head(min(capacity, len(ranking)))["order_id"].astype(int))
+def _population(window: str, rows: pd.DataFrame) -> str:
+    return (f"processor-approved orders at checkout in the {window} window with a known "
+            f"label ({len(rows)} orders, {int(rows['label'].sum())} positive)")
 
 
-def _capacity_threshold(scores: np.ndarray, capacity: int) -> float:
-    if not len(scores):
-        return math.nan
-    index = min(max(capacity, 1), len(scores)) - 1
-    return float(np.sort(scores)[::-1][index])
+def _ap(labels: np.ndarray, scores: np.ndarray, *, population: str, window: str) -> Metric:
+    if 0 < labels.sum() < len(labels):
+        return Metric(value=float(average_precision_score(labels, scores)), unit="score",
+                      population=population, window=window)
+    return Metric.not_evaluated(unit="score", population=population, window=window,
+                                reason="needs both positive and negative labels")
 
 
-CALIBRATION_SLICE_DAYS = 30
-
-
-def _score_deciles(scores: np.ndarray) -> np.ndarray:
-    """Equal-count decile index (0-9) over the score ranking."""
-    order = np.argsort(scores, kind="stable")
-    bins = np.empty(len(scores), dtype=np.int8)
-    bins[order] = np.minimum(np.arange(len(scores)) * 10 // len(scores), 9)
-    return bins
-
-
-def _calibration_table(
-    scores: np.ndarray,
-    labels: np.ndarray,
-    calibrated: np.ndarray,
-) -> pd.DataFrame:
-    raw = pd.DataFrame(
-        {
-            "bin": _score_deciles(scores) + 1,
-            "predicted": scores,
-            "calibrated": calibrated,
-            "observed": labels,
-        }
-    )
-    table = raw.groupby("bin", as_index=False).agg(
-        orders=("observed", "size"),
-        min_score=("predicted", "min"),
-        max_score=("predicted", "max"),
-        mean_predicted=("predicted", "mean"),
-        mean_calibrated=("calibrated", "mean"),
-        observed_rate=("observed", "mean"),
-    )
-    for column in [
-        "min_score",
-        "max_score",
-        "mean_predicted",
-        "mean_calibrated",
-        "observed_rate",
-    ]:
-        table[column] = table[column].map(lambda value: f"{value:.4f}")
-    return table
-
-
-def _fit_isotonic(scores: np.ndarray, labels: np.ndarray) -> IsotonicRegression:
-    """Isotonic map from model score to probability.
-
-    A separate head with a separate purpose: the ranking model keeps
-    ``class_weight='balanced'`` and is used for ordering, while this map is
-    what a limit or exposure decision would read. Isotonic is monotone, so it
-    cannot change the ranking and cannot change PR-AUC.
-    """
-    calibrator = IsotonicRegression(y_min=0.0, y_max=1.0, out_of_bounds="clip")
-    calibrator.fit(scores, labels)
-    return calibrator
-
-
-def _brier(probabilities: np.ndarray, labels: np.ndarray) -> float:
-    return float(np.mean((probabilities - labels) ** 2))
-
-
-def _expected_calibration_error(
-    probabilities: np.ndarray,
-    labels: np.ndarray,
-    bins: np.ndarray,
-) -> float:
-    """Weighted mean gap between predicted probability and observed rate.
-
-    Bins are the equal-count score deciles the calibration table already uses,
-    so the number here is the table read as one figure.
-    """
-    frame = pd.DataFrame({"bin": bins, "predicted": probabilities, "observed": labels})
-    grouped = frame.groupby("bin").agg(
-        size=("observed", "size"),
-        predicted=("predicted", "mean"),
-        observed=("observed", "mean"),
-    )
-    weights = grouped["size"] / len(frame)
-    return float((weights * (grouped["predicted"] - grouped["observed"]).abs()).sum())
-
-
-def _exposure_table(data_dir: Path) -> pd.DataFrame:
-    plans = pd.read_csv(data_dir / "plans.csv", usecols=["plan_id", "order_id", "principal"])
-    payments = pd.read_csv(
-        data_dir / "payments.csv",
-        usecols=["plan_id", "amount", "result"],
-    )
-    collected = (
-        payments[payments["result"].eq("success")]
-        .groupby("plan_id", as_index=False)["amount"]
-        .sum()
-        .rename(columns={"amount": "collected"})
-    )
-    exposure = plans.merge(collected, on="plan_id", how="left")
-    exposure["collected"] = exposure["collected"].fillna(0.0)
-    exposure["loss_exposure"] = (exposure["principal"] - exposure["collected"]).clip(lower=0)
-    return exposure[["order_id", "principal", "collected", "loss_exposure"]]
-
-
-def _cost_optimal(
-    order_ids: pd.Series,
-    scores: np.ndarray,
-    labels: np.ndarray,
-    exposure: pd.DataFrame,
-    costs: dict,
-) -> dict[str, float | int]:
-    rows = pd.DataFrame(
-        {"order_id": order_ids.to_numpy(), "score": scores, "label": labels.astype(int)}
-    ).merge(exposure, on="order_id", how="left", validate="one_to_one")
-    rows[["principal", "collected", "loss_exposure"]] = rows[
-        ["principal", "collected", "loss_exposure"]
-    ].fillna(0.0)
-    review_cost = float(costs["review_cost_usd"])
-    insult = (
-        rows["principal"] * float(costs["false_decline_margin_pct"])
-        + float(costs["false_decline_ltv_usd"])
-    )
-    rows["delta"] = np.where(
-        rows["label"].eq(1),
-        review_cost - rows["loss_exposure"],
-        review_cost + insult,
-    )
-    rows["tp"] = rows["label"]
-    rows["fp"] = 1 - rows["label"]
-    rows["caught_dollars"] = rows["loss_exposure"] * rows["label"]
-    rows = rows.sort_values("score", ascending=False, kind="stable")
-    by_threshold = rows.groupby("score", sort=False, as_index=False).agg(
-        delta=("delta", "sum"),
-        alerts=("label", "size"),
-        true_positives=("tp", "sum"),
-        false_positives=("fp", "sum"),
-        caught_dollars=("caught_dollars", "sum"),
-    )
-    for column in ["delta", "alerts", "true_positives", "false_positives", "caught_dollars"]:
-        by_threshold[column] = by_threshold[column].cumsum()
-    baseline = float(rows.loc[rows["label"].eq(1), "loss_exposure"].sum())
-    losses = baseline + by_threshold["delta"]
-    best_position = int(losses.to_numpy().argmin()) if len(losses) else -1
-    if best_position < 0 or float(losses.iloc[best_position]) >= baseline:
-        return {
-            "threshold": float(np.nextafter(scores.max(), np.inf)),
-            "alerts": 0,
-            "true_positives": 0,
-            "false_positives": 0,
-            "fraud_dollars_caught": 0.0,
-            "total_cost": baseline,
-        }
-    best = by_threshold.iloc[best_position]
-    return {
-        "threshold": float(best["score"]),
-        "alerts": int(best["alerts"]),
-        "true_positives": int(best["true_positives"]),
-        "false_positives": int(best["false_positives"]),
-        "fraud_dollars_caught": float(best["caught_dollars"]),
-        "total_cost": float(losses.iloc[best_position]),
+def detection_metrics(scorers: Mapping[str, Scorer], rows: pd.DataFrame,
+                      window: str) -> dict[str, Metric]:
+    """AP of each scorer's raw score and Brier of its calibrated probability on labelled
+    ``rows`` (from ``model.features.labelled``), plus the row and positive counts."""
+    labels = rows["label"].to_numpy()
+    population = _population(window, rows)
+    metrics = {
+        f"detection.{window}.orders": Metric(value=len(rows), unit="count",
+                                             population=population, window=window),
+        f"detection.{window}.positives": Metric(value=int(labels.sum()), unit="count",
+                                                population=population, window=window),
     }
+    for name, scorer in scorers.items():
+        metrics[f"detection.{name}.average_precision.{window}"] = _ap(
+            labels, scorer.score(rows), population=population, window=window)
+        if len(rows):
+            brier = float(np.mean((scorer.probability(rows) - labels) ** 2))
+            metrics[f"detection.{name}.brier.{window}"] = Metric(
+                value=brier, unit="score", population=population, window=window)
+        else:
+            metrics[f"detection.{name}.brier.{window}"] = Metric.not_evaluated(
+                unit="score", population=population, window=window, reason="no labelled orders")
+    return metrics
 
 
-def _caught_dollars(selected: set[int], labeled: set[int], exposure: pd.DataFrame) -> float:
-    caught = selected & labeled
-    return float(exposure.loc[exposure["order_id"].isin(caught), "loss_exposure"].sum())
+def metrics_on_test_window(scorers: Mapping[str, Scorer], tables: Mapping[str, pd.DataFrame],
+                        context: pd.DataFrame, protocol: Protocol) -> dict[str, Metric]:
+    """Supporting metrics on one world's test window, with labels as known at the end of
+    the follow-up."""
+    rows = labelled(checkout_rows(context, tables), tables["labels"], protocol.windows["test"],
+                    protocol.observed_end)
+    return detection_metrics(scorers, rows, "test")
 
 
-def _hybrid_table(
-    holdout: pd.DataFrame,
-    best_scores: np.ndarray,
-    capacity: int,
-    exposure: pd.DataFrame,
-    alerts_path: Path,
-) -> tuple[pd.DataFrame, str]:
-    labeled = set(holdout.loc[holdout["label"].eq(1), "order_id"].astype(int))
-    model_ranking = pd.DataFrame(
-        {"order_id": holdout["order_id"].to_numpy(), "score": best_scores}
-    ).sort_values(["score", "order_id"], ascending=[False, True], kind="stable")
-    model_selected = set(model_ranking.head(capacity)["order_id"].astype(int))
-    rows = [
-        {
-            "Strategy": "Model top-k",
-            "Reviewed": len(model_selected),
-            "Fraud $ caught": f"${_caught_dollars(model_selected, labeled, exposure):,.2f}",
-        }
-    ]
-    if not alerts_path.exists():
-        note = "`data/alerts.csv` was absent, so rules-only and hybrid were skipped."
-        return pd.DataFrame(rows), note
+def shortcut_sensitivity(tables: Mapping[str, pd.DataFrame], context: pd.DataFrame,
+                         protocol: Protocol, full: Scorer) -> dict[str, Metric]:
+    """Validation AP of the shortcut models (fitted like the classifiers) against the
+    ``full`` scorer's, and the perturbation of legitimate first orders."""
+    rows = checkout_rows(context, tables)
+    train = labelled(rows, tables["labels"], protocol.windows["fit"],
+                     protocol.freezes["classifier"])
+    valid = labelled(rows, tables["labels"], protocol.windows["validation"],
+                     protocol.freezes["policy"])
+    labels = valid["label"].to_numpy()
+    population = _population("validation", valid)
+    prefix = "detection.sensitivity"
+    metrics = {f"{prefix}.full.average_precision.validation": _ap(
+        labels, full.score(valid), population=population, window="validation")}
+    for name, (kind, columns) in SHORTCUTS.items():
+        if kind == "tree":
+            model = DecisionTreeClassifier(max_depth=4, min_samples_leaf=20,
+                                           class_weight=CLASS_WEIGHT, random_state=RANDOM_STATE)
+        else:
+            model = HistGradientBoostingClassifier(max_iter=200, early_stopping=False,
+                                                   class_weight=CLASS_WEIGHT,
+                                                   random_state=RANDOM_STATE)
+        with threadpool_limits(limits=1):
+            model.fit(train[list(columns)], train["label"])
+            scores = model.predict_proba(valid[list(columns)])[:, 1]
+        metrics[f"{prefix}.{name}.average_precision.validation"] = _ap(
+            labels, scores, population=population, window="validation")
 
-    alerts = pd.read_csv(alerts_path)
-    alerts = alerts[alerts["order_id"].isin(set(holdout["order_id"]))]
-    alerts = alerts.sort_values(["score", "order_id"], ascending=[False, True], kind="stable")
-    alerts = alerts.drop_duplicates("order_id")
-    rule_rank = alerts["order_id"].astype(int).tolist()
-    rule_selected = set(rule_rank[:capacity])
-    rows.insert(
-        0,
-        {
-            "Strategy": "Rules alerts",
-            "Reviewed": len(rule_selected),
-            "Fraud $ caught": f"${_caught_dollars(rule_selected, labeled, exposure):,.2f}",
-        },
-    )
-
-    half = capacity // 2
-    hybrid = set(rule_rank[:half])
-    model_quota = capacity - len(hybrid)
-    for order_id in model_ranking["order_id"].astype(int):
-        if order_id not in hybrid:
-            hybrid.add(order_id)
-            model_quota -= 1
-            if model_quota == 0:
-                break
-    rows.append(
-        {
-            "Strategy": "Hybrid (half rules / half model)",
-            "Reviewed": len(hybrid),
-            "Fraud $ caught": f"${_caught_dollars(hybrid, labeled, exposure):,.2f}",
-        }
-    )
-    note = (
-        "Hybrid takes up to half of capacity from ranked rules alerts and fills the remainder "
-        "from the model ranking without duplicate reviews. Rules exhaust their alert supply "
-        "below the configured review capacity."
-    )
-    return pd.DataFrame(rows), note
-
-
-def _save_pr_curve(labels: np.ndarray, scores: dict[str, np.ndarray], destination: Path) -> None:
-    figure, axis = plt.subplots(figsize=(7.2, 4.8))
-    for name, values in scores.items():
-        precision, recall, _ = precision_recall_curve(labels, values)
-        axis.plot(recall, precision, linewidth=2, label=name)
-    axis.axhline(labels.mean(), color="0.45", linestyle="--", label="Holdout base rate")
-    axis.set(xlabel="Recall", ylabel="Precision", title="Holdout precision-recall curve")
-    axis.set_xlim(0, 1)
-    axis.set_ylim(0, 1.02)
-    axis.grid(alpha=0.2)
-    axis.legend(loc="best")
-    figure.tight_layout()
-    figure.savefig(destination, format="svg", metadata={"Date": None})
-    plt.close(figure)
-
-
-def _save_pattern_recall(table: pd.DataFrame, destination: Path) -> None:
-    models = [column for column in table.columns if column not in {"Pattern", "Fraud orders"}]
-    positions = np.arange(len(table))
-    width = 0.8 / max(len(models), 1)
-    figure, axis = plt.subplots(figsize=(8.4, 4.8))
-    for index, model in enumerate(models):
-        recall = table[model].str.rstrip("%").astype(float) / 100
-        axis.bar(positions + (index - (len(models) - 1) / 2) * width, recall, width, label=model)
-    axis.set_xticks(positions, table["Pattern"], rotation=25, ha="right")
-    axis.set(xlabel="Fraud pattern", ylabel="Recall at review capacity", ylim=(0, 1.05))
-    axis.grid(axis="y", alpha=0.2)
-    axis.legend(loc="best")
-    figure.tight_layout()
-    figure.savefig(destination, format="svg", metadata={"Date": None})
-    plt.close(figure)
-
-
-def main() -> None:
-    started = time.perf_counter()
-    config = load_config()
-    data_dir = REPO / "data"
-    frames = load_feature_frames(data_dir)
-    features = build_features(**frames)
-    train, holdout = chronological_split(features, config)
-
-    missing = [
-        filename
-        for filename in MODEL_FILES.values()
-        if not (ARTIFACT_DIR / filename).exists()
-    ]
-    if missing:
-        raise FileNotFoundError(
-            f"missing model artifacts {missing}; run `.venv/bin/python -m model.train` first"
-        )
-    models = {name: joblib.load(ARTIFACT_DIR / filename) for name, filename in MODEL_FILES.items()}
-    x_holdout = holdout[FEATURE_COLUMNS]
-    labels = holdout["label"].to_numpy(dtype=int)
-    scores = {name: model.predict_proba(x_holdout)[:, 1] for name, model in models.items()}
-
-    slice_start = pd.Timestamp(config["holdout_start"]) - pd.Timedelta(
-        days=CALIBRATION_SLICE_DAYS
-    )
-    calibration_slice = train[train["ts"] >= slice_start]
-    slice_labels = calibration_slice["label"].to_numpy(dtype=int)
-    calibrators = {
-        name: _fit_isotonic(
-            model.predict_proba(calibration_slice[FEATURE_COLUMNS])[:, 1], slice_labels
-        )
-        for name, model in models.items()
-    }
-    calibrated = {
-        name: calibrators[name].predict(values) for name, values in scores.items()
-    }
-
-    holdout_days = max(
-        (features["ts"].max() - pd.Timestamp(config["holdout_start"])).days,
-        1,
-    )
-    capacity = min(
-        len(holdout),
-        int(config["model"]["review_capacity_per_day"]) * holdout_days,
-    )
-    selections = {
-        name: _ranked_selection(holdout["order_id"], values, capacity)
-        for name, values in scores.items()
-    }
-
-    metrics_rows = []
-    for name, values in scores.items():
-        selected = selections[name]
-        selected_labels = holdout["order_id"].isin(selected)
-        precision = float(holdout.loc[selected_labels, "label"].mean())
-        metrics_rows.append(
-            {
-                "Model": name,
-                "PR-AUC": f"{average_precision_score(labels, values):.4f}",
-                f"Precision@{capacity:,}": f"{precision:.2%}",
-                "Capacity threshold": f"{_capacity_threshold(values, capacity):.6f}",
-            }
-        )
-    metrics = pd.DataFrame(metrics_rows)
-
-    label_patterns = frames["labels"][["order_id", "pattern_id"]].drop_duplicates()
-    label_patterns = label_patterns[label_patterns["order_id"].isin(set(holdout["order_id"]))]
-    pattern_rows = []
-    for pattern, group in label_patterns.groupby("pattern_id", sort=True):
-        ids = set(group["order_id"].astype(int))
-        row: dict[str, str | int] = {"Pattern": pattern, "Fraud orders": len(ids)}
-        for name, selected in selections.items():
-            row[name] = f"{len(ids & selected) / max(len(ids), 1):.2%}"
-        pattern_rows.append(row)
-    pattern_table = pd.DataFrame(pattern_rows)
-
-    exposure = _exposure_table(data_dir)
-    cost_rows = []
-    cost_results: dict[str, dict[str, float | int]] = {}
-    for name, values in scores.items():
-        result = _cost_optimal(
-            holdout["order_id"], values, labels, exposure, config["costs"]
-        )
-        cost_results[name] = result
-        cost_rows.append(
-            {
-                "Model": name,
-                "Threshold": f"{result['threshold']:.6f}",
-                "Alerts": f"{result['alerts']:,}",
-                "TP": f"{result['true_positives']:,}",
-                "FP": f"{result['false_positives']:,}",
-                "Fraud $ caught": f"${result['fraud_dollars_caught']:,.2f}",
-                "Total cost": f"${result['total_cost']:,.2f}",
-            }
-        )
-    cost_table = pd.DataFrame(cost_rows)
-
-    pr_auc = {name: average_precision_score(labels, values) for name, values in scores.items()}
-    best_name = max(pr_auc, key=pr_auc.get)
-    hybrid, hybrid_note = _hybrid_table(
-        holdout,
-        scores[best_name],
-        capacity,
-        exposure,
-        data_dir / "alerts.csv",
-    )
-
-    REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    _save_pr_curve(labels, scores, REPORT_DIR / "model_pr_curve.svg")
-    _save_pattern_recall(pattern_table, REPORT_DIR / "model_recall_by_pattern.svg")
-
-    calibration_sections = []
-    calibration_metrics: dict[str, dict[str, float]] = {}
-    for name, values in scores.items():
-        bins = _score_deciles(values)
-        calibration_metrics[name] = {
-            "brier_raw": round(_brier(values, labels), 6),
-            "brier_isotonic": round(_brier(calibrated[name], labels), 6),
-            "ece_raw": round(_expected_calibration_error(values, labels, bins), 6),
-            "ece_isotonic": round(
-                _expected_calibration_error(calibrated[name], labels, bins), 6
-            ),
-        }
-        table = _markdown_table(_calibration_table(values, labels, calibrated[name]))
-        calibration_sections.append(f"### {name}\n\n{table}")
-
-    calibration_summary = _markdown_table(
-        pd.DataFrame(
-            [
-                {
-                    "Model": name,
-                    "Brier (raw)": f"{metrics['brier_raw']:.6f}",
-                    "Brier (isotonic)": f"{metrics['brier_isotonic']:.6f}",
-                    "ECE (raw)": f"{metrics['ece_raw']:.4f}",
-                    "ECE (isotonic)": f"{metrics['ece_isotonic']:.4f}",
-                }
-                for name, metrics in calibration_metrics.items()
-            ]
-        )
-    )
-
-    elapsed = time.perf_counter() - started
-    reviews_per_day = int(config["model"]["review_capacity_per_day"])
-    review_cost = float(config["costs"]["review_cost_usd"])
-    slice_days = CALIBRATION_SLICE_DAYS
-    slice_from = slice_start.date()
-    slice_n = f"{len(calibration_slice):,}"
-    slice_fraud = f"{slice_labels.sum():,}"
-    model_summary = {
-        "holdout_start": config["holdout_start"],
-        "holdout_end": str(holdout["ts"].max()),
-        "holdout_days": holdout_days,
-        "orders": len(holdout),
-        "fraud_orders": int(labels.sum()),
-        "base_rate": round(float(labels.mean()), 6),
-        "capacity": capacity,
-        "best_model": best_name,
-        "models": {
-            name: {
-                "pr_auc": round(float(pr_auc[name]), 4),
-                "precision_at_capacity": round(
-                    float(holdout.loc[holdout["order_id"].isin(selections[name]), "label"].mean()),
-                    4,
-                ),
-            }
-            for name in scores
-        },
-        "recall_by_pattern": {
-            str(row["Pattern"]): {
-                name: round(float(str(row[name]).rstrip("%")) / 100, 4) for name in scores
-            }
-            for row in pattern_rows
-        },
-        "calibration": {
-            "slice_start": str(slice_start.date()),
-            "slice_orders": len(calibration_slice),
-            "slice_fraud_orders": int(slice_labels.sum()),
-            "models": calibration_metrics,
-        },
-    }
-    report = f"""# Fraud model evaluation
-
-Chronological holdout: {holdout['ts'].min()} through {holdout['ts'].max()}.
-
-Orders: {len(holdout):,}; fraud orders: {labels.sum():,}; base rate: {labels.mean():.3%}.
-
-Review capacity: {reviews_per_day:,}/day × {holdout_days} days = {capacity:,}.
-
-## Detection performance
-
-{_markdown_table(metrics)}
-
-PR-AUC is reported instead of ROC-AUC because ROC-AUC can look strong while obscuring false
-positives at this {labels.mean():.2%} fraud base rate. PR-AUC measures performance on the rare
-positive class, while precision@capacity reflects the actual review constraint.
-
-![Precision-recall curves](model_pr_curve.svg)
-
-## Calibration deciles
-
-Each bin contains one score-decile of holdout orders; predicted probability is compared with
-the observed fraud rate. Because training uses `class_weight='balanced'`, the reported
-probabilities are inflated by design. PR-AUC and precision@capacity are rank metrics and do not
-depend on probability calibration; the cost-optimal threshold is chosen by a score sweep, not by
-reading the score as a probability.
-
-Reporting that diagnostic and stopping there leaves the useful half undone, so the raw score
-is also passed through an isotonic map fitted on the last {slice_days} days of the training
-window ({slice_from} onward: {slice_n} orders, {slice_fraud} fraud). `mean_calibrated` below
-is that map applied to the holdout. The calibrator is a separate head with a separate purpose
-— isotonic regression is monotone, so it cannot reorder anything and cannot move PR-AUC or
-precision@capacity by construction. What it changes is whether the number can be read as a
-probability, which is what a credit limit or exposure decision needs and a rank does not.
-
-{calibration_summary}
-
-Expected calibration error is the order-weighted mean gap between predicted probability and
-observed rate across the same deciles, so it is the tables below read as one figure.
-
-The slice sits inside the training window rather than outside it: the committed model artifacts
-are trained on the full pre-holdout period, and refitting to carve out a clean calibration month
-would change every number in this report. The fitted map is therefore optimistic, because it
-learns from scores the model has already seen. A production calibrator would be fitted on data
-the ranking model never touched.
-
-{chr(10).join(calibration_sections)}
-
-## Recall by fraud pattern at capacity
-
-{_markdown_table(pattern_table)}
-
-![Recall by fraud pattern](model_recall_by_pattern.svg)
-
-## Holdout oracle frontier (threshold chosen on this holdout)
-
-{_markdown_table(cost_table)}
-
-Total cost counts realized principal not collected on missed fraud, ${review_cost:.2f}
-per alert, and the configured margin-plus-LTV insult cost on false positives. A caught fraud
-avoids its realized loss exposure; successful down and installment payments reduce that exposure.
-
-## Fraud-dollar comparison at review capacity
-
-The higher-PR-AUC model ({best_name}) supplies the model ranking.
-
-{_markdown_table(hybrid)}
-
-{hybrid_note}
-
-## Limitations of this holdout
-
-- Separability is partly structural: `ship_addr_is_new` is true for 45.5% of fraud
-  orders versus 0.1% of benign orders because benign addresses use
-  `added_ts = signup_ts` and benign signups skew old. `account_age_days` carries the
-  same structure, and the rules result of 0 false auto-declines follows from it.
-- The benign R03 geo-mismatch base rate is inflated because simulated home-IP country
-  is independent of KYC country for about 25% of users. Workload and CASE-05 suppression
-  counts measure that simulated population and will change after the planned geo fix.
-- P-SYNTH and P-MERCH have zero holdout orders; their episodes end before month 10.
-  Holdout metrics cover five of seven injected patterns.
-- Never-pay labels include a 30% benign-looking branch (150 accounts) that pays one
-  installment, stricter than the written policy definition.
-
-```json
-{json.dumps(model_summary, sort_keys=True)}
-```
-"""
-    (REPORT_DIR / "model.md").write_text(report)
-    (REPORT_DIR / "model.json").write_text(
-        json.dumps(model_summary, indent=1, sort_keys=True) + "\n"
-    )
-    print(report)
-    print(f"evaluation runtime: {elapsed:.2f} seconds")
-
-
-if __name__ == "__main__":
-    main()
+    scores = full.score(valid)
+    cutoff = np.quantile(scores, 1 - TOP_SHARE) if len(scores) else np.nan
+    first = valid[(valid["label"] == 0) & (valid["is_first_attempt_user"] == 1)]
+    moved = first.assign(**PROFILE)
+    first_population = (f"legitimate first orders in the validation window ({len(first)}); "
+                        f"profile {PROFILE}")
+    for name, frame in (("as_observed", first), ("new_account_profile", moved)):
+        above = int((full.score(frame) > cutoff).sum()) if len(frame) else 0
+        key = f"{prefix}.first_orders.{name}"
+        if len(frame):
+            metrics[f"{key}.median_score"] = Metric(
+                value=float(np.median(full.score(frame))), unit="score",
+                population=first_population, window="validation")
+            metrics[f"{key}.above_top_share"] = Metric.from_ratio(
+                above, len(frame), unit="share", population=first_population,
+                window="validation", note=f"above the top {TOP_SHARE:.0%} validation cutoff")
+        else:
+            metrics[f"{key}.median_score"] = Metric.not_evaluated(
+                unit="score", population=first_population, window="validation",
+                reason="no legitimate first orders")
+            metrics[f"{key}.above_top_share"] = Metric.not_evaluated(
+                unit="share", population=first_population, window="validation",
+                reason="no legitimate first orders", numerator=0, denominator=0)
+    return metrics

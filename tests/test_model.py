@@ -1,151 +1,200 @@
+"""Detection models: labels used only once known, the calibration month kept out of
+fitting, row-by-row scoring, metadata instead of binaries, supporting metrics."""
+
 from __future__ import annotations
 
 import json
-import os
-import subprocess
-import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal
-from sklearn.metrics import average_precision_score
 
-REPO = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO))
+from core import asof
+from core.protocol import load_protocol
+from model.evaluate import detection_metrics, shortcut_sensitivity
+from model.features import FEATURES, TREE_FEATURES, labels_known_before
+from model.train import RuleScorer, fit
 
-from model.evaluate import (  # noqa: E402
-    CALIBRATION_SLICE_DAYS,
-    _expected_calibration_error,
-    _fit_isotonic,
-    _score_deciles,
-)
-from model.features import FEATURE_COLUMNS, build_features, load_feature_frames  # noqa: E402
-from model.train import chronological_split, load_config, make_models  # noqa: E402
+REPO = Path(__file__).resolve().parents[1]
+PROTOCOL = load_protocol()
 
 
-@pytest.fixture(scope="session")
-def tiny_world(tmp_path_factory: pytest.TempPathFactory) -> dict[str, pd.DataFrame]:
-    destination = tmp_path_factory.mktemp("model-world")
-    environment = os.environ.copy()
-    environment.update({"SIM_SCALE": "0.02", "SIM_OUT": str(destination)})
-    subprocess.run(
-        [sys.executable, "-m", "simulator.generate"],
-        cwd=REPO,
-        env=environment,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return load_feature_frames(destination)
+def synthetic(seed: int = 7, n: int = 6_000) -> dict[str, pd.DataFrame]:
+    """Context rows, attempts and dated labels over the protocol's windows; fraud depends on
+    a few context columns so the models have something to learn."""
+    rng = np.random.default_rng(seed)
+    start, end = PROTOCOL.order_start, PROTOCOL.order_end
+    seconds = np.sort(rng.integers(start.value // 10**9, end.value // 10**9, n))
+    at = pd.to_datetime(seconds, unit="s").astype("datetime64[s]")
+    context = pd.DataFrame({"order_id": np.arange(1, n + 1), "user_id": np.arange(1, n + 1),
+                            "merchant_id": 1, "decision_at": at})
+    for column in asof.COLUMNS:
+        if column.dtype == "int8":
+            values = rng.random(n) < 0.1
+        elif column.dtype == "int64":
+            values = rng.poisson(1.0, n)
+        else:
+            values = rng.gamma(2.0, 20.0, n)
+        context[column.name] = pd.Series(values).astype(column.dtype)
+    risk = (-5 + 3 * (context["account_age_days"] < 10) + 2 * context["bin_ip_country_mismatch"]
+            + 1.5 * (context["accounts_on_device_30d"] >= 3))
+    fraud = rng.random(n) < 1 / (1 + np.exp(-risk.to_numpy()))
+    known = at + pd.to_timedelta(rng.integers(20, 50, n), unit="D")
+    labels = pd.DataFrame({"order_id": context["order_id"], "label": fraud.astype(np.int64),
+                           "basis": np.where(fraud, "third_party_fraud", "no_finding"),
+                           "label_known_at": known})
+    attempts = pd.DataFrame({"order_id": context["order_id"], "known_at": at,
+                             "processor_result": np.where(rng.random(n) < 0.97, "approved",
+                                                          "declined")})
+    return {"context": context, "labels": labels, "order_attempts": attempts}
 
 
-def _truncate_world(
-    frames: dict[str, pd.DataFrame],
-    cutoff: pd.Timestamp,
-) -> dict[str, pd.DataFrame]:
-    truncated = {name: frame.copy() for name, frame in frames.items()}
-    for name, column in {
-        "orders": "ts",
-        "users": "signup_ts",
-        "addresses": "added_ts",
-        "account_events": "ts",
-        "promo_redemptions": "ts",
-    }.items():
-        truncated[name] = truncated[name][truncated[name][column] <= cutoff].copy()
-
-    installments = truncated["installments"]
-    installments = installments[installments["due_ts"] <= cutoff].copy()
-    installments.loc[installments["paid_ts"] > cutoff, "paid_ts"] = pd.NaT
-    truncated["installments"] = installments
-
-    kept_orders = set(truncated["orders"]["order_id"])
-    truncated["plans"] = truncated["plans"][
-        truncated["plans"]["order_id"].isin(kept_orders)
-    ].copy()
-    truncated["labels"] = truncated["labels"][
-        truncated["labels"]["order_id"].isin(kept_orders)
-    ].copy()
-    return truncated
+@pytest.fixture(scope="module")
+def world() -> dict[str, pd.DataFrame]:
+    return synthetic()
 
 
-def test_point_in_time_leakage_guard(tiny_world: dict[str, pd.DataFrame]) -> None:
-    full = build_features(**tiny_world)
-    sample = full.sample(n=min(25, len(full)), random_state=load_config()["seed"])
-
-    for expected in sample.itertuples(index=False):
-        cutoff = pd.Timestamp(expected.ts)
-        rebuilt = build_features(**_truncate_world(tiny_world, cutoff))
-        actual_row = rebuilt[rebuilt["order_id"].eq(expected.order_id)][FEATURE_COLUMNS]
-        expected_row = full[full["order_id"].eq(expected.order_id)][FEATURE_COLUMNS]
-        assert len(actual_row) == 1
-        assert_frame_equal(
-            actual_row.reset_index(drop=True),
-            expected_row.reset_index(drop=True),
-            check_exact=True,
-        )
+@pytest.fixture(scope="module")
+def base(world, tmp_path_factory):
+    directory = tmp_path_factory.mktemp("base")
+    return _fit(world, directory), directory
 
 
-def test_feature_build_is_deterministic(tiny_world: dict[str, pd.DataFrame]) -> None:
-    first = build_features(**tiny_world)
-    second = build_features(**tiny_world)
-    assert_frame_equal(first, second, check_exact=True)
+def _fit(world: dict[str, pd.DataFrame], tmp_path: Path, labels: pd.DataFrame | None = None):
+    tables = {"order_attempts": world["order_attempts"],
+              "labels": world["labels"] if labels is None else labels}
+    return fit(tables, world["context"], PROTOCOL, tmp_path)
 
 
-def test_chronological_split_has_no_overlap(tiny_world: dict[str, pd.DataFrame]) -> None:
-    features = build_features(**tiny_world)
-    config = load_config()
-    train, holdout = chronological_split(features, config)
-    assert train["ts"].max() < holdout["ts"].min()
-    assert train["ts"].max() < pd.Timestamp(config["holdout_start"])
-    assert holdout["ts"].min() >= pd.Timestamp(config["holdout_start"])
+def _probe(world: dict[str, pd.DataFrame]) -> pd.DataFrame:
+    return world["context"].sample(300, random_state=1)
 
 
-def test_tiny_world_logistic_smoke(tiny_world: dict[str, pd.DataFrame]) -> None:
-    features = build_features(**tiny_world)
-    train, holdout = chronological_split(features, load_config())
-    model = make_models(load_config()["seed"])["Logistic Regression"]
-    model.fit(train[FEATURE_COLUMNS], train["label"])
-    scores = model.predict_proba(holdout[FEATURE_COLUMNS])[:, 1]
-    assert average_precision_score(holdout["label"], scores) > 0.05
+def test_labels_known_at_the_freeze_are_not_yet_known() -> None:
+    labels = pd.DataFrame({"order_id": [1, 2, 2, 3], "label": [1, 0, 1, 0],
+                           "label_known_at": pd.to_datetime(
+                               ["2024-09-30 23:59:59", "2024-09-01 00:00:00", "2024-10-01 00:00:00",
+                                "2024-10-02 00:00:00"])})
+    known = labels_known_before(labels, pd.Timestamp("2024-10-01"))
+    assert known.to_dict() == {1: 1, 2: 0}  # order 2's positive arrives at the freeze itself
 
 
-def test_isotonic_calibration_is_monotone_and_pulls_toward_the_observed_rate() -> None:
-    rng = np.random.default_rng(load_config()["seed"])
-    labels = (rng.random(2000) < 0.02).astype(int)
-    # a ranking score that separates but over-predicts, as class_weight='balanced' does
-    scores = np.clip(rng.normal(0.2 + 0.5 * labels, 0.1), 0, 1)
-    calibrated = _fit_isotonic(scores, labels).predict(scores)
-
-    order = np.argsort(scores, kind="stable")
-    assert np.all(np.diff(calibrated[order]) >= -1e-12)
-    assert calibrated.mean() == pytest.approx(labels.mean(), abs=1e-6)
-    bins = _score_deciles(scores)
-    assert _expected_calibration_error(
-        calibrated, labels, bins
-    ) < _expected_calibration_error(scores, labels, bins)
-
-
-def test_expected_calibration_error_on_a_hand_computed_case() -> None:
-    # two equal bins: predicted 0.5 against observed 1.0, predicted 0.1 against observed 0.0
-    probabilities = np.array([0.5, 0.5, 0.1, 0.1])
-    labels = np.array([1, 1, 0, 0])
-    bins = np.array([1, 1, 0, 0])
-    assert _expected_calibration_error(probabilities, labels, bins) == pytest.approx(0.3)
+def test_fit_ignores_labels_known_after_the_classifier_freeze(world, base, tmp_path) -> None:
+    """Training rows carry only what was known at the freeze: flipping fit-window labels
+    that became known later changes nothing, while flipping earlier-known ones does."""
+    base = base[0]
+    labels = world["labels"].copy()
+    fit_window = PROTOCOL.windows["fit"]
+    in_fit = (labels["order_id"].isin(world["context"].loc[
+        (world["context"]["decision_at"] >= fit_window.start)
+        & (world["context"]["decision_at"] < fit_window.end), "order_id"]))
+    late = labels[in_fit].assign(label=1 - labels.loc[in_fit, "label"],
+                                 label_known_at=PROTOCOL.freezes["classifier"])
+    later = _fit(world, tmp_path / "later", pd.concat([labels, late], ignore_index=True))
+    probe = _probe(world)
+    for name in ("tree", "logistic", "boosting"):
+        assert np.array_equal(base.scorers[name].score(probe), later.scorers[name].score(probe))
+        assert base.scorers[name].version == later.scorers[name].version
+    early = late.assign(label_known_at=PROTOCOL.freezes["classifier"] - pd.Timedelta(seconds=1))
+    sooner = _fit(world, tmp_path / "sooner", pd.concat([labels, early], ignore_index=True))
+    assert not np.array_equal(base.scorers["boosting"].score(probe),
+                              sooner.scorers["boosting"].score(probe))
 
 
-def test_committed_calibration_block_reports_an_improvement() -> None:
-    summary = json.loads((REPO / "reports" / "model.json").read_text())
-    calibration = summary["calibration"]
-    holdout_start = pd.Timestamp(load_config()["holdout_start"])
-    assert pd.Timestamp(calibration["slice_start"]) == holdout_start - pd.Timedelta(
-        days=CALIBRATION_SLICE_DAYS
-    )
-    assert calibration["slice_fraud_orders"] > 0
-    for name, metrics in calibration["models"].items():
-        assert metrics["ece_isotonic"] < metrics["ece_raw"], name
-        assert metrics["brier_isotonic"] < metrics["brier_raw"], name
-    assert calibration["models"]["HistGradient Boosting"]["ece_raw"] == pytest.approx(
-        0.0176, abs=5e-5
-    )
+def test_calibration_month_is_not_used_to_fit_the_classifiers(world, base, tmp_path) -> None:
+    base, directory = base
+    labels = world["labels"].copy()
+    span = PROTOCOL.windows["calibration"]
+    month = world["context"].loc[(world["context"]["decision_at"] >= span.start)
+                                 & (world["context"]["decision_at"] < span.end), "order_id"]
+    flipped = labels["order_id"].isin(month)
+    labels.loc[flipped, "label"] = 1 - labels.loc[flipped, "label"]
+    changed = _fit(world, tmp_path / "changed", labels)
+    probe = _probe(world)
+    for name in ("tree", "logistic", "boosting"):
+        assert np.array_equal(base.scorers[name].score(probe), changed.scorers[name].score(probe))
+        assert not np.array_equal(base.scorers[name].probability(probe),
+                                  changed.scorers[name].probability(probe))
+    meta = json.loads((directory / "model_boosting.json").read_text())
+    assert meta["fit"]["window"] == ["2024-04-01", "2024-08-01"]
+    assert meta["calibration"]["window"] == ["2024-10-01", "2024-11-01"]
+
+
+def test_scores_are_row_by_row_and_reproducible(world, base, tmp_path) -> None:
+    first, directory = base
+    second = _fit(world, tmp_path)
+    probe = _probe(world)
+    for name, scorer in first.scorers.items():
+        batch = scorer.score(probe)
+        single = np.concatenate([scorer.score(probe.iloc[[i]]) for i in range(60)])
+        assert np.array_equal(batch[:60], single), name
+        assert np.array_equal(batch, second.scorers[name].score(probe)), name
+        assert scorer.version == second.scorers[name].version
+        assert ((scorer.probability(probe) >= 0) & (scorer.probability(probe) <= 1)).all()
+    for name in ("rules", "tree", "logistic", "boosting"):
+        assert (directory / f"model_{name}.json").read_bytes() == (
+            tmp_path / f"model_{name}.json").read_bytes()
+
+
+def test_scorers_read_only_their_columns(world, base) -> None:
+    result = base[0]
+    assert set(result.scorers) == {"rules", "tree", "logistic", "boosting"}
+    assert result.scorers["tree"].columns == TREE_FEATURES and len(TREE_FEATURES) <= 4
+    assert set(result.scorers["boosting"].columns) == set(FEATURES)
+    assert not set(FEATURES) & {"account_blocked", "shipped_at_decision"}
+    probe = _probe(world)
+    with pytest.raises(KeyError, match="account_age_days"):
+        result.scorers["tree"].score(probe.drop(columns="account_age_days"))
+    unrelated = probe.assign(merchant_age_days=-1.0)  # not a column the tree reads
+    assert np.array_equal(result.scorers["tree"].score(probe),
+                          result.scorers["tree"].score(unrelated))
+    rules = result.scorers["rules"]
+    assert isinstance(rules, RuleScorer)
+    assert list(rules.fired(probe).columns[:11]) == [f"R{i:02d}" for i in range(1, 12)]
+
+
+def test_metrics_are_metric_objects_with_counts(base) -> None:
+    result = base[0]
+    metrics = result.metrics
+    for name in ("rules", "tree", "logistic", "boosting"):
+        assert 0 <= metrics[f"detection.{name}.average_precision.validation"].value <= 1
+        assert metrics[f"detection.{name}.brier.validation"].value >= 0
+    assert metrics["detection.validation.orders"].value > metrics[
+        "detection.validation.positives"].value > 0
+
+
+def test_average_precision_and_brier_on_a_hand_case() -> None:
+    class Fixed:
+        columns = ()
+
+        def score(self, rows):
+            return rows["s"].to_numpy()
+
+        def probability(self, rows):
+            return rows["p"].to_numpy()
+
+    rows = pd.DataFrame({"s": [0.9, 0.8, 0.3, 0.1], "p": [1.0, 0.5, 0.5, 0.0],
+                         "label": [1, 0, 1, 0]})
+    metrics = detection_metrics({"m": Fixed()}, rows, "validation")
+    # precision 1 at the first positive, 2/3 at the second: AP = (1 + 2/3) / 2
+    assert metrics["detection.m.average_precision.validation"].value == pytest.approx(5 / 6)
+    assert metrics["detection.m.brier.validation"].value == pytest.approx((0 + .25 + .25 + 0) / 4)
+    empty = detection_metrics({"m": Fixed()}, rows.assign(label=0), "validation")
+    assert empty["detection.m.average_precision.validation"].value is None
+
+
+def test_shortcut_sensitivity_reports_each_check(world, base) -> None:
+    result = base[0]
+    tables = {"order_attempts": world["order_attempts"], "labels": world["labels"]}
+    metrics = shortcut_sensitivity(tables, world["context"], PROTOCOL, result.scorers["boosting"])
+    for name in ("full", "age_tree", "construction_tree", "three_feature_boosting"):
+        assert metrics[f"detection.sensitivity.{name}.average_precision.validation"].evaluated
+    before = metrics["detection.sensitivity.first_orders.as_observed.median_score"].value
+    after = metrics["detection.sensitivity.first_orders.new_account_profile.median_score"].value
+    assert after > before  # in this world, young accounts are riskier by construction
+
+
+def test_no_model_binaries_are_committed() -> None:
+    binaries = [p for p in (REPO / "model").rglob("*") if p.suffix in {".joblib", ".pkl"}]
+    assert binaries == []
