@@ -49,13 +49,14 @@ reviewer:
 
 capacity:
   # Two parameters: coverage hours (the shift layout) and review minutes per 1,000
-  # orders (analysts per shift). Levels are whole analysts per shift on unchanged
-  # coverage hours, fixed at the "generator and capacity frozen" milestone.
+  # orders (analysts per shift). Levels are whole analysts per shift of the current
+  # layout on unchanged coverage hours, fixed at the "generator and capacity frozen"
+  # milestone (base: the incumbent's fit-window review minutes on the development
+  # worlds / 0.8; low about half, high about 1.5 times the base minutes). Until then
+  # the replay uses roster.analysts_per_shift as its only level ("configured").
   review_minutes_per_1000_orders: null
-  levels:
-    low: null
-    base: null
-    high: null
+  levels: null          # {low: {early: n, late: n}, base: {...}, high: {...}}
+  redesigned: null      # {layout: <name in roster.layouts>, analysts_per_shift: {...}}
 
 roster:
   layout: current

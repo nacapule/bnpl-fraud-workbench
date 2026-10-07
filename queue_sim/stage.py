@@ -1,0 +1,377 @@
+"""The pipeline's tune and replay stages, and the frames other stages keep from them.
+
+The pipeline (``pipeline.py``) passes its run object, which gives each world's tables
+(``run.tables(ref)``), the fitted scorers per seed (``run.memory["scorers"]``), the
+protocol (``run.protocol``) and the worlds to evaluate (``run.worlds``). The world-level
+context is shared through ``run.memory["context"]`` as the pipeline caches it.
+
+* :func:`tune`: per seed, on the baseline world's validation window at the base
+  capacity, each policy's thresholds (``rules.tuning``); kept in
+  ``run.memory["tuned"]``.
+* :func:`replay`: per evaluation world, every tuned policy and approve-all on the test
+  window at each capacity level and layout, plus three variants at the base level
+  (approve-all history frozen, the perfect reviewer, weaker verification): one row of
+  integer outcomes each (``queue_sim.outcomes``), and per-world tables (the reviewer's
+  confusion matrix, prevented loss by pattern).
+* :func:`review_decisions`: the incumbent's review decisions at base capacity on one
+  world, with the context rows and checks behind them, for case and packet selection.
+* :func:`routing_frame`: the incumbent's routing at checkout on one world (the MySQL
+  ``alerts`` table).
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass, field, replace
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+import pandas as pd
+
+from core import actions, asof, config, evidence, ledger
+from core.actions import CheckoutRoute
+from queue_sim import outcomes, policies
+from queue_sim.replay import FrozenHistory, PolicyHistory, ReplayResult, Settings, World
+from queue_sim.replay import replay as run_replay
+from queue_sim.reviewer import PerfectReviewer, Reviewer, Verification
+from queue_sim.roster import Roster, ServiceCalendar
+from rules import tuning
+
+BASELINE = "baseline"
+INCUMBENT = "incumbent_rules"
+
+
+@dataclass
+class StageOutput:
+    """The fields the pipeline's stage outputs carry."""
+
+    metrics: dict[str, Any] = field(default_factory=dict)
+    tables: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    notes: list[str] = field(default_factory=list)
+    inputs: dict[str, Path] = field(default_factory=dict)
+    outputs: list[Path] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class Staffing:
+    """One staffing variant: a capacity level on a shift layout."""
+
+    level: str
+    layout: str
+    analysts_per_shift: Mapping[str, int]
+
+    def roster(self, policy_cfg: Mapping[str, Any]) -> Roster:
+        return Roster.from_config(policy_cfg, layout=self.layout,
+                                  analysts_per_shift=self.analysts_per_shift)
+
+
+def staffing(policy_cfg: Mapping[str, Any] | None = None) -> list[Staffing]:
+    """Capacity levels on the current layout, then the redesigned layout, if configured.
+
+    Before the capacity base is fixed only the configured roster exists ("configured").
+    """
+    policy_cfg = config.load("policy") if policy_cfg is None else policy_cfg
+    current = policy_cfg["roster"]["layout"]
+    levels = policy_cfg["capacity"].get("levels") or {}
+    variants = [Staffing(level, current, counts) for level, counts in levels.items()
+                if counts is not None]
+    if not variants:
+        variants = [Staffing("configured", current, policy_cfg["roster"]["analysts_per_shift"])]
+    redesigned = policy_cfg["capacity"].get("redesigned")
+    if redesigned:
+        variants.append(Staffing("base", redesigned["layout"],
+                                 redesigned["analysts_per_shift"]))
+    return variants
+
+
+def base_staffing(policy_cfg: Mapping[str, Any]) -> Staffing:
+    variants = staffing(policy_cfg)
+    current = policy_cfg["roster"]["layout"]
+    for item in variants:
+        if item.level in ("base", "configured") and item.layout == current:
+            return item
+    raise ValueError("no base staffing on the current layout")
+
+
+# ------------------------------------------------------------------------- one world
+
+
+@dataclass
+class Bench:
+    """Everything a replay of one world needs, built once per world."""
+
+    world: World
+    latent_orders: pd.DataFrame
+    neighbours: Any
+    policy_cfg: Mapping[str, Any]
+    frozen: FrozenHistory
+
+    @classmethod
+    def of(cls, tables: Mapping[str, pd.DataFrame], context: pd.DataFrame, *, seed: int,
+           observed_until: pd.Timestamp, policy_cfg: Mapping[str, Any] | None = None) -> Bench:
+        policy_cfg = config.load("policy") if policy_cfg is None else policy_cfg
+        world = World(tables=tables, context=context, seed=seed,
+                      observed_until=pd.Timestamp(observed_until),
+                      terms=ledger.ProductTerms.from_config())
+        neighbours = asof.Neighbours.of(tables) if hasattr(asof, "Neighbours") else None
+        return cls(world, tables["latent_orders"], neighbours, policy_cfg, FrozenHistory(world))
+
+    def verification(self, rates: str = "verification") -> Verification:
+        return Verification.from_config(self.world.seed, self.latent_orders, self.policy_cfg,
+                                        rates=rates)
+
+    def run(self, policy: policies.Policy, window: tuple[pd.Timestamp, pd.Timestamp],
+            staff: Staffing, *, history: str = "policy", reviewer: str = "evidence",
+            rates: str = "verification") -> ReplayResult:
+        chosen = PolicyHistory(self.world, neighbours=self.neighbours, frozen=self.frozen) \
+            if history == "policy" else self.frozen
+        judge = (PerfectReviewer.from_latent(self.latent_orders) if reviewer == "perfect"
+                 else Reviewer())
+        return run_replay(
+            self.world, policy, window=window, roster=staff.roster(self.policy_cfg),
+            calendar=ServiceCalendar.from_config(self.policy_cfg), reviewer=judge,
+            verification=self.verification(rates), history=chosen,
+            settings=Settings.from_config(self.policy_cfg))
+
+    def ltv_cents(self) -> int:
+        return int(round(float(self.policy_cfg["costs"]["false_decline_ltv_usd"]) * 100))
+
+    def checkout_scores(self, policy: policies.Policy,
+                        window: tuple[pd.Timestamp, pd.Timestamp]) -> dict[str, np.ndarray]:
+        orders = self.world.orders(*window)
+        rows = self.world.context.set_index("order_id").reindex(orders["order_id"])
+        rows = rows.reset_index()
+        return {"review": policy.review(rows) if policy.review is not None else np.array([]),
+                "decline": policy.decline(rows) if policy.decline is not None
+                else np.array([])}
+
+
+def _window(protocol: Any, name: str) -> tuple[pd.Timestamp, pd.Timestamp]:
+    window = protocol.windows[name]
+    return window.start, window.end
+
+
+def _bench(run: Any, ref: Any) -> Bench:
+    cache = run.memory.setdefault("benches", {})
+    if ref not in cache:
+        tables = run.tables(ref)
+        contexts = run.memory.setdefault("context", {})
+        if ref not in contexts:
+            contexts[ref] = asof.build_context(tables)
+        cache[ref] = Bench.of(tables, contexts[ref], seed=ref.seed,
+                              observed_until=run.protocol.observed_until)
+    return cache[ref]
+
+
+def _baseline(run: Any, seed: int) -> Any:
+    ref = next((r for r in run.all_worlds if r.seed == seed and r.family == BASELINE), None)
+    if ref is None:  # build one of the same type
+        sample = run.all_worlds[0]
+        ref = replace(sample, seed=seed, family=BASELINE)
+    return ref
+
+
+def policies_for(scorers: Mapping[str, Any], bench: Bench) -> dict[str, policies.Policy]:
+    return policies.policy_set(scorers, bench.world.terms, bench.ltv_cents())
+
+
+# ------------------------------------------------------------------------- stages
+
+
+def tune(run: Any) -> StageOutput:
+    """Each seed's policies tuned on its baseline world's validation window (base level)."""
+    policy_cfg = config.load("policy")
+    grid = tuning.Grid.from_config(policy_cfg)
+    staff = base_staffing(policy_cfg)
+    window = _window(run.protocol, "validation")
+    frontier_rows, chosen_rows = [], []
+    for seed in sorted({ref.seed for ref in run.all_worlds}):
+        bench = _bench(run, _baseline(run, seed))
+        found = run.memory.setdefault("tuned", {}).setdefault(seed, {})
+        for name, policy in policies_for(run.memory["scorers"][seed], bench).items():
+            if not policy.tunable:
+                found[name] = policy
+                continue
+
+            def evaluate(candidate: policies.Policy, bench: Bench = bench
+                         ) -> tuple[ReplayResult, dict[str, Any]]:
+                result = bench.run(candidate, window, staff)
+                return result, outcomes.outcome_row(result, bench.world, keys={},
+                                                    ltv_cents=bench.ltv_cents())
+
+            tuned = tuning.tune(policy, bench.checkout_scores(policy, window), evaluate, grid)
+            found[name] = tuned.chosen
+            frontier_rows += [{"seed": seed, "policy": name, **row}
+                              for row in _records(tuned.frontier)]
+            chosen_rows.append({
+                "seed": seed, "policy": name, "feasible_points": tuned.feasible_points,
+                "points": len(tuned.frontier),
+                "chosen_version": None if tuned.chosen is None else tuned.chosen.version,
+                "review_threshold": None if tuned.chosen is None
+                else tuned.chosen.review_threshold,
+                "decline_threshold": None if tuned.chosen is None
+                else tuned.chosen.decline_threshold,
+                "review_on_boundary": tuned.on_boundary["review"],
+                "decline_on_boundary": tuned.on_boundary["decline"],
+            })
+    return StageOutput(tables={"tune.frontier": frontier_rows, "tune.chosen": chosen_rows},
+                       notes=[f"tuning rule: {tuning.RULE}"])
+
+
+VARIANTS = (  # (history, reviewer, verification rates) at the base level
+    ("policy", "evidence", "verification"),
+    ("frozen", "evidence", "verification"),
+    ("policy", "perfect", "verification"),
+    ("policy", "evidence", "verification_weak"),
+)
+
+
+def replay(run: Any) -> StageOutput:
+    """Every tuned policy and approve-all on every evaluation world's test window."""
+    policy_cfg = config.load("policy")
+    window = _window(run.protocol, "test")
+    rows, confusion, latent, prevented = [], [], [], []
+    for ref in run.worlds:
+        bench = _bench(run, ref)
+        tuned = run.memory["tuned"][ref.seed]
+        classes = outcomes.truth(bench.world.tables, bench.world.observed_until)
+        latent_classes = bench.latent_orders[["order_id", "pattern_id"]].assign(
+            pattern_id=lambda f: f["pattern_id"].fillna("legitimate"))
+        for name, policy in tuned.items():
+            keys = {"seed": ref.seed, "family": ref.family, "policy": name}
+            if policy is None:
+                rows.append({**keys, "capacity_level": "base", "evaluated": False})
+                continue
+            for staff in staffing(policy_cfg):
+                variants = VARIANTS if (staff.level in ("base", "configured")
+                                        and staff.layout == policy_cfg["roster"]["layout"]) \
+                    else VARIANTS[:1]
+                for history, reviewer, rates in variants:
+                    result = bench.run(policy, window, staff, history=history,
+                                       reviewer=reviewer, rates=rates)
+                    row_keys = {**keys, "capacity_level": staff.level, "layout": staff.layout,
+                                "history": history, "reviewer": reviewer,
+                                "verification": rates, "policy_version": policy.version,
+                                "evaluated": True}
+                    rows.append(outcomes.outcome_row(result, bench.world, keys=row_keys,
+                                                     ltv_cents=bench.ltv_cents(),
+                                                     classes=classes))
+                    if (history, reviewer, rates) == VARIANTS[0] and staff.level in (
+                            "base", "configured") and staff.layout == policy_cfg["roster"][
+                            "layout"]:
+                        confusion += [{**keys, **r} for r in _records(
+                            outcomes.confusion(result, classes))]
+                        latent += [{**keys, **r} for r in _records(
+                            outcomes.confusion(result, latent_classes, by="pattern_id"))]
+                        prevented += [{**keys, **r} for r in _records(
+                            outcomes.prevented_by_pattern(result, bench.world, classes))]
+    return StageOutput(tables={"replay.outcomes": rows, "replay.confusion": confusion,
+                               "replay.confusion_latent": latent,
+                               "replay.prevented_by_pattern": prevented})
+
+
+def _incumbent_result(run: Any, ref: Any) -> tuple[Bench, policies.Policy, ReplayResult]:
+    cache = run.memory.setdefault("incumbent_replays", {})
+    bench = _bench(run, ref)
+    policy = run.memory["tuned"][ref.seed][INCUMBENT]
+    if policy is None:
+        raise ValueError(f"the incumbent has no feasible operating point for seed {ref.seed}")
+    if ref not in cache:
+        policy_cfg = config.load("policy")
+        cache[ref] = bench.run(policy, (run.protocol.order_start, run.protocol.order_end),
+                               base_staffing(policy_cfg))
+    return bench, policy, cache[ref]
+
+
+def review_decisions(run: Any, ref: Any) -> pd.DataFrame:
+    """The incumbent's reviews at base capacity on one world (all order windows).
+
+    One row per order routed to review and taken up by an analyst: ``decision_at`` is
+    when the analyst took it up; the context columns (core.asof KEY_COLUMNS +
+    COLUMN_NAMES) are rebuilt at that moment under the incumbent's own decisions so far
+    (core.asof.policy_rows); ``checks`` lists the verification checks completed by then
+    (none at the first look) and ``checks_later`` those completed afterwards, each
+    ``(check, outcome, completed_at)``; ``disposition`` and ``final`` are the
+    reviewer's first and last decisions.
+    """
+    bench, policy, result = _incumbent_result(run, ref)
+    return decision_rows(bench, policy, result)
+
+
+def decision_rows(bench: Bench, policy: policies.Policy, result: ReplayResult) -> pd.DataFrame:
+    reviews = result.reviews.dropna(subset=["started_at"]).sort_values(["started_at",
+                                                                         "order_id"])
+    columns = [*asof.KEY_COLUMNS, *asof.COLUMN_NAMES]
+    if reviews.empty:
+        return pd.DataFrame(columns=[*columns, "policy", "policy_version", "checks",
+                                     "checks_later", "disposition", "final"])
+    decisions = pd.DataFrame({"order_id": reviews["order_id"].to_numpy(np.int64),
+                              "decision_at": reviews["started_at"].to_numpy()})
+    world_rows = bench.frozen.rows(decisions, None, decisions["decision_at"].min())
+    realized = actions.realize(bench.world.tables, result.fates, bench.world.terms,
+                               observed_until=bench.world.observed_until)
+    realized["order_attempts"] = bench.world.tables["order_attempts"]
+    state = actions.policy_state(result.fates, result.blocks)
+    rows = asof.policy_rows(world_rows, realized, state, decisions,
+                            **({} if bench.neighbours is None
+                               else {"neighbours": bench.neighbours}))
+    rows = rows[columns].reset_index(drop=True)
+    later = []
+    for item in reviews["checks"].fillna(""):
+        parts = [tuple(p.split(":")) for p in item.split(",") if p]
+        later.append(parts)
+    rows["policy"] = policy.name
+    rows["policy_version"] = policy.version
+    rows["checks"] = [[] for _ in range(len(rows))]
+    rows["checks_later"] = later
+    rows["disposition"] = reviews["first_disposition"].to_numpy()
+    rows["final"] = reviews["final"].to_numpy()
+    return rows
+
+
+def routing_frame(run: Any, ref: Any) -> pd.DataFrame:
+    """The incumbent's routing at checkout on one world: the MySQL ``alerts`` table.
+
+    One row per order the incumbent routed to review or auto-declined: ``alert_id``
+    (order id plus policy version), ``order_id``, ``user_id``, ``ts`` (checkout),
+    ``score``, ``band`` (``review`` or ``auto_decline``), ``fired_rules`` (FP-2 §6.2
+    conditions that held at checkout, ``R06(a)``/``R06(b)`` named apart), ``policy``,
+    ``policy_version``.
+    """
+    _, policy, result = _incumbent_result(run, ref)
+    return alerts(result, policy)
+
+
+def alerts(result: ReplayResult, policy: policies.Policy) -> pd.DataFrame:
+    routes = result.routes
+    flagged = routes.loc[routes["route"].isin([CheckoutRoute.REVIEW.value,
+                                              CheckoutRoute.AUTO_DECLINE.value])]
+    rows = result.alert_rows.set_index("order_id").reindex(flagged["order_id"]).reset_index()
+    held = evidence.conditions(rows)
+    rules = list(evidence.RULE_FAMILY)
+    fired = [[rule for rule in rules if flags[rule]] for flags in held[rules].to_dict("records")]
+    score = np.where(flagged["route"] == CheckoutRoute.AUTO_DECLINE.value,
+                     flagged["decline_score"], flagged["review_score"])
+    return pd.DataFrame({
+        "alert_id": flagged["alert_id"].to_numpy(), "order_id": flagged["order_id"].to_numpy(),
+        "user_id": rows["user_id"].to_numpy(np.int64),
+        "ts": pd.to_datetime(rows["decision_at"]).to_numpy(),
+        "score": score.astype(float), "band": flagged["route"].to_numpy(),
+        "fired_rules": fired, "policy": policy.name, "policy_version": policy.version,
+    })
+
+
+def _records(frame: pd.DataFrame) -> list[dict[str, Any]]:
+    out = []
+    for record in frame.to_dict("records"):
+        out.append({key: _plain(value) for key, value in record.items()})
+    return out
+
+
+def _plain(value: Any) -> Any:
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, float) and np.isnan(value):
+        return None
+    return value
