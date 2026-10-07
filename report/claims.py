@@ -69,6 +69,7 @@ TESTS = ("sign", "interval", "mcnemar")
 MCNEMAR_SEGMENTS = ("only_policy", "only_reference")
 NAME = re.compile(r"^[a-z0-9_]+$")
 CLAIM_PLACEHOLDER = re.compile(r"\{\{\s*claim:([a-z0-9_-]+)\s*\}\}")
+LTV_CELL = re.compile(r"_(ltv_[0-9_]+_usd)$")  # a metric at another LTV proxy names its cell
 
 
 class ClaimError(ValueError):
@@ -81,23 +82,31 @@ def is_contrast(key: str) -> bool:
 
 
 def selected_reason(key: str, summary: Mapping[str, Any]) -> str | None:
-    """Why no test of ``key`` may be published, or ``None``: the key's family and
-    capacity (its last plain segments but one) are a cell where the recommendation rule
-    selected (``evaluate.flips``) the key's policy (its last plain segment) or the
-    reference it is compared with (a ``vs_<reference>`` segment), whatever the metric."""
+    """Why no test of ``key`` may be published, or ``None``: the key's cell is one where
+    the recommendation rule selected (``evaluate.flips``) the key's policy (its last
+    plain segment) or the reference it is compared with (a ``vs_<reference>`` segment),
+    whatever the metric. The key's cell is its family and capacity (the plain segments
+    before the policy) at the configured LTV proxy, or, for a metric named for another
+    proxy (``..._ltv_5_usd``), that proxy's sensitivity cell."""
     try:
         flips = table(summary, "evaluate.flips")
     except KeyError:
         return None
     parts = key.split(".")
     plain = [part for part in parts if not part.startswith("vs_")]
+    if plain and plain[-1] in MCNEMAR_SEGMENTS:  # a count of cases from one comparison
+        plain.pop()
     if len(plain) < 4 or plain[0] != "evaluate":
         return None
     family, capacity, policy = plain[-3:]
+    proxy = LTV_CELL.search(plain[1])
     compared = [policy, *(part[len("vs_"):] for part in parts if part.startswith("vs_"))]
     for row in flips:
         chosen = row.get("recommended")
-        if (row.get("family"), row.get("capacity")) == (family, capacity) and chosen in compared:
+        same_proxy = (row.get("varies") == "ltv" and row.get("cell") == proxy.group(1)) \
+            if proxy else row.get("varies") != "ltv"
+        if (row.get("family"), row.get("capacity")) == (family, capacity) and same_proxy \
+                and chosen in compared:
             return (f"{chosen} was selected by the recommendation rule among the challengers "
                     f"({family}, {capacity}), so no test or p-value of a comparison with it "
                     f"is published; state the rule's result instead")

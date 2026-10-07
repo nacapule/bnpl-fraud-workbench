@@ -720,6 +720,10 @@ def test_no_test_or_p_value_is_published_for_the_selected_policy() -> None:
         with pytest.raises(FormatError, match="no test or p-value"):
             render_value(f"{key} | p", sources)
         assert render_value(f"{key} | signs", sources) == "positive on 9/10 seeds"
+    # nor its counts of cases
+    for segment in claims_module.MCNEMAR_SEGMENTS:
+        assert claims_module.selected_reason(
+            f"evaluate.right.vs_incumbent.surge.high.hybrid.{segment}", selected)
     # nor with the selected policy as the reference
     reverse = "evaluate.net.vs_hybrid.surge.high.incumbent"
     scope = {"policy": "incumbent", "reference": "hybrid", "key": reverse, "family": "surge",
@@ -734,6 +738,29 @@ def test_no_test_or_p_value_is_published_for_the_selected_policy() -> None:
     for key in ("evaluate.net.vs_incumbent.surge.high.v2",
                 "evaluate.net.vs_hybrid.baseline.base.incumbent"):
         assert claims_module.selected_reason(key, selected) is None
+    # a selection at another LTV proxy covers that proxy's metrics only
+    proxied = assemble_summary([_replay_stage(), StageResult(
+        stage="evaluate", versions={"world": "w1"}, inputs={}, metrics={},
+        tables={"evaluate.flips": [
+            {"cell": "primary", "varies": "primary", "family": "surge", "capacity": "high",
+             "recommended": None},
+            {"cell": "ltv_45_usd", "varies": "ltv", "family": "surge", "capacity": "high",
+             "recommended": "hybrid"}]})])
+    assert claims_module.sentence(record, proxied, WORDING).endswith("p = 0.021).")
+    assert render_value("evaluate.net.vs_incumbent.surge.high.hybrid | p",
+                        Sources(summary=proxied)) == "p = 0.021"
+    refused = "evaluate.rule_net_per_1000_orders_ltv_45_usd.vs_incumbent.surge.high.hybrid"
+    assert "selected" in claims_module.selected_reason(refused, proxied)
+    assert claims_module.selected_reason(refused.replace("_45_", "_5_"), proxied) is None
+    # and a selection at the configured proxy does not cover the other proxies' metrics
+    assert claims_module.selected_reason(refused, selected) is None
+    # the evaluate stage names an LTV cell and its metrics the way this reads them
+    from core import recommendation
+    for cents in (500, 4_500, 750):
+        cell = recommendation.OperatingCell(recommendation.ltv_name(cents), "ltv", "baseline",
+                                            "base", {}, cents)
+        name = recommendation.improvement_name(cell)
+        assert claims_module.LTV_CELL.search(name).group(1) == cell.name
     # another policy, or a cell where the rule kept the incumbent, is tested as before
     unselected = _with_selection(None)
     assert claims_module.sentence(record, unselected, WORDING).endswith("p = 0.021).")
