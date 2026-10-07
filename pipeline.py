@@ -220,8 +220,11 @@ def make_run(profile: Profile, *, name: str | None = None, seeds: list[int] | No
         manifest_path = Path(world) / "manifest.json"
         if not manifest_path.exists():
             raise PipelineError(f"{world} holds no manifest.json")
-        manifest = json.loads(manifest_path.read_text())
-        ref = WorldRef(manifest.get("seed"), manifest.get("family"))
+        try:
+            manifest = json.loads(manifest_path.read_text())
+            ref = WorldRef(manifest.get("seed"), manifest.get("family"))
+        except (OSError, ValueError, AttributeError) as error:
+            raise PipelineError(f"{world}: unreadable manifest: {error}") from error
         if ref.family not in protocol.family_starts:
             raise PipelineError(f"{world}: unknown family {ref.family!r}")
         chosen_seeds, chosen_families, database = (ref.seed,), (ref.family,), ref
@@ -413,7 +416,10 @@ def stage_world(run: Run) -> StageOutput:
                 world_module.verify_manifest(tables, manifest)
             except (OSError, ValueError, KeyError) as error:
                 raise PipelineError(f"world {ref.name}: {error}") from error
-            world_module.write_world(tables, target)
+            try:
+                world_module.write_world(tables, target)
+            except OSError as error:
+                raise PipelineError(f"world {ref.name}: cannot rewrite it: {error}") from error
             if world_identity(run, ref) is None:
                 raise PipelineError(f"world {ref.name}: its files do not match its manifest")
         tables = world_module.read_world(target, ["order_attempts", "labels", "accounts"])

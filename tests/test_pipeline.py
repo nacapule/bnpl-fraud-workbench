@@ -239,6 +239,30 @@ def test_an_unreadable_world_file_is_a_pipeline_error(tmp_path: Path) -> None:
         stored.chmod(0o644)
 
 
+def test_world_files_that_cannot_be_read_or_rewritten_are_pipeline_errors(
+    tmp_path: Path, monkeypatch
+) -> None:
+    source = tmp_path / "source"
+    shutil.copytree(MINI_WORLD, source)
+    (source / "manifest.json").chmod(0)
+    try:
+        with pytest.raises(pipeline.PipelineError, match="unreadable manifest"):
+            pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path / "runs", world=source)
+    finally:
+        (source / "manifest.json").chmod(0o644)
+    path = source / "order_attempts.csv"  # valid rows in another order: rewritten canonically
+    header, *rows = path.read_text().rstrip("\n").split("\n")
+    path.write_text("\n".join([header, *reversed(rows)]) + "\n")
+
+    def refuse(tables, directory):
+        raise PermissionError("read-only")
+
+    monkeypatch.setattr(world_module, "write_world", refuse)
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path / "runs", world=source)
+    with pytest.raises(pipeline.PipelineError, match="world 0-baseline: cannot rewrite it"):
+        pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)
+
+
 def _given_world(tmp_path: Path) -> tuple[pipeline.Run, Path]:
     run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
     pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)
