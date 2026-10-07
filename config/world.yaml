@@ -35,10 +35,12 @@ product:
 fulfilment:
   median_lag_hours: 12           # per-merchant attribute; per-order draws around it
 
-# Adjudicated label (core.world.adjudicate). Unknown is not negative.
+# Determinations of the adjudicated label (core.world.adjudicate), from the fraud
+# policy. The label horizon is pre-registered in experiments/protocol.yaml.
 labels:
-  horizon_days: 60
-  zero_effort_max_paid_installments: 0   # never-pay determination (fraud policy)
+  default_grace_days: 30       # first installment unpaid this long after due: zero-effort default
+  linked_plan_days: 7          # another zero-effort plan opened this close makes it never-pay
+  promo_linked_accounts: 3     # linked accounts on one first-purchase promotion: promo abuse
 
 # Parameter changes each family applies from its start date (protocol.yaml).
 families:

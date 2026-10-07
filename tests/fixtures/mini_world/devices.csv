@@ -1,0 +1,17 @@
+device_id,created_at,fingerprint,ua_family
+1,2023-09-01 08:00:00,fp-d_dan,iOS
+2,2024-02-02 12:00:00,fp-d_lee,iOS
+3,2024-05-02 10:00:00,fp-d_ana,iOS
+4,2024-11-11 11:00:00,fp-d_gus,iOS
+5,2025-03-03 16:00:00,fp-d_ivy,iOS
+6,2025-06-01 09:00:00,fp-d_hal,iOS
+7,2025-07-07 07:00:00,fp-d_kim,iOS
+8,2025-08-20 14:00:00,fp-d_cara,iOS
+9,2025-08-20 14:20:00,fp-d_tablet,Android
+10,2025-10-10 10:00:00,fp-d_jay,iOS
+11,2026-01-12 18:00:00,fp-d_ben,Android
+12,2026-02-01 12:00:00,fp-d_fay,iOS
+13,2026-02-03 02:10:00,fp-d_ato,Chrome
+14,2026-02-14 01:00:00,fp-d_eve,Chrome
+15,2026-03-10 20:00:00,fp-d_farm,Android
+16,2026-05-20 15:00:00,fp-d_mo,iOS

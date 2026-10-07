@@ -1,0 +1,6 @@
+event_id,occurred_at,known_at,dispute_id,order_id,reason,amount_cents
+28,2026-01-02 10:00:00,2026-01-04 10:00:00,1,2,item_not_received,3750
+116,2026-02-04 09:00:00,2026-02-05 09:00:00,2,5,item_not_received,10500
+133,2026-02-10 10:00:00,2026-02-12 10:00:00,3,8,item_not_received,4750
+189,2026-03-01 09:00:00,2026-03-03 09:00:00,4,17,unauthorized,16250
+197,2026-03-05 10:00:00,2026-03-06 10:00:00,5,14,item_not_received,39000

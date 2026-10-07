@@ -1,0 +1,17 @@
+user_id,actor,episode_id,profile
+1,legitimate,,
+2,legitimate,,traveller
+3,legitimate,,
+4,legitimate,,hardship
+5,legitimate,,
+6,fraudster,1,
+7,legitimate,,
+8,legitimate,,household
+9,legitimate,,
+10,legitimate,,new_customer
+11,fraudster,3,
+12,fraudster,5,
+13,fraudster,6,
+14,fraudster,6,
+15,fraudster,6,
+16,legitimate,,

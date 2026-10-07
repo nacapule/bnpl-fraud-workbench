@@ -1,0 +1,119 @@
+{
+  "code_commit": null,
+  "config_sha256": "a78b46bc3e9f053cb5744ed90cc151fccf01bab0a2466c0333919ed9101da9e1",
+  "evaluation_only": {
+    "bustout_merchant_ids": [
+      3
+    ]
+  },
+  "family": "baseline",
+  "generator_version": "mini-world-1",
+  "horizon": {
+    "observed_until": "2026-06-30 23:59:59",
+    "order_end": "2026-06-30 00:00:00",
+    "order_start": "2025-12-01 00:00:00"
+  },
+  "seed": 0,
+  "tables": {
+    "account_events": {
+      "rows": 7,
+      "sha256": "805ddbe17b36d6b9521415f3c897b99151a2f848dd5d356d5fc58e9be987d96d"
+    },
+    "accounts": {
+      "rows": 16,
+      "sha256": "b36dd9f7ecca33852e09387bf892b1b14c3454836baf9defea134616a17ad632"
+    },
+    "address_links": {
+      "rows": 17,
+      "sha256": "0f5a69099be73e2b13e9ff623dc2620f178858bd730db464cb0ff0f1709604e5"
+    },
+    "addresses": {
+      "rows": 16,
+      "sha256": "12c2c57677f7c8612b972ea7c482899099c29f84d215cae8dc95a24fe8952af2"
+    },
+    "cards": {
+      "rows": 18,
+      "sha256": "c797267b2d2432a7a09e5cfa818005e47129bf17728ceac7e247a548427a6323"
+    },
+    "cash_events": {
+      "rows": 110,
+      "sha256": "e40ec7eee9168e0740fd9ad468166cdef3cbb668eb8e0069a16de4869b0be010"
+    },
+    "deliveries": {
+      "rows": 18,
+      "sha256": "676d859397a93832a4e6d7adfaa1e593b9343d460928fc80a042bc59de2b65f7"
+    },
+    "device_links": {
+      "rows": 19,
+      "sha256": "564029cc6088ab1ca5c0a4a34cc63c985d6005cc08ee1546a71c527a89b81c93"
+    },
+    "devices": {
+      "rows": 16,
+      "sha256": "a9e42c60f11cfa119d92198e7072c936fa7e35ccc66adbde4d846e62ed65854c"
+    },
+    "dispute_openings": {
+      "rows": 5,
+      "sha256": "d56674e0dfef4c5bf67bb55bccfe8017d378663949f1d4c15203494006f90b00"
+    },
+    "dispute_resolutions": {
+      "rows": 5,
+      "sha256": "0a3a77c084df09133023d854c4a142a7f589a10178d3f7daa854c11b3f0c1996"
+    },
+    "fulfilments": {
+      "rows": 20,
+      "sha256": "6c9f9ac1a147f26d9201b851014e4c48018e40297b0431d5cf54f963ae714850"
+    },
+    "installment_schedule": {
+      "rows": 80,
+      "sha256": "f926f4fee11c423723e6a2b4a76dd2f33827b6d73b5c85ef321e34445fc43337"
+    },
+    "labels": {
+      "rows": 20,
+      "sha256": "1edf047c85b6ba2030bb2bea48a29589008aa1803ac21f2d869d48308f775316"
+    },
+    "latent_accounts": {
+      "rows": 16,
+      "sha256": "0496acf9df2eee649f66a54038be887a43b7b7768e4c7c2d57ac9c862dc23cce"
+    },
+    "latent_episodes": {
+      "rows": 6,
+      "sha256": "b86054635f364d8463f7c99fa17ae841e9efdbe3d759f9f1284f32a0b571bcce"
+    },
+    "latent_orders": {
+      "rows": 22,
+      "sha256": "89416de3643dfe227eab4d2ea86f09d3152b7400f3e72e51a3dbd9446be8a0e1"
+    },
+    "merchants": {
+      "rows": 3,
+      "sha256": "75dd5943e7991ca178a730cef22fa84e4c68fd2ca3e94011f0d655b64136ca9c"
+    },
+    "order_attempts": {
+      "rows": 22,
+      "sha256": "30cebf16af2dbe130c6ee13fea72d0bcfc2d258b5add64c14eae049d4c80f17b"
+    },
+    "payment_attempts": {
+      "rows": 91,
+      "sha256": "2560d2aafee272097dc88cbb096ce386b8eb66a0c6dfb7e14d69c4204d4720ae"
+    },
+    "payment_reversals": {
+      "rows": 1,
+      "sha256": "b2de37df195c3c78922c8b39dd5caa2f6973fae465792155ccb5daa5e386f6de"
+    },
+    "plan_writeoffs": {
+      "rows": 4,
+      "sha256": "583eec8ec6adc2827d9aafbbdfeb4be11f64c12422b0986fe355b5aa155670e3"
+    },
+    "plans": {
+      "rows": 20,
+      "sha256": "1afe73a2b0ef758bd489a1ae3520441d9ab8c88c99da15d825c7012206693e3c"
+    },
+    "promotions": {
+      "rows": 1,
+      "sha256": "6b9ecd7c70fbc441927a38d4b0a9dd2ffd36266309d7ab0e7210cc4c3e9f86c9"
+    },
+    "victim_reports": {
+      "rows": 1,
+      "sha256": "01067446da4d16ee7cd43d880755e618d37307d38b5f939102b9c1498c41697c"
+    }
+  }
+}

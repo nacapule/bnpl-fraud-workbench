@@ -1,0 +1,4 @@
+merchant_id,created_at,name,category,risk_tier,fulfilment_median_hours,closed_at
+1,2024-03-01 09:00:00,north-goods-14,home,1,12.0,
+2,2024-06-10 09:00:00,volt-tech-31,electronics,2,18.0,
+3,2025-12-15 09:00:00,flash-gems-70,jewelry,3,10.0,2026-02-20 12:00:00
