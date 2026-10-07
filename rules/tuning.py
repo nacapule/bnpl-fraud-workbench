@@ -1,189 +1,150 @@
-"""Threshold tuning: sweep the review/decline bands before ``holdout_start``,
-report every candidate on the holdout, and pick the
-net-$-maximizing point subject to review capacity.
+"""Threshold tuning through the replay, on the validation window.
 
-The ONE rules-side component allowed to read labels (offline calibration,
-FP-1 §2.4). Run: python -m rules.tuning  (after rules.engine has built the
-enriched frame logic — this re-derives scores itself so it can sweep).
+Each policy's review and decline thresholds are chosen by replaying the validation
+window at the base capacity for every point of a grid of score cut-points the policy
+can attain, and taking the best feasible point by the rule in ``config/policy.yaml``
+``tuning``:
 
-Outputs: reports/tradeoffs.{md,json,svg}, reports/operating_point.json
+* cut-points: the policy's score at each listed review rate and decline rate (the
+  share of validation orders at or above it, scored at checkout with the world-level
+  context); rate 0 switches the route off, so "no review" and "no decline" are always
+  in the grid;
+* feasible: the review minutes the point offers (every routed order's review time)
+  fit in the analyst minutes available over the window;
+* best: the highest net contribution after the friction cost (the LTV proxy for each
+  legitimate order declined or cancelled); ties go to fewer reviews, then fewer
+  declines.
+
+The result is the best point *in the searched grid*, reported with the whole frontier,
+whether it lies on the grid's boundary (the highest review or decline rate searched,
+where a wider grid might do better), and explicitly when no point is feasible (no
+policy is chosen then; nothing falls back silently). The chosen thresholds are the
+policy the replay evaluates, identified by its version; no other copy of the bands
+exists.
 """
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
+import math
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
+from typing import Any
 
-import matplotlib
+import numpy as np
 import pandas as pd
 
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-
-from core.config import legacy
-from rules.engine import build_enriched, run_rules  # noqa: E402
-
-REPO = Path(__file__).resolve().parent.parent
+from core import config
+from queue_sim.policies import Policy
+from queue_sim.replay import ReplayResult
 
 
-def collected_by_order(d: Path) -> pd.Series:
-    payments = pd.read_csv(d / "payments.csv")
-    plans = pd.read_csv(d / "plans.csv")
-    got = payments[payments.result == "success"].groupby("plan_id").amount.sum()
-    plans["collected"] = plans.plan_id.map(got).fillna(0)
-    return plans.set_index("order_id").collected
+@dataclass(frozen=True)
+class Grid:
+    review_rates: tuple[float, ...]
+    decline_rates: tuple[float, ...]
+
+    @classmethod
+    def from_config(cls, policy: Mapping[str, Any] | None = None) -> Grid:
+        tuning = (config.load("policy") if policy is None else policy)["tuning"]
+        return cls(tuple(float(r) for r in tuning["review_rates"]),
+                   tuple(float(r) for r in tuning["decline_rates"]))
 
 
-def evaluate_point(hold: pd.DataFrame, review_band: int, decline_band: int,
-                   costs: dict, capacity_per_day: float, days: int) -> dict:
-    alerted = hold[hold.score >= review_band]
-    declined = hold[hold.score >= decline_band]
-    n_alerts = len(alerted)
-    alerts_per_day = n_alerts / days
+def cut_point(scores: np.ndarray, rate: float) -> float | None:
+    """The score at or above which ``rate`` of the orders lie (None for rate 0)."""
+    if rate <= 0:
+        return None
+    values = np.sort(np.asarray(scores, dtype=float)[~np.isnan(scores)])[::-1]
+    if not len(values):
+        return None
+    k = min(max(math.ceil(rate * len(values)), 1), len(values))
+    return float(values[k - 1])
 
-    caught = alerted[alerted.is_fraud]
-    caught_usd = float(caught.loss.sum())
-    precision = len(caught) / n_alerts if n_alerts else 0.0
 
-    insults = declined[~declined.is_fraud]
-    insult_cost = float(
-        (insults.amount * costs["false_decline_margin_pct"]
-         + costs["false_decline_ltv_usd"]).sum()
-    )
-    review_cost = n_alerts * costs["review_cost_usd"]
-    net = caught_usd - review_cost - insult_cost
+@dataclass(frozen=True)
+class Tuned:
+    policy: str
+    chosen: Policy | None  # None when no grid point is feasible
+    frontier: pd.DataFrame  # one row per grid point
+    on_boundary: dict[str, bool]  # the chosen point is at the highest rate searched
+    rule: str
 
-    recall_by = {}
-    for pat, grp in hold[hold.is_fraud].groupby("pattern_id"):
-        recall_by[pat] = round(float((grp.score >= review_band).mean()), 3)
-    recall_overall = round(float((hold[hold.is_fraud].score >= review_band).mean()), 3)
+    @property
+    def feasible_points(self) -> int:
+        return int(self.frontier["feasible"].sum())
 
-    return {
-        "review_band": review_band, "decline_band": decline_band,
-        "alerts_per_day": round(alerts_per_day, 1), "n_alerts": n_alerts,
-        "precision": round(precision, 3), "recall_overall": recall_overall,
-        "recall_by_pattern": recall_by, "caught_usd": round(caught_usd, 0),
-        "n_auto_declines": len(declined), "n_insults": len(insults),
-        "insult_cost_usd": round(insult_cost, 0), "review_cost_usd": round(review_cost, 0),
-        "net_usd": round(net, 0),
-        "over_capacity": alerts_per_day > capacity_per_day,
+
+RULE = ("best in the searched grid: highest net contribution after the friction cost "
+        "among points whose offered review minutes fit the minutes available; ties to "
+        "fewer reviews, then fewer declines")
+
+
+def tune(
+    policy: Policy,
+    scores: Mapping[str, np.ndarray],
+    run: Callable[[Policy], tuple[ReplayResult, Mapping[str, Any]]],
+    grid: Grid,
+) -> Tuned:
+    """Search ``grid`` for ``policy``.
+
+    ``scores`` holds the validation orders' checkout scores for the review and the
+    decline signal (keys ``review`` and ``decline``); ``run`` replays one candidate
+    and returns its result and outcome row (queue_sim.outcomes.outcome_row).
+    """
+    review_points = _points("review", policy, scores, grid.review_rates)
+    decline_points = _points("decline", policy, scores, grid.decline_rates)
+    rows = []
+    seen: dict[tuple[float | None, float | None], dict[str, Any]] = {}
+    for (r_rate, r_cut) in review_points:
+        for (d_rate, d_cut) in decline_points:
+            candidate = policy.with_thresholds(r_cut, d_cut)
+            key = (candidate.review_threshold, candidate.decline_threshold)
+            if key not in seen:
+                _, row = run(candidate)
+                seen[key] = dict(row)
+            row = seen[key]
+            rows.append({
+                "review_rate": r_rate, "decline_rate": d_rate,
+                "review_threshold": candidate.review_threshold,
+                "decline_threshold": candidate.decline_threshold,
+                "policy_version": candidate.version,
+                "objective_cents": int(row["net_cents"]) - int(row["friction_cost_cents"]),
+                "feasible": int(row["review_minutes_offered"]) <= int(row["available_minutes"]),
+                **{k: row[k] for k in ("net_cents", "net_vs_approve_all_cents",
+                                       "friction_cost_cents", "prevented_loss_cents",
+                                       "reviews", "review_minutes_offered",
+                                       "available_minutes", "legitimate_declined",
+                                       "legitimate_held", "decided_after_shipping")},
+                "declines": int(row["fraud_declined_checkout"])
+                + int(row["legitimate_declined_checkout"]),
+            })
+    frontier = pd.DataFrame(rows)
+    feasible = frontier.loc[frontier["feasible"]]
+    if feasible.empty:
+        return Tuned(policy.name, None, frontier, {"review": False, "decline": False}, RULE)
+    best = feasible.sort_values(["objective_cents", "reviews", "declines"],
+                                ascending=[False, True, True], kind="stable").iloc[0]
+    chosen = policy.with_thresholds(_none(best["review_threshold"]),
+                                    _none(best["decline_threshold"]))
+    boundary = {
+        "review": len(review_points) > 1 and best["review_rate"] == review_points[-1][0],
+        "decline": len(decline_points) > 1 and best["decline_rate"] == decline_points[-1][0],
     }
+    return Tuned(policy.name, chosen, frontier, boundary, RULE)
 
 
-def main() -> None:
-    cfg = legacy()
-    costs = cfg["costs"]
-    capacity = cfg["model"]["review_capacity_per_day"]
-    d = REPO / "data"
-
-    ap = run_rules(build_enriched())
-    labels = pd.read_csv(d / "labels.csv")
-    lab = labels.drop_duplicates("order_id").set_index("order_id").pattern_id
-    ap["pattern_id"] = ap.order_id.map(lab)
-    ap["is_fraud"] = ap.pattern_id.notna()
-    ap["loss"] = (ap.amount - ap.order_id.map(collected_by_order(d))).clip(lower=0)
-
-    fit_end = pd.Timestamp(cfg["holdout_start"])
-    fit = ap[ap.ts < fit_end].copy()
-    hold = ap[ap.ts >= fit_end].copy()
-    fit_days = max((fit.ts.max() - fit.ts.min()).days, 1)
-    days = max((hold.ts.max() - hold.ts.min()).days, 1)
-
-    # Selection happens ONLY on the fit window; the holdout is reporting-only.
-    fit_grid = []
-    for rb in range(30, 65, 5):
-        for db_ in range(70, 120, 10):
-            fit_grid.append(evaluate_point(fit, rb, db_, costs, capacity, fit_days))
-    feasible = [g for g in fit_grid if not g["over_capacity"]]
-    best_fit = max(
-        feasible or fit_grid,
-        key=lambda g: (g["net_usd"], -g["review_band"], -g["decline_band"]),
-    )
-    tied_decline_bands = sorted(
-        point["decline_band"]
-        for point in (feasible or fit_grid)
-        if point["review_band"] == best_fit["review_band"]
-        and point["net_usd"] == best_fit["net_usd"]
-    )
-
-    # Report the whole grid on the holdout for the frontier plot/table; the
-    # chosen point is the one selected on fit.
-    grid = []
-    for rb in range(30, 65, 5):
-        for db_ in range(70, 120, 10):
-            grid.append(evaluate_point(hold, rb, db_, costs, capacity, days))
-    chosen = next(
-        g for g in grid
-        if g["review_band"] == best_fit["review_band"]
-        and g["decline_band"] == best_fit["decline_band"]
-    )
-
-    # markdown report
-    cols = ["review_band", "decline_band", "alerts_per_day", "precision",
-            "recall_overall", "caught_usd", "n_insults", "net_usd"]
-    lines = [
-        f"# Rule threshold tuning — selected before {cfg['holdout_start']}, reported after\n",
-        (f"Cost model: review ${costs['review_cost_usd']:.2f}/case; false decline = "
-         f"{costs['false_decline_margin_pct'] * 100:.0f}% margin + "
-         f"${costs['false_decline_ltv_usd']:.0f} LTV proxy "
-         "(config `costs`, assumptions documented in README).\n"),
-        "| " + " | ".join(cols) + " |",
-        "|" + "---|" * len(cols),
-    ]
-    for g in sorted(grid, key=lambda g: (-g["net_usd"])):
-        over = " (over capacity)" if g["over_capacity"] else ""
-        mark = " **⬅ chosen**" if g is chosen else over
-        lines.append("| " + " | ".join(str(g[c]) for c in cols) + " |" + mark)
-    lines += [
-        "",
-        (
-            "Fit-window decline-band tie: "
-            + ", ".join(str(band) for band in tied_decline_bands)
-            + f" share net ${best_fit['net_usd']:,.0f}; "
-            + f"{best_fit['decline_band']} is the lowest tied value and is selected."
-        ),
-        "",
-        f"**Chosen operating point: review ≥ {chosen['review_band']}, "
-        f"auto-decline ≥ {chosen['decline_band']}.** "
-        f"It maximizes net $ ({chosen['net_usd']:,}) under the ≤{capacity} alerts/day "
-        f"capacity constraint: {chosen['alerts_per_day']}/day at precision "
-        f"{chosen['precision']:.0%}, catching ${chosen['caught_usd']:,.0f} of holdout fraud "
-        f"exposure with {chosen['n_insults']} auto-declined legitimate orders. "
-        "Raising the review band further trades linearly less review cost for "
-        "disproportionate recall loss on ATO and stolen-card patterns; lowering it "
-        "overruns the review team. The classic fraud triangle — loss caught vs review "
-        "cost vs insult rate — made explicit.",
-        "",
-        "Recall by pattern at the chosen point: "
-        + ", ".join(f"{k} {v:.0%}" for k, v in sorted(chosen["recall_by_pattern"].items())),
-    ]
-    (REPO / "reports").mkdir(exist_ok=True)
-    (REPO / "reports" / "tradeoffs.md").write_text("\n".join(lines) + "\n")
-    frontier = [{c: g[c] for c in cols} for g in grid]
-    (REPO / "reports" / "tradeoffs.json").write_text(json.dumps(frontier, indent=1) + "\n")
-
-    # frontier SVG
-    fig, axes = plt.subplots(1, 1, figsize=(8, 5))
-    for db_ in sorted({g["decline_band"] for g in grid}):
-        pts = sorted((g for g in grid if g["decline_band"] == db_),
-                     key=lambda g: g["alerts_per_day"])
-        axes.plot([g["alerts_per_day"] for g in pts], [g["caught_usd"] / 1000 for g in pts],
-                  marker="o", markersize=3, linewidth=1, label=f"decline ≥ {db_}")
-    axes.axvline(capacity, color="grey", linestyle="--", linewidth=1,
-                 label=f"capacity {capacity}/day")
-    axes.scatter([chosen["alerts_per_day"]], [chosen["caught_usd"] / 1000],
-                 s=90, zorder=5, facecolors="none", edgecolors="red", label="chosen")
-    axes.set_xlabel("alerts per day (holdout)")
-    axes.set_ylabel("fraud $ caught (thousands)")
-    axes.set_title("Alert volume vs fraud-$ caught — threshold sweep")
-    axes.legend(fontsize=8)
-    fig.tight_layout()
-    fig.savefig(REPO / "reports" / "tradeoffs.svg")
-
-    (REPO / "reports" / "operating_point.json").write_text(json.dumps(chosen, indent=1))
-    print(json.dumps({k: v for k, v in chosen.items() if k != "recall_by_pattern"}, indent=1))
-    print("wrote reports/tradeoffs.{md,json,svg}, reports/operating_point.json")
+def _points(which: str, policy: Policy, scores: Mapping[str, np.ndarray],
+            rates: Sequence[float]) -> list[tuple[float, float | None]]:
+    """(rate, threshold) pairs for one route; a fixed route keeps its own threshold."""
+    signal = policy.review if which == "review" else policy.decline
+    if signal is None:
+        return [(0.0, None)]
+    if which not in policy.tunable:
+        fixed = policy.review_threshold if which == "review" else policy.decline_threshold
+        return [(float("nan"), fixed)]
+    return [(rate, cut_point(scores[which], rate)) for rate in rates]
 
 
-if __name__ == "__main__":
-    main()
+def _none(value: Any) -> float | None:
+    return None if value is None or (isinstance(value, float) and math.isnan(value)) \
+        else float(value)
