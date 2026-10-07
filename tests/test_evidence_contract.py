@@ -99,10 +99,3 @@ def test_contract_rejects_what_the_policy_rules_out() -> None:
     with pytest.raises(ValueError):
         PermittedActions("§6.6(c)", frozenset({"clear"}), frozenset(), frozenset({"clear"}),
                          {"clear": "§6.6(c)"}, frozenset())
-
-
-def test_classification_is_not_implemented_yet() -> None:
-    with pytest.raises(NotImplementedError):
-        evidence.classify({}, ())
-    with pytest.raises(NotImplementedError):
-        evidence.permitted_actions(evidence.EXAMPLE_EVIDENCE)
