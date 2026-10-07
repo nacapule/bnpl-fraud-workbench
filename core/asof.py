@@ -286,7 +286,9 @@ COLUMNS: tuple[AsofColumn, ...] = (
     _col("never_pay_determined_user", OC, "int8",
          "A never-pay determination on one of the account's earlier plans was known before "
          "the decision; computed from payments with core.world.adjudicate's rule, never by "
-         "reading labels.", "plans of policy-approved orders", "ever", False, *ALL),
+         "reading labels. A voided or cancelled plan defaults only before it stops; another "
+         "determination on the same order does not hide this one.",
+         "plans of policy-approved orders", "ever", False, *ALL),
     _col("promo_redemptions_user", OC, "int64", "Promotions used on the account's orders.",
          "policy-approved orders", "ever, before the decision", False, "rules", "ml"),
     _col("promo_uses_linked_accounts", OC, "int64",
