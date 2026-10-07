@@ -860,6 +860,29 @@ def test_a_release_pauses_what_followed_the_hold_of_installments_already_due(tab
                               T("2025-02-06 20:00"), T("2025-02-08")])
 
 
+def test_cash_a_kept_row_leads_to_during_the_hold_waits_for_the_release(tables, terms):
+    """Order 18's dispute is filed on 03-01 and notified on 03-03 09:00, while the order
+    (shipping only after 40 days) is held from 03-02 to 03-04: the opening stands, its
+    debit and fee wait for the release (03-05 09:00). Order 12's plan was written off on
+    03-31; its recovery (04-30 02:20) falls in a hold from 04-29 to 05-01 and waits."""
+    world_ = _late_shipment(_late_shipment(tables, 18, 40), 12, 100)
+    fates = _fates(world_, {
+        18: _hold("2025-03-02 00:00", outcome="cleared", release="2025-03-04 00:00"),
+        12: _hold("2025-04-29 00:00", outcome="cleared", release="2025-05-01 00:00")})
+    realized = actions.realize(world_, fates, terms)
+    opening = _rows(world_, "dispute_openings", realized["dispute_openings"], [18])
+    assert _records(opening, ["event_id", "known_at"]) == [(197, T("2025-03-03 09:00"))]
+    ledger_ = realized["cash_events"]
+    debit = ledger_.loc[ledger_["ref_event_id"] == 197]
+    assert set(debit["kind"]) == {"dispute_debit", "dispute_fee"}
+    assert set(debit["occurred_at"]) == {T("2025-03-05 09:00")}
+    recovery = ledger_.loc[ledger_["ref_event_id"] == 291]
+    assert recovery["occurred_at"].tolist() == [T("2025-05-02 02:20")]
+    _assert_prefix_invariant(world_, fates, terms,
+                             [T("2025-03-03 10:00"), T("2025-03-04 12:00"), T("2025-03-06"),
+                              T("2025-04-30 03:00"), T("2025-05-01 12:00"), T("2025-05-03")])
+
+
 @pytest.mark.parametrize("seed", range(6))
 def test_realizing_what_was_decided_by_a_moment_changes_nothing_known_before_it(
         tables, terms, seed):

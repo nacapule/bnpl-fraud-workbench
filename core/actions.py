@@ -61,9 +61,12 @@ at ``r``               their payments and reversals after ``h``) and a write-off
                        ``h`` move by ``r - checkout`` (the schedule starts at the
                        release); shipment, delivery, disputes, victim reports and the
                        payments and reversals of installments already due at ``h`` (the
-                       checkout payment's included) move by ``r - h``; events moved past
-                       the observation end are dropped
-held before shipment,  what occurred by ``h`` stands, nothing after it has happened yet,
+                       checkout payment's included) move by ``r - h``, and so does cash
+                       that rows kept at their time lead to after ``h`` (a dispute
+                       notified during the hold, a recovery); events moved past the
+                       observation end are dropped
+held before shipment,  what occurred by ``h`` stands, nothing after it has happened yet
+                       (no cash after ``h`` either),
 still pending          and installments not yet due at ``h`` are not scheduled (they do
                        not fall due while the order is paused); neither approved nor
                        voided in the state
@@ -391,6 +394,20 @@ def _realize_rows(
     return out
 
 
+def _shifted_ids(before: Mapping[str, pd.DataFrame],
+                 after: Mapping[str, pd.DataFrame]) -> set[int]:
+    """Event ids whose time realization moved."""
+    out: set[int] = set()
+    for name in (*_SHIP_TABLES, *_PAY_TABLES):
+        frame = after[name]
+        if not len(frame):
+            continue
+        was = before[name].set_index("event_id")["occurred_at"].reindex(frame["event_id"])
+        now = frame["occurred_at"].to_numpy(dtype="datetime64[s]")
+        out |= set(frame.loc[now != was.to_numpy(dtype="datetime64[s]"), "event_id"].tolist())
+    return out
+
+
 def _cut_times(by_order: pd.DataFrame) -> pd.Series:
     """When each voided or still-held order stopped: nothing after it happened.
 
@@ -506,8 +523,22 @@ def _released_cash(
     if not missing:
         return [memo[k] for k in keys]
     orders = released.loc[released["order_id"].isin({k[1] for k in missing})]
-    moved = _realize_rows(_order_subset(tables, orders["order_id"]), orders, observed_until)
+    subset = _order_subset(tables, orders["order_id"])
+    moved = _realize_rows(subset, orders, observed_until)
     derived = ledger.derive_cash_events(moved, terms)
+    # cash that a row kept at its time leads to after the hold (a dispute filed before
+    # it and notified during it, a recovery of an earlier write-off) waits for the
+    # release too: by the pause, as everything else that followed the hold
+    by_order = orders.set_index("order_id")
+    hold = derived["order_id"].map(by_order["hold_at"]).to_numpy(dtype="datetime64[s]")
+    pause = derived["order_id"].map(by_order["released_at"] - by_order["hold_at"]).to_numpy(
+        dtype="timedelta64[s]")
+    late = (derived["occurred_at"].to_numpy(dtype="datetime64[s]") > hold) & ~derived[
+        "ref_event_id"].isin(_shifted_ids(subset, moved)).to_numpy()
+    for column in _TIME_COLUMNS:
+        values = derived[column].to_numpy(dtype="datetime64[s]").copy()
+        values[late] = values[late] + pause[late]
+        derived[column] = values
     if observed_until is not None:  # cash a moved event leads to only once it is known
         derived = derived.loc[derived["known_at"] <= pd.Timestamp(observed_until)]
     ids = tables["cash_events"].set_index(["kind", "ref_event_id"])["event_id"]
