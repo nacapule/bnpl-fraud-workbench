@@ -135,3 +135,17 @@ def test_native_and_scientific_numbers_are_compared_by_value(claimed, actual) ->
 def test_a_huge_number_claim_is_a_wrong_value_not_a_match() -> None:
     assert check_claim(claim("context.accounts_on_device_30d", "1" + "0" * 400),
                        PACKET).status == "wrong_value"
+
+
+@pytest.mark.parametrize("claimed", ["1e-" + "9" * 400, "1e" + "9" * 400, "0." + "0" * 5000 + "1"])
+def test_extreme_exponents_and_precision_are_no_match_not_an_error(claimed) -> None:
+    assert not value_matches(claimed, 1)
+
+
+@pytest.mark.parametrize("field,derived", [
+    ("decision.checks[" + "9" * 5000 + "]", None),
+    ("result", {"operation": "sum", "inputs": ["decision.checks[" + "1" * 5000 + "]"]}),
+])
+def test_unresolvable_paths_are_claim_errors_not_exceptions(field, derived) -> None:
+    check = check_claim(claim(field, "1", derived), PACKET)
+    assert check.error and check.status in ("unknown_field", "derived_invalid", "unverifiable")

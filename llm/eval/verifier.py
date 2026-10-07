@@ -24,8 +24,9 @@ from typing import Any
 
 from llm.eval import tokens
 
-PATH_PART = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)((?:\[\d+\])*)")
-NUMBER = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?")
+PATH_PART = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)((?:\[\d{1,9}\])*)")
+NUMBER = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d{1,4})?")
+MAX_PLACES = 30  # finer than any float carries
 TRUE = {"1", "true", "yes"}
 FALSE = {"0", "false", "no"}
 MISSING = object()
@@ -58,7 +59,7 @@ def _number(text: str) -> tuple[float, int] | None:
     value = float(cleaned)
     if not math.isfinite(value):
         return None
-    return value, max(0, decimals - int(exponent or 0))
+    return value, min(MAX_PLACES, max(0, decimals - int(exponent or 0)))
 
 
 def _as_float(value: int | float) -> float | None:
@@ -136,7 +137,7 @@ def recompute(operation: str, values: Sequence[Any]) -> float | None:
 class ClaimCheck:
     field: str
     status: str  # verified, wrong_value, unknown_field, derived_ok, derived_wrong,
-    #              derived_invalid
+    #              derived_invalid, unverifiable
     expected: Any = None
 
     @property
@@ -145,6 +146,15 @@ class ClaimCheck:
 
 
 def check_claim(claim: Mapping[str, Any], packet: Mapping[str, Any]) -> ClaimCheck:
+    """One claim's check; a claim the verifier cannot evaluate is an error, never an
+    exception."""
+    try:
+        return _check_claim(claim, packet)
+    except (ArithmeticError, ValueError, TypeError, RecursionError):
+        return ClaimCheck(str(claim.get("field")), "unverifiable")
+
+
+def _check_claim(claim: Mapping[str, Any], packet: Mapping[str, Any]) -> ClaimCheck:
     derived = claim.get("derived")
     if derived:
         values = [resolve(packet, path) for path in derived["inputs"]]
