@@ -224,6 +224,14 @@ def fractional_cents_as_objects(t) -> None:
     cash.loc[0, "amount_cents"] = Decimal(int(cash.loc[0, "amount_cents"])) + Decimal("0.5")
 
 
+def fractional_cents_below_float_precision(t) -> None:
+    """A Decimal a float conversion would round to a whole number of cents."""
+    cash = t["cash_events"]
+    cash["amount_cents"] = cash["amount_cents"].astype(object)
+    whole = int(cash.loc[0, "amount_cents"])
+    cash.loc[0, "amount_cents"] = Decimal(whole) + Decimal("0.99999999999999")
+
+
 def fractional_id_as_text(t) -> None:
     orders = t["order_attempts"]
     orders["merchant_id"] = orders["merchant_id"].astype(str)
@@ -271,6 +279,7 @@ OTHER_RULES = [
     ("cash_mismatch", cash_extra),
     ("schema", fractional_cents),
     ("schema", fractional_cents_as_objects),
+    ("schema", fractional_cents_below_float_precision),
     ("schema", fractional_id_as_text),
     ("delivery_before_fulfilment", delivery_before_shipment),
     ("schedule_mismatch", schedule_does_not_sum),

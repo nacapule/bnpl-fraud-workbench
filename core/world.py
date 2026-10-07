@@ -42,6 +42,7 @@ import io
 import json
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -497,15 +498,29 @@ def coerce(name: str, frame: pd.DataFrame) -> pd.DataFrame:
             elif column.type == "str":
                 values = values.astype("str")
             else:
-                if column.type in INTEGER_TYPES and values.dtype.kind not in "iub":
-                    numeric = pd.to_numeric(values, errors="coerce")
-                    if (numeric.notna() & (numeric % 1 != 0)).any():
-                        raise ValueError("fractional values in an integer column")
+                if column.type in INTEGER_TYPES and _has_fraction(values):
+                    raise ValueError("fractional values in an integer column")
                 values = values.astype(column.dtype)
         except (ValueError, TypeError) as error:
             raise SchemaError(f"{name}.{column.name}: {error}") from error
         out[column.name] = values
     return out.reset_index(drop=True)
+
+
+def _has_fraction(values: pd.Series) -> bool:
+    """Whether any value has a fractional part, judged at its own precision."""
+    if values.dtype.kind in "iub":
+        return False
+    if values.dtype.kind == "f":
+        return bool((values.notna() & (values % 1 != 0)).any())
+    for value in values.dropna():
+        try:
+            number = value if isinstance(value, Decimal) else Decimal(str(value))
+        except InvalidOperation:
+            continue  # not a number: the cast reports it
+        if number.is_finite() and number != number.to_integral_value():
+            return True
+    return False
 
 
 def empty(name: str) -> pd.DataFrame:

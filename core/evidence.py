@@ -2,10 +2,10 @@
 
 One written standard drives both: the fraud policy (``policy/fraud-policy.md``,
 :data:`POLICY`). Classification reads the order's as-of context row at the
-evaluation time (core.asof: rule columns anchored at the order, earlier outcomes
-and shipment status as known at the evaluation time) plus the outcomes of at
-most two verification checks
-(core.actions.Check), each run at most once (§5.1). It never reads labels or
+evaluation time (core.asof: each column at its anchor, so what the policy measures
+before the order stays fixed while linkage, earlier outcomes and shipment status
+are as known at the evaluation time) plus the outcomes of at most two
+verification checks (core.actions.Check), each run at most once (§5.1). It never reads labels or
 latent tables. Latent truth may generate check outcomes, at stated per-pattern
 rates keyed to the order's stable id, but never chooses an action; sparse
 evidence stays sparse.
@@ -183,9 +183,11 @@ def classify(context_row: Mapping[str, Any], checks: Sequence[CheckResult]) -> E
 
     ``context_row`` is the order's as-of context row (core.asof KEY_COLUMNS plus
     COLUMN_NAMES) with ``decision_at`` the evaluation time (the review, or a check's
-    completion): attempt-derived columns anchored at the order, outcome-derived ones
-    under the policy being replayed and known by then, so an earlier outcome that
-    settles the order (§6.3) counts as soon as it is known. It is a pandas Series or
+    completion): order-anchored columns as at the order, decision-anchored ones
+    (linkage, the current email, outcome-derived columns under the policy being
+    replayed) as known by then, so accounts that join the device while the order
+    waits count for R02 and an earlier outcome that settles the order (§6.3) counts
+    as soon as it is known. It is a pandas Series or
     a mapping. ``checks`` are the results completed by then, at most one per check.
     Nothing else is read: no labels, latent tables or world.
     """

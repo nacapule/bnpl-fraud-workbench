@@ -9,13 +9,16 @@ Decision point. A context row describes one order attempt at one decision time
 ``decision_at``: checkout (the attempt's own ``known_at``) for routing, rules
 and ML; the review and each check's completion for the reviewer, packets and
 the referee, which re-evaluate the policy on the evidence known then (fraud
-policy §6.6). The policy states its rule windows relative to the order, so
-attempt-derived columns are anchored at the attempt whatever the decision time:
-they see the events ordered before the attempt in the world's total order
-``(known_at, kind rank, event_id)``, and "before the decision" in their windows
-means before the order. Outcome-derived columns see the events known before
-``decision_at`` under the policy: earlier outcomes that settle an order,
-repayment, disputes, shipment and cancellation status, blocks. Entities are
+policy §2.4, §6.6). Each column has an ``anchor``, following the policy's
+wording. ``order``-anchored columns describe the attempt as it was placed (the
+attempt's own attributes, velocity, tenure, link ages, credential changes and
+anything the policy measures "before the order"): they see the events ordered
+before the attempt in the world's total order ``(known_at, kind rank,
+event_id)``, whatever the decision time. ``decision``-anchored columns see the
+events known before ``decision_at``: linkage counted "before decision time"
+(§2.5, R02, R08), the current email (R06), and every outcome-derived column
+(earlier outcomes that settle an order, repayment, disputes, shipment and
+cancellation status, blocks). At checkout the two coincide. Entities are
 visible from their creation time. "Current" below means the attempt being
 decided; a column that includes it says so.
 
@@ -60,7 +63,7 @@ point-in-time kernels in ``model/features.py``
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 import pandas as pd
 
@@ -87,9 +90,10 @@ class AsofColumn:
     dtype: str
     definition: str
     eligibility: str  # which events count
-    window: str  # e.g. "24h before the decision", "ever", "at the decision"
+    window: str  # e.g. "24h before the order", "ever", "at the decision"
     includes_current: bool | None  # None where the question does not arise
     used_by: tuple[str, ...]  # rules, ml, reviewer, packets, referee, replay
+    anchor: str = "decision"  # ORDER or DECISION (module docstring)
 
 
 def _col(name: str, kind: str, dtype: str, definition: str, eligibility: str, window: str,
@@ -289,6 +293,22 @@ COLUMNS: tuple[AsofColumn, ...] = (
          "policy before the decision.", "policy blocks", "30 days before the decision", None,
          "replay", "reviewer"),
 )
+ORDER, DECISION = "order", "decision"
+_DECISION_ANCHORED_ATTEMPT_COLUMNS = frozenset({
+    "email_domain_class", "email_root_other_accounts",  # the current email (R06)
+    "accounts_on_device_30d", "accounts_on_address_30d", "accounts_on_address_ever",  # §2.5
+})
+
+
+def _anchored(column: AsofColumn) -> AsofColumn:
+    if column.kind == OUTCOME or column.name in _DECISION_ANCHORED_ATTEMPT_COLUMNS:
+        return column
+    return replace(column, anchor=ORDER,
+                   definition=column.definition.replace("the decision", "the order"),
+                   window=column.window.replace("the decision", "the order"))
+
+
+COLUMNS = tuple(_anchored(column) for column in COLUMNS)
 COLUMN_NAMES = tuple(column.name for column in COLUMNS)
 ATTEMPT_COLUMNS = tuple(c.name for c in COLUMNS if c.kind == ATTEMPT)
 OUTCOME_COLUMNS = tuple(c.name for c in COLUMNS if c.kind == OUTCOME)
@@ -312,15 +332,18 @@ def email_history(accounts: pd.DataFrame, account_events: pd.DataFrame) -> pd.Da
 
     The signup email is held from the account's ``created_at``, each
     ``email_change``'s new address from its ``known_at``; a holding ends when the
-    next change is known (``until`` is NaT for the current address). Changing back
-    to an earlier address starts a new interval.
+    next change is known (``until`` is NaT for the current address); changes known
+    at the same time follow their event ids. Changing back to an earlier address
+    starts a new interval.
     """
     changes = account_events.loc[account_events["kind"] == "email_change",
-                                 ["user_id", "email", "known_at"]]
+                                 ["user_id", "email", "known_at", "event_id"]]
+    signups = accounts[["user_id", "email", "created_at"]].assign(event_id=-1)
+    # the world's event order: by known_at, then event id; the signup comes first
     history = pd.concat([
-        accounts[["user_id", "email", "created_at"]].rename(columns={"created_at": "since"}),
+        signups.rename(columns={"created_at": "since"}),
         changes.rename(columns={"known_at": "since"}),
-    ], ignore_index=True).sort_values(["user_id", "since"], kind="stable")
+    ], ignore_index=True).sort_values(["user_id", "since", "event_id"], kind="stable")
     history["until"] = history.groupby("user_id")["since"].shift(-1)
     history["email_root"] = [normalize_email(email) for email in history["email"]]
     return history[["user_id", "email_root", "since", "until"]].reset_index(drop=True)

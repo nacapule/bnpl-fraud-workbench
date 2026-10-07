@@ -62,13 +62,13 @@ def test_example_conditions_rest_on_asof_columns() -> None:
 
 
 def test_a_settlement_known_at_review_decides_the_waiting_order() -> None:
-    """Rule columns stay anchored at the order; the settlement is outcome-derived, so a
-    re-evaluation at review sees it, and row (a) overrides the pending check."""
+    """R03 rests on the attempt (order-anchored); the settlement is decision-anchored, so
+    a re-evaluation at review sees it, and row (a) overrides the pending check."""
     ev, result = evidence.EXAMPLE_SETTLED_EVIDENCE, evidence.EXAMPLE_SETTLED_ACTIONS
+    anchor = {column.name: column.anchor for column in asof.COLUMNS}
     assert ev.conditions == evidence.EXAMPLE_EVIDENCE.conditions
-    for column in ev.conditions[0].columns:
-        assert column not in asof.OUTCOME_COLUMNS
-    assert set(ev.settlements[0].columns) <= set(asof.OUTCOME_COLUMNS)
+    assert {anchor[c] for c in ev.conditions[0].columns} == {asof.ORDER}
+    assert {anchor[c] for c in ev.settlements[0].columns} == {asof.DECISION}
     assert result.row == "§6.6(a)" and result.standard == {"decline"}
     assert {"clear", "hold", "needs_check"} <= result.prohibited
     assert not result.required_checks

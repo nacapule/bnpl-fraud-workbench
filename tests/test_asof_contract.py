@@ -29,6 +29,23 @@ def test_repayment_dispute_and_block_history_is_outcome_derived() -> None:
         assert name in asof.OUTCOME_COLUMNS
 
 
+def test_columns_are_anchored_as_the_policy_words_them() -> None:
+    """Order-relative rule windows stay at the order; linkage counted before decision
+    time, the current email and outcomes move with the decision (policy §2.4, §2.5)."""
+    anchor = {column.name: column.anchor for column in asof.COLUMNS}
+    for name in ("hours_since_password_change", "device_link_age_hours", "attempts_user_24h",
+                 "attempts_device_24h", "processor_declines_card_24h",
+                 "geo_kmh_from_previous_attempt", "is_first_attempt_user", "account_age_days",
+                 "ship_to_home", "home_address_age_days", "amount_over_category_p95"):
+        assert anchor[name] == asof.ORDER, name
+    for name in ("accounts_on_device_30d", "accounts_on_address_30d",
+                 "email_root_other_accounts", "email_domain_class", *asof.OUTCOME_COLUMNS):
+        assert anchor[name] == asof.DECISION, name
+    for column in asof.COLUMNS:
+        if column.anchor == asof.ORDER:
+            assert "the decision" not in column.window + column.definition, column.name
+
+
 def test_context_never_reads_labels_or_latent_truth() -> None:
     from core.world import LATENT_TABLES
 
@@ -63,7 +80,8 @@ def test_email_history_holds_one_address_at_a_time() -> None:
     events = pd.DataFrame({
         "user_id": [2, 2, 1, 1], "kind": ["email_change", "login", "email_change", "email_change"],
         "email": ["annb+x@googlemail.com", None, "ann@proton.me", "a.n.n.b@gmail.com"],
-        "known_at": pd.to_datetime(["2025-02-01", "2025-02-02", "2025-03-01", "2025-04-01"])})
+        "known_at": pd.to_datetime(["2025-02-01", "2025-02-02", "2025-03-01", "2025-04-01"]),
+        "event_id": [1, 2, 3, 4]})
     T = pd.Timestamp
     assert asof.email_history(accounts, events).values.tolist() == [
         [1, "annb@gmail.com", T("2025-01-01"), T("2025-03-01")],
@@ -72,6 +90,21 @@ def test_email_history_holds_one_address_at_a_time() -> None:
         [2, "cy@outlook.com", T("2025-01-02"), T("2025-02-01")],
         [2, "annb@gmail.com", T("2025-02-01"), pd.NaT],
     ]
+
+
+def test_email_changes_at_one_time_follow_event_ids_not_row_order() -> None:
+    accounts = pd.DataFrame({"user_id": [1], "email": ["a@outlook.com"],
+                             "created_at": pd.to_datetime(["2025-01-01"])})
+    at = pd.Timestamp("2025-02-01")
+    events = pd.DataFrame({"user_id": [1, 1], "kind": ["email_change"] * 2,
+                           "email": ["private@outlook.com", "shared@gmail.com"],
+                           "known_at": [at, at], "event_id": [12, 11]})
+    expected = [[1, "a@outlook.com", pd.Timestamp("2025-01-01"), at],
+                [1, "shared@gmail.com", at, at],  # held for no time at all
+                [1, "private@outlook.com", at, pd.NaT]]
+    for order in ([0, 1], [1, 0]):
+        shuffled = events.iloc[order].reset_index(drop=True)
+        assert asof.email_history(accounts, shuffled).values.tolist() == expected
 
 
 def test_policy_state_records_pending_holds() -> None:
