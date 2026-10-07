@@ -117,7 +117,9 @@ def literal_text(template: str, allowed_phrases: Iterable[str] = ()) -> str:
     """The template's own words: placeholders, code, comments, links and identifiers blanked."""
     text = template
     text = _blank_fences(COMMENT.sub(_blank, text))
-    for pattern in (PLACEHOLDER, INLINE_CODE, LINK_TARGET, FOOTNOTE_MARKER):
+    # A placeholder keeps its closing brace, so a sentence after it still starts one.
+    text = PLACEHOLDER.sub(lambda match: _blank(match)[:-1] + "}", text)
+    for pattern in (INLINE_CODE, LINK_TARGET, FOOTNOTE_MARKER):
         text = pattern.sub(_blank, text)
     text = REFERENCE_TARGET.sub(lambda m: m.group(1) + " " * len(m.group(2)), text)
     text = LIST_MARKER.sub(lambda m: m.group(1) + " " * (len(m.group(0)) - len(m.group(1))), text)
@@ -172,19 +174,20 @@ def _strip_quotes(line: str, most: int) -> tuple[int, str]:
 
 
 def _blank_fences(text: str) -> str:
-    """Fenced code blanked wherever it sits (in lists and quotes too), for the lints.
+    """Fenced and indented code blanked wherever it sits, for the lints.
 
-    An open fence's lines are read as its content first, inside exactly the
-    quote marks it opened in; it ends at its closer (indented at most three
-    columns past the content column of the list item it is in) or where its
-    container ends (fewer quote marks, or a line indented less than that column).
-    An opener indented four columns or more past its container is indented code,
-    not a fence.
+    Each line's container marks (block quotes and list items, in any order) are
+    read first. An open fence's lines are its content, inside exactly the quote
+    marks it opened in; it ends at its closer (indented at most three columns
+    past its container's content) or where its container ends (fewer quote marks,
+    or a line indented less than the list item's content). An opener indented
+    four columns or more past its container, and the lines after a blank line
+    indented that far, are indented code.
     """
     out: list[str] = []
     fence: tuple[str, int, int] | None = None  # marker, quote depth, content column
     lists: list[int] = []  # content columns of the open list items
-    blank = True
+    blank, code = True, False
     for line in text.split("\n"):
         if fence is not None:
             marker, depth, column = fence
@@ -202,18 +205,38 @@ def _blank_fences(text: str) -> str:
             out.append(line)
             continue
         indent = _indent(rest)
-        if blank or LIST_ITEM.match(rest):  # a new block belongs to the items it is under
+        item = LIST_ITEM.match(rest)
+        if blank or item:  # a new block belongs to the items it is indented under
             while lists and lists[-1] > indent:
                 lists.pop()
-        content, offset = rest, 0
-        while item := LIST_ITEM.match(content):  # every list mark on the line: "- - text"
-            offset += len(item.group(0).replace("\t", "    "))
-            lists.append(offset)
-            content = content[item.end():]
+        base = lists[-1] if lists else 0
+        if not item and indent >= base + 4 and (blank or code):
+            blank, code = False, True  # indented code
+            out.append(" " * len(line))
+            continue
+        code = False
+        content, offset, quoted = rest, 0, False
+        while True:  # every container mark on the line: "- - text", "- > text"
+            if item := LIST_ITEM.match(content):
+                offset += len(item.group(0).replace("\t", "    "))
+                lists.append(offset)
+                content = content[item.end():]
+            elif offset and (marker := QUOTE.match(content)):
+                depth, quoted, offset = depth + 1, True, 0
+                content = content[marker.end():]
+            else:
+                break
         blank = False
-        base = lists[-1] if lists and (offset or indent >= lists[-1]) else 0
+        if quoted:
+            base = 0  # columns now count from the quote's content
+        elif lists and (offset or indent >= lists[-1]):
+            base = lists[-1]
+        else:
+            base = 0
         opened = _fence(content.strip())
-        if opened and (offset or indent - base <= 3):
+        # A fence opens at most three columns into its container's content.
+        prefixed = bool(offset or quoted)
+        if opened and (_indent(content) if prefixed else indent - base) <= 3:
             fence = (opened, depth, base)
             out.append(" " * len(line))
         else:

@@ -299,7 +299,9 @@ def test_inline_code_with_three_backticks_does_not_open_a_fence() -> None:
     "- Example:\n\n  ```text\n  code 12\n    ```\n\nLoss was 84% of GMV.\n",  # in an item
     "> ```markdown\n> > ```\n> example 12\n> ```\n>\n> Loss was 84% of GMV.\n",  # a > in code
     "- - ```text\n    code 12\n    ```\n\n    Loss was 84% of GMV.\n",  # two list marks
-    "    ```text\n    example\n    ```\n\nLoss was 84% of GMV.\n",  # indented code, no fence
+    "    ```text\n    example 12\n    ```\n\nLoss was 84% of GMV.\n",  # indented code, no fence
+    "- > ```text\n  > example 12\n  > ```\n  >\n  > Loss was 84% of GMV.\n",  # a quote in an item
+    "- Item.\n\n        code 12\n\nLoss was 84% of GMV.\n",  # indented code in an item
 ])
 def test_a_fence_ends_with_its_closer_or_its_container(template: str) -> None:
     """Fence content is read as content first; a fence never outlives its container."""
@@ -339,6 +341,7 @@ def test_comparisons_typed_into_a_template_are_flagged() -> None:
     # an allowed sentence exempts itself whole, and nothing longer
     for text, lines in [
         ("Intro. A lower threshold holds more orders for review. Next.\n", []),
+        ("Result: {{ claim:hybrid-net }} A lower threshold holds more orders for review.\n", []),
         ("A lower threshold holds more orders for review than the incumbent rules.\n", [1, 1]),
         ("So A lower threshold holds more orders for review.\n", [1, 1]),
     ]:
