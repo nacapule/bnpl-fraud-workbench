@@ -20,12 +20,117 @@ before them, in the fixed order `(known_at, event kind, event id)`. Event and
 entity ids are assigned after sorting by time, so they carry no information
 about how an event was generated.
 
-### Population and behaviour
+### How a world is generated
 
-*To be written with the generator: the parameter table with the reason for
-each value, fixed before any model is fitted (legitimate new customers,
-households, movers, device changes, travel, hardship, home geography, time of
-day, fraud patterns and episodes, family shifts).*
+`python -m simulator.generate --seed S --family F` builds one world. Customers,
+fraudsters and merchants act through one set of primitives
+(`simulator/builder.py`): open an account, link a device or an address, add a
+card, log in or change a credential, place an order, pay or miss an
+installment, have a payment reversed, ship, deliver, dispute, report a
+takeover. Each primitive checks the account's state at that moment (the
+account exists, the device and address are linked to it, the card is on it,
+the merchant is trading), so every event is generated from what existed when
+it happened; the contract validator then checks the assembled world again.
+Fraud patterns are parameter sets over the same primitives
+(`simulator/fraud.py`), not separate generators appended to a benign world.
+
+The world holds every attempted order with the outcomes it would have if the
+platform approved everything. Only processor declines happen inside it;
+policies act later, in the replay. Outcomes come from behaviour: a cardholder
+disputes a charge, a takeover victim reports orders, a customer in hardship
+stops paying. The generator never sets a label. The adjudicated label is
+computed afterwards from the observable outcomes (below), so a fraud order can
+end up unlabelled (a never-pay customer whose single default looks like credit
+loss) and a legitimate order can end up labelled (a customer who disputes their
+own order as unauthorized and wins).
+
+Construction details carry no information about the pattern. Every actor takes
+the hour of each action from one time-of-day profile (an evening peak). An IP
+address is drawn from blocks that depend only on its country, and a customer's
+home country decides the country of their home and mobile IPs; only trips
+abroad (or a fraudster's own location) produce another country. Entity and
+event ids are assigned after the whole world is sorted by time, with exact ties
+broken by random draws, so an id says when something happened and nothing else.
+
+Randomness comes from independent streams, one per component and actor
+(`numpy.random.SeedSequence(seed, spawn_key=(component, index))`). A world is
+therefore byte-identical when regenerated, and adding or removing one actor
+never changes another's draws.
+
+### Customers and their behaviour
+
+Volumes are for one world at scale 1; `--scale` shrinks a world for tests and
+CI. Every value is in `config/world.yaml`.
+
+| Parameter | Value | Why |
+| --- | --- | --- |
+| Order attempts | about 160,000 over 20 months | The protocol's support check needs at least 30 test-window orders of every checkout pattern on every development seed with fraud held near 1%; 120,000 left some patterns under 40 per window, so the volume was raised rather than the fraud share. |
+| Households | 255 per 1,000 orders, 45% opened between July 2021 and the start of the horizon | An established book with steady growth; the repeat-order rate is calibrated from the target volume less the 1% fraud share. |
+| Household size | 1 (86%), 2 (10%), 3 (4%) accounts | Households share a home address, so rules counting accounts per address meet them. |
+| Shared tablet | 30% of multi-account households | Households also share devices (R02's benign case). |
+| First order of a new account | 65% within minutes of signup, 25% within days (mean 10), 10% never | Most pay-in-4 accounts are opened at a merchant's checkout, so legitimate new accounts order immediately, exactly as new fraud accounts do. |
+| Large first order | 15% of new customers, 1.8 to 3 times the category median | Legitimate front-loaded first orders exist (R04's benign case). |
+| Repeat orders | Poisson, gamma-distributed rates (shape 0.8), holiday peak 1.6 times, weekends 1.15 times | Most customers order rarely and a few often. |
+| Customer lifetime | exponential, mean 900 days; 10% of older accounts dormant | Accounts stop shopping; dormant accounts exist. |
+| New phone | 0.35 a year; the old phone stays linked up to 3 days | Phones are replaced about every three years. |
+| Password reset after a new phone | 35% of new phones, within a day | A new phone often means a forgotten password (R01's benign case). |
+| Laptop added | 30% of accounts, once | A second device. |
+| Cards | added 0.12 and replaced 0.20 a year; 3% issued abroad | Cards expire and are added; a few customers hold foreign cards. |
+| Credential and contact changes | password 0.04, email 0.01, phone 0.05 a year | Rare but present. |
+| Moves | 0.07 a year per household; the old home link ends | Movers ship to a new address. |
+| Trips abroad | 0.40 a year, 4 to 16 days; 35% to the neighbouring country (US and Canada) | Travellers order from a foreign IP (R03 and R11's benign cases). |
+| Gifts | 5% of orders, half to another customer's home | Shipping away from home is ordinary. |
+| Mobile data | 35% of actions | Mobile IPs vary but stay in the home country. |
+| Logins | 35% of orders preceded by a login within 10 minutes (every actor), plus 4 a year | Account activity around orders. |
+| Promotions | FIRST10 on 30% of first orders; seasonal codes on 12% of orders while they run | Platform-funded promotions are common. |
+| AVS and CVV failures | 4.0% and 2.0% of legitimate orders | Stated in the fraud policy (FP-2 §6.5(a)). |
+| Processor declines | 1.2% of legitimate attempts, half retried minutes later | Insufficient funds and card errors. |
+| Late payers | 15% of customers; their installments fail first 30% of the time (others 3%), retried after 3 and 7 days | Late but recovered payments. |
+| Defaults | 3.5% of a new customer's first plan, 1.2% of other plans, 4 times for 5% fragile customers; 70% (first plans) and 35% (others) zero-effort | Credit loss, including new customers who never pay; most first-plan defaults look exactly like never-pay. |
+| After a default | 70% stop ordering | Defaulters rarely keep shopping. |
+| Reversals | 0.3% of collected installments bounce 2 to 5 days later; 75% are repaid 2 days later | Bank returns. |
+| Fulfilment | merchant median hours lognormal around 12 h (sigma 0.5, 2 to 72 h); each order lognormal around its merchant's median (sigma 0.6) | Goods ship within hours, which the replay's race between review and shipment depends on. |
+| Delivery | lognormal, median 2.5 days | |
+| Lost parcels | 0.5% of shipments never delivered, 70% claimed (upheld) | Genuine item-not-received claims. |
+| Unconfirmed deliveries | 1.5% delivered without a carrier confirmation, no claim | Not every carrier confirms. |
+| Other disputes | delivered-but-claimed 0.2% (80% rejected), not as described 0.4% (half upheld), customer disputing their own order as unauthorized 0.05% (half upheld) | Disputes on legitimate orders, some of which become fraud labels. |
+| Disputes' timing | notified 1 to 4 days after filing, resolved 20 to 60 days later | |
+
+### Fraud patterns
+
+Each pattern's episodes start evenly over the order horizon: the horizon is cut
+into as many equal slices as there are episodes, and each episode starts on a
+random day within its slice at a profile hour. Every evaluation window
+therefore receives fresh episodes of every pattern, and episodes are many and
+small rather than a few large ones. Episode counts are per 100,000 target
+orders.
+
+| Pattern | Episodes | What the actors do | Typical outcome |
+| --- | --- | --- | --- |
+| Account takeover (`P-ATO`) | 100 | A fraudster logs into an established customer's account (75% at least 90 days old, always with an earlier order) from a new device and an IP in the victim's country (60%) or abroad, usually resets or changes the password or the email (75%), enters a drop address at checkout (80%) and places 1 to 3 orders, mostly at resale merchants, with the stored card (a stolen card 15% of the time). | The owner reports the orders (65%), disputes them with the card issuer (20%) or never notices and pays (15%). |
+| Stolen card (`P-STOLEN`) | 95 | A new account with a stolen card, often from abroad; 35% first test 3 to 6 stolen cards in minutes (processor declines); 1 to 3 orders. A quarter are sleeper accounts opened 60 to 300 days earlier, kept warm with logins and sometimes a small repaid order, then used with a newly added stolen card. | The cardholder disputes (75%, lost 90% of the time); installments fail. |
+| Synthetic ring (`P-SYNTH`) | 18 | 3 to 5 synthetic identities (born 1986 to 2002, thin files) opened over weeks; 45% share 1 or 2 devices, 30% share drop addresses and 25% share neither; 40% use spellings of one email address. Each repays one small warm-up order, then all place 1 or 2 large orders at resale merchants within 72 hours and never pay. | Never-pay through the shared device, address or email, or unlabelled credit loss when nothing links them. |
+| Never-pay (`P-NEVERPAY`) | 75 | First-party: single orders (45%), bursts of 2 to 4 plans within 6 days (30%) and linked groups of 2 to 4 accounts sharing a device, an address or an email (25%). Nothing is paid after checkout. | Bursts and groups meet the never-pay marker; single orders read as credit loss. |
+| Promotion farm (`P-PROMO`) | 40 | 3 to 6 new accounts over 3 weeks, each using FIRST10 once; 50% share devices, 25% email spellings, 25% only an address. 70% repay. | Promotion abuse when linked by device or email; address-only farms stay unlabelled, like households. |
+| Item-not-received abuse (`P-INR-ABUSE`) | 16 | An account opened weeks earlier orders 3 to 6 times, pays, and claims 1 to 3 delivered orders never arrived; 85% of claims are rejected. | Abuse once two rejected claims on delivered orders are known. |
+| Merchant bust-out (`P-MERCH`) | 5 | A resale merchant onboards, ramps up sales for 40 to 75 days with new customers acquired at its checkout (0.2 a day rising to 0.8) and rising tickets (to 1.8 times), stops delivering 8 to 14 days before it disappears, and still reports shipments. Its customers claim non-delivery after the closure (75%). | Bust-out on the undelivered orders, with the claims dated after the closure; the merchants' ids are in the manifest for evaluation only. |
+
+The generator reports how each pattern's orders end up labelled
+(`simulator.support.labelled_share`). Patterns a checkout decision can act on
+are listed in `config/world.yaml` (`support.checkout_patterns`); item-not-received
+abuse shows only when claims arrive, and merchant bust-out is the merchant's
+fraud, so neither is a checkout target.
+
+### Families
+
+The three families share every event known before the test window
+(2025-06-01) for a seed: families add actors from their own random streams and
+never change the base world's. The acquisition surge adds new households from
+the test window at the base arrival rate again (twice the inflow), and these
+campaign customers use FIRST10 on 80% of first orders. The fraud-mix shift adds
+as many account takeovers again from the test window and activates 25 aged
+sleeper accounts with stolen cards; those accounts are opened before the test
+window in every family and stay dormant in the other two.
 
 ### Truth and labels
 
