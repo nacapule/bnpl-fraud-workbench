@@ -1,9 +1,17 @@
--- Q10 — Impossible geo-velocity: consecutive events from countries farther
--- apart than travel allows, using approximate country centroids (embedded CTE).
--- Read: implied_kmh > 900 means two actors (or proxying) — one of them is not
--- the customer. Travelers move at airplane speed BETWEEN sessions, not within
--- an hour; the mimic check is whether a plausible flight window separates the
--- sightings (FP-1 §6.1).
+-- Q10 — Impossible geo-velocity: consecutive order attempts on one account from
+-- countries farther apart than anyone can travel in between.
+-- Cutoff: @as_of (see Q01); unset means the end of observation.
+-- A row pairs an order attempt with the account's previous attempt, in the
+-- world's event order, when the IP countries differ, the earlier one is under 12
+-- hours before, and the implied speed between the countries' centroids exceeds
+-- 900 km/h (FP-2 R11). Centroids are approximate and embedded below; they are
+-- the rule engine's list, and every IP country in the world must have one.
+-- Gaps under 72 seconds count as 72 seconds.
+-- Read: one of the two attempts is probably not the customer, or the customer
+-- is behind a proxy. A traveller moves between sessions at airline speed, not
+-- within the hour; the check settles it (FP-2 §6.5(b)).
+SET @as_of = CAST(COALESCE(@as_of, '2025-12-29 23:59:59') AS DATETIME);
+
 WITH centroids AS (
   SELECT 'US' AS cc, 39.8 AS lat, -98.6 AS lon UNION ALL
   SELECT 'CA', 56.1, -106.3 UNION ALL SELECT 'GB', 54.0, -2.9 UNION ALL
@@ -14,32 +22,32 @@ WITH centroids AS (
   SELECT 'CN', 36.5, 103.8 UNION ALL SELECT 'RU', 61.5, 105.3 UNION ALL
   SELECT 'ID', -2.2, 117.3
 ),
-sightings AS (
-  SELECT user_id, ts, ip_country AS cc FROM orders
-),
 pairs AS (
-  SELECT s.user_id, s.ts, s.cc,
-         LAG(s.ts) OVER (PARTITION BY s.user_id ORDER BY s.ts) AS prev_ts,
-         LAG(s.cc) OVER (PARTITION BY s.user_id ORDER BY s.ts) AS prev_cc
-  FROM sightings s
+  SELECT user_id, order_id, known_at, ip_country,
+         LAG(order_id) OVER by_account AS previous_order_id,
+         LAG(known_at) OVER by_account AS previous_at,
+         LAG(ip_country) OVER by_account AS previous_country
+  FROM order_attempts
+  WHERE known_at <= @as_of
+  WINDOW by_account AS (PARTITION BY user_id ORDER BY known_at, event_id)
+),
+distances AS (
+  SELECT p.*, TIMESTAMPDIFF(SECOND, p.previous_at, p.known_at) AS gap_seconds,
+         6371 * 2 * ASIN(SQRT(
+           POW(SIN(RADIANS(c2.lat - c1.lat) / 2), 2) +
+           COS(RADIANS(c1.lat)) * COS(RADIANS(c2.lat)) *
+           POW(SIN(RADIANS(c2.lon - c1.lon) / 2), 2))) AS km
+  FROM pairs p
+  JOIN centroids c1 ON c1.cc = p.previous_country
+  JOIN centroids c2 ON c2.cc = p.ip_country
+  WHERE p.ip_country <> p.previous_country
+    AND TIMESTAMPDIFF(SECOND, p.previous_at, p.known_at) < 12 * 3600
 )
-SELECT p.user_id, p.prev_ts, p.prev_cc, p.ts, p.cc,
-       ROUND(TIMESTAMPDIFF(MINUTE, p.prev_ts, p.ts) / 60.0, 2) AS gap_hours,
-       ROUND(6371 * 2 * ASIN(SQRT(
-         POW(SIN(RADIANS(c2.lat - c1.lat) / 2), 2) +
-         COS(RADIANS(c1.lat)) * COS(RADIANS(c2.lat)) *
-         POW(SIN(RADIANS(c2.lon - c1.lon) / 2), 2))), 0) AS km,
-       ROUND(6371 * 2 * ASIN(SQRT(
-         POW(SIN(RADIANS(c2.lat - c1.lat) / 2), 2) +
-         COS(RADIANS(c1.lat)) * COS(RADIANS(c2.lat)) *
-         POW(SIN(RADIANS(c2.lon - c1.lon) / 2), 2)))
-         / GREATEST(TIMESTAMPDIFF(MINUTE, p.prev_ts, p.ts) / 60.0, 0.02), 0) AS implied_kmh
-FROM pairs p
-JOIN centroids c1 ON c1.cc = p.prev_cc
-JOIN centroids c2 ON c2.cc = p.cc
-WHERE p.prev_cc IS NOT NULL
-  AND p.cc <> p.prev_cc
-  AND TIMESTAMPDIFF(MINUTE, p.prev_ts, p.ts) < 720
-HAVING implied_kmh > 900
-ORDER BY implied_kmh DESC
+SELECT user_id, previous_order_id, previous_at, previous_country,
+       order_id, known_at AS attempted_at, ip_country,
+       ROUND(gap_seconds / 3600, 2) AS gap_hours, ROUND(km, 0) AS km,
+       ROUND(km / GREATEST(gap_seconds / 3600, 0.02), 0) AS implied_kmh
+FROM distances
+WHERE km / GREATEST(gap_seconds / 3600, 0.02) > 900
+ORDER BY implied_kmh DESC, order_id
 LIMIT 200;
