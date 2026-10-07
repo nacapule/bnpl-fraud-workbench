@@ -535,6 +535,41 @@ def test_a_vanishing_merchant_delivers_to_no_buyer() -> None:
     assert max(shipments.shipped[1:]) < 910 * DAY
 
 
+def test_a_closing_merchant_ships_everything_before_it_closes() -> None:
+    class Shipments:
+        merchants = {1: {"median": 300.0, "bustout_from": 901 * DAY, "closed": 909 * DAY}}
+
+        def __init__(self) -> None:
+            self.shipped: list[int] = []
+            self.delivered: list[int] = []
+
+        def ship(self, a, o, t): self.shipped.append(t)
+        def deliver(self, a, o, t): self.delivered.append(t)
+
+    shipments = Shipments()
+    out = Outcomes(shipments, _clock(), OutcomeParams.from_config(config.load("world")))
+    out.scale_lag(0, 2.0)
+    placed = (900.5, 908.99, 909 - 100 / DAY)  # before the bust-out, then minutes to go
+    for k, day in enumerate(placed):
+        order = Order.__new__(Order)
+        order.merchant, order.t = 1, int(day * DAY)
+        out.fulfil(Actor.of(5, 96, k), order)
+    assert all(order_t <= t < 909 * DAY
+               for order_t, t in zip((int(d * DAY) for d in placed), shipments.shipped,
+                                     strict=True))
+    assert len(shipments.delivered) == 1  # ordered before the bust-out: delivered
+
+
+def test_no_shipment_after_its_merchant_closed(worlds) -> None:
+    for family, tables in worlds.items():
+        closing = tables["merchants"].dropna(subset=["closed_at"])[["merchant_id",
+                                                                     "closed_at"]]
+        shipped = tables["fulfilments"].merge(
+            tables["order_attempts"][["order_id", "merchant_id"]], on="order_id").merge(
+            closing, on="merchant_id")
+        assert len(shipped) > 0 and (shipped["occurred_at"] < shipped["closed_at"]).all(), family
+
+
 def test_collections_on_a_victims_card_succeed_until_the_owner_notices(fraud_heavy) -> None:
     """A takeover victim pays the plans on their card until they first report or
     dispute any of the takeover's orders."""

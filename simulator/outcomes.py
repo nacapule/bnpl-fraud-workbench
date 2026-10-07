@@ -74,12 +74,14 @@ class Outcomes:
 
     def fulfil(self, a: Actor, o: Order, *, deliver: bool = True) -> None:
         """The merchant reports shipment; the carrier confirms delivery unless ``deliver``
-        is false. A merchant busting out reports shipments before it disappears and
-        delivers nothing, whoever the buyer is."""
+        is false. A merchant that disappears reports every shipment before it goes
+        (by an hour when it can), and one busting out delivers nothing, whoever the
+        buyer is."""
         shipped = self.ship_time(a, o)
+        closed = self.b.merchants[o.merchant]["closed"]
+        if closed is not None:
+            shipped = min(max(o.t + 600, min(shipped, closed - HOUR)), closed - 1)
         if self.vanishing(o):
-            closed = self.b.merchants[o.merchant]["closed"]
-            shipped = max(o.t + 600, min(shipped, closed - HOUR))
             deliver = False
         self.b.ship(a, o, shipped)
         if deliver:

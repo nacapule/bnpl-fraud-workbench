@@ -153,8 +153,8 @@ multiply each order's drawn time to shipment by 0.5 or 2 for orders placed from
 the test window on (before the 15-minute floor), with the same random draws as
 the baseline. Everything anchored on the shipment or the delivery moves with it
 (delivery, settlement and promotion funding, claims filed after delivery, a
-vanishing merchant's last shipments before it closes, and the labels that
-follow). What is anchored on the checkout stays as in the baseline: the
+closing merchant's shipments, which are all reported before it closes, and the
+labels that follow). What is anchored on the checkout stays as in the baseline: the
 installment schedule and collections, card blocks, takeover reports and
 unauthorized disputes, claims for parcels that never arrive (10 to 25 days after
 the order) and bust-out claims (after the closure).
