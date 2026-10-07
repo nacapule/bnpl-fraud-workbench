@@ -34,12 +34,21 @@ comparatives:
   good: [better, beats, beat, outperforms, outperformed, improves, improved, best]
   bad: [worse, worst]
 
-# Words that negate or except a sentence's comparison: such a claim is tested as
-# no_detected_difference or equivalent, never as a direction.
-negations: [not, no, never, neither, nor, without, none, cannot, "can't", "didn't",
-            "doesn't", "don't", "isn't", "wasn't", "aren't", "weren't", "hasn't", "haven't",
-            "hadn't", "won't", "wouldn't", fail, fails, failed, except, excluding, unless,
-            barely, hardly, rarely, scarcely]
+# Negation is read only directly before the comparative word ("no more than",
+# "not higher than"); such a claim is tested as no_detected_difference or
+# equivalent. Quoted: YAML reads a bare no as false.
+negations: ["not", "no", "never"]
+
+# Words a claim's sentence may not hold, because they change what its
+# comparison says in ways the checks cannot follow: negation away from the
+# comparative word, exceptions, hedges and magnitudes (state a magnitude with a
+# rendered number instead).
+refused_words: ["without", "except", "excluding", "unless", "unlike", "whereas", "neither",
+                "nor", "none", "cannot", "can't", "didn't", "doesn't", "don't", "isn't",
+                "wasn't", "aren't", "weren't", "hasn't", "haven't", "hadn't", "won't",
+                "wouldn't", "fail", "fails", "failed", "barely", "hardly", "scarcely",
+                "rarely", "nearly", "almost", "slightly", "marginally", "somewhat", "far",
+                "much", "substantially", "considerably", "dramatically", "vastly", "greatly"]
 
 # Comparative sentences that state no result (exact sentence text).
 allowed_sentences: []

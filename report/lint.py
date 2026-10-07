@@ -63,7 +63,6 @@ IDENTIFIERS = (
     rf"(?>\bQ\d{{2}}){END}",  # SQL investigation queries
     rf"(?>\bCASE-\d{{2}}){END}",  # case files
 )
-FENCE = re.compile(r"^(```|~~~).*?^\1[^\n]*$", re.MULTILINE | re.DOTALL)
 INLINE_CODE = re.compile(r"`[^`\n]*`")
 COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
 LINK_TARGET = re.compile(r"\]\([^)]*\)")
@@ -74,7 +73,10 @@ LIST_MARKER = re.compile(r"^(\s*)\d+[.)](?=\s)", re.MULTILINE)
 NUMBER = re.compile(r"\d[\d,.]*")
 LIST_ITEM = re.compile(r"^(\s*)(?:[-*+]|\d+[.)])(\s+)")
 QUOTE = re.compile(r"^ {0,3}> ?")
-FENCE_OPEN = re.compile(r"^(`{3,}|~{3,})")
+# A fence opens with three or more backticks (whose info string holds no
+# backtick: ```make final``` is inline code) or three or more tildes.
+FENCE_OPEN = re.compile(r"^(?:(`{3,})(?![^\n]*`)|(~{3,}))")
+TABLE_DELIMITER = re.compile(r"^\|?\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)*\|?$")
 BREAK = re.compile(r"^ {0,3}(?:=+|-{2,}|\*{3,}|_{3,})\s*$")  # heading underline or rule
 INLINE = (  # Markdown that is not visible text, and what is shown instead
     (re.compile(r"!\[([^\]]*)\]\([^)]*\)"), r"\1"),  # image: its alt text
@@ -106,9 +108,17 @@ class Finding:
 SIGNS = ("up", "down", "good", "bad")
 
 
+def _words(value: Any, where: str) -> list[str]:
+    """A list of strings, refusing what YAML turned into something else (no: False)."""
+    items = list(value or [])
+    if bad := [item for item in items if not isinstance(item, str)]:
+        raise ValueError(f"{where}: {bad} are not text; quote them in report/lint.yaml")
+    return items
+
+
 def load_config(path: Path = CONFIG) -> dict[str, Any]:
     data = yaml.safe_load(path.read_text()) or {}
-    comparatives = {str(sign): [str(word) for word in words]
+    comparatives = {str(sign): _words(words, f"comparatives.{sign}")
                     for sign, words in (data.get("comparatives") or {}).items()}
     if unknown := sorted(set(comparatives) - set(SIGNS)):
         raise ValueError(f"comparatives: unknown groups {unknown}; use {SIGNS}")
@@ -119,12 +129,14 @@ def load_config(path: Path = CONFIG) -> dict[str, Any]:
         "directional": list(data.get("directional", [])),
         "comparatives": comparatives,
         "directional_words": [word for words in comparatives.values() for word in words],
-        "negations": [str(word) for word in data.get("negations", [])],
+        "negations": _words(data.get("negations"), "negations"),
+        "refused_words": _words(data.get("refused_words"), "refused_words"),
         "polarity": {str(key): str(value) for key, value in (data.get("polarity") or {}).items()},
         "defaults": {str(key): str(value) for key, value in (data.get("defaults") or {}).items()},
         "allowed_sentences": list(data.get("allowed_sentences", [])),
         "names": {
-            str(group): {str(name): list(phrases) for name, phrases in (entries or {}).items()}
+            str(group): {str(name): _words(phrases, f"names.{group}.{name}")
+                         for name, phrases in (entries or {}).items()}
             for group, entries in (data.get("names") or {}).items()
         },
         "references": list(data.get("references", [])),
@@ -139,7 +151,8 @@ def _blank(match: re.Match[str]) -> str:
 def literal_text(template: str, allowed_phrases: Iterable[str] = ()) -> str:
     """The template's own words: placeholders, code, comments, links and identifiers blanked."""
     text = template
-    for pattern in (FENCE, COMMENT, PLACEHOLDER, INLINE_CODE, LINK_TARGET, FOOTNOTE_MARKER):
+    text = _blank_fences(COMMENT.sub(_blank, text))
+    for pattern in (PLACEHOLDER, INLINE_CODE, LINK_TARGET, FOOTNOTE_MARKER):
         text = pattern.sub(_blank, text)
     text = REFERENCE_TARGET.sub(lambda m: m.group(1) + " " * len(m.group(2)), text)
     text = LIST_MARKER.sub(lambda m: m.group(1) + " " * (len(m.group(0)) - len(m.group(1))), text)
@@ -164,33 +177,76 @@ def _indent(line: str) -> int:
     return len(expanded) - len(expanded.lstrip(" "))
 
 
+def _unquote(line: str) -> tuple[int, str, int]:
+    """A line without its block-quote marks: (depth, the rest, indent of the first mark)."""
+    depth, quote_indent = 0, 0
+    while marker := QUOTE.match(line):
+        if depth == 0:
+            quote_indent = _indent(marker.group(0))
+        line = line[marker.end():]
+        depth += 1
+    return depth, line, quote_indent
+
+
+def _fence(content: str) -> str | None:
+    match = FENCE_OPEN.match(content)
+    return None if match is None else match.group(1) or match.group(2)
+
+
+def _closes(fence: str, stripped: str) -> bool:
+    return stripped.startswith(fence) and set(stripped) == {fence[0]}
+
+
+def _blank_fences(text: str) -> str:
+    """Fenced code blanked wherever it sits (in lists and quotes too), for the number lint."""
+    out, fence = [], None
+    for line in text.split("\n"):
+        _, rest, _ = _unquote(line)
+        item = LIST_ITEM.match(rest)
+        content = (rest[item.end():] if item else rest).strip()
+        if fence is not None:
+            if _closes(fence, content):
+                fence = None
+            out.append(" " * len(line))
+        elif opened := _fence(content):
+            fence = opened
+            out.append(" " * len(line))
+        else:
+            out.append(line)
+    return "\n".join(out)
+
+
 def _scan(text: str) -> tuple[list[tuple[int, str]], list[tuple[int, str]]]:
     """Rendered Markdown's prose lines as (block-quote depth, text), and the lines
     holding constructs this reader does not follow, with the reason.
 
     Comments, fenced code, indented code (four columns past the enclosing list
-    item's content, or right after a heading), table rows, rules and heading
+    item's content, or right after a heading), tables (a header row, a delimiter
+    row and the rows up to a blank line or another block), rules and heading
     underlines become empty lines, so line numbers hold. Block-quote marks are
     removed, and a quoted paragraph continued without its mark keeps its depth.
     """
-    text = COMMENT.sub(_blank, text)
+    lines = COMMENT.sub(_blank, text).split("\n")
     out: list[tuple[int, str]] = []
     unsupported: list[tuple[int, str]] = []
     # Per block-quote depth: after a blank line or a block's end; inside indented
-    # code; the open fence; the content columns of the open list items.
+    # code; the open fence and how far its closer may be indented; inside a
+    # table; the content columns of the open list items.
     state: dict[int, dict[str, Any]] = {}
     previous_depth, previous_prose = 0, False
-    for number, line in enumerate(text.split("\n"), start=1):
-        depth, quote_indent = 0, 0
-        while marker := QUOTE.match(line):
-            if depth == 0:
-                quote_indent = _indent(marker.group(0))
-            line = line[marker.end():]
-            depth += 1
+    for number, raw in enumerate(lines, start=1):
+        top = state.get(0)
+        if top and top["fence"]:  # a top-level fence holds everything up to its closer
+            fence, limit = top["fence"]
+            if _indent(raw) <= limit and _closes(fence, raw.strip()):
+                top.update(fence=None, blank=True)
+            out.append((0, ""))
+            continue
+        depth, line, quote_indent = _unquote(raw)
         stripped = line.strip()
         if (depth < previous_depth and previous_prose and stripped
-                and not BLOCK_START.match(line) and not FENCE_OPEN.match(stripped)
-                and not BREAK.match(line) and not stripped.startswith("|")):
+                and not BLOCK_START.match(line) and not _fence(stripped)
+                and not BREAK.match(line)):
             out.append((previous_depth, line))  # a lazy continuation of the quote
             continue
         if depth and quote_indent and state.get(0, {}).get("lists"):
@@ -198,18 +254,23 @@ def _scan(text: str) -> tuple[list[tuple[int, str]], list[tuple[int, str]]]:
         for deeper in [key for key in state if key > depth]:
             del state[deeper]
         context = state.setdefault(
-            depth, {"blank": True, "code": False, "fence": None, "lists": []})
+            depth, {"blank": True, "code": False, "fence": None, "table": False, "lists": []})
         previous_depth, previous_prose = depth, False
         if context["fence"]:
-            fence = context["fence"]
-            if stripped.startswith(fence) and set(stripped) == {fence[0]}:
+            fence, limit = context["fence"]
+            if _indent(line) <= limit and _closes(fence, stripped):
                 context.update(fence=None, blank=True)
             out.append((depth, ""))
             continue
         if not stripped:
-            context["blank"] = True
+            context.update(blank=True, table=False)
             out.append((depth, ""))
             continue
+        if context["table"]:
+            if not (BLOCK_START.match(line) or _fence(stripped) or BREAK.match(line)):
+                out.append((depth, ""))  # a table row
+                continue
+            context["table"] = False
         indent = _indent(line)
         item = LIST_ITEM.match(line)
         lists = context["lists"]
@@ -225,15 +286,24 @@ def _scan(text: str) -> tuple[list[tuple[int, str]], list[tuple[int, str]]]:
             continue
         context["code"] = False
         content = line[item.end():].strip() if item else stripped
-        if fence := FENCE_OPEN.match(content):
+        if fence := _fence(content):
             if item or lists or depth or indent:
                 unsupported.append((number, "fenced code inside a list or block quote"))
-            context.update(fence=fence.group(1), blank=False)
+            column = len(item.group(0).replace("\t", "    ")) if item else (
+                lists[-1] if lists else 0)
+            context.update(fence=(fence, column + 3), blank=False)
             out.append((depth, ""))
             continue
         if content.startswith(">"):
             unsupported.append((number, "a block quote inside a list item"))
-        if BREAK.match(line) or stripped.startswith("|"):
+        if "|" in content and number < len(lines):
+            next_depth, next_line, _ = _unquote(lines[number])
+            if next_depth == depth and "|" in next_line and \
+                    TABLE_DELIMITER.match(next_line.strip()):
+                context.update(table=True, blank=False)
+                out.append((depth, ""))  # the header row
+                continue
+        if BREAK.match(line):
             context["blank"] = True
             out.append((depth, ""))
             continue

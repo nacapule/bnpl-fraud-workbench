@@ -24,14 +24,22 @@ phrases documents use):
   positive difference and ``down`` words (fewer, lower) a negative one;
   ``good`` and ``bad`` words (better, beats, worse) follow the metric's
   ``polarity``;
-* a negated sentence ("did not earn more", "no higher than") is tested as
-  ``no_detected_difference`` or ``equivalent``, and only a negated one is.
+* a sentence negated directly before its comparative word ("no higher than",
+  "not more than") is tested as ``no_detected_difference`` or ``equivalent``,
+  and only such a sentence is. Negation elsewhere ("did not earn more"),
+  exceptions, hedges and magnitudes (``refused_words``: "without", "barely",
+  "far") are refused; a magnitude is stated with a rendered number;
+* both sides compare like with like: a metric, family or capacity level named
+  on one side of the comparative word holds for both, and naming different
+  ones on the two sides ("hybrid at high staffing ... incumbent rules at low
+  staffing") is refused.
 
 A check's key names what it tests: for ``sign`` and ``interval``, one policy, one
 ``vs_<reference>`` segment, one metric, and at most one family and one capacity
-level; for ``mcnemar``, the first key holds the cases only the compared policy got
-right and the second those only the reference got right, each naming its own
-policy, the same metric and the same family and capacity level. The tests:
+level; for ``mcnemar``, two keys of one paired comparison, the same but for one
+segment: ``only_policy`` in the first (the cases where the metric's event
+happened for the policy and not the reference) and ``only_reference`` in the
+second. The tests:
 
 ``sign``
     a paired difference over seeds (a metric whose key has a ``vs_<reference>``
@@ -127,6 +135,7 @@ class Vocabulary:
     references: frozenset[str]
     comparatives: Mapping[str, str]  # word -> up, down, good or bad
     negations: tuple[str, ...]
+    refused: tuple[str, ...]
     polarity: Mapping[str, int]  # metric -> +1 when higher is better, -1 when lower is
     defaults: Mapping[str, str]  # families / capacities -> the name meant when none is named
 
@@ -138,6 +147,8 @@ class Vocabulary:
             if group not in GROUPS:
                 raise ValueError(f"names: unknown group {group}; use {GROUPS}")
             for name, phrases in (entries or {}).items():
+                if not all(isinstance(phrase, str) for phrase in phrases):
+                    raise ValueError(f"names: {name}: every phrase must be text")
                 if any(name in known for known in groups.values()):
                     raise ValueError(f"names: {name} is listed twice")
                 groups[group][name] = tuple(phrases)
@@ -164,7 +175,8 @@ class Vocabulary:
             if group not in ("families", "capacities") or name not in groups[group]:
                 raise ValueError(f"defaults: {group}: {name} is not one of the {group}")
         return cls(groups=groups, references=references, comparatives=comparatives,
-                   negations=tuple(config.get("negations") or ()), polarity=polarity,
+                   negations=tuple(config.get("negations") or ()),
+                   refused=tuple(config.get("refused_words") or ()), polarity=polarity,
                    defaults=defaults)
 
     @property
@@ -313,27 +325,29 @@ def _one(names: list[str], what: str, key: str, optional: bool = False) -> str |
     return names[0] if names else None
 
 
+MCNEMAR_SEGMENTS = ("only_policy", "only_reference")
+
+
 def tested(check: Check, vocabulary: Vocabulary) -> Tested:
     """The comparison a check's key tests, read through the vocabulary's names."""
     def within(group: str, names: list[str]) -> list[str]:
         return [name for name in names if name in vocabulary.groups[group]]
 
-    keys = (check.key,) if check.key else check.keys
-    shared = []
-    for key in keys:
-        plain, _ = _segments(key)
-        shared.append(tuple(_one(within(group, plain), group, key, optional=group != "metrics")
-                            for group in ("metrics", "families", "capacities")))
-    if len(set(shared)) > 1:
-        raise ValueError(f"its keys {list(keys)} differ in metric, family or capacity")
-    metric_name, family, capacity = shared[0]
+    key = check.key
     if check.test == "mcnemar":
-        policy = _one(within("policies", _segments(keys[0])[0]), "policies", keys[0])
-        reference = _one(within("policies", _segments(keys[1])[0]), "policies", keys[1])
-    else:
-        plain, versus = _segments(check.key)
-        policy = _one(within("policies", plain), "policies", check.key)
-        reference = _one(within("policies", versus), "vs_<reference> policies", check.key)
+        first, second = (part.split(".") for part in check.keys)
+        differing = [(a, b) for a, b in zip(first, second, strict=False) if a != b]
+        if len(first) != len(second) or differing != [MCNEMAR_SEGMENTS]:
+            raise ValueError(f"its keys {list(check.keys)} must be one paired comparison, the "
+                             "same but for only_policy in the first and only_reference in "
+                             "the second")
+        key = check.keys[0]
+    plain, versus = _segments(key)
+    metric_name, family, capacity = (
+        _one(within(group, plain), group, key, optional=group != "metrics")
+        for group in ("metrics", "families", "capacities"))
+    policy = _one(within("policies", plain), "policies", key)
+    reference = _one(within("policies", versus), "vs_<reference> policies", key)
     return Tested(policy, reference, metric_name, family, capacity)
 
 
@@ -353,20 +367,40 @@ def claim_problems(claim: Claim, vocabulary: Vocabulary) -> list[str]:
     (start, end), word = words[0]
     named: dict[str, set[str]] = {"before": set(), "after": set(), "metrics": set(),
                                   "families": set(), "capacities": set()}
-    for (_, last), name in mentions(vocabulary.names, sentence, vocabulary.comparatives):
+    sides: dict[str, dict[str, set[str]]] = {group: {"before": set(), "after": set()}
+                                             for group in ("metrics", "families", "capacities")}
+    for (first, last), name in mentions(vocabulary.names, sentence, vocabulary.comparatives):
         group = vocabulary.group_of(name)
+        side = "before" if last <= start else "after" if first >= end else None
         if group == "policies":
-            named["before" if last <= start else "after"].add(name)
+            named[side or "after"].add(name)
         else:
             named[group].add(name)
+            if side:
+                sides[group][side].add(name)
     problems = []
+    for group, seen in sides.items():
+        if seen["before"] and seen["after"] and seen["before"] != seen["after"]:
+            problems.append(f"its sentence names {_phrase_list(seen['before'])} before {word!r} "
+                            f"and {_phrase_list(seen['after'])} after it ({group}); compare "
+                            "like with like, or write two sentences")
+    if refused := [sentence[a:b] for a, b in phrase_spans(vocabulary.refused, sentence)]:
+        problems.append(f"its sentence has {', '.join(repr(w) for w in refused)}, which change "
+                        "what the comparison says; rewrite without them (a magnitude as a "
+                        "rendered number)")
+    negations = phrase_spans(vocabulary.negations, sentence)
+    adjacent = [(a, b) for a, b in negations if b <= start and not sentence[b:start].strip()]
+    stray = [sentence[a:b] for a, b in negations if (a, b) not in adjacent]
+    if stray:
+        problems.append(f"its sentence has {', '.join(repr(w) for w in stray)} away from "
+                        f"{word!r}; negation is read only directly before it ('no {word} than')")
     if not named["before"]:
         problems.append(f"its sentence names no policy before {word!r}")
     if not named["after"]:
         problems.append(f"its sentence names no policy after {word!r} to compare against")
     if not named["metrics"]:
         problems.append("its sentence names no metric")
-    negated = bool(phrase_spans(vocabulary.negations, sentence))
+    negated = bool(adjacent)
     sign = vocabulary.comparatives[word]
     found: list[Tested] = []
     for index, check in enumerate(claim.checks, start=1):
