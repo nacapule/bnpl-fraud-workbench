@@ -29,12 +29,18 @@ A benchmark lives in ``llm/eval/benchmarks/<id>/`` and is fixed before any call:
     error messages and full event logs go to ``--log-dir`` too, outside the repository.
 
 ``ledger.json`` beside the benchmarks keeps every arm's spend across benchmarks and
-invocations. Each call is bounded before it is made: its input by the bytes of its
-prompts plus ``input_overhead_tokens`` (a token covers at least one byte), its output by
-``max_output_tokens``, which the backend enforces (a token cap is refused for a backend
-that cannot). That bound is reserved in the ledger, on disk, before the call and must fit
-under the arm's configured caps; afterwards the reservation becomes the reported usage,
-or stays charged in full when the usage is unknown or the run was interrupted.
+invocations; one live run per arm at a time holds it (a lock), and every change is made
+under a file lock on the current state. Each call is bounded before it is made
+(:func:`call_bound`): every request the CLI may send for it (the first, up to three
+continuations after hitting the output limit and one nudge after a reply without text)
+has at most its prompts' bytes plus ``input_overhead_tokens`` plus the earlier requests'
+output as input (a token covers at least one byte) and ``max_output_tokens`` as output,
+which the backend enforces (a token cap is refused for a backend that cannot). Requests
+the CLI retries after an API error are taken to carry no billed tokens. The bound is
+reserved in the ledger before the call and must fit under the arm's caps; afterwards the
+reservation becomes the reported usage, or stays charged in full when the usage is
+unknown or the run was interrupted; a call whose reported usage exceeds its bound stops
+the run.
 
 Scoring replays the cache only, after checking that the policy, prompt, packets, the
 referee's views and the scoring code still have their recorded hashes (a scoring change
@@ -50,6 +56,8 @@ counted failure; nothing is retried for format. Usage::
 from __future__ import annotations
 
 import argparse
+import contextlib
+import fcntl
 import hashlib
 import json
 import math
@@ -57,7 +65,7 @@ import os
 import re
 import sys
 from collections import Counter, defaultdict
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -122,10 +130,14 @@ def load_benchmark(directory: Path) -> dict[str, Any]:
 
 
 def _write_json(path: Path, value: Any) -> None:
-    """Write ``value`` whole or not at all."""
+    """Write ``value`` whole or not at all, as ASCII JSON (any string survives)."""
     partial = path.with_name(path.name + ".partial")
-    partial.write_text(json.dumps(value, indent=1, sort_keys=True, ensure_ascii=False) + "\n")
+    partial.write_text(json.dumps(value, indent=1, sort_keys=True) + "\n")
     os.replace(partial, path)
+
+
+def _write_log(path: Path, text: str) -> None:
+    path.write_text(text, encoding="utf-8", errors="backslashreplace")
 
 
 # ------------------------------------------------------------------ fixed inputs
@@ -283,79 +295,117 @@ def pin_arm(directory: Path, arm: Arm, fingerprint: Mapping[str, str]) -> dict[s
 
 
 class Ledger:
-    """An arm's spend across every benchmark and invocation. A call's bound is reserved
-    on disk before it is made and settled after it, so an interrupted call stays
-    charged in full."""
+    """An arm's spend across every benchmark and invocation.
+
+    Opening it takes the arm's run lock, so one live run per arm holds it at a time;
+    reservations still pending then were left by a run that ended without settling them
+    and are charged in full. Every change reloads the file under a file lock, so runs
+    of different arms never overwrite each other. A call's bound is reserved before it is
+    made and settled after it."""
 
     def __init__(self, path: Path, arm: str, *, calls: int | None, tokens: int | None):
         self.path, self.arm = path, arm
         self.caps = {"calls": calls, "tokens": tokens}
-        self.data = json.loads(path.read_text()) if path.exists() else {"arms": {}}
-        self.entry = self.data["arms"].setdefault(arm, {
-            "calls": 0, "charged_tokens": 0, "input_tokens": 0, "output_tokens": 0,
-            "unknown_usage_calls": 0, "interrupted_calls": 0, "by_benchmark": {},
-            "pending": {}})
-        pending = self.entry.setdefault("pending", {})
-        for key in sorted(pending):  # reserved by a run that never settled them
-            benchmark, amount = pending[key]["benchmark"], pending[key]["tokens"]
-            self.entry["interrupted_calls"] = self.entry.get("interrupted_calls", 0) + 1
-            self._charge(benchmark, amount, None, None)
-            del pending[key]
-        _write_json(self.path, self.data)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self._run_lock = (path.parent / f".{path.name}.{arm}.lock").open("a")
+        try:
+            fcntl.flock(self._run_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            self._run_lock.close()
+            raise BudgetError(f"another live run of arm {arm} holds the ledger") from None
+        with self._update() as entry:
+            for key in sorted(entry["pending"]):
+                reservation = entry["pending"].pop(key)
+                entry["interrupted_calls"] += 1
+                self._charge(entry, reservation["benchmark"], reservation["tokens"], None, None)
+
+    def close(self) -> None:
+        if not self._run_lock.closed:
+            fcntl.flock(self._run_lock, fcntl.LOCK_UN)
+            self._run_lock.close()
+
+    def __enter__(self) -> Ledger:
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        self.close()
+
+    @contextlib.contextmanager
+    def _update(self) -> Iterator[dict[str, Any]]:
+        """This arm's entry in the current file, written back after the change."""
+        with (self.path.parent / f".{self.path.name}.lock").open("a") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            data = json.loads(self.path.read_text()) if self.path.exists() else {"arms": {}}
+            entry = data["arms"].setdefault(self.arm, {})
+            for key, empty in (("calls", 0), ("charged_tokens", 0), ("input_tokens", 0),
+                               ("output_tokens", 0), ("unknown_usage_calls", 0),
+                               ("interrupted_calls", 0), ("by_benchmark", {}), ("pending", {})):
+                entry.setdefault(key, empty)
+            yield entry
+            _write_json(self.path, data)
 
     def refusal(self, bound: int) -> str | None:
         """Why a call with this token bound would break a cap, or None."""
-        if self.caps["calls"] is not None and self.entry["calls"] + 1 > self.caps["calls"]:
-            return f"arm {self.arm} has used {self.entry['calls']} of {self.caps['calls']} calls"
-        if (self.caps["tokens"] is not None
-                and self.entry["charged_tokens"] + bound > self.caps["tokens"]):
-            return (f"arm {self.arm} has charged {self.entry['charged_tokens']} of "
-                    f"{self.caps['tokens']} tokens; the next call may use up to {bound}")
+        with self._update() as entry:
+            pending = sum(item["tokens"] for item in entry["pending"].values())
+            calls_cap, tokens_cap = self.caps["calls"], self.caps["tokens"]
+            if calls_cap is not None and entry["calls"] + len(entry["pending"]) + 1 > calls_cap:
+                return f"arm {self.arm} has used {entry['calls']} of {calls_cap} calls"
+            if tokens_cap is not None and entry["charged_tokens"] + pending + bound > tokens_cap:
+                return (f"arm {self.arm} has charged {entry['charged_tokens']} of "
+                        f"{tokens_cap} tokens; the next call may use up to {bound}")
         return None
 
     def reserve(self, benchmark: str, bound: int) -> str:
         """Record, before a call, that it may use up to ``bound`` tokens."""
-        key = f"{benchmark}:{os.getpid()}:{len(self.entry['pending'])}:{os.urandom(4).hex()}"
-        self.entry["pending"][key] = {"benchmark": benchmark, "tokens": int(bound)}
-        _write_json(self.path, self.data)
+        key = f"{benchmark}:{os.getpid()}:{os.urandom(6).hex()}"
+        with self._update() as entry:
+            entry["pending"][key] = {"benchmark": benchmark, "tokens": int(bound)}
         return key
 
     def release(self, key: str) -> None:
         """A reservation for a call that never reached the model."""
-        del self.entry["pending"][key]
-        _write_json(self.path, self.data)
+        with self._update() as entry:
+            del entry["pending"][key]
 
     def settle(self, key: str, input_tokens: int | None, output_tokens: int | None) -> int:
         """Replace a reservation by the call's reported usage, or charge it in full when
         the usage is unknown. Returns the charge."""
-        reservation = self.entry["pending"].pop(key)
-        charged = self._charge(reservation["benchmark"], reservation["tokens"], input_tokens,
-                               output_tokens)
-        _write_json(self.path, self.data)
+        with self._update() as entry:
+            reservation = entry["pending"].pop(key)
+            charged = self._charge(entry, reservation["benchmark"], reservation["tokens"],
+                                   input_tokens, output_tokens)
         return charged
 
-    def _charge(self, benchmark: str, bound: int, input_tokens: int | None,
+    @staticmethod
+    def _charge(entry: dict[str, Any], benchmark: str, bound: int, input_tokens: int | None,
                 output_tokens: int | None) -> int:
         unknown = input_tokens is None or output_tokens is None
         known = (input_tokens or 0) + (output_tokens or 0)
         charged = max(known, bound) if unknown else known
-        self.entry["calls"] += 1
-        self.entry["charged_tokens"] += charged
-        self.entry["input_tokens"] += input_tokens or 0
-        self.entry["output_tokens"] += output_tokens or 0
-        self.entry["unknown_usage_calls"] += int(unknown)
-        spent = self.entry["by_benchmark"].setdefault(benchmark, {"calls": 0,
-                                                                  "charged_tokens": 0})
+        entry["calls"] += 1
+        entry["charged_tokens"] += charged
+        entry["input_tokens"] += input_tokens or 0
+        entry["output_tokens"] += output_tokens or 0
+        entry["unknown_usage_calls"] += int(unknown)
+        spent = entry["by_benchmark"].setdefault(benchmark, {"calls": 0, "charged_tokens": 0})
         spent["calls"] += 1
         spent["charged_tokens"] += charged
         return charged
 
 
+# Requests one CLI call may send: the first, three continuations after the output limit
+# and one nudge after a reply without text.
+REQUESTS_PER_CALL = 5
+
+
 def call_bound(system_prompt: str, user_prompt: str) -> int:
-    """The most tokens one call can use: its prompts' bytes plus the CLI's own input
-    and the output limit."""
-    return (len(system_prompt.encode()) + len(user_prompt.encode())
-            + int(SIZES["input_overhead_tokens"]) + int(SIZES["max_output_tokens"]))
+    """The most tokens one call can use: request k (from 0) has at most the prompts'
+    bytes, the CLI's own input and k earlier outputs as input, and one output."""
+    prompt = (len(system_prompt.encode()) + len(user_prompt.encode())
+              + int(SIZES["input_overhead_tokens"]))
+    output = int(SIZES["max_output_tokens"])
+    return sum(prompt + k * output + output for k in range(REQUESTS_PER_CALL))
 
 
 # --------------------------------------------------------------------- live runs
@@ -430,8 +480,17 @@ def run_live(directory: Path, arm_name: str, *, log_dir: Path, private_terms: Se
     if private_terms_in(fingerprint, terms):
         raise ValueError("the CLI's version or isolation names a private term")
     pin = pin_arm(directory, arm, fingerprint)
-    ledger = Ledger(ledger_path or LEDGER, arm.name, calls=caps.get("calls"),
-                    tokens=caps.get("tokens"))
+    with Ledger(ledger_path or LEDGER, arm.name, calls=caps.get("calls"),
+                tokens=caps.get("tokens")) as ledger:
+        return _calls(directory, definition, arm, pin, ledger, backend, terms, system_prompt,
+                      log_dir=log_dir, max_calls=max_calls, max_tokens=max_tokens,
+                      max_output=max_output)
+
+
+def _calls(directory: Path, definition: Mapping[str, Any], arm: Arm, pin: Mapping[str, str],
+           ledger: Ledger, backend: Any, terms: Sequence[str], system_prompt: str, *,
+           log_dir: Path, max_calls: int, max_tokens: int | None, max_output: int | None
+           ) -> dict[str, Any]:
     cache = directory / "cache"
     cache.mkdir(exist_ok=True)
     logs = log_dir / definition["id"] / arm.name
@@ -461,6 +520,8 @@ def run_live(directory: Path, arm_name: str, *, log_dir: Path, private_terms: Se
         stem = f"{case_id}-{probe}"
         errors: list[str] = []
         response = None
+        usage = {"calls": 0, "input_tokens": 0, "output_tokens": 0, "charged_tokens": 0,
+                 "unknown_usage_calls": 0}
         attempts = 0
         for _attempt in range(2):
             if reason := refusal(bound):
@@ -476,34 +537,43 @@ def run_live(directory: Path, arm_name: str, *, log_dir: Path, private_terms: Se
             except client.BackendError as error:
                 errors.append(str(error))
                 if error.called:
+                    charged = ledger.settle(reservation, None, None)
                     used["calls"] += 1
-                    used["tokens"] += ledger.settle(reservation, None, None)
+                    used["tokens"] += charged
+                    usage["calls"] += 1
+                    usage["charged_tokens"] += charged
+                    usage["unknown_usage_calls"] += 1
                 else:
                     ledger.release(reservation)
                 response = None
                 continue
+            summary = response.summary
+            charged = ledger.settle(reservation, summary.input_tokens, summary.output_tokens)
             used["calls"] += 1
-            charged = ledger.settle(reservation, response.summary.input_tokens,
-                                    response.summary.output_tokens)
             used["tokens"] += charged
-            (logs / f"{stem}.attempt{attempts}.events.jsonl").write_text(
-                "".join(json.dumps(event) + "\n" for event in response.events))
+            usage["calls"] += 1
+            usage["charged_tokens"] += charged
+            usage["input_tokens"] += summary.input_tokens or 0
+            usage["output_tokens"] += summary.output_tokens or 0
+            usage["unknown_usage_calls"] += int(summary.input_tokens is None
+                                                or summary.output_tokens is None)
+            _write_log(logs / f"{stem}.attempt{attempts}.events.jsonl",
+                       "".join(json.dumps(event) + "\n" for event in response.events))
             if charged > bound:
                 raise BudgetError(f"a call used {charged} tokens, more than its bound {bound}")
-            if (response.summary.cli_version != pin["cli_version"]
-                    or response.summary.isolation != pin["isolation"]):
+            if summary.cli_version != pin["cli_version"] or summary.isolation != pin["isolation"]:
                 raise FrozenError(f"the CLI or its isolation changed during the run "
-                                  f"({response.summary.cli_version})")
-            if response.summary.n_error_events and not _contaminated(response.summary):
+                                  f"({summary.cli_version})")
+            if summary.n_error_events and not _contaminated(summary):
                 errors.append("error events in the log")
-                (logs / f"{stem}.attempt{attempts}.text.txt").write_text(response.text)
+                _write_log(logs / f"{stem}.attempt{attempts}.text.txt", response.text)
                 response = None
                 continue
             break
         if errors:
-            (logs / f"{stem}.errors.txt").write_text("\n".join(errors) + "\n")
+            _write_log(logs / f"{stem}.errors.txt", "\n".join(errors) + "\n")
         record: dict[str, Any] = {"identity": identity, "attempts": attempts,
-                                  "failed_attempts": len(errors)}
+                                  "failed_attempts": len(errors), "usage": usage}
         if response is None:
             used["transport_failures"] += 1
             failures_in_a_row += 1
@@ -525,8 +595,8 @@ def run_live(directory: Path, arm_name: str, *, log_dir: Path, private_terms: Se
                 _write_json(quarantine / f"{definition['id']}-{arm.name}-{stem}.json",
                             {**record, "quarantined": reasons})
                 record = {"identity": identity, "attempts": attempts,
-                          "failed_attempts": len(errors), "outcome": "protocol_failure",
-                          "quarantined": reasons}
+                          "failed_attempts": len(errors), "usage": usage,
+                          "outcome": "protocol_failure", "quarantined": reasons}
         if private_terms_in(record, terms):  # only the identity can remain; it was checked
             raise ValueError(f"the record for {stem} names a private term")
         _write_json(path, record)
@@ -575,6 +645,8 @@ def cached_records(directory: Path, definition: Mapping[str, Any], arm: Arm
                                   f"fit arm {arm.name}")
         elif record.get("outcome") not in ("transport_failure", "protocol_failure"):
             raise FrozenError(f"cache record {path.name} has no known outcome")
+        if not isinstance(record.get("usage"), Mapping):
+            raise FrozenError(f"cache record {path.name} has no usage")
         records[(case_id, probe)] = record
     if missing:
         raise CoverageError(f"arm {arm.name} lacks {len(missing)} of {len(calls)} calls: "
@@ -755,12 +827,9 @@ def evaluate(directory: Path, *, amend: str | None = None) -> dict[str, Any]:
                 raise FrozenError(f"the referee's view of {case_id}/{probe} differs from "
                                   "the one fixed with the benchmark")
             rows[(case_id, probe)] = score_record(record, shown, view)
-        summaries = [record.get("summary") or {} for record in records.values()]
-        spend = {
-            "calls": sum(record["attempts"] for record in records.values()),
-            "input_tokens": sum(s.get("input_tokens") or 0 for s in summaries),
-            "output_tokens": sum(s.get("output_tokens") or 0 for s in summaries),
-        }
+        spend = {key: sum(int(record["usage"][key]) for record in records.values())
+                 for key in ("calls", "input_tokens", "output_tokens", "charged_tokens",
+                             "unknown_usage_calls")}
         results["arms"][arm.name] = {
             "arm": arm.__dict__, "spend": spend,
             "summary": summarize_arm(definition, rows),

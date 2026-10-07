@@ -25,6 +25,7 @@ SIZES = {"development_cases": 3, "final_cases": 3, "min_final_seeds": 1,
          "max_cases_per_cluster": 2, "probe_cases": 1, "probe_kinds": ["shuffled", "renamed"],
          "max_output_tokens": 500, "input_overhead_tokens": 0}
 BOUND = 1000  # every stand-in call's token bound
+CALL_BOUND = harness.call_bound
 
 
 @pytest.fixture(autouse=True)
@@ -168,7 +169,8 @@ def test_end_to_end_scores_and_failures(bench: Path, tmp_path: Path) -> None:
     assert b["acceptable"]["numerator"] == 0
     assert results["arms"]["a"]["latent_diagnostic"]["fraud_cleared"]["numerator"] == 0
     assert results["arms"]["a"]["spend"] == {"calls": 5, "input_tokens": 500,
-                                             "output_tokens": 250}
+                                             "output_tokens": 250, "charged_tokens": 750,
+                                             "unknown_usage_calls": 0}
     paired = results["statistics"]["paired"]["a vs b"]
     assert (paired["only_first"], paired["only_second"]) == (3, 0)
     assert paired["clusters_favouring_first"] == 3 and paired["cluster_sign_test_p"] == 0.25
@@ -309,6 +311,42 @@ def test_an_interrupted_call_stays_charged_in_full(bench: Path, tmp_path: Path,
     assert ledger["calls"] == 2 + 1 + 3 and ledger["charged_tokens"] == 5 * 150 + BOUND
 
 
+def test_a_call_is_bounded_over_every_request_the_cli_may_send() -> None:
+    # 3 prompt bytes; output 500 per request; request k carries k earlier outputs
+    assert CALL_BOUND("ab", "c") == sum(3 + k * 500 + 500 for k in range(5)) == 7515
+
+
+def test_one_live_run_per_arm_and_no_lost_updates_between_arms(tmp_path: Path) -> None:
+    path = tmp_path / "ledger.json"
+    with harness.Ledger(path, "a", calls=1, tokens=None) as first:
+        with pytest.raises(harness.BudgetError):
+            harness.Ledger(path, "a", calls=1, tokens=None)
+        with harness.Ledger(path, "b", calls=None, tokens=None) as other:
+            key_a = first.reserve("x", 100)
+            key_b = other.reserve("x", 100)
+            assert first.refusal(100)  # the pending call counts against the cap of one
+            first.settle(key_a, 10, 5)
+            other.settle(key_b, 20, 5)
+    arms = json.loads(path.read_text())["arms"]
+    assert (arms["a"]["calls"], arms["a"]["charged_tokens"]) == (1, 15)
+    assert (arms["b"]["calls"], arms["b"]["charged_tokens"]) == (1, 25)
+    with harness.Ledger(path, "a", calls=1, tokens=None):  # the lock was released
+        pass
+
+
+def test_an_escaped_surrogate_is_a_format_failure_and_results_are_written(
+        bench: Path, tmp_path: Path, monkeypatch) -> None:
+    broken = good_memo({"context": {"unauthorized_disputes_lost_user": 0,
+                                    "bin_ip_country_mismatch": 0}, "order": {"device": "D1"}})
+    broken = broken.replace("context.bin_ip_country_mismatch", "context.\\ud800")
+    run(bench, "a", tmp_path, backend=StandIn("a", answers={(0, 0): (broken, {})}))
+    run(bench, "b", tmp_path)
+    outcomes = harness.evaluate(bench)["arms"]["a"]["summary"]["outcomes"]
+    assert outcomes.get("format_failure", 0) >= 1
+    monkeypatch.setattr(harness, "BENCHMARKS", bench.parent)
+    assert harness.main(["--benchmark", bench.name]) == 0
+
+
 def test_a_call_over_its_bound_stops_the_run(bench: Path, tmp_path: Path) -> None:
     greedy = StandIn("a", answers={(0, 0): (None, {"output_tokens": 2000})})
     with pytest.raises(harness.BudgetError):
@@ -327,6 +365,11 @@ def test_one_retry_for_transport_or_error_events_then_a_recorded_failure(
     assert len(retried) == 2  # one transport retry, one error-event retry
     assert len(failed) == 1 and failed[0]["failed_attempts"] == 2
     assert all("connection reset" not in json.dumps(r) for r in records(bench))
+    usages = sorted((r["usage"]["charged_tokens"], r["usage"]["unknown_usage_calls"])
+                    for r in retried)
+    assert usages == [(300, 0), (BOUND + 150, 1)]  # every attempt's spend is kept
+    assert failed[0]["usage"] == {"calls": 2, "input_tokens": 0, "output_tokens": 0,
+                                  "charged_tokens": 2 * BOUND, "unknown_usage_calls": 2}
 
 
 def test_consecutive_transport_failures_stop_the_run(bench: Path, tmp_path: Path) -> None:

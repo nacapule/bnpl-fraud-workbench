@@ -1,0 +1,3 @@
+# Lock files and half-written files of live runs (llm/eval/harness.py).
+.*.lock
+*.partial
