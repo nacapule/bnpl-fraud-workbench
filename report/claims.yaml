@@ -1,14 +1,17 @@
 # Every directional sentence in the README and the operating review, with the
-# result key and the paired test behind it (report/claims.py). The documents
-# are written from templates in report/templates/; a claim fails when its text
-# leaves the rendered document or the results stop supporting it.
+# paired result and the test behind each comparison it makes
+# (report/claims.py). A claim fails when its sentence leaves the rendered
+# document or a check stops holding.
 #
 # - id: short-name
-#   document: README.md                     # rendered document path
-#   text: "an exact piece of the rendered sentence"
-#   test: sign                              # sign | interval | mcnemar
-#   direction: positive                     # positive | negative | no_difference
-#   key: evaluate.some.metric               # sign, interval
-#   keys: [only_first.key, only_second.key] # mcnemar
-#   alpha: 0.05                             # optional
+#   document: README.md                       # rendered document path
+#   sentence: "The complete sentence, exactly as rendered."
+#   checks:                                   # one per comparison in the sentence
+#     - test: sign                            # sign | interval | mcnemar
+#       direction: positive                   # positive | negative |
+#                                             # no_detected_difference | equivalent
+#       key: evaluate.net_contribution.vs_incumbent_rules.baseline.base.hybrid
+#       # keys: [only_first.key, only_second.key]   # mcnemar
+#       # alpha: 0.05                         # optional
+#       # margin: 50000                       # equivalent only, in the metric's unit
 claims: []

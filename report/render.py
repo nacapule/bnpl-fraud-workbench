@@ -90,16 +90,26 @@ def _path(data: Any, dotted: str, what: str) -> Any:
 
 def _resolve(expression: str, sources: Sources) -> Value:
     if expression.startswith("protocol:"):
-        return Value(plain=_path(sources.protocol, expression[len("protocol:"):], "the protocol"))
+        dotted = expression[len("protocol:"):]
+        return _setting(_path(sources.protocol, dotted, "the protocol"), dotted)
     if expression.startswith("config:"):
         name, _, dotted = expression[len("config:"):].partition(":")
         if name not in sources.configs:
             raise KeyError(f"no configuration file {name!r}")
-        return Value(plain=_path(sources.configs[name], dotted, f"config/{name}.yaml"))
+        return _setting(_path(sources.configs[name], dotted, f"config/{name}.yaml"), dotted)
     if " - " in expression:
         first, second = (part.strip() for part in expression.split(" - ", 1))
         return _difference(_metric(first, sources), _metric(second, sources))
-    return Value(metric=_metric(expression, sources))
+    return Value(metric=_metric(expression, sources), contrast=is_contrast(expression))
+
+
+def is_contrast(key: str) -> bool:
+    """A paired difference against a reference: a key with a ``vs_<reference>`` segment."""
+    return any(part.startswith("vs_") for part in key.split("."))
+
+
+def _setting(value: Any, dotted: str) -> Value:
+    return Value(plain=value, unit=formats.unit_from_name(dotted.rsplit(".", 1)[-1]))
 
 
 def _metric(key: str, sources: Sources) -> Metric:
@@ -113,7 +123,7 @@ def _difference(first: Metric, second: Metric) -> Value:
         raise FormatError(f"cannot subtract {second.unit} from {first.unit}")
     if not (first.evaluated and second.evaluated):
         raise FormatError("cannot subtract a metric that was not evaluated")
-    return Value(plain=first.value - second.value, difference_of=first.unit)
+    return Value(plain=first.value - second.value, unit=first.unit, difference=True)
 
 
 def _split(body: str) -> tuple[str, str, list[str]]:
@@ -129,20 +139,31 @@ def render_value(body: str, sources: Sources) -> str:
 
 
 def render_table(body: str, sources: Sources) -> str:
-    """Render ``table:name | column "Header" format, ...`` as a Markdown table."""
+    """Render ``table:name | column "Header" format, ...`` as a Markdown table.
+
+    A cell's unit comes from its column name's suffix (``net_cents``,
+    ``held_share``, ...); raises :class:`RenderError` listing every problem.
+    """
     head, _, spec = body.partition("|")
     name = head.strip()[len("table:"):].strip()
     rows = table(sources.summary, name)
+    problems: list[str] = []
     columns = []
-    for item in spec.split(","):
+    for item in spec.split(",") if spec.strip() else []:
         match = COLUMN.match(item)
         if not match:
-            raise FormatError(f"bad column {item.strip()!r} in table {name!r}")
+            problems.append(f"bad column {item.strip()!r}")
+            continue
         column, header, form = match.groups()
         format_name, *args = (form or "value").split(":")
-        columns.append((column, header or column, format_name, args))
-    if not columns or not spec.strip():
-        raise FormatError(f"table {name!r} names no columns")
+        if format_name not in formats.FORMATS:
+            problems.append(f"unknown format {format_name!r} for column {column!r}")
+        elif rows and column not in rows[0]:
+            problems.append(f"no column {column!r}")
+        else:
+            columns.append((column, header or column, format_name, args))
+    if not columns and not problems:
+        problems.append("no columns named")
     lines = [
         "| " + " | ".join(header for _, header, _, _ in columns) + " |",
         "|" + "|".join("---" if form == "value" else "---:" for _, _, form, _ in columns) + "|",
@@ -150,19 +171,21 @@ def render_table(body: str, sources: Sources) -> str:
     for index, row in enumerate(rows):
         cells = []
         for column, _, format_name, args in columns:
-            if column not in row:
-                raise KeyError(f"table {name!r} has no column {column!r}")
             cell = row[column]
             if cell is None:
                 cells.append("n/a")
             elif isinstance(cell, bool):
                 cells.append("yes" if cell else "no")
             else:
+                resolved = Value(plain=cell, unit=formats.unit_from_name(column))
                 try:
-                    cells.append(formats.apply(format_name, Value(plain=cell), args))
+                    cells.append(formats.apply(format_name, resolved, args))
                 except FormatError as error:
-                    raise FormatError(f"table {name!r} row {index}: {error}") from error
+                    problems.append(f"row {index} column {column!r}: {error}")
+                    cells.append("")
         lines.append("| " + " | ".join(cells) + " |")
+    if problems:
+        raise RenderError(f"table {name!r}", problems)
     return "\n".join(lines)
 
 

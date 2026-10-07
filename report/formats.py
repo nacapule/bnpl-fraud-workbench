@@ -1,12 +1,18 @@
 """Number formats for rendered documents.
 
-Each format turns a :class:`core.results.Metric` (or a plain value from the
-protocol or a configuration file) into text. A format refuses a metric whose
-unit it does not fit, so a template cannot print cents as a percentage or a
-rate as dollars. Differences of rates are percentage points (``pp``), never
-percent: a change from 30% to 42.5% is "+12.5 pp". A difference of two rates
-is stored in ``bps`` (10,000 times the difference) or computed in the template
-as ``{{ a - b | pp }}``.
+Each format turns a :class:`core.results.Metric`, or a plain value, into text,
+and refuses a value whose unit it does not fit: a template cannot print cents
+as a percentage or a rate as dollars. A plain value (a protocol or
+configuration setting, or a result table cell) takes its unit from the suffix
+of its name (``_cents``, ``_bps``, ``_rate``, ``_share``, ``_minutes``,
+``_count``; see :func:`unit_from_name`); a value with no unit prints only as a
+plain number (``value``, ``num``, ``count``), never scaled into dollars,
+percent or points.
+
+Differences of rates are percentage points (``pp``), never percent: a change
+from 30% to 42.5% is "+12.5 pp". A paired difference of rates is recorded in
+``bps`` under a key with a ``vs_<reference>`` segment, or computed in the
+template as ``{{ a - b | pp }}``.
 
 A metric that was not evaluated renders as "not evaluated (N=…)" whatever the
 format, so a gap is visible instead of a number.
@@ -22,18 +28,43 @@ from dataclasses import dataclass
 from core.results import Metric
 from core.stats import sign_test
 
+SUFFIX_UNITS = {
+    "_cents": "cents",
+    "_bps": "bps",
+    "_rate": "rate",
+    "_share": "share",
+    "_minutes": "minutes",
+    "_count": "count",
+}
+
 
 class FormatError(ValueError):
     """A format does not fit the value or its arguments."""
 
 
+def unit_from_name(name: str) -> str | None:
+    """The unit a setting or table column declares by its name's suffix, if any."""
+    for suffix, unit in SUFFIX_UNITS.items():
+        if name.endswith(suffix):
+            return unit
+    return None
+
+
 @dataclass(frozen=True)
 class Value:
-    """What a placeholder resolved to: a result metric, or a plain value."""
+    """What a placeholder resolved to.
+
+    ``metric`` is a result metric (``contrast`` when its key has a
+    ``vs_<reference>`` segment, i.e. a paired difference); otherwise ``plain``
+    is a setting or a table cell with its declared ``unit`` (or none), and
+    ``difference`` says it was computed as ``a - b`` of two metrics of ``unit``.
+    """
 
     metric: Metric | None = None
     plain: object = None
-    difference_of: str | None = None  # the unit of two metrics subtracted in a template
+    unit: str | None = None
+    difference: bool = False
+    contrast: bool = False
 
     @property
     def number(self) -> int | float:
@@ -43,6 +74,14 @@ class Value:
         if not math.isfinite(number):
             raise FormatError(f"{number!r} is not finite")
         return number
+
+    @property
+    def effective_unit(self) -> str | None:
+        return self.metric.unit if self.metric is not None else self.unit
+
+    @property
+    def is_difference(self) -> bool:
+        return self.difference or self.contrast
 
 
 Format = Callable[[Value, list[str]], str]
@@ -69,10 +108,11 @@ def _options(args: list[str], decimals: int) -> tuple[int, bool]:
     return decimals, signed
 
 
-def _unit(resolved: Value, allowed: tuple[str, ...], name: str) -> None:
-    unit = resolved.metric.unit if resolved.metric is not None else resolved.difference_of
-    if unit is not None and unit not in allowed:
-        raise FormatError(f"format {name!r} does not fit unit {unit!r}")
+def _unit(resolved: Value, allowed: tuple[str | None, ...], name: str) -> None:
+    unit = resolved.effective_unit
+    if unit not in allowed:
+        described = "a number with no declared unit" if unit is None else f"unit {unit!r}"
+        raise FormatError(f"format {name!r} does not fit {described}")
 
 
 def _metric(resolved: Value, name: str) -> Metric:
@@ -90,7 +130,7 @@ def usd(resolved: Value, args: list[str]) -> str:
 
 def pct(resolved: Value, args: list[str]) -> str:
     """A rate or share as percent: ``12.3%`` (one decimal by default)."""
-    if resolved.difference_of is not None:
+    if resolved.is_difference:
         raise FormatError("a difference of rates is in percentage points: use the pp format")
     _unit(resolved, ("rate", "share"), "pct")
     decimals, signed = _options(args, 1)
@@ -100,18 +140,18 @@ def pct(resolved: Value, args: list[str]) -> str:
 def pp(resolved: Value, args: list[str]) -> str:
     """A difference of rates in percentage points, always signed: ``+12.5 pp``.
 
-    Takes a ``bps`` metric (10,000 times the difference), or a plain number
-    that is a difference of two rates (``{{ a - b | pp }}``).
+    Takes a paired-difference metric in ``bps`` (10,000 times the difference),
+    or ``{{ a - b }}`` of two rates, shares or ``bps`` metrics.
     """
-    if resolved.metric is not None:
-        _unit(resolved, ("bps",), "pp")
-        points = resolved.number / 100
-    elif resolved.difference_of in ("rate", "share"):
+    if not resolved.is_difference:
+        raise FormatError("the pp format needs a difference of rates")
+    unit = resolved.effective_unit
+    if unit in ("rate", "share") and resolved.difference:
         points = resolved.number * 100
-    elif resolved.difference_of == "bps":
+    elif unit == "bps":
         points = resolved.number / 100
     else:
-        raise FormatError("the pp format needs a difference of two rates")
+        raise FormatError(f"the pp format does not fit a difference in {unit!r}")
     decimals, _ = _options(args, 1)
     return _text(points, decimals, signed=True, suffix=" pp")
 
@@ -131,13 +171,13 @@ def per_10k(resolved: Value, args: list[str]) -> str:
 
 
 def count(resolved: Value, args: list[str]) -> str:
-    """A whole number with thousands separators: ``1,234``."""
-    _unit(resolved, ("count", "minutes"), "count")
-    _, signed = _options(args, 0)
+    """A count with thousands separators: ``1,234``; a mean count gets one decimal."""
+    _unit(resolved, ("count", "minutes", None), "count")
+    decimals, signed = _options(args, 0)
     number = resolved.number
     if isinstance(number, float) and not number.is_integer():
-        raise FormatError(f"the count format needs a whole number, got {number!r}")
-    return _text(number, 0, signed=signed)
+        decimals = max(decimals, 1)
+    return _text(number, decimals, signed=signed)
 
 
 def num(resolved: Value, args: list[str]) -> str:
@@ -153,21 +193,22 @@ def fraction(resolved: Value, args: list[str]) -> str:
         raise FormatError("the n format takes no arguments")
     if metric.numerator is None:
         raise FormatError("the n format needs a metric with a numerator and denominator")
-    return f"{_text(metric.numerator, 0)}/{_text(metric.denominator, 0)}"
+    top, bottom = Value(plain=metric.numerator), Value(plain=metric.denominator)
+    return f"{count(top, [])}/{count(bottom, [])}"
 
 
 def numerator(resolved: Value, args: list[str]) -> str:
     metric = _metric(resolved, "numerator")
     if metric.numerator is None:
         raise FormatError("this metric has no numerator")
-    return _text(metric.numerator, 0)
+    return count(Value(plain=metric.numerator), args)
 
 
 def denominator(resolved: Value, args: list[str]) -> str:
     metric = _metric(resolved, "denominator")
     if metric.denominator is None:
         raise FormatError("this metric has no denominator")
-    return _text(metric.denominator, 0)
+    return count(Value(plain=metric.denominator), args)
 
 
 UNIT_FORMATS: dict[str, Format] = {
@@ -184,26 +225,25 @@ UNIT_FORMATS: dict[str, Format] = {
 
 
 def value(resolved: Value, args: list[str]) -> str:
-    """The format that fits the metric's unit; plain values as they are."""
-    if resolved.metric is not None:
-        return UNIT_FORMATS[resolved.metric.unit](resolved, args)
-    if resolved.difference_of in ("rate", "share"):
+    """The format that fits the unit; untyped values as they are."""
+    unit = resolved.effective_unit
+    if resolved.is_difference and unit in ("rate", "share"):
         return pp(resolved, args)
-    if resolved.difference_of is not None:
-        return UNIT_FORMATS[resolved.difference_of](resolved, args)
+    if unit is not None:
+        return UNIT_FORMATS[unit](resolved, args)
     plain = resolved.plain
     if isinstance(plain, dt.date):
         return date(resolved, args)
     if isinstance(plain, str):
         return plain
     if isinstance(plain, int) and not isinstance(plain, bool):
-        return _text(plain, 0)
+        return count(resolved, args)
     return num(resolved, args)
 
 
-def _bound(number: float) -> Value:
+def _bound(number: float, unit: str) -> Value:
     """A number in a metric's own unit (an interval bound, a seed's value)."""
-    return Value(plain=number)
+    return Value(plain=number, unit=unit)
 
 
 def interval(resolved: Value, args: list[str]) -> str:
@@ -212,8 +252,8 @@ def interval(resolved: Value, args: list[str]) -> str:
     if metric.interval is None:
         raise FormatError("this metric has no interval")
     form = UNIT_FORMATS[metric.unit]
-    low = form(_bound(metric.interval.low), args)
-    high = form(_bound(metric.interval.high), args)
+    low = form(_bound(metric.interval.low, metric.unit), args)
+    high = form(_bound(metric.interval.high, metric.unit), args)
     return f"{metric.interval.level * 100:g}% CI {low} to {high}"
 
 
@@ -223,11 +263,11 @@ def seeds(resolved: Value, args: list[str]) -> str:
     if metric.seeds is None:
         raise FormatError("the seeds format needs a metric with a seed spread")
     form = UNIT_FORMATS[metric.unit]
-    shown = [*args, "signed"] if form is not count else args
+    shown = [*args, "signed"] if resolved.is_difference else args
     spread = metric.seeds
 
     def show(number: float) -> str:
-        return form(_bound(number), shown)
+        return form(_bound(number, metric.unit), shown)
 
     return (
         f"mean {show(spread.mean)}, min {show(spread.min)}, max {show(spread.max)}; "
@@ -278,7 +318,13 @@ def date(resolved: Value, args: list[str]) -> str:
 
 
 def bps_pct(resolved: Value, args: list[str]) -> str:
-    """A setting in basis points as percent: 2500 becomes ``25%``."""
+    """A setting in basis points as percent: ``down_payment_bps: 2500`` becomes ``25%``.
+
+    Only for configured settings; result metrics print as ``bps``, ``per_10k`` or ``pp``.
+    """
+    if resolved.metric is not None or resolved.is_difference:
+        raise FormatError("the bps_pct format is for configured settings, not results")
+    _unit(resolved, ("bps",), "bps_pct")
     decimals, _ = _options(args, 0)
     return _text(resolved.number / 100, decimals, suffix="%")
 
