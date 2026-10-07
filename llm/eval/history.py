@@ -363,8 +363,10 @@ class Chain:
         return self.attempts[0].present
 
     @property
-    def duration_ms(self) -> int:
-        return sum(attempt.duration_ms or 0 for attempt in self.attempts if attempt.present)
+    def duration_ms(self) -> int | None:
+        """The stored attempts' total duration; None when one of them has none."""
+        durations = [attempt.duration_ms for attempt in self.attempts if attempt.present]
+        return None if None in durations else sum(durations)
 
 
 @dataclass(frozen=True)
@@ -575,7 +577,8 @@ def archived_result(archive: Archive, replay: ArmReplay) -> dict[str, Any]:
         ),
         "consistency_n": len(agreements),
         "latency_p50_ms": (
-            int(statistics.median(row["duration_ms"] for row in rows)) if rows else None
+            int(statistics.median(durations)) if (durations := [
+                row["duration_ms"] for row in rows if row["duration_ms"] is not None]) else None
         ),
         "cache_hit_rate": (
             round((n_attempted + probe_hits) / opportunities, 3) if opportunities else None
@@ -647,7 +650,7 @@ class Scored:
 
     alert_id: int
     truth_decline: bool
-    duration_ms: int
+    duration_ms: int | None
     accepted: bool = False  # an output passed the historical and the strict validator
     strict_rejected: bool = False  # the historical protocol accepted it, the strict check not
     correct: bool = False
@@ -664,7 +667,7 @@ class Scored:
 def _score(archive: Archive, case: Mapping[str, Any], chain: Chain, endpoint: str) -> Scored:
     memo = chain.first_memo if endpoint == "first_attempt" else chain.memo
     duration = (
-        (chain.attempts[0].duration_ms or 0) if endpoint == "first_attempt" else (chain.duration_ms)
+        chain.attempts[0].duration_ms if endpoint == "first_attempt" else chain.duration_ms
     )
     truth_decline = case["truth_action"] == "decline_block"
     if memo is None or strict_problems(memo):
@@ -718,7 +721,7 @@ def _endpoint_statistics(scored: list[Scored]) -> dict[str, Any]:
     truth_declines = sum(row.truth_decline for row in scored)
     truth_declines_valid = sum(row.truth_decline for row in accepted)
     fields = sum(row.tokens_corrected["n_texts"] for row in accepted)
-    durations = [row.duration_ms for row in accepted]
+    durations = [row.duration_ms for row in accepted if row.duration_ms is not None]
     return {
         "cases": cases,
         "valid_outputs": _ratio(valid, cases),

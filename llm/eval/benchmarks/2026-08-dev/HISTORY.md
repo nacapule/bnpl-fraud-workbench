@@ -118,8 +118,8 @@ The packets are preserved because changing them would change the inputs the mode
 ## How the arms ran
 
 The arms ran through the Claude and Codex command-line tools from the author's account,
-in the caller's working directory. Those tools load the user's global instructions. The
-stored records contain each final reply and its duration, with incomplete token counts for
-the Claude arms. They do not contain transcripts, so they cannot rule out influence from
-global instructions or other files. Reasoning effort was not recorded. The latency medians
-come from different tools and do not establish a speed comparison.
+in the caller's working directory. The stored records contain each final reply and its
+duration, with incomplete token counts for the Claude arms. They do not contain
+transcripts, so they cannot rule out influence from global instructions or other files.
+Reasoning effort was not recorded. The latency medians come from different tools and do
+not establish a speed comparison.

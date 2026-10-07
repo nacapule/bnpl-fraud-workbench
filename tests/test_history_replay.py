@@ -234,6 +234,25 @@ def test_a_stored_record_without_text_is_an_invalid_attempt(tmp_path):
     assert chain.memo is None
 
 
+def test_a_stored_record_without_a_duration_is_left_out_of_the_latency(tmp_path):
+    bench = _copy_archive(tmp_path)
+    archive = Archive(bench)
+    terra = _arm(archive, TERRA)
+    alert = archive.cases[0]["alert_id"]
+    prompt = history.render_prompt(archive.templates["memo_v2"], archive.packets[alert])
+    path = archive.cache_dir / history.cache_file_name(terra.model, prompt)
+    record = json.loads(path.read_text())
+    record["response"]["duration_ms"] = None
+    path.write_text(json.dumps(record))
+    archive = Archive(bench)
+    replay = replay_arm(archive, terra)
+    [chain] = [c for c in replay.primary if c.alert_id == alert]
+    assert chain.memo is not None and chain.duration_ms is None
+    assert isinstance(history.archived_result(archive, replay)["latency_p50_ms"], int)
+    scored = score_arm(archive, replay)
+    assert [row.duration_ms for row in scored["final"] if row.alert_id == alert] == [None]
+
+
 def test_the_summary_renders_an_arm_without_valid_outputs(stats):
     broken = json.loads(json.dumps(stats))
     broken["arms"][TERRA]["final"]["latency_p50_ms"] = None
