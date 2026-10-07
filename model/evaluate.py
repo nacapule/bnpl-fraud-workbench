@@ -587,25 +587,6 @@ The higher-PR-AUC model ({best_name}) supplies the model ranking.
 ```
 """
     (REPORT_DIR / "model.md").write_text(report)
-
-    recall_summary = "; ".join(
-        f"{row['Pattern']} "
-        + "/".join(f"{name} {row[name]}" for name in scores)
-        for row in pattern_rows
-    )
-    notes_lines = [
-        "# Model results",
-        f"- Holdout: {len(holdout):,} approved orders; base rate {labels.mean():.3%}.",
-        "- PR-AUC: " + "; ".join(f"{name} {pr_auc[name]:.4f}" for name in scores) + ".",
-        "- Precision@capacity: "
-        + "; ".join(
-            f"{row['Model']} {row[f'Precision@{capacity:,}']}" for row in metrics_rows
-        )
-        + f" ({capacity:,} reviews).",
-        f"- Recall by pattern: {recall_summary}.",
-        "- Runtime is machine-dependent and is not part of the committed metrics.",
-    ]
-    (REPO / "model" / "README-notes.md").write_text("\n".join(notes_lines) + "\n")
     print(report)
     print(f"evaluation runtime: {elapsed:.2f} seconds")
 
