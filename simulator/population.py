@@ -2,8 +2,8 @@
 
 Nothing here depends on whether an actor is legitimate or fraudulent. Emails,
 IP addresses and devices are drawn by the same functions for everyone; an IP
-address depends only on its country (F25), and a customer's home country
-decides the country of their home IP (F13).
+address depends only on its country, and a customer's home country decides
+the country of their home IP.
 """
 
 from __future__ import annotations
