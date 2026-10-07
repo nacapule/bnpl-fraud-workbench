@@ -27,7 +27,7 @@ from queue_sim.policies import PRIORITIES
 from queue_sim.replay import ReplayResult, World
 
 KEY_COLUMNS = ("seed", "family", "policy", "capacity_level", "layout", "history", "reviewer",
-               "policy_version")
+               "verification", "evaluated", "policy_version")
 FRAUD, LEGITIMATE, UNKNOWN = "fraud", "legitimate", "unknown"
 SLA_TARGETS = {"P0": 1, "P1": 4, "P2": 8, "P3": 24}
 
@@ -150,7 +150,7 @@ def outcome_row(result: ReplayResult, world_: World, *, keys: Mapping[str, Any],
         met = decided & in_p & (r["service_hours_to_decision"] <= SLA_TARGETS[p])
         row[f"reviews_{p}"] = int(in_p.sum())
         row[f"sla_met_{p}"] = int(met.sum())
-    return row
+    return {**dict(keys), **{column: row[column] for column in OUTCOME_COLUMNS}}
 
 
 def confusion(result: ReplayResult, classes: pd.DataFrame, *, by: str = "basis") -> pd.DataFrame:

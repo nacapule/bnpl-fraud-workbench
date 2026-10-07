@@ -98,6 +98,7 @@ def test_the_replay_stage_writes_one_integer_row_per_policy_and_variant(staged) 
     assert len(rows) == 7 * len(stage.VARIANTS)  # one configured level on the mini world
     assert not rows.duplicated(["seed", "family", "policy", "capacity_level", "layout",
                                 "history", "reviewer", "verification"]).any()
+    assert list(rows.columns) == [*outcomes.KEY_COLUMNS, *outcomes.OUTCOME_COLUMNS]
     for column in outcomes.OUTCOME_COLUMNS:
         values = rows[column]
         assert values.map(lambda v: isinstance(v, int | np.integer)).all(), column
