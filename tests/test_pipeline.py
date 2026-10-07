@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import types
 from pathlib import Path
@@ -107,14 +108,16 @@ def test_world_and_validate_stages_on_a_given_world(tmp_path: Path) -> None:
     }]
     assert validate.metrics["validate.worlds_valid"].value == 1
     assert world.versions["world"] == validate.versions["world"]
-    manifest_sha = validate.inputs["worlds/0-baseline/manifest.json"]
-    assert len(manifest_sha) == 64
+    manifest = json.loads((run.world_dir(run.worlds[0]) / "manifest.json").read_text())
+    identity = validate.inputs["world:0-baseline"]
+    assert identity == pipeline.manifest_identity(manifest)
+    assert identity == pipeline.manifest_identity(manifest | {"code_commit": "0123abc"})
     lineage = json.loads((run.directory / "lineage.json").read_text())
     assert set(lineage["stages"]) == {"world", "validate"}
     outputs = lineage["stages"]["world"]["outputs"]
     assert "worlds/0-baseline/order_attempts.csv" in outputs
-    validate_inputs = lineage["stages"]["validate"]["inputs"]
-    assert validate_inputs["worlds/0-baseline/manifest.json"] == manifest_sha
+    assert "worlds/0-baseline/manifest.json" in outputs  # the raw file, commit and all
+    assert lineage["stages"]["validate"]["inputs"]["world:0-baseline"] == identity
     assert "commit" in lineage["stages"]["world"]["code"]
     assert not (run.results_dir / "summary.json").exists()  # a partial run has no summary
 
@@ -156,9 +159,13 @@ def test_validation_rejects_a_world_that_breaks_chronology(tmp_path: Path) -> No
 
 
 # ---------------------------------------------------------------- whole runs with stand-in stages
-def _fake_stages(monkeypatch, *, value: int = 7) -> None:
+def _fake_stages(monkeypatch, *, value: int = 7, overrides: dict | None = None) -> None:
+    overrides = overrides or {}
+
     def make(name: str):
         def function(run: pipeline.Run) -> pipeline.StageOutput:
+            if name in overrides:
+                return overrides[name](run)
             if name == "world":
                 for ref in run.all_worlds:
                     target = run.world_dir(ref)
@@ -169,7 +176,7 @@ def _fake_stages(monkeypatch, *, value: int = 7) -> None:
             metric = Metric(value=value, unit="count", population=f"{name} things",
                             window="test")
             return pipeline.StageOutput(metrics={f"{name}.things": metric},
-                                        inputs={"config/policy.yaml": REPO / "config/policy.yaml"})
+                                        inputs=["config/policy.yaml"])
         return function
 
     stages = tuple(pipeline.Stage(stage.name, make(stage.name), stage.versions, stage.description)
@@ -187,7 +194,8 @@ def test_a_complete_run_assembles_its_summary_and_reruns_byte_for_byte(
     summary = read_summary(run.results_dir / "summary.json")
     assert set(summary["stages"]) == set(pipeline.STAGE_NAMES)
     assert summary["metrics"]["evaluate.things"]["value"] == 7
-    assert set(summary["versions"]) == {"world", "features", "policy", "protocol", "benchmark"}
+    assert set(summary["versions"]) == {"world", "features", "policy", "protocol", "benchmark",
+                                        "models"}
     first = {path.name: path.read_bytes() for path in run.results_dir.iterdir()}
     first_lineage = (run.directory / "lineage.json").read_text()
     pipeline.execute(run, list(pipeline.STAGES), log=lambda _: None)
@@ -209,6 +217,93 @@ def test_a_rerun_stage_on_a_different_world_cannot_join_the_summary(
     pipeline.execute(run, pipeline.select("world", "world"), log=lambda _: None)
     with pytest.raises(VersionMismatch, match="world"):  # ... but later stages are stale
         pipeline.execute(run, pipeline.select("llm", "llm"), log=lambda _: None)
+
+
+def _dev_run(tmp_path: Path) -> pipeline.Run:
+    return pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, seeds=[416],
+                             families=["baseline"])
+
+
+def test_a_stale_evaluation_cannot_join_a_fresh_replay(tmp_path: Path, monkeypatch) -> None:
+    def replay_with(value: int):
+        def replay(run: pipeline.Run) -> pipeline.StageOutput:
+            item = Metric(value=value, unit="count", population="replayed", window="test")
+            return pipeline.StageOutput(metrics={"replay.things": item})
+        return replay
+
+    def evaluate(run: pipeline.Run) -> pipeline.StageOutput:
+        replayed = read_result(run.results_dir / "replay.json").metrics["replay.things"].value
+        item = Metric(value=replayed, unit="count", population="evaluated", window="test")
+        return pipeline.StageOutput(metrics={"evaluate.things": item},
+                                    inputs=["results/replay.json"])
+
+    _fake_stages(monkeypatch, overrides={"replay": replay_with(10), "evaluate": evaluate})
+    run = _dev_run(tmp_path)
+    pipeline.execute(run, list(pipeline.STAGES), log=lambda _: None)
+    _fake_stages(monkeypatch, overrides={"replay": replay_with(20), "evaluate": evaluate})
+    pipeline.execute(run, pipeline.select("replay", "replay"), log=lambda _: None)
+    with pytest.raises(pipeline.PipelineError, match="evaluate: results/replay.json changed"):
+        pipeline.execute(run, pipeline.select("llm", "llm"), log=lambda _: None)
+    pipeline.execute(run, pipeline.select("evaluate"), log=lambda _: None)  # rerun from there
+    assert read_summary(run.results_dir / "summary.json")["metrics"]["evaluate.things"][
+        "value"] == 20
+
+
+def test_replays_from_other_models_cannot_join_the_summary(tmp_path: Path, monkeypatch) -> None:
+    def fit_with(text: str):
+        def fit(run: pipeline.Run) -> pipeline.StageOutput:
+            (run.stage_dir("fit") / "model.json").write_text(text)
+            run.memory["scorers"] = {416: {}}
+            return pipeline.StageOutput()
+        return fit
+
+    _fake_stages(monkeypatch, overrides={"fit": fit_with('{"c": 1}')})
+    run = _dev_run(tmp_path)
+    pipeline.execute(run, list(pipeline.STAGES), log=lambda _: None)
+    _fake_stages(monkeypatch, overrides={"fit": fit_with('{"c": 2}')})
+    pipeline.execute(run, pipeline.select("fit", "fit"), log=lambda _: None)
+    with pytest.raises(VersionMismatch, match="models"):
+        pipeline.execute(run, pipeline.select("llm", "llm"), log=lambda _: None)
+
+
+def test_models_live_in_memory_so_later_stages_need_the_fit(tmp_path: Path) -> None:
+    with pytest.raises(pipeline.PipelineError, match="run from the fit stage"):
+        _dev_run(tmp_path).scorers(416)
+
+
+def test_run_names_stay_inside_the_runs_directory(tmp_path: Path) -> None:
+    for name in ("..", "../results", "a/b", ".hidden", ""):
+        with pytest.raises(pipeline.PipelineError, match="plain directory name"):
+            pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, name=name or "..x/")
+    assert pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, name="dev-2.b").directory \
+        == tmp_path / "dev-2.b"
+
+
+def test_any_override_turns_the_final_profile_into_a_trial_run(tmp_path: Path) -> None:
+    final = pipeline.PROFILES["final"]
+    for overrides in ({"scale": 0.1}, {"seeds": [1]}, {"families": ["baseline"]},
+                      {"world": MINI_WORLD}):
+        run = pipeline.make_run(final, runs=tmp_path, **overrides)
+        assert run.results_dir.is_relative_to(tmp_path) and run.docs_dir.is_relative_to(tmp_path)
+
+
+def test_untracked_files_make_the_tree_dirty(tmp_path: Path) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", "-C", str(tmp_path), "-c", "user.name=T", "-c",
+                        "user.email=t@example.com", "-c", "commit.gpgsign=false", *args],
+                       check=True, capture_output=True)
+
+    git("init", "-q")
+    (tmp_path / ".gitignore").write_text("runs/\n")
+    git("add", "-A")
+    git("commit", "-q", "-m", "start")
+    assert pipeline.code_identity(tmp_path)["dirty"] is False
+    (tmp_path / "runs").mkdir()
+    (tmp_path / "runs" / "lineage.json").write_text("{}")
+    assert pipeline.code_identity(tmp_path)["dirty"] is False  # ignored output
+    (tmp_path / "replay.py").write_text("print('uncommitted')\n")
+    assert pipeline.code_identity(tmp_path)["dirty"] is True
+    assert pipeline.code_identity(tmp_path / "missing")["dirty"] is None
 
 
 def test_the_summary_needs_every_stage(tmp_path: Path, monkeypatch) -> None:
@@ -270,13 +365,17 @@ def test_the_replay_keeps_each_worlds_review_decisions(tmp_path: Path, monkeypat
 
 
 # ---------------------------------------------------------------- evaluate
+POLICIES = ("approve_all", "incumbent_rules", "hybrid")
+
+
 def outcome(seed: int, policy: str, net: int, *, family: str = "baseline",
-            capacity: str = "base", held: int = 10, legit: int = 10_000) -> dict:
+            capacity: str = "base", held: int = 10, legit: int = 10_000,
+            used: float = 300, available: float = 400) -> dict:
     return {
         "seed": seed, "family": family, "capacity": capacity, "policy": policy,
         "net_cents": net, "loss_cents": 5_000, "gmv_cents": 1_000_000,
         "legit_held": held, "legit_declined": 0, "legit_orders": legit,
-        "review_minutes_used": 300, "review_minutes_available": 400,
+        "review_minutes_used": used, "review_minutes_available": available,
         "decided_after_shipping": 2,
     }
 
@@ -292,8 +391,12 @@ def outcomes() -> list[dict]:
     return rows
 
 
+def evaluate(rows: list[dict], seeds=(1, 2, 3), families=("baseline",), policies=POLICIES):
+    return pipeline.evaluate_outcomes(rows, seeds, families, policies)
+
+
 def test_evaluate_pairs_policies_by_seed() -> None:
-    metrics, table = pipeline.evaluate_outcomes(outcomes(), (1, 2, 3))
+    metrics, table = evaluate(outcomes())
     net = metrics["evaluate.net_contribution.vs_incumbent_rules.baseline.base.hybrid"]
     assert net.seeds.per_seed == {1: 500, 2: -100, 3: 400}
     assert net.value == pytest.approx(800 / 3)
@@ -313,20 +416,42 @@ def test_evaluate_pairs_policies_by_seed() -> None:
     assert used.unit == "bps" and used.seeds.per_seed == {1: 0.0, 2: 0.0, 3: 0.0}
     assert "evaluate.net_contribution.vs_approve_all.baseline.base.approve_all" not in metrics
     row = next(r for r in table if r["policy"] == "hybrid")
+    assert row["net_contribution_cents"] == pytest.approx(1_600)
+    assert row["net_contribution_vs_incumbent_rules_cents"] == pytest.approx(800 / 3)
+    assert row["review_minutes_used_share_vs_approve_all_bps"] == 0.0
     assert row["net_contribution_vs_incumbent_rules_positive_seeds"] == 2
+
+
+def test_fractional_quantities_are_pooled_without_truncation() -> None:
+    rows = [r | {"review_minutes_used": 0.75, "review_minutes_available": 1.5}
+            for r in outcomes()]
+    metrics, _ = evaluate(rows)
+    used = metrics["evaluate.review_minutes_used_share.baseline.base.hybrid"]
+    assert (used.numerator, used.denominator, used.value) == (2.25, 4.5, 0.5)
 
 
 def test_evaluate_refuses_incomplete_or_repeated_outcomes() -> None:
     rows = outcomes()
-    with pytest.raises(pipeline.PipelineError, match="covers seeds"):
-        pipeline.evaluate_outcomes(rows[:-1], (1, 2, 3))
+    with pytest.raises(pipeline.PipelineError, match="missing"):
+        evaluate(rows[:-1])
     with pytest.raises(pipeline.PipelineError, match="repeated"):
-        pipeline.evaluate_outcomes(rows + rows[:1], (1, 2, 3))
+        evaluate(rows + rows[:1])
     with pytest.raises(pipeline.PipelineError, match="lack columns"):
-        pipeline.evaluate_outcomes([{k: v for k, v in r.items() if k != "gmv_cents"}
-                                    for r in rows], (1, 2, 3))
+        evaluate([{k: v for k, v in r.items() if k != "gmv_cents"} for r in rows])
     with pytest.raises(pipeline.PipelineError, match="zero legit_orders"):
-        pipeline.evaluate_outcomes([r | {"legit_orders": 0} for r in rows], (1, 2, 3))
+        evaluate([r | {"legit_orders": 0} for r in rows])
+    without_incumbent = [r for r in rows if r["policy"] != "incumbent_rules"]
+    with pytest.raises(pipeline.PipelineError, match="missing"):
+        evaluate(without_incumbent)
+    with pytest.raises(pipeline.PipelineError, match="references"):
+        evaluate(without_incumbent, policies=("approve_all", "hybrid"))
+    with pytest.raises(pipeline.PipelineError, match="missing"):  # a family left out
+        evaluate(rows, families=("baseline", "fraud_mix_shift"))
+    low = [r | {"capacity": "low"} for r in rows if r["policy"] != "hybrid"]
+    with pytest.raises(pipeline.PipelineError, match="missing"):  # hybrid absent at low
+        evaluate(rows + low)
+    with pytest.raises(pipeline.PipelineError, match="unexpected"):
+        evaluate(rows + [outcome(4, "hybrid", 0)])
 
 
 def test_pooling_per_seed_metrics() -> None:
@@ -341,11 +466,26 @@ def test_pooling_per_seed_metrics() -> None:
     other = Metric(**{**score.__dict__, "value": 0.6})
     mean = pipeline.pool_over_seeds({1: score, 2: other}, "ap")
     assert mean.value == pytest.approx(0.7)
-    gap = Metric.not_evaluated(unit="rate", population="fit-window orders", window="fit",
-                               reason="none", numerator=0, denominator=0)
-    assert not pipeline.pool_over_seeds({1: rate(1, 4), 2: gap}, "x").evaluated
     with pytest.raises(pipeline.PipelineError, match="disagree"):
         pipeline.pool_over_seeds({1: rate(1, 4), 2: score}, "x")
+
+
+def test_pooling_keeps_support_when_a_seed_is_withheld() -> None:
+    def rate(n: int, d: int) -> Metric:
+        return Metric.from_ratio(n, d, population="never-pay orders", window="test")
+
+    withheld = Metric.not_evaluated(unit="rate", population="never-pay orders", window="test",
+                                    reason="below minimum support", numerator=1, denominator=5)
+    pooled = pipeline.pool_over_seeds({1: rate(42, 50), 2: withheld}, "x")
+    assert not pooled.evaluated
+    assert (pooled.numerator, pooled.denominator) == (43, 55)
+    assert "seeds [2]" in pooled.note
+
+
+def test_a_metric_missing_on_a_seed_is_an_error_not_a_smaller_sample() -> None:
+    score = Metric(value=0.8, unit="score", population="AP", window="calibration")
+    with pytest.raises(pipeline.PipelineError, match="expected"):
+        pipeline.pool_over_seeds({1: score}, "ap", seeds=(1, 2))
 
 
 # ---------------------------------------------------------------- MySQL
@@ -390,3 +530,14 @@ def test_load_and_alerts_on_the_mini_world(tmp_path: Path) -> None:
     assert rows[0][1] == "review" and json.loads(rows[0][2]) == "R06(b)"
     with pytest.raises(pymysql.err.IntegrityError):  # an order the world does not have
         pipeline.write_alerts(_alerts([999_999], [int(first["user_id"].iloc[0])]))
+    other_user = int(orders.loc[orders["user_id"] != first["user_id"].iloc[0], "user_id"].iloc[0])
+    with pytest.raises(pipeline.PipelineError, match="another account"):
+        pipeline.write_alerts(_alerts([int(first["order_id"].iloc[0])], [other_user]))
+    connection = pymysql.connect(**db_settings().pymysql_kwargs())
+    try:
+        with connection.cursor() as cursor:  # both failures left the earlier alerts in place
+            cursor.execute("SELECT alert_id FROM alerts ORDER BY alert_id")
+            kept = [row[0] for row in cursor.fetchall()]
+    finally:
+        connection.close()
+    assert kept == sorted(f"{order}-v1" for order in first["order_id"])

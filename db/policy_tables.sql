@@ -1,11 +1,11 @@
 -- Policy output loaded beside the world (not world data): the incumbent rules
 -- policy's routing decisions on the loaded world, written by the pipeline's
--- alerts stage after the world is loaded (python pipeline.py, stage alerts).
--- Reloading the world drops this table with the world's own objects.
+-- alerts stage after the world is loaded (python pipeline.py, stage alerts),
+-- which replaces the rows in one transaction. Reloading the world drops this
+-- table with the world's own objects, so a changed definition takes effect
+-- at the next world load.
 
-DROP TABLE IF EXISTS alerts;
-
-CREATE TABLE alerts (
+CREATE TABLE IF NOT EXISTS alerts (
   alert_id VARCHAR(80) NOT NULL COMMENT 'Stable alert id: order id and policy version.',
   order_id INT NOT NULL COMMENT 'Routed order.',
   user_id INT NOT NULL COMMENT 'Ordering account.',

@@ -38,6 +38,7 @@ import importlib
 import importlib.util
 import json
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -72,6 +73,7 @@ from core.stats import paired_seed_differences  # noqa: E402
 
 RUNS = REPO / "runs"
 RESULTS = REPO / "results"
+RUN_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 POLICY_TABLES_SQL = REPO / "db" / "policy_tables.sql"
 CI_SCALE = 0.1  # the CI world: small enough to generate within two minutes
 BASELINE = "baseline"
@@ -168,6 +170,13 @@ class Run:
             raise PipelineError(f"world {ref.name} has not been generated (run the world stage)")
         return json.loads(path.read_text())
 
+    def scorers(self, seed: int) -> dict[str, Any]:
+        """The models fitted for ``seed`` in this process (kept in memory, not on disk)."""
+        fitted = self.memory.get("scorers", {})
+        if seed not in fitted:
+            raise PipelineError("the fitted models are kept in memory: run from the fit stage")
+        return fitted[seed]
+
     def tables(self, ref: WorldRef) -> dict[str, pd.DataFrame]:
         cache = self.memory.setdefault("tables", {})
         if ref not in cache:
@@ -206,10 +215,14 @@ def make_run(profile: Profile, *, name: str | None = None, seeds: list[int] | No
         database = canonical if profile.name != "ci" else WorldRef(chosen_seeds[0], BASELINE)
     if len(set(chosen_seeds)) != len(chosen_seeds):
         raise PipelineError("seeds repeat")
-    directory = Path(runs) / (name or profile.name)
-    publish = profile.publish and world is None and not seeds and not families
+    run_name = name or profile.name
+    if not RUN_NAME.fullmatch(run_name) or ".." in run_name:
+        raise PipelineError(f"run name {run_name!r} must be a plain directory name")
+    directory = Path(runs) / run_name
+    # Only the profile as registered publishes: any override makes it a trial run.
+    publish = profile.publish and world is None and not seeds and not families and scale is None
     return Run(
-        name=name or profile.name,
+        name=run_name,
         directory=directory,
         results_dir=Path(results) if publish else directory / "results",
         docs_dir=Path(docs) if publish else directory / "docs",
@@ -227,15 +240,18 @@ def make_run(profile: Profile, *, name: str | None = None, seeds: list[int] | No
 class StageOutput:
     """What a stage hands back: published metrics and tables, plus lineage.
 
-    ``inputs`` maps a stable name (a repository path, or a run-relative path)
-    to a file whose SHA-256 goes into the result file; ``outputs`` lists files
-    or directories the stage wrote, hashed into the run's lineage only.
+    ``inputs`` names what the stage read: a repository path
+    (``config/policy.yaml``), a world (``world:416-baseline``, identified by its
+    manifest without the code commit) or an earlier stage's result
+    (``results/replay.json``). Their hashes go into the result file and are
+    checked again before the summary (:func:`input_hash`). ``outputs`` lists
+    files or directories the stage wrote, hashed into the run's lineage only.
     """
 
     metrics: dict[str, Metric] = field(default_factory=dict)
     tables: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
     notes: list[str] = field(default_factory=list)
-    inputs: dict[str, Path] = field(default_factory=dict)
+    inputs: list[str] = field(default_factory=list)
     outputs: list[Path] = field(default_factory=list)
 
 
@@ -268,15 +284,31 @@ def entry(stage: str, module: str, name: str) -> Callable[..., Any]:
     return call
 
 
-def _repo_inputs(*paths: str) -> dict[str, Path]:
-    return {path: REPO / path for path in paths if (REPO / path).exists()}
+def _repo_inputs(*paths: str) -> list[str]:
+    return [path for path in paths if (REPO / path).exists()]
 
 
-def _world_inputs(run: Run, worlds: list[WorldRef]) -> dict[str, Path]:
-    return {
-        f"worlds/{ref.name}/manifest.json": run.world_dir(ref) / "manifest.json"
-        for ref in worlds
-    }
+def _world_inputs(worlds: list[WorldRef]) -> list[str]:
+    return [f"world:{ref.name}" for ref in worlds]
+
+
+def manifest_identity(manifest: Mapping[str, Any]) -> str:
+    """SHA-256 of a world manifest without its code commit: what the world is."""
+    content = {key: value for key, value in manifest.items() if key != "code_commit"}
+    return hashlib.sha256(canonical_json(content).encode()).hexdigest()
+
+
+def input_hash(run: Run, name: str) -> str | None:
+    """The current SHA-256 of a stage input named as in :class:`StageOutput`; None if gone."""
+    if name.startswith("world:"):
+        seed, _, family = name[len("world:"):].partition("-")
+        path = run.world_dir(WorldRef(int(seed), family)) / "manifest.json"
+        return manifest_identity(json.loads(path.read_text())) if path.exists() else None
+    if name.startswith("results/"):
+        path = run.results_dir / name[len("results/"):]
+    else:
+        path = REPO / name
+    return file_sha256(path) if path.is_file() else None
 
 
 def _count(value: int, population: str, window: str = "all") -> Metric:
@@ -334,7 +366,7 @@ def stage_validate(run: Run) -> StageOutput:
     return StageOutput(
         metrics={"validate.worlds_valid": _count(len(rows), "worlds that passed validation")},
         tables={"validate.worlds": rows},
-        inputs=_world_inputs(run, run.all_worlds),
+        inputs=_world_inputs(run.all_worlds),
     )
 
 
@@ -366,7 +398,7 @@ def stage_load(run: Run) -> StageOutput:
                                      f"rows loaded into MySQL, world {ref.name}")},
         tables={"load.tables": [{"table": name, "rows": int(rows)}
                                 for name, rows in sorted(counts.items())]},
-        inputs=_world_inputs(run, [ref]),
+        inputs=_world_inputs([ref]),
     )
 
 
@@ -387,36 +419,39 @@ def stage_context(run: Run) -> StageOutput:
         rows.append({"seed": ref.seed, "family": ref.family, "rows": len(frame),
                      "columns": len(frame.columns)})
     return StageOutput(tables={"context.worlds": rows},
-                       inputs=_world_inputs(run, run.all_worlds) | _repo_inputs("core/asof.py"))
+                       inputs=_world_inputs(run.all_worlds) + _repo_inputs("core/asof.py"))
 
 
-def pool_over_seeds(per_seed: Mapping[int, Metric], what: str) -> Metric:
+def pool_over_seeds(per_seed: Mapping[int, Metric], what: str,
+                    seeds: tuple[int, ...] | None = None) -> Metric:
     """One metric from per-seed metrics: pooled numerator over denominator, or the mean.
 
     The per-seed values become the metric's seed spread. All seeds must share
-    unit, population and window.
+    unit, population and window, and when ``seeds`` is given exactly those
+    seeds must be present. If any seed was not evaluated the value is withheld,
+    naming those seeds, while a rate keeps its pooled numerator and denominator
+    so the documents still show its support.
     """
+    if seeds is not None and set(per_seed) != set(seeds):
+        raise PipelineError(f"{what}: reported for seeds {sorted(per_seed)}, "
+                            f"expected {sorted(seeds)}")
     metrics = list(per_seed.values())
     first = metrics[0]
     identity = (first.unit, first.population, first.window)
     for item in metrics:
         if (item.unit, item.population, item.window) != identity:
             raise PipelineError(f"{what}: seeds disagree on unit, population or window")
+    pooled = first.numerator is not None
+    numerator = sum(item.numerator for item in metrics) if pooled else None
+    denominator = sum(item.denominator for item in metrics) if pooled else None
     missing = sorted(seed for seed, item in per_seed.items() if not item.evaluated)
-    if missing:
+    if missing or (pooled and denominator == 0):
+        reason = f"not evaluated on seeds {missing}" if missing else "zero denominator"
         return Metric.not_evaluated(unit=first.unit, population=first.population,
-                                    window=first.window,
-                                    reason=f"not evaluated on seeds {missing}",
-                                    numerator=None if first.numerator is None else 0,
-                                    denominator=None if first.numerator is None else 0)
+                                    window=first.window, reason=reason,
+                                    numerator=numerator, denominator=denominator)
     spread = SeedSpread({seed: item.value for seed, item in per_seed.items()})
-    if first.numerator is not None:
-        numerator = sum(item.numerator for item in metrics)
-        denominator = sum(item.denominator for item in metrics)
-        if denominator == 0:
-            return Metric.not_evaluated(unit=first.unit, population=first.population,
-                                        window=first.window, reason="zero denominator",
-                                        numerator=numerator, denominator=0)
+    if pooled:
         return Metric.from_ratio(numerator, denominator, population=first.population,
                                  window=first.window, unit=first.unit, seeds=spread,
                                  note=first.note)
@@ -427,6 +462,7 @@ def pool_over_seeds(per_seed: Mapping[int, Metric], what: str) -> Metric:
 def stage_fit(run: Run) -> StageOutput:
     """Fit the classifiers of each seed on the baseline world's pre-test history."""
     fit = entry("fit", "model.train", "fit")
+    shutil.rmtree(run.directory / "fit", ignore_errors=True)  # no models from earlier runs
     per_key: dict[str, dict[int, Metric]] = {}
     outputs = []
     for seed in run.fit_seeds:
@@ -438,9 +474,10 @@ def stage_fit(run: Run) -> StageOutput:
             for key, item in result.metrics.items():
                 per_key.setdefault(key, {})[seed] = item
         outputs.append(out_dir)
-    metrics = {f"fit.{key}": pool_over_seeds(items, key) for key, items in per_key.items()}
+    metrics = {f"fit.{key}": pool_over_seeds(items, key, run.seeds)
+               for key, items in per_key.items()}
     return StageOutput(metrics=metrics, outputs=outputs,
-                       inputs=_world_inputs(run, [WorldRef(s, BASELINE) for s in run.fit_seeds]))
+                       inputs=_world_inputs([WorldRef(s, BASELINE) for s in run.fit_seeds]))
 
 
 def stage_tune(run: Run) -> StageOutput:
@@ -503,10 +540,13 @@ ALERT_COLUMNS = ("alert_id", "order_id", "user_id", "ts", "score", "band", "fire
 
 
 def write_alerts(frame: pd.DataFrame, settings=None) -> int:
-    """Recreate MySQL table ``alerts`` (``db/policy_tables.sql``) and insert ``frame``.
+    """Replace the rows of MySQL table ``alerts`` (``db/policy_tables.sql``) with ``frame``.
 
     ``fired_rules`` is a list of rule ids per row, stored as JSON. Runs after
-    the world is loaded: the table refers to its orders and accounts.
+    the world is loaded: the table refers to its orders and accounts, and each
+    alert's account must be the one that placed the order. The table is
+    created if missing; the old rows are deleted and the new ones inserted in
+    one transaction, so a failure leaves the previous alerts in place.
     """
     import pymysql
 
@@ -526,12 +566,21 @@ def write_alerts(frame: pd.DataFrame, settings=None) -> int:
     try:
         with connection.cursor() as cursor:
             for statement in loader.statements(POLICY_TABLES_SQL.read_text()):
-                cursor.execute(statement)
+                cursor.execute(statement)  # CREATE TABLE IF NOT EXISTS: commits on its own
+            connection.commit()
+            cursor.execute("DELETE FROM alerts")
             cursor.executemany(
                 f"INSERT INTO alerts ({', '.join(ALERT_COLUMNS)}) "
                 f"VALUES ({', '.join(['%s'] * len(ALERT_COLUMNS))})",
                 rows,
             )
+            cursor.execute(
+                "SELECT COUNT(*) FROM alerts a JOIN order_attempts o ON o.order_id = a.order_id "
+                "WHERE o.user_id <> a.user_id"
+            )
+            if mismatched := cursor.fetchone()[0]:
+                raise PipelineError(f"alerts: {mismatched} alerts name another account than "
+                                    "the order's")
             cursor.execute("SELECT COUNT(*) FROM alerts")
             count = cursor.fetchone()[0]
         if count != len(rows):
@@ -551,8 +600,8 @@ def write_alerts(frame: pd.DataFrame, settings=None) -> int:
 # the value and computed per seed for the spread.
 OUTCOME_METRICS: dict[str, tuple[str, str, str | None, str]] = {
     "net_contribution": ("cents", "net_cents", None, "platform net cash, test-window orders"),
-    "loss_bps_of_gmv": ("bps", "loss_cents", "gmv_cents",
-                        "fraud and abuse loss per 10,000 of GMV, test-window orders"),
+    "loss_of_gmv": ("bps", "loss_cents", "gmv_cents",
+                    "fraud and abuse loss per 10,000 of GMV, test-window orders"),
     "legitimate_held_per_10k": ("bps", "legit_held", "legit_orders",
                                 "legitimate orders held per 10,000 legitimate orders"),
     "legitimate_declined_per_10k": ("bps", "legit_declined", "legit_orders",
@@ -565,84 +614,113 @@ OUTCOME_METRICS: dict[str, tuple[str, str, str | None, str]] = {
 OUTCOME_KEYS = ("seed", "family", "capacity", "policy")
 
 
+def _plain(value: Any) -> int | float:
+    """A numpy or Python number as int when whole and integral-typed, else float."""
+    if isinstance(value, bool):
+        raise PipelineError(f"evaluate: {value!r} is not a quantity")
+    number = value.item() if hasattr(value, "item") else value
+    return number if isinstance(number, int) else float(number)
+
+
 def _per_seed(rows: pd.DataFrame, numerator: str, denominator: str | None,
-              unit: str) -> dict[int, float | int]:
+              unit: str) -> dict[int, int | float]:
     values = {}
     for row in rows.itertuples(index=False):
-        top = getattr(row, numerator)
+        top = _plain(getattr(row, numerator))
         if denominator is None:
-            values[int(row.seed)] = int(top) if float(top).is_integer() else float(top)
+            values[int(row.seed)] = top
         else:
-            bottom = getattr(row, denominator)
+            bottom = _plain(getattr(row, denominator))
             if bottom == 0:
                 raise PipelineError(f"evaluate: zero {denominator} on seed {row.seed}")
             values[int(row.seed)] = (10_000 if unit == "bps" else 1) * top / bottom
     return values
 
 
+def _column(name: str, unit: str) -> str:
+    """A table column name that declares its unit by suffix (see report.formats)."""
+    return name if name.endswith(f"_{unit}") else f"{name}_{unit}"
+
+
+def _check_grid(frame: pd.DataFrame, seeds: tuple[int, ...], families: tuple[str, ...],
+                policies: tuple[str, ...]) -> None:
+    """Every family, policy and capacity level, each on exactly the run's seeds."""
+    capacities = sorted(frame["capacity"].astype(str).unique())
+    expected = {
+        (family, capacity, policy, seed)
+        for family in families for capacity in capacities for policy in policies for seed in seeds
+    }
+    found = set(zip(frame["family"], frame["capacity"].astype(str), frame["policy"],
+                    frame["seed"].astype(int), strict=True))
+    if missing := sorted(expected - found):
+        raise PipelineError(f"evaluate: {len(missing)} outcome rows missing, first {missing[0]}")
+    if extra := sorted(found - expected):
+        raise PipelineError(f"evaluate: unexpected outcome rows, first {extra[0]}")
+
+
 def evaluate_outcomes(outcomes: list[dict[str, Any]], seeds: tuple[int, ...],
+                      families: tuple[str, ...], policies: tuple[str, ...],
                       window: str = "test") -> tuple[dict[str, Metric], list[dict[str, Any]]]:
     """Per-seed paired metrics from the replay's outcome rows.
 
     For each family, capacity level and policy: each metric pooled over seeds
     with its per-seed spread, and the per-seed paired difference against
-    approve-all and against the incumbent rules. Differences of shares and
-    rates are in basis points. Every (family, capacity, policy) must cover
-    exactly the run's seeds.
+    approve-all and against the incumbent rules (both must be among
+    ``policies``). Differences of shares and rates are in basis points. The
+    rows must cover every family, policy and capacity level on exactly the
+    run's seeds, once each.
     """
+    missing_references = sorted(set(REFERENCES) - set(policies))
+    if missing_references:
+        raise PipelineError(f"evaluate: the policies lack the references {missing_references}")
     frame = pd.DataFrame(outcomes)
     needed = set(OUTCOME_KEYS) | {c for _, n, d, _ in OUTCOME_METRICS.values() for c in (n, d) if c}
-    missing = sorted(needed - set(frame.columns))
-    if missing:
+    if missing := sorted(needed - set(frame.columns)):
         raise PipelineError(f"evaluate: the replay's outcome rows lack columns {missing}")
     if frame.duplicated(list(OUTCOME_KEYS)).any():
         raise PipelineError("evaluate: repeated outcome rows for a seed, family, capacity, policy")
+    _check_grid(frame, seeds, families, policies)
+    frame["capacity"] = frame["capacity"].astype(str)
     metrics: dict[str, Metric] = {}
     table_rows: list[dict[str, Any]] = []
     for (family, capacity), group in frame.groupby(["family", "capacity"], sort=True):
-        policies = sorted(group["policy"].unique())
-        values: dict[str, dict[str, dict[int, float | int]]] = {}
-        for policy in policies:
+        values: dict[str, dict[str, dict[int, int | float]]] = {}
+        for policy in sorted(policies):
             rows = group[group["policy"].eq(policy)]
-            if tuple(sorted(rows["seed"].astype(int))) != tuple(sorted(seeds)):
-                raise PipelineError(
-                    f"evaluate: {family}/{capacity}/{policy} covers seeds "
-                    f"{sorted(rows['seed'].astype(int))}, not {sorted(seeds)}"
-                )
             values[policy] = {}
-            summary_row: dict[str, Any] = {"family": family, "capacity": capacity,
-                                           "policy": policy, "seeds": len(seeds)}
             for name, (unit, numerator, denominator, population) in OUTCOME_METRICS.items():
                 per_seed = _per_seed(rows, numerator, denominator, unit)
                 values[policy][name] = per_seed
                 spread = SeedSpread(per_seed)
                 key = f"evaluate.{name}.{family}.{capacity}.{policy}"
                 if denominator is None:
-                    item = Metric(value=spread.mean, unit=unit, population=population,
-                                  window=window, seeds=spread)
+                    metrics[key] = Metric(value=spread.mean, unit=unit, population=population,
+                                          window=window, seeds=spread)
                 else:
-                    item = Metric.from_ratio(
-                        int(rows[numerator].sum()), int(rows[denominator].sum()),
+                    metrics[key] = Metric.from_ratio(
+                        _plain(rows[numerator].sum()), _plain(rows[denominator].sum()),
                         population=population, window=window, unit=unit, seeds=spread,
                     )
-                metrics[key] = item
-                summary_row[name] = item.value
-        for policy in policies:
+        for policy in sorted(policies):
             for reference in REFERENCES:
-                if reference not in values or reference == policy:
+                if reference == policy:
                     continue
                 for name, (unit, _, _, population) in OUTCOME_METRICS.items():
                     spread = paired_seed_differences(values[policy][name], values[reference][name])
-                    difference_unit = "bps" if unit in ("share", "rate") else unit
                     if unit in ("share", "rate"):
                         spread = SeedSpread({s: 10_000 * v for s, v in spread.per_seed.items()})
                     key = f"evaluate.{name}.vs_{reference}.{family}.{capacity}.{policy}"
                     metrics[key] = Metric(
-                        value=spread.mean, unit=difference_unit, window=window, seeds=spread,
+                        value=spread.mean, unit=_difference_unit(unit), window=window,
+                        seeds=spread,
                         population=f"{population}: {policy} minus {reference}, paired by seed",
                     )
-        table_rows += [row for row in _summary_rows(metrics, family, capacity, policies)]
+        table_rows += _summary_rows(metrics, family, capacity, sorted(policies))
     return metrics, table_rows
+
+
+def _difference_unit(unit: str) -> str:
+    return "bps" if unit in ("share", "rate") else unit
 
 
 def _summary_rows(metrics: dict[str, Metric], family: str, capacity: str,
@@ -650,12 +728,14 @@ def _summary_rows(metrics: dict[str, Metric], family: str, capacity: str,
     rows = []
     for policy in policies:
         row: dict[str, Any] = {"family": family, "capacity": capacity, "policy": policy}
-        for name in OUTCOME_METRICS:
-            row[name] = metrics[f"evaluate.{name}.{family}.{capacity}.{policy}"].value
+        cell = f"{family}.{capacity}.{policy}"
+        for name, (unit, *_) in OUTCOME_METRICS.items():
+            row[_column(name, unit)] = metrics[f"evaluate.{name}.{cell}"].value
             for reference in REFERENCES:
-                key = f"evaluate.{name}.vs_{reference}.{family}.{capacity}.{policy}"
-                item = metrics.get(key)
-                row[f"{name}_vs_{reference}"] = None if item is None else item.value
+                item = metrics.get(f"evaluate.{name}.vs_{reference}.{cell}")
+                row[_column(f"{name}_vs_{reference}", _difference_unit(unit))] = (
+                    None if item is None else item.value
+                )
                 row[f"{name}_vs_{reference}_positive_seeds"] = (
                     None if item is None else item.seeds.sign_count.positive
                 )
@@ -671,9 +751,10 @@ def stage_evaluate(run: Run) -> StageOutput:
     outcomes = read_result(replay_file).tables.get("replay.outcomes")
     if outcomes is None:
         raise PipelineError("evaluate: the replay result has no replay.outcomes table")
-    metrics, rows = evaluate_outcomes(outcomes, run.seeds)
+    metrics, rows = evaluate_outcomes(outcomes, run.seeds, run.families,
+                                      tuple(run.protocol.raw["policies"]))
     return StageOutput(metrics=metrics, tables={"evaluate.policies": rows},
-                       inputs={"results/replay.json": replay_file})
+                       inputs=["results/replay.json"])
 
 
 def stage_llm(run: Run) -> StageOutput:
@@ -690,12 +771,13 @@ STAGES = (
     Stage("validate", stage_validate, ("world",), "check worlds against the contract"),
     Stage("load", stage_load, ("world",), "load the database world into MySQL"),
     Stage("context", stage_context, ("world", "features"), "build the as-of context"),
-    Stage("fit", stage_fit, ("world", "features", "protocol"), "fit classifiers per seed"),
-    Stage("tune", stage_tune, ("world", "features", "policy", "protocol"),
+    Stage("fit", stage_fit, ("world", "features", "protocol", "models"),
+          "fit classifiers per seed"),
+    Stage("tune", stage_tune, ("world", "features", "policy", "protocol", "models"),
           "choose thresholds on validation"),
-    Stage("replay", stage_replay, ("world", "features", "policy", "protocol"),
+    Stage("replay", stage_replay, ("world", "features", "policy", "protocol", "models"),
           "replay every policy on every world"),
-    Stage("alerts", stage_alerts, ("world", "policy"), "routing decisions into MySQL"),
+    Stage("alerts", stage_alerts, ("world", "policy", "models"), "routing decisions into MySQL"),
     Stage("evaluate", stage_evaluate, ("world", "features", "policy", "protocol"),
           "paired comparisons across seeds"),
     Stage("llm", stage_llm, ("benchmark", "policy"), "offline LLM benchmark replay"),
@@ -719,13 +801,25 @@ def files_version(paths: tuple[str, ...], root: Path = REPO) -> str:
     return _short(digest)
 
 
+def models_version(run: Run) -> str:
+    """A short hash over what the fit stage wrote (model metadata), or "none"."""
+    directory = run.directory / "fit"
+    files = sorted(path for path in directory.rglob("*") if path.is_file()) \
+        if directory.exists() else []
+    if not files:
+        return "none"
+    digest = hashlib.sha256()
+    for path in files:
+        digest.update(path.relative_to(directory).as_posix().encode() + b"\0")
+        digest.update(path.read_bytes() + b"\0")
+    return _short(digest)
+
+
 def world_version(run: Run) -> str:
     """A short hash over the run's world manifests (the code commit left out)."""
     digest = hashlib.sha256()
     for ref in run.all_worlds:
-        manifest = dict(run.manifest(ref))
-        manifest.pop("code_commit", None)
-        digest.update(canonical_json(manifest).encode())
+        digest.update(manifest_identity(run.manifest(ref)).encode())
     return _short(digest)
 
 
@@ -734,6 +828,8 @@ def versions(run: Run, names: tuple[str, ...]) -> dict[str, str]:
     for name in names:
         if name == "world":
             out[name] = world_version(run)
+        elif name == "models":
+            out[name] = models_version(run)
         elif name == "benchmark":
             manifests = sorted(
                 path.relative_to(REPO).as_posix()
@@ -745,20 +841,24 @@ def versions(run: Run, names: tuple[str, ...]) -> dict[str, str]:
     return out
 
 
-def _git(*args: str) -> str | None:
+def _git(root: Path, *args: str) -> str | None:
     try:
-        done = subprocess.run(["git", "-C", str(REPO), *args], capture_output=True, text=True,
+        done = subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True,
                               check=True)
     except (OSError, subprocess.CalledProcessError):
         return None
     return done.stdout.strip()
 
 
-def code_identity() -> dict[str, Any]:
-    """The commit the run used, and whether the working tree had changes."""
-    status = _git("status", "--porcelain", "--untracked-files=no")
+def code_identity(root: Path = REPO) -> dict[str, Any]:
+    """The commit the run used, and whether the tree had changes or untracked files.
+
+    Untracked files count (an uncommitted module can be imported); ignored
+    ones (runs/, data/, caches) do not.
+    """
+    status = _git(root, "status", "--porcelain", "--untracked-files=normal")
     dirty = None if status is None else bool(status)
-    return {"commit": _git("rev-parse", "HEAD"), "dirty": dirty}
+    return {"commit": _git(root, "rev-parse", "HEAD"), "dirty": dirty}
 
 
 def _hash_outputs(paths: list[Path], run: Run) -> dict[str, str]:
@@ -815,7 +915,7 @@ def run_stage(run: Run, stage: Stage, lineage: Lineage) -> Path:
     result = StageResult(
         stage=stage.name,
         versions=versions(run, stage.versions),
-        inputs={name: file_sha256(path) for name, path in output.inputs.items()},
+        inputs={name: _required_input(run, stage.name, name) for name in output.inputs},
         metrics=output.metrics,
         tables=output.tables,
         notes=output.notes,
@@ -833,12 +933,36 @@ def run_stage(run: Run, stage: Stage, lineage: Lineage) -> Path:
     return path
 
 
+def _required_input(run: Run, stage: str, name: str) -> str:
+    digest = input_hash(run, name)
+    if digest is None:
+        raise PipelineError(f"{stage}: input {name} does not exist")
+    return digest
+
+
+def stale_inputs(run: Run, results: list[StageResult]) -> list[str]:
+    """Inputs that changed after the stage that read them ran."""
+    problems = []
+    for result in results:
+        for name, recorded in result.inputs.items():
+            if input_hash(run, name) != recorded:
+                problems.append(f"{result.stage}: {name} changed since it ran; "
+                                f"rerun from {result.stage}")
+    return problems
+
+
 def summarize(run: Run) -> Path:
-    """Assemble ``summary.json`` from one result file per stage; refuse an incomplete set."""
+    """Assemble ``summary.json`` from one current result file per stage.
+
+    Refuses an incomplete set, a stage whose inputs changed after it ran, and
+    stages that disagree on a version (``core.results.VersionMismatch``).
+    """
     missing = [name for name in STAGE_NAMES if not (run.results_dir / f"{name}.json").exists()]
     if missing:
         raise PipelineError(f"no results from stages {missing}; the run is not complete")
     results = [read_result(run.results_dir / f"{name}.json") for name in STAGE_NAMES]
+    if stale := stale_inputs(run, results):
+        raise PipelineError("out-of-date results: " + "; ".join(stale))
     return write_summary(results, run.results_dir)
 
 
@@ -871,8 +995,9 @@ def preflight(profile: Profile, run: Run) -> None:
     """Checks before anything is written."""
     if profile.name == "final":
         protocol_module.require_freeze()
-        if code_identity()["dirty"]:
-            raise PipelineError("the final run needs a clean working tree (commit first)")
+        if code_identity()["dirty"] is not False:
+            raise PipelineError("the final run needs a clean working tree with no untracked "
+                                "files (commit first)")
     for ref in run.all_worlds:
         protocol_module.check_seed(ref.seed)
 
