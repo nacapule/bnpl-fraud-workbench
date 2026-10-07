@@ -27,12 +27,17 @@ phrases documents use):
 * a sentence negated directly before its comparative word ("no higher than",
   "not more than") is tested as ``no_detected_difference`` or ``equivalent``,
   and only such a sentence is. Negation elsewhere ("did not earn more"),
-  exceptions, hedges and magnitudes (``refused_words``: "without", "barely",
-  "far") are refused; a magnitude is stated with a rendered number;
+  exceptions, hedges, magnitudes and universal or exclusive words
+  (``refused_words``: "without", "barely", "far", "every", "never", "only")
+  are refused; a magnitude or a count of seeds is stated with a rendered value;
+* a sentence about the mean difference (``average_words``: "mean",
+  "average") needs ``interval`` checks; a sign test speaks of most seeds,
+  not of the mean;
 * both sides compare like with like: a metric, family or capacity level named
   on one side of the comparative word holds for both, and naming different
   ones on the two sides ("hybrid at high staffing ... incumbent rules at low
-  staffing") is refused.
+  staffing") is refused. A name around the comparative word ("held fewer
+  legitimate orders") is on both sides.
 
 A check's key names what it tests: for ``sign`` and ``interval``, one policy, one
 ``vs_<reference>`` segment, one metric, and at most one family and one capacity
@@ -136,6 +141,7 @@ class Vocabulary:
     comparatives: Mapping[str, str]  # word -> up, down, good or bad
     negations: tuple[str, ...]
     refused: tuple[str, ...]
+    averages: tuple[str, ...]  # words that make a sentence about the mean difference
     polarity: Mapping[str, int]  # metric -> +1 when higher is better, -1 when lower is
     defaults: Mapping[str, str]  # families / capacities -> the name meant when none is named
 
@@ -176,7 +182,8 @@ class Vocabulary:
                 raise ValueError(f"defaults: {group}: {name} is not one of the {group}")
         return cls(groups=groups, references=references, comparatives=comparatives,
                    negations=tuple(config.get("negations") or ()),
-                   refused=tuple(config.get("refused_words") or ()), polarity=polarity,
+                   refused=tuple(config.get("refused_words") or ()),
+                   averages=tuple(config.get("average_words") or ()), polarity=polarity,
                    defaults=defaults)
 
     @property
@@ -275,16 +282,23 @@ def _mcnemar(check: Check, summary: Mapping[str, Any]) -> str | None:
 
 
 # ---------------------------------------------------------------- sentence and checks
-def mentions(names: Mapping[str, Iterable[str]], text: str,
-             between: Iterable[str] = ()) -> list[tuple[tuple[int, int], str]]:
+def _alternation(words: Iterable[str]) -> str:
+    words = sorted({normalize(word) for word in words if normalize(word)}, key=len, reverse=True)
+    return "|".join(re.escape(word) for word in words)
+
+
+def mentions(names: Mapping[str, Iterable[str]], text: str, between: Iterable[str] = (),
+             negations: Iterable[str] = ()) -> list[tuple[tuple[int, int], str]]:
     """Where ``text`` names each name: whole words, case-insensitive, the longest
     phrase first (so "expected loss" is the policy, not the metric). A word of
-    ``between`` may sit between a phrase's words: "held fewer legitimate orders"
-    names "held legitimate orders"."""
-    between = sorted({normalize(word) for word in between if normalize(word)}, key=len,
-                     reverse=True)
-    gap = r"\s+" if not between else (
-        r"\s+(?:(?:" + "|".join(re.escape(word) for word in between) + r")\s+)?")
+    ``between``, perhaps negated, may sit between a phrase's words: "held fewer
+    legitimate orders" and "held no more legitimate orders" name "held legitimate
+    orders"."""
+    gap = r"\s+"
+    if comparatives := _alternation(between):
+        negated = _alternation(negations)
+        optional = rf"(?:(?:{negated})\s+)?" if negated else ""
+        gap = rf"\s+(?:{optional}(?:{comparatives})\s+)?"
     phrases = sorted(
         {(normalize(phrase), name) for name, items in names.items() for phrase in items
          if normalize(phrase)},
@@ -369,25 +383,34 @@ def claim_problems(claim: Claim, vocabulary: Vocabulary) -> list[str]:
                                   "families": set(), "capacities": set()}
     sides: dict[str, dict[str, set[str]]] = {group: {"before": set(), "after": set()}
                                              for group in ("metrics", "families", "capacities")}
-    for (first, last), name in mentions(vocabulary.names, sentence, vocabulary.comparatives):
+    found_names = mentions(vocabulary.names, sentence, vocabulary.comparatives,
+                           vocabulary.negations)
+    for (first, last), name in found_names:
         group = vocabulary.group_of(name)
         side = "before" if last <= start else "after" if first >= end else None
         if group == "policies":
             named[side or "after"].add(name)
         else:
             named[group].add(name)
-            if side:
-                sides[group][side].add(name)
+            for each in (side,) if side else ("before", "after"):  # straddling: both sides
+                sides[group][each].add(name)
     problems = []
     for group, seen in sides.items():
         if seen["before"] and seen["after"] and seen["before"] != seen["after"]:
             problems.append(f"its sentence names {_phrase_list(seen['before'])} before {word!r} "
                             f"and {_phrase_list(seen['after'])} after it ({group}); compare "
                             "like with like, or write two sentences")
-    if refused := [sentence[a:b] for a, b in phrase_spans(vocabulary.refused, sentence)]:
+    names_at = [span for span, _ in found_names]
+
+    def outside_names(words: Iterable[str]) -> list[str]:
+        return [sentence[a:b] for a, b in phrase_spans(words, sentence)
+                if not any(x <= a and b <= y for x, y in names_at)]
+
+    if refused := outside_names(vocabulary.refused):
         problems.append(f"its sentence has {', '.join(repr(w) for w in refused)}, which change "
-                        "what the comparison says; rewrite without them (a magnitude as a "
-                        "rendered number)")
+                        "what the comparison says and no check tests; rewrite without them "
+                        "(state a magnitude or a count of seeds with a rendered value)")
+    averaged = outside_names(vocabulary.averages)
     negations = phrase_spans(vocabulary.negations, sentence)
     adjacent = [(a, b) for a, b in negations if b <= start and not sentence[b:start].strip()]
     stray = [sentence[a:b] for a, b in negations if (a, b) not in adjacent]
@@ -412,6 +435,10 @@ def claim_problems(claim: Claim, vocabulary: Vocabulary) -> list[str]:
         found.append(item)
         problems += [f"check {index}: {problem}"
                      for problem in _match_problems(item, named, word, vocabulary)]
+        if averaged and check.test != "interval":
+            problems.append(f"check {index}: {averaged[0]!r} speaks of the mean difference, "
+                            f"which a {check.test} test does not; use an interval check of the "
+                            "mean difference, or drop the word")
         if negated != (check.direction in ("no_detected_difference", "equivalent")):
             problems.append(
                 f"check {index}: a negated comparison is tested as no_detected_difference or "

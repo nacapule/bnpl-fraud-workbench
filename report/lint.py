@@ -131,6 +131,7 @@ def load_config(path: Path = CONFIG) -> dict[str, Any]:
         "directional_words": [word for words in comparatives.values() for word in words],
         "negations": _words(data.get("negations"), "negations"),
         "refused_words": _words(data.get("refused_words"), "refused_words"),
+        "average_words": _words(data.get("average_words"), "average_words"),
         "polarity": {str(key): str(value) for key, value in (data.get("polarity") or {}).items()},
         "defaults": {str(key): str(value) for key, value in (data.get("defaults") or {}).items()},
         "allowed_sentences": list(data.get("allowed_sentences", [])),
@@ -197,19 +198,40 @@ def _closes(fence: str, stripped: str) -> bool:
     return stripped.startswith(fence) and set(stripped) == {fence[0]}
 
 
+def _cells(row: str) -> int:
+    """How many cells a table row has: unescaped pipes, outer ones not counted."""
+    row = row.strip()
+    row = row[1:] if row.startswith("|") else row
+    row = row[:-1] if row.endswith("|") and not row.endswith("\\|") else row
+    return len(re.split(r"(?<!\\)\|", row))
+
+
 def _blank_fences(text: str) -> str:
-    """Fenced code blanked wherever it sits (in lists and quotes too), for the number lint."""
-    out, fence = [], None
+    """Fenced code blanked wherever it sits (in lists and quotes too), for the number lint.
+
+    An open fence's lines are read as its content before any container mark; the
+    fence ends at its closer or where its container ends (fewer quote marks, or a
+    line indented less than its list item's content).
+    """
+    out: list[str] = []
+    fence: tuple[str, int, int] | None = None  # marker, quote depth, content column
     for line in text.split("\n"):
-        _, rest, _ = _unquote(line)
+        if fence is not None:
+            marker, depth, column = fence
+            quotes, rest, _ = _unquote(line) if depth else (0, line, 0)
+            ended = quotes < depth or (column and rest.strip() and _indent(rest) < column)
+            if not ended:
+                if _indent(rest) <= column + 3 and _closes(marker, rest.strip()):
+                    fence = None
+                out.append(" " * len(line))
+                continue
+            fence = None
+        depth, rest, _ = _unquote(line)
         item = LIST_ITEM.match(rest)
         content = (rest[item.end():] if item else rest).strip()
-        if fence is not None:
-            if _closes(fence, content):
-                fence = None
-            out.append(" " * len(line))
-        elif opened := _fence(content):
-            fence = opened
+        if opened := _fence(content):
+            column = len(item.group(0).replace("\t", "    ")) if item else _indent(rest)
+            fence = (opened, depth, column if item else 0)
             out.append(" " * len(line))
         else:
             out.append(line)
@@ -254,7 +276,7 @@ def _scan(text: str) -> tuple[list[tuple[int, str]], list[tuple[int, str]]]:
         for deeper in [key for key in state if key > depth]:
             del state[deeper]
         context = state.setdefault(
-            depth, {"blank": True, "code": False, "fence": None, "table": False, "lists": []})
+            depth, {"blank": True, "code": False, "fence": None, "table": None, "lists": []})
         previous_depth, previous_prose = depth, False
         if context["fence"]:
             fence, limit = context["fence"]
@@ -263,14 +285,15 @@ def _scan(text: str) -> tuple[list[tuple[int, str]], list[tuple[int, str]]]:
             out.append((depth, ""))
             continue
         if not stripped:
-            context.update(blank=True, table=False)
+            context.update(blank=True, table=None)
             out.append((depth, ""))
             continue
-        if context["table"]:
-            if not (BLOCK_START.match(line) or _fence(stripped) or BREAK.match(line)):
+        if context["table"] is not None:
+            if not (BLOCK_START.match(line) or _fence(stripped) or BREAK.match(line)
+                    or _indent(line) < context["table"]):
                 out.append((depth, ""))  # a table row
                 continue
-            context["table"] = False
+            context["table"] = None  # another block, or the list item it was in has ended
         indent = _indent(line)
         item = LIST_ITEM.match(line)
         lists = context["lists"]
@@ -299,8 +322,11 @@ def _scan(text: str) -> tuple[list[tuple[int, str]], list[tuple[int, str]]]:
         if "|" in content and number < len(lines):
             next_depth, next_line, _ = _unquote(lines[number])
             if next_depth == depth and "|" in next_line and \
-                    TABLE_DELIMITER.match(next_line.strip()):
-                context.update(table=True, blank=False)
+                    TABLE_DELIMITER.match(next_line.strip()) and \
+                    _cells(content) == _cells(next_line):
+                if item or lists or depth:
+                    unsupported.append((number, "a table inside a list or block quote"))
+                context.update(table=indent, blank=False)
                 out.append((depth, ""))  # the header row
                 continue
         if BREAK.match(line):

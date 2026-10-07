@@ -285,6 +285,16 @@ def test_inline_code_with_three_backticks_does_not_open_a_fence() -> None:
     assert [f.text for f in lint.number_findings("README.md", template)] == ["84"]
 
 
+@pytest.mark.parametrize("template", [
+    "```markdown\n> ```text\n> example 12\n> ```\n```\n\nLoss was 84% of GMV.\n",  # quoted
+    "- ```\n  code 12\nLoss was 84% of GMV.\n",  # the list item, and its fence, ended
+    "> ```\n> code 12\n\nLoss was 84% of GMV.\n",  # the quote, and its fence, ended
+])
+def test_a_fence_ends_with_its_closer_or_its_container(template: str) -> None:
+    """Fence content is read as content first; a fence never outlives its container."""
+    assert [f.text for f in lint.number_findings("README.md", template)] == ["84"]
+
+
 def test_identifiers_code_links_and_list_markers_are_not_numbers() -> None:
     template = (
         "1. Rule R01 and R11 fire; FP-2 §6.3(a) and §5.2 apply at P0 to P3.\n"
@@ -362,6 +372,10 @@ def test_code_blocks_and_headings_do_not_join_sentences() -> None:
     ("| Hybrid earned more than incumbent rules.\n",  # a pipe alone is not a table
      ["| Hybrid earned more than incumbent rules."]),
     ("| a | b |\n|---|---|\n| hybrid | more |\nrow\n\nAfter the table.\n", ["After the table."]),
+    ("- Results:\n\n  |Policy|Net|\n  |---|---|\n  |Hybrid|ok|\nHybrid earned more.\n",
+     ["Results:", "Hybrid earned more."]),  # the list item, and its table, ended
+    ("| Hybrid earned more. |\n|---|---|\n",  # cells do not match: not a table
+     ["| Hybrid earned more.", "| |---|---|"]),
 ])
 def test_sentences_are_what_markdown_shows(text: str, expected: list[str]) -> None:
     """Code inside quotes and lists is hidden; quotes, emphasis and links read as text."""
@@ -374,6 +388,7 @@ def test_sentences_are_what_markdown_shows(text: str, expected: list[str]) -> No
     ("- Item.\n\n  ```\n  Hybrid earned more.\n  ```\n",
      [(3, "fenced code inside a list or block quote")]),
     ("> ```\n> Hybrid earned more.\n> ```\n", [(1, "fenced code inside a list or block quote")]),
+    ("- Results:\n\n  |Policy|Net|\n  |---|---|\n", [(3, "a table inside a list or block quote")]),
     ("100. Item.\n\n     >     Hybrid earned more than incumbent rules.\n",
      [(3, "a block quote inside a list item")]),
     ("- Item.\n\n  > Hybrid earned more\n  > than incumbent rules.\n",
@@ -507,7 +522,7 @@ VOCABULARY = claims_module.Vocabulary.from_config({
                      "expected_loss": ["expected loss"]},
         "metrics": {"net": ["earned", "net contribution"], "loss": ["loss"],
                     "held": ["legitimate orders held", "held legitimate orders"],
-                    "minutes": ["review minutes"]},
+                    "declined": ["good orders declined"], "minutes": ["review minutes"]},
         "families": {"baseline": ["baseline world"], "surge": ["acquisition surge"]},
         "capacities": {"base": ["base capacity"], "high": ["high capacity", "high staffing"],
                        "low": ["low staffing"]},
@@ -516,7 +531,8 @@ VOCABULARY = claims_module.Vocabulary.from_config({
     "comparatives": {"up": ["more", "higher"], "down": ["less", "fewer", "lower"],
                      "good": ["better", "beats"], "bad": ["worse"]},
     "negations": ["not", "no"],
-    "refused_words": ["without", "barely", "far", "didn't"],
+    "refused_words": ["without", "barely", "far", "didn't", "every", "never", "all"],
+    "average_words": ["mean", "average"],
     "polarity": {"net": "higher", "loss": "lower", "held": "lower"},
     "defaults": {"families": "baseline", "capacities": "base"},
 })
@@ -633,6 +649,33 @@ def test_negation_is_read_only_directly_before_the_comparative_word() -> None:
         "('no more than')"]
     assert problems_of("Hybrid's net contribution was not higher than incumbent rules'.",
                        {**AGAINST_RULES, "direction": "no_detected_difference"}) == []
+
+
+def test_wording_the_tests_do_not_cover_is_refused() -> None:
+    """A sign test over seeds says most seeds, not every seed and not the mean."""
+    assert problems_of("Hybrid earned more than incumbent rules on every seed.",
+                       AGAINST_RULES)[0].startswith("its sentence has 'every'")
+    assert problems_of("Hybrid's net contribution was never higher than incumbent rules'.",
+                       {**AGAINST_RULES, "direction": "no_detected_difference"})[0] \
+        .startswith("its sentence has 'never'")
+    mean = "Hybrid's mean net contribution was higher than incumbent rules'."
+    assert problems_of(mean, AGAINST_RULES) == [
+        "check 1: 'mean' speaks of the mean difference, which a sign test does not; use an "
+        "interval check of the mean difference, or drop the word"]
+    assert problems_of(mean, {**AGAINST_RULES, "test": "interval"}) == []
+    assert problems_of("Hybrid earned more than approve-all.", AGAINST_ALL) == []  # a name
+
+
+def test_a_name_around_the_comparative_is_on_both_sides() -> None:
+    crossed = ("Hybrid held fewer legitimate orders than the good orders declined by "
+               "incumbent rules.")
+    held = {"direction": "negative", "key": "replay.held.vs_incumbent.hybrid"}
+    declined = {"direction": "negative", "key": "replay.declined.vs_incumbent.hybrid"}
+    assert problems_of(crossed, held, declined) == [
+        "its sentence names held before 'fewer' and declined, held after it (metrics); compare "
+        "like with like, or write two sentences"]
+    assert problems_of("Hybrid held no more legitimate orders than incumbent rules.",
+                       {**held, "direction": "no_detected_difference"}) == []
 
 
 def test_the_repository_negations_survive_yaml(tmp_path: Path) -> None:

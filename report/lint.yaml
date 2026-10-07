@@ -37,18 +37,27 @@ comparatives:
 # Negation is read only directly before the comparative word ("no more than",
 # "not higher than"); such a claim is tested as no_detected_difference or
 # equivalent. Quoted: YAML reads a bare no as false.
-negations: ["not", "no", "never"]
+negations: ["not", "no"]
 
 # Words a claim's sentence may not hold, because they change what its
 # comparison says in ways the checks cannot follow: negation away from the
 # comparative word, exceptions, hedges and magnitudes (state a magnitude with a
 # rendered number instead).
+# Universal and exclusive words ("every seed", "never", "only") claim more than a
+# test over seeds shows; a count of seeds is a rendered value ({{ key | signs }}).
+# Words inside a name ("approve-all") do not count.
 refused_words: ["without", "except", "excluding", "unless", "unlike", "whereas", "neither",
-                "nor", "none", "cannot", "can't", "didn't", "doesn't", "don't", "isn't",
-                "wasn't", "aren't", "weren't", "hasn't", "haven't", "hadn't", "won't",
+                "nor", "none", "never", "cannot", "can't", "didn't", "doesn't", "don't",
+                "isn't", "wasn't", "aren't", "weren't", "hasn't", "haven't", "hadn't", "won't",
                 "wouldn't", "fail", "fails", "failed", "barely", "hardly", "scarcely",
                 "rarely", "nearly", "almost", "slightly", "marginally", "somewhat", "far",
-                "much", "substantially", "considerably", "dramatically", "vastly", "greatly"]
+                "much", "substantially", "considerably", "dramatically", "vastly", "greatly",
+                "every", "each", "all", "any", "always", "consistently", "uniformly",
+                "invariably", "only", "solely", "exclusively"]
+
+# Words that make a sentence about the mean difference over seeds, which takes an
+# interval check of the mean difference rather than a sign test.
+average_words: ["mean", "average", "averaged", "averages"]
 
 # Comparative sentences that state no result (exact sentence text).
 allowed_sentences: []
