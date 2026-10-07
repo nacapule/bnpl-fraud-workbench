@@ -10,12 +10,12 @@ from pathlib import Path
 
 import joblib
 import pandas as pd
-import yaml
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from core.config import legacy
 from model.features import FEATURE_COLUMNS, build_features, load_feature_frames
 
 REPO = Path(__file__).resolve().parent.parent
@@ -26,9 +26,8 @@ MODEL_FILES = {
 }
 
 
-def load_config(path: str | Path = REPO / "config.yaml") -> dict:
-    with Path(path).open() as handle:
-        return yaml.safe_load(handle)
+def load_config() -> dict:
+    return legacy()
 
 
 def chronological_split(

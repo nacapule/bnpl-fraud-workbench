@@ -8,8 +8,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-import yaml
 
+from core.config import legacy
 from queue_sim.simulate import load_inputs, run_policy
 from queue_sim.sweep import (
     HEADCOUNTS,
@@ -26,8 +26,7 @@ REPO = Path(__file__).resolve().parents[1]
 
 @pytest.fixture(scope="module")
 def config() -> dict:
-    with (REPO / "config.yaml").open() as handle:
-        return yaml.safe_load(handle)
+    return legacy()
 
 
 @pytest.fixture(scope="module")

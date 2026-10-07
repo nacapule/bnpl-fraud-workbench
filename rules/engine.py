@@ -270,10 +270,11 @@ def run_rules(ap: pd.DataFrame) -> pd.DataFrame:
 
 def main() -> None:
     import sqlalchemy as sa
-    import yaml
+
+    from core.config import db_settings, legacy
 
     t0 = time.time()
-    cfg = yaml.safe_load(open(REPO / "config.yaml"))
+    cfg = legacy()
     bands = cfg["rules"]["bands"]
     ap = build_enriched()
     ap = run_rules(ap)
@@ -287,10 +288,7 @@ def main() -> None:
     out["fired_rules"] = banded.fired_rules.map(json.dumps)
     out.to_csv(REPO / "data" / "alerts.csv", index=False)
 
-    db = cfg["db"]
-    eng = sa.create_engine(
-        f"mysql+pymysql://{db['user']}:{db['password']}@{db['host']}:{db['port']}/{db['database']}"
-    )
+    eng = sa.create_engine(db_settings().sqlalchemy_url())
     with eng.begin() as c:
         c.execute(sa.text("DELETE FROM alerts"))
         out.to_sql("alerts", c, if_exists="append", index=False, chunksize=5000)

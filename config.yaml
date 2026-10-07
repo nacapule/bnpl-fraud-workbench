@@ -1,5 +1,7 @@
-# bnpl-fraud-workbench configuration
-# Single source of truth for seeds, volumes, costs, thresholds, and model routing.
+# Configuration of the current pipeline, read through core.config.legacy().
+# The new configuration lives in config/world.yaml, config/policy.yaml and
+# config/llm.yaml; this file is removed once nothing reads it. The database
+# endpoint comes from config/world.yaml (with BNPL_DB_* overrides).
 
 seed: 416
 holdout_start: "2026-04-01"
@@ -21,13 +23,6 @@ simulator:
     promo_clusters: 2
     promo_accounts: 190
     merchant_bustouts: 2
-
-db:
-  host: 127.0.0.1
-  port: 3306
-  user: fraud
-  password: fraudpw          # local docker-compose only; not a secret
-  database: bnpl
 
 costs:
   review_cost_usd: 2.50          # per manual case review (assumption, documented)

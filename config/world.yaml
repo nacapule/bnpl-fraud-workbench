@@ -1,0 +1,60 @@
+# Synthetic world: what the generator builds and the product it simulates.
+# Every value here is a modelling assumption; docs/methods.md states the reason
+# for each. Seeds, evaluation windows and families' start dates are
+# pre-registered in experiments/protocol.yaml, not here.
+
+generator_version: "2.0.0-dev"
+
+# One platform-local clock: naive timestamps at one-second resolution.
+clock: platform-local, naive, seconds
+
+volume:
+  target_orders: 120000          # order attempts over the order horizon
+  target_fraud_share: 0.01       # about today's level; never tuned toward a result
+  merchants: 150
+
+# Pay-in-4 product terms, read by core/ledger.py.
+product:
+  down_payment_bps: 2500         # 25% collected at approval
+  n_installments: 3              # remaining balance in three installments
+  installment_interval_days: 14  # fortnightly, first one 14 days after approval
+  # Down payment is 25% rounded down to the cent; the rest is split evenly and
+  # leftover cents go to the earliest installments, one cent each.
+  remainder_rule: earliest_installments_first
+  merchant_discount_bps: 500     # merchant settled at fulfilment net of 5%
+  dispute_fee_cents: 1500        # network fee per dispute, charged at opening
+  liability:                     # who bears a lost dispute
+    unauthorized: platform
+    item_not_received: merchant  # platform when the merchant has closed
+    not_as_described: merchant   # platform when the merchant has closed
+  writeoff_after_days: 14        # after the last installment's due date, if unpaid
+  recovery_lag_days: 30          # one recovery event after write-off
+  recovery_rate_bps: 2000        # 20% of the written-off balance
+  promotions_funded_by: platform
+
+fulfilment:
+  median_lag_hours: 12           # per-merchant attribute; per-order draws around it
+
+# Adjudicated label (core.world.adjudicate). Unknown is not negative.
+labels:
+  horizon_days: 60
+  zero_effort_max_paid_installments: 0   # never-pay determination (fraud policy)
+
+# Parameter changes each family applies from its start date (protocol.yaml).
+families:
+  baseline: {}
+  acquisition_surge:
+    new_customer_multiplier: 2.0
+    first_purchase_promotion: FIRST10
+  fraud_mix_shift:
+    sleeper_stolen_card_accounts: true
+    takeover_share_multiplier: 2.0
+
+# MySQL endpoint the world is loaded into. Override per run with BNPL_DB_HOST,
+# BNPL_DB_PORT, BNPL_DB_USER, BNPL_DB_PASSWORD and BNPL_DB_NAME.
+db:
+  host: 127.0.0.1
+  port: 3306
+  user: fraud
+  password: fraudpw              # local docker-compose only; not a secret
+  database: bnpl

@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import yaml
+from core.config import legacy
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CACHE_DIR = REPO_ROOT / "llm" / "eval" / "cache"
@@ -42,8 +42,7 @@ MIN_AUTHORITATIVE_INPUT_TOKENS = 100
 
 
 def load_config() -> dict[str, Any]:
-    with open(REPO_ROOT / "config.yaml") as f:
-        return yaml.safe_load(f)
+    return legacy()
 
 
 def resolve_model(task: str, override: str | None = None) -> str:

@@ -26,12 +26,12 @@ from typing import Any
 import joblib
 import numpy as np
 import pandas as pd
-import yaml
 from sklearn.metrics import average_precision_score
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
+from core.config import legacy  # noqa: E402
 from model.features import FEATURE_COLUMNS, build_features, load_feature_frames  # noqa: E402
 from model.train import ARTIFACT_DIR, MODEL_FILES, chronological_split  # noqa: E402
 
@@ -112,8 +112,7 @@ def bootstrap_pr_auc(
 
 
 def _config() -> dict[str, Any]:
-    with (REPO / "config.yaml").open() as handle:
-        return yaml.safe_load(handle)
+    return legacy()
 
 
 def _result(prompt_version: str, model: str) -> dict[str, Any]:

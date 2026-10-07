@@ -15,8 +15,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import yaml
 
+from core.config import legacy
 from simulator.behavior import World, run_benign
 from simulator.patterns import inject_all
 from simulator.population import build_population
@@ -26,8 +26,7 @@ TS_FMT = "%Y-%m-%d %H:%M:%S"
 
 
 def load_scaled_config() -> dict:
-    with open(REPO / "config.yaml") as f:
-        cfg = yaml.safe_load(f)
+    cfg = legacy()
     scale = float(os.environ.get("SIM_SCALE", "1.0"))
     if scale != 1.0:
         s = cfg["simulator"]

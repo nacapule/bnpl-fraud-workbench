@@ -15,9 +15,11 @@ import time
 from pathlib import Path
 
 import pymysql
-import yaml
 
 REPO = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO))
+
+from core.config import db_settings  # noqa: E402
 
 TABLES = [
     "users", "devices", "user_devices", "cards", "addresses", "merchants", "orders",
@@ -80,8 +82,7 @@ def load_table(conn: pymysql.Connection, name: str) -> int:
 
 
 def main() -> None:
-    with open(REPO / "config.yaml") as f:
-        cfg = yaml.safe_load(f)["db"]
+    cfg = db_settings().pymysql_kwargs()
     t0 = time.time()
     conn = connect(cfg)
     ddl = "\n".join(

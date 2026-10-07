@@ -10,19 +10,18 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-import yaml
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
+from core.config import legacy  # noqa: E402
 from model.features import build_features, load_feature_frames  # noqa: E402
 from rules.definitions import RULES  # noqa: E402
 from rules.engine import build_enriched, run_rules  # noqa: E402
 
 
 def _config() -> dict[str, Any]:
-    with (REPO / "config.yaml").open() as handle:
-        return yaml.safe_load(handle)
+    return legacy()
 
 
 @lru_cache(maxsize=1)

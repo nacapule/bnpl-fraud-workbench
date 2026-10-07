@@ -1,0 +1,37 @@
+# Operating policy: the single policy artifact read by the rules engine, the
+# replay and the case files. Costs and service times are stated assumptions.
+
+rules:
+  # Score = sum of fired rule weights; bands are chosen on the validation window.
+  bands:
+    review: 30
+    decline: 90
+
+costs:
+  review_cost_usd: 2.50          # loaded cost per manual review (assumption)
+  false_decline_ltv_usd: 15.00   # customer-lifetime proxy lost on a legitimate decline
+  analyst_loaded_hourly_usd: null  # set before the staffing comparison (Stage 2)
+
+actions:
+  hold_max_hours: 48             # longest a hold pauses fulfilment and settlement
+
+capacity:
+  # Two parameters: coverage hours (the roster below) and review minutes per
+  # 1,000 orders. The base level is fixed at the "generator and capacity
+  # frozen" milestone; see experiments/protocol.yaml.
+  review_minutes_per_1000_orders: null
+  levels: {low: null, base: null, high: null}
+
+roster:
+  # Two offset 5-day shifts give 7-day coverage (0=Mon .. 6=Sun).
+  analysts:
+    - {name: A1, shift_days: [0, 1, 2, 3, 4], shift_start: "08:00", productive_hours: 6.5}
+    - {name: A2, shift_days: [2, 3, 4, 5, 6], shift_start: "11:00", productive_hours: 6.5}
+  service_time_arithmetic_mean_min: 7.0
+  service_time_sigma: 0.6
+
+sla:
+  # Hours from alert to decision by priority, on a fixed service calendar that
+  # does not move with the roster.
+  target_hours: {P0: 1, P1: 4, P2: 8, P3: 24}
+  target_attainment: 0.90

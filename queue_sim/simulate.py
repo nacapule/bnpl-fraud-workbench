@@ -26,11 +26,12 @@ from pathlib import Path
 import matplotlib
 import numpy as np
 import pandas as pd
-import yaml
 
 matplotlib.use("Agg")
 matplotlib.rcParams["svg.hashsalt"] = "bnpl-queue-416"
 import matplotlib.pyplot as plt  # noqa: E402
+
+from core.config import legacy  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
 BUSINESS_EPS = 1e-9
@@ -138,7 +139,7 @@ def finish_service(analyst: Analyst, start: datetime, duration: timedelta) -> da
 
 
 def load_inputs() -> tuple[pd.DataFrame, dict, dict]:
-    cfg = yaml.safe_load(open(REPO / "config.yaml"))
+    cfg = legacy()
     op = json.loads((REPO / "reports" / "operating_point.json").read_text())
     alerts = pd.read_csv(REPO / "data" / "alerts.csv", parse_dates=["ts"])
     labels = pd.read_csv(REPO / "data" / "labels.csv").drop_duplicates("order_id")

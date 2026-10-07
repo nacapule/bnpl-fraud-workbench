@@ -1,0 +1,17 @@
+# Memo drafter: backends, models and benchmark sizes. Responses are cached
+# under llm/eval/cache so the repository reproduces offline.
+#   cli:   a Claude Code-compatible CLI (binary from CLAUDE_CLI_BIN, default `claude`)
+#   codex: the Codex CLI
+
+backend: cli                     # env LLM_BACKEND overrides
+tasks:
+  triage_memo:
+    model: claude-sonnet-5
+    eval_arms: [claude-sonnet-5, gpt-5.6-luna]
+    prompt_version: memo_v2
+
+benchmark:
+  n_cases: 200
+  hard_negatives_min: 60
+  consistency_cases: 50
+  consistency_runs: 3

@@ -18,16 +18,14 @@ from typing import Any
 import pandas as pd
 import sqlalchemy as sa
 
-from llm.client import load_config
+from core.config import db_settings
 
 FORBIDDEN_KEYS = {"label", "labels", "pattern_id", "story_id", "is_fraud"}
 REPO = Path(__file__).resolve().parent.parent
 
 
 def get_engine() -> sa.Engine:
-    db = load_config()["db"]
-    url = f"mysql+pymysql://{db['user']}:{db['password']}@{db['host']}:{db['port']}/{db['database']}"
-    return sa.create_engine(url)
+    return sa.create_engine(db_settings().sqlalchemy_url())
 
 
 def _rows(engine: sa.Engine | sa.Connection, sql: str, **params: Any) -> list[dict[str, Any]]:

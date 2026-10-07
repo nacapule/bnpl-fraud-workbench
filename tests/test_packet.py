@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import socket
 from pathlib import Path
 
 import pytest
@@ -12,14 +11,6 @@ from llm.eval.select_cases import assert_provenance, select_case_metadata
 from llm.packet import FORBIDDEN_KEYS, _assert_no_forbidden
 
 REPO = Path(__file__).resolve().parent.parent
-
-
-def _db_up() -> bool:
-    try:
-        with socket.create_connection(("127.0.0.1", 3306), timeout=2):
-            return True
-    except OSError:
-        return False
 
 
 def test_forbidden_walker_catches_planted_label() -> None:
@@ -32,7 +23,7 @@ def test_forbidden_keys_cover_truth_tables() -> None:
     assert {"pattern_id", "labels", "story_id"} <= FORBIDDEN_KEYS
 
 
-@pytest.mark.skipif(not _db_up(), reason="mysql not running")
+@pytest.mark.legacy_world
 def test_live_packet_has_no_forbidden_keys() -> None:
     import pandas as pd
     import sqlalchemy as sa

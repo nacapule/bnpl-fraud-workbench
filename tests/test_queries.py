@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import glob
-import socket
 from pathlib import Path
 
 import pytest
@@ -20,14 +19,6 @@ def _statements(sql: str) -> list[str]:
     return [statement.strip() for statement in sql.split(";") if statement.strip()]
 
 
-def _db_up() -> bool:
-    try:
-        with socket.create_connection(("127.0.0.1", 3306), timeout=2):
-            return True
-    except OSError:
-        return False
-
-
 def test_twelve_queries_exist() -> None:
     assert len(QUERIES) == 12
 
@@ -40,17 +31,15 @@ def test_no_query_reads_ground_truth(path: str) -> None:
     assert "stories" not in sql
 
 
-@pytest.mark.skipif(not _db_up(), reason="mysql not running")
+@pytest.mark.legacy_world
 @pytest.mark.parametrize("path", QUERIES)
 def test_query_executes_and_returns_rows(path: str) -> None:
     import pandas as pd
     import sqlalchemy as sa
-    import yaml
 
-    db = yaml.safe_load(open(REPO / "config.yaml"))["db"]
-    url = (f"mysql+pymysql://{db['user']}:{db['password']}@{db['host']}:"
-           f"{db['port']}/{db['database']}")
-    eng = sa.create_engine(url)
+    from core.config import db_settings
+
+    eng = sa.create_engine(db_settings().sqlalchemy_url())
     # Comments out first (a ';' inside a comment is not a statement boundary),
     # then double % for the driver: exec_driver_sql still hands pymysql an empty
     # parameter tuple, which triggers %-interpolation over the raw SQL.

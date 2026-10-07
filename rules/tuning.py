@@ -16,11 +16,11 @@ from pathlib import Path
 
 import matplotlib
 import pandas as pd
-import yaml
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
+from core.config import legacy
 from rules.engine import build_enriched, run_rules  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
@@ -71,7 +71,7 @@ def evaluate_point(hold: pd.DataFrame, review_band: int, decline_band: int,
 
 
 def main() -> None:
-    cfg = yaml.safe_load(open(REPO / "config.yaml"))
+    cfg = legacy()
     costs = cfg["costs"]
     capacity = cfg["model"]["review_capacity_per_day"]
     d = REPO / "data"
