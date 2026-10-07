@@ -13,8 +13,9 @@ documents. Options ``--from`` and ``--until`` run part of the list on an
 existing run directory; the fitted models and tuned policies stay in memory, so a
 run that needs them starts at the fit stage. ``--workers N`` spreads the replays
 over N processes (``BNPL_REPLAY_WORKERS`` otherwise; results do not depend on it),
-and ``--tuning-history policy|frozen`` overrides the protocol's ``tuning.history``
-(the replay's default when the protocol names none) for a trial run.
+and ``--tuning-history MODE`` overrides the protocol's ``tuning.history`` (tune's
+default when the protocol names none; a mode ``queue_sim.stage.tune`` accepts) for a
+trial run.
 
 A run lives in ``runs/<name>/`` (not committed): the generated worlds under
 ``worlds/<seed>-<family>/``, each stage's artifacts under its own directory,
@@ -83,7 +84,7 @@ POLICY_TABLES_SQL = REPO / "db" / "policy_tables.sql"
 CI_SCALE = 0.1  # the CI world: about 15,700 orders, with every pattern present
 BASELINE = "baseline"
 REFERENCES = ("approve_all", "incumbent_rules")
-TUNING_HISTORIES = ("policy", "frozen")  # queue_sim.stage.tune's history
+HISTORY_NAME = re.compile(r"^[a-z][a-z_]*$")  # a tuning history mode
 VERSION_FILES = {
     "features": ("core/asof.py",),
     "policy": ("config/policy.yaml", "policy/fraud-policy.md", "core/actions.py",
@@ -162,7 +163,7 @@ class Run:
     database_world: WorldRef | None
     source: Path | None = None
     workers: int | None = None  # replay worker processes (queue_sim.stage.workers)
-    tuning_history: str | None = None  # None: the protocol's, else the replay's default
+    tuning_history: str | None = None  # None: the protocol's, else the tuning default
     memory: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -233,9 +234,9 @@ def make_run(profile: Profile, *, name: str | None = None, seeds: list[int] | No
     if workers is not None and (isinstance(workers, bool) or not isinstance(workers, int)
                                 or workers < 1):
         raise PipelineError(f"workers must be a positive integer, got {workers!r}")
-    if tuning_history is not None and tuning_history not in TUNING_HISTORIES:
-        raise PipelineError(f"tuning history must be one of {TUNING_HISTORIES}, "
-                            f"got {tuning_history!r}")
+    if tuning_history is not None and (not isinstance(tuning_history, str)
+                                       or not HISTORY_NAME.fullmatch(tuning_history)):
+        raise PipelineError(f"a tuning history is a lower-case name, got {tuning_history!r}")
     if world is not None:
         manifest_path = Path(world) / "manifest.json"
         if not manifest_path.exists():
@@ -617,18 +618,34 @@ def stage_fit(run: Run) -> StageOutput:
     return StageOutput(metrics=metrics, outputs=outputs)
 
 
+def tuning_histories() -> tuple[str, ...] | None:
+    """The history modes ``queue_sim.stage.tune`` accepts (its ``TUNING_HISTORIES``),
+    or None while that module does not exist or does not list them."""
+    try:
+        module = importlib.import_module("queue_sim.stage")
+    except ModuleNotFoundError:
+        return None
+    allowed = getattr(module, "TUNING_HISTORIES", None)
+    return tuple(allowed) if allowed else None
+
+
 def tuning_history(run: Run) -> str | None:
-    """The history tuning replays under: the run's override, else the protocol's
-    ``tuning.history``; None leaves the replay's default."""
-    if run.tuning_history is not None:
-        return run.tuning_history
-    tuning = run.protocol.raw.get("tuning") or {}
-    history = tuning.get("history") if isinstance(tuning, Mapping) else None
+    """The history mode tuning runs in, passed to ``queue_sim.stage.tune``: the run's
+    override, else the protocol's ``tuning.history``; None leaves tune's default. The
+    mode must be one tune accepts (when it lists them)."""
+    where = "--tuning-history"
+    history = run.tuning_history
+    if history is None:
+        tuning = run.protocol.raw.get("tuning") or {}
+        history = tuning.get("history") if isinstance(tuning, Mapping) else None
+        where = "protocol tuning.history"
     if history is None:
         return None
-    if history not in TUNING_HISTORIES:
-        raise PipelineError(f"protocol tuning.history must be one of {TUNING_HISTORIES}, "
-                            f"got {history!r}")
+    allowed = tuning_histories()
+    if not isinstance(history, str) or not HISTORY_NAME.fullmatch(history) or (
+            allowed is not None and history not in allowed):
+        names = f"one of {list(allowed)}" if allowed else "a lower-case name"
+        raise PipelineError(f"{where} must be {names}, got {history!r}")
     return history
 
 
@@ -638,7 +655,7 @@ def stage_tune(run: Run) -> StageOutput:
     _kept(run, "scorers", "fitted models", "tune", "fit")
     history = tuning_history(run)
     output = stage_output(tune(run) if history is None else tune(run, history=history), "tune")
-    output.notes.append(f"tuning history: {history or 'the replay default'}")
+    output.notes.append(f"tuning history: {history or 'the tuning default'}")
     return output
 
 
@@ -1182,14 +1199,18 @@ def run_stage(run: Run, stage: Stage, lineage: Lineage) -> Path:
     after = {name: input_hash(run, name) for name in before}
     if changed := sorted(name for name in before if after[name] != before[name]):
         raise PipelineError(f"{stage.name}: inputs changed while it ran: {changed}")
-    result = StageResult(
-        stage=stage.name,
-        versions=versions(run, stage.versions),
-        inputs=before,
-        metrics=output.metrics,
-        tables=output.tables,
-        notes=output.notes,
-    )
+    try:
+        result = StageResult(
+            stage=stage.name,
+            versions=versions(run, stage.versions),
+            inputs=before,
+            metrics=output.metrics,
+            tables=output.tables,
+            notes=output.notes,
+        )
+    except ValueError as error:
+        raise PipelineError(f"{stage.name}: its output does not fit the result file: "
+                            f"{error}") from error
     path = write_result(result, run.results_dir)
     lineage.record(stage.name, {
         "started_at": started.isoformat(timespec="seconds"),
@@ -1271,6 +1292,7 @@ def preflight(profile: Profile, run: Run) -> None:
                                 "files (commit first)")
     for ref in run.all_worlds:
         protocol_module.check_seed(ref.seed)
+    tuning_history(run)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1288,8 +1310,9 @@ def main(argv: list[str] | None = None) -> int:
     runner.add_argument("--until", help="last stage to run")
     runner.add_argument("--workers", type=int,
                         help="replay worker processes (default: BNPL_REPLAY_WORKERS, else 1)")
-    runner.add_argument("--tuning-history", choices=TUNING_HISTORIES,
-                        help="override the protocol's tuning history (a trial run)")
+    runner.add_argument("--tuning-history",
+                        help="override the protocol's tuning history, a mode "
+                             "queue_sim.stage.tune accepts (a trial run)")
     args = parser.parse_args(argv)
     if args.command == "stages":
         for stage in STAGES:

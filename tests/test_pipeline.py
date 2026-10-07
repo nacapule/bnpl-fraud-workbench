@@ -526,6 +526,7 @@ class OtherStageOutput:  # another module's stage output, with the same fields
 def _stage_module(monkeypatch, calls: list) -> types.ModuleType:
     """A stand-in for queue_sim.stage with its signatures, recording the calls."""
     module = types.ModuleType("queue_sim.stage")
+    module.TUNING_HISTORIES = ("policy", "frozen", "shortlist")
 
     def tune(run, **options):
         calls.append(("tune", options))
@@ -572,7 +573,7 @@ def test_tune_and_replay_call_the_stage_module(tmp_path: Path, monkeypatch) -> N
     lineage = json.loads((run.directory / "lineage.json").read_text())
     assert "worlds/0-baseline/review_decisions.pkl" in lineage["stages"]["replay"]["outputs"]
     assert read_result(run.results_dir / "tune.json").notes[-1] == \
-        "tuning history: the replay default"
+        "tuning history: the tuning default"
 
 
 def test_the_tuning_history_comes_from_the_protocol_or_an_override(
@@ -581,26 +582,40 @@ def test_the_tuning_history_comes_from_the_protocol_or_an_override(
     calls: list = []
     _stage_module(monkeypatch, calls)
     run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD,
-                            tuning_history="frozen")
+                            tuning_history="shortlist")  # any mode tune lists passes through
     run.memory["scorers"] = {0: {}}
     pipeline.stage_tune(run)
-    assert calls[-1] == ("tune", {"history": "frozen"})
+    assert calls[-1] == ("tune", {"history": "shortlist"})
     run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
-    run.protocol.raw.setdefault("tuning", {})["history"] = "policy"
+    run.protocol.raw.setdefault("tuning", {})["history"] = "frozen"
     run.memory["scorers"] = {0: {}}
-    assert "tuning history: policy" in pipeline.stage_tune(run).notes
-    assert calls[-1] == ("tune", {"history": "policy"})
+    assert "tuning history: frozen" in pipeline.stage_tune(run).notes
+    assert calls[-1] == ("tune", {"history": "frozen"})
     run.protocol.raw["tuning"]["history"] = "TO_COMPLETE_AT_FREEZE"
-    with pytest.raises(pipeline.PipelineError, match="tuning.history"):
+    with pytest.raises(pipeline.PipelineError, match="protocol tuning.history must be one of"):
+        pipeline.preflight(pipeline.PROFILES["dev"], run)  # before anything is written
+    run.protocol.raw["tuning"]["history"] = "cached"  # not a mode tune lists
+    with pytest.raises(pipeline.PipelineError, match="'shortlist'"):
         pipeline.stage_tune(run)
-    with pytest.raises(pipeline.PipelineError, match="tuning history"):
-        pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, tuning_history="cached")
+    with pytest.raises(pipeline.PipelineError, match="lower-case name"):
+        pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, tuning_history="Frozen ")
     with pytest.raises(pipeline.PipelineError, match="workers"):
         pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, workers=0)
     final = pipeline.make_run(pipeline.PROFILES["final"], runs=tmp_path, tuning_history="policy")
     assert final.results_dir.is_relative_to(tmp_path)  # an override is a trial run
     assert pipeline.make_run(pipeline.PROFILES["final"], runs=tmp_path,
                              workers=4).results_dir == pipeline.RESULTS
+
+
+def test_output_that_does_not_fit_a_result_file_names_the_stage(tmp_path: Path,
+                                                                 monkeypatch) -> None:
+    def replay(run: pipeline.Run) -> pipeline.StageOutput:
+        return pipeline.StageOutput(tables={"replay.outcomes": [{"reviews_P0": 1}]})
+
+    _fake_stages(monkeypatch, overrides={"replay": replay})
+    run = _dev_run(tmp_path)
+    with pytest.raises(pipeline.PipelineError, match="replay: its output does not fit"):
+        pipeline.execute(run, pipeline.select(until="replay"), log=lambda _: None)
 
 
 def test_another_modules_stage_output_is_converted_or_refused() -> None:
