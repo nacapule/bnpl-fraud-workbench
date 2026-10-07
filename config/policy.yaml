@@ -1,37 +1,88 @@
-# Operating policy: the single policy artifact read by the rules engine, the
-# replay and the case files. Costs and service times are stated assumptions.
+# Operating policy: the single policy artifact read by the rules engine, the replay
+# (queue_sim) and the case files. Every cost, time and rate below is a stated modelling
+# assumption (fraud policy FP-2 §11), not a measurement; docs/methods.md gives the reasons.
 
 rules:
-  # Score = sum of fired rule weights; bands are chosen on the validation window.
+  # Score = sum of fired rule weights (rules/definitions.py). These are today's bands:
+  # the capacity base is sized on the review queue they make in the fit windows
+  # (experiments/protocol.yaml capacity). The replay's incumbent uses the bands chosen
+  # on validation by the tuning rule below, recorded in the tuning results.
   bands:
     review: 30
     decline: 90
 
 costs:
-  review_cost_usd: 2.50          # loaded cost per manual review (assumption)
-  false_decline_ltv_usd: 15.00   # customer-lifetime proxy lost on a legitimate decline
-  analyst_loaded_hourly_usd: null  # set before the staffing comparison
+  false_decline_ltv_usd: 15.00   # customer-lifetime proxy lost on a declined or cancelled legitimate order
+  analyst_loaded_hourly_usd: 35.00   # salary plus overhead per productive analyst hour (staffing comparison)
 
 actions:
-  hold_max_hours: 48             # longest a hold pauses fulfilment and settlement
+  hold_max_hours: 48             # longest a hold pauses fulfilment and settlement (FP-2 §4, §5.3(c))
+  senior_review_minutes: 20      # extra minutes an escalation takes, outside the analyst roster
+
+reviewer:
+  # The simulated analyst follows FP-2 through core/evidence.py and runs the checks it
+  # requires (queue_sim/reviewer.py). Check outcomes are simulation assumptions drawn per
+  # order from who placed it (simulation truth generates the observation, never the
+  # action), keyed by the order's id so every policy sees the same outcomes.
+  # Checks establish who is ordering, never intent (FP-2 §5.1): first-party fraud passes
+  # them like a legitimate customer; only third parties fail them.
+  actor_class:                   # latent pattern -> class; orders with no pattern are legitimate
+    P-ATO: takeover              # the holder answers contact and disowns the order
+    P-STOLEN: third_party        # the fraudster holds the account but not the card
+    P-SYNTH: third_party         # a made-up identity fails identity verification
+    P-NEVERPAY: first_party
+    P-INR-ABUSE: first_party
+    P-PROMO: first_party
+    P-MERCH: legitimate          # the customer is genuine; the merchant is the fraudster
+  verification:                  # probability of each outcome; the rest is no_response
+    legitimate:  {contact: {passed: 0.85, failed: 0.0}, id_check: {passed: 0.85, failed: 0.02}}
+    first_party: {contact: {passed: 0.85, failed: 0.0}, id_check: {passed: 0.85, failed: 0.02}}
+    takeover:    {contact: {passed: 0.25, failed: 0.60}, id_check: {passed: 0.05, failed: 0.60}}
+    third_party: {contact: {passed: 0.85, failed: 0.0}, id_check: {passed: 0.05, failed: 0.60}}
+  # Sensitivity: weaker verification (a better-prepared attacker passes more often).
+  verification_weak:
+    legitimate:  {contact: {passed: 0.85, failed: 0.0}, id_check: {passed: 0.85, failed: 0.02}}
+    first_party: {contact: {passed: 0.85, failed: 0.0}, id_check: {passed: 0.85, failed: 0.02}}
+    takeover:    {contact: {passed: 0.50, failed: 0.35}, id_check: {passed: 0.25, failed: 0.45}}
+    third_party: {contact: {passed: 0.85, failed: 0.0}, id_check: {passed: 0.25, failed: 0.45}}
+  response_hours: {median: 6.0, sigma: 1.0}   # lognormal delay to a check's answer
 
 capacity:
-  # Two parameters: coverage hours (the roster below) and review minutes per
-  # 1,000 orders. The base level is fixed at the "generator and capacity
-  # frozen" milestone; see experiments/protocol.yaml.
+  # Two parameters: coverage hours (the shift layout) and review minutes per 1,000
+  # orders (analysts per shift). Levels are whole analysts per shift on unchanged
+  # coverage hours, fixed at the "generator and capacity frozen" milestone.
   review_minutes_per_1000_orders: null
-  levels: {low: null, base: null, high: null}
+  levels:
+    low: null
+    base: null
+    high: null
 
 roster:
-  # Two offset 5-day shifts give 7-day coverage (0=Mon .. 6=Sun).
-  analysts:
-    - {name: A1, shift_days: [0, 1, 2, 3, 4], shift_start: "08:00", productive_hours: 6.5}
-    - {name: A2, shift_days: [2, 3, 4, 5, 6], shift_start: "11:00", productive_hours: 6.5}
+  layout: current
+  layouts:
+    # Two offset 5-day shifts give 7-day coverage (days 0 = Monday .. 6 = Sunday, the
+    # day each shift starts; a shift may run past midnight).
+    current:
+      - {name: early, days: [0, 1, 2, 3, 4], start: "08:00", productive_hours: 6.5}
+      - {name: late, days: [2, 3, 4, 5, 6], start: "11:00", productive_hours: 6.5}
+  analysts_per_shift: {early: 1, late: 1}
   service_time_arithmetic_mean_min: 7.0
   service_time_sigma: 0.6
 
 sla:
-  # Hours from alert to decision by priority, on a fixed service calendar that
-  # does not move with the roster.
+  # Service hours from queue entry to decision, by priority (FP-2 §7.1), counted on a
+  # fixed calendar that does not move with the roster (§7.2).
+  calendar: {days: [0, 1, 2, 3, 4, 5, 6], start: "08:00", end: "20:00"}
   target_hours: {P0: 1, P1: 4, P2: 8, P3: 24}
   target_attainment: 0.90
+
+tuning:
+  # Thresholds are chosen on the validation window through the replay at the base
+  # capacity, over cut-points the policy's scores can attain: the score at each review
+  # rate and decline rate below (shares of validation orders). Rule: highest net
+  # contribution after the friction cost (LTV proxy on declined and cancelled
+  # legitimate orders) among feasible points; feasible = review minutes used within
+  # the minutes available; ties go to fewer reviews, then fewer declines. "No review"
+  # and "no decline" are in the grid, so a policy always has a feasible point.
+  review_rates: [0.0, 0.005, 0.01, 0.02, 0.03, 0.05, 0.08, 0.12]
+  decline_rates: [0.0, 0.001, 0.0025, 0.005, 0.01, 0.02]
