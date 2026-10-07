@@ -114,8 +114,7 @@ class Customers:
             last = family
             email = pop.email_address(rng, first, family,
                                       disposable=rng.random() < c["disposable_email_share"])
-            user = b.account(h.actor, signup, email, country,
-                             int(rng.integers(1955, 2007)))
+            user = b.account(h.actor, signup, email, country, pop.birth_year(rng, signup))
             m = self._member(h, user, signup, first, family, existing=existing and k == 0
                              or signup < self.clock.start)
             if size > 1:

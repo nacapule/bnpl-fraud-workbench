@@ -63,7 +63,7 @@ def build_world(seed: int, family: str, *, scale: float = 1.0,
     legit_merchants(b, market, Actor.of(seed, MERCHANTS, 0),
                     max(20, int(round(cfg["volume"]["merchants"] * min(1.0, 4 * scale)))),
                     order_start, order_end, seconds(m["trading_since"]), m["onboarding_share"],
-                    cfg["fulfilment"]["median_lag_hours"], m["fulfilment_median_sigma"])
+                    cfg)
     promotions = _promotions(b, Actor.of(seed, PROMOTIONS, 0), cfg["promotions"])
     outcomes = Outcomes(b, clock, OutcomeParams.from_config(cfg))
     customers = Customers(b, clock, market, outcomes, cfg, promotions, order_end)

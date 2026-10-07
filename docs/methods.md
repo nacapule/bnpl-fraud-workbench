@@ -57,7 +57,8 @@ data, and their first orders take FIRST10 and later ones seasonal codes at the
 customers' rates. The departures from that are behaviour and are stated in the
 fraud table (resale merchants, larger tickets, card failures, desktops,
 promotion farms' FIRST10, one session's IP for a takeover or a card-testing
-run). Entity and event ids are assigned after the whole world is sorted by
+run). A device or address several accounts share is first seen when the first
+of them uses it. Entity and event ids are assigned after the whole world is sorted by
 time, with exact ties broken by random draws, so an id says when something
 happened and nothing else.
 
@@ -76,6 +77,7 @@ CI. Every value is in `config/world.yaml`.
 | Order attempts | about 160,000 over 20 months | The protocol's support check needs at least 30 test-window orders of every checkout pattern on every development seed with fraud held near 1%; 120,000 left some patterns under 40 per window, so the volume was raised rather than the fraud share. |
 | Households | 255 per 1,000 orders, 45% opened between July 2021 and the start of the horizon | An established book with steady growth; the repeat-order rate is calibrated from the target volume less the 1% fraud share. |
 | Household size | 1 (86%), 2 (10%), 3 (4%) accounts | Households share a home address, so rules counting accounts per address meet them. |
+| Account holders' age | born 19 to 77 calendar years before signup (every actor) | Pay-in-4 accounts are for adults. |
 | Shared tablet | 30% of multi-account households | Households also share devices (R02's benign case). |
 | First order of a new account | 65% within minutes of signup, 25% within days (mean 10), 10% never | Most pay-in-4 accounts are opened at a merchant's checkout, so legitimate new accounts order immediately, exactly as new fraud accounts do. |
 | Large first order | 15% of new customers, 1.8 to 3 times the category median | Legitimate front-loaded first orders exist (R04's benign case). |
@@ -100,6 +102,7 @@ CI. Every value is in `config/world.yaml`.
 | After a default | 70% stop ordering | Defaulters rarely keep shopping. |
 | Reversals | 0.3% of collected installments bounce 2 to 5 days later; 75% are repaid 2 days later | Bank returns. |
 | Fulfilment | merchant median hours lognormal around 12 h (sigma 0.5, 2 to 72 h); each order lognormal around its merchant's median (sigma 0.6) | Goods ship within hours, which the replay's race between review and shipment depends on. |
+| Merchant risk tier | at onboarding, tiers 1/2/3 for 65/28/7% of merchants, 30/45/25% in the resale categories (electronics, jewelry, gaming); 10% of merchants join during the horizon | One onboarding rule for every merchant, including those that later bust out. |
 | Delivery | lognormal, median 2.5 days | |
 | Lost parcels | 0.5% of shipments never delivered, 70% claimed (upheld) | Genuine item-not-received claims. |
 | Unconfirmed deliveries | 1.5% delivered without a carrier confirmation, no claim | Not every carrier confirms. |
@@ -117,9 +120,9 @@ orders.
 
 | Pattern | Episodes | What the actors do | Typical outcome |
 | --- | --- | --- | --- |
-| Account takeover (`P-ATO`) | 100 | A fraudster logs into an established customer's account (75% at least 90 days old, the rest 14 to 89 days, always with an earlier order) from a new device and one IP for the session, in the victim's country (60%) or abroad, usually resets or changes the password or the email (75%), enters a drop address at checkout (80%) and places 1 to 3 orders, mostly at resale merchants, with the stored card (a stolen card 15% of the time). | The owner reports the orders 1 to 21 days after the last one (65%), disputes each with the card issuer 7 to 40 days after it (20%, lost 85% of the time) or never notices (15%). Installments on the card are collected until the owner reports or disputes, and fail from then on. |
-| Stolen card (`P-STOLEN`) | 95 | A new account (60% from a phone) with a stolen card, from an IP abroad 40% of the time; 35% first test 3 to 6 stolen cards in minutes from one IP (processor declines); 1 to 3 orders. A quarter are sleeper accounts opened 60 to 300 days earlier, kept warm with logins and sometimes a small repaid order, then used with a newly added stolen card. | The cardholder disputes the charge 5 to 40 days after it (75%, lost 90% of the time) or only has the card blocked 2 to 30 days after it; installments are collected until then and fail afterwards. |
-| Synthetic ring (`P-SYNTH`) | 18 | 3 to 5 synthetic identities (born 1986 to 2002, thin files) opened over weeks; 45% share 1 or 2 devices, 30% share drop addresses and 25% share neither; 40% use spellings of one email address. Each repays one small warm-up order, then all place 1 or 2 large orders at resale merchants within 72 hours and never pay. | Never-pay through the shared device, address or email, or unlabelled credit loss when nothing links them. |
+| Account takeover (`P-ATO`) | 100 | A fraudster logs into an established customer's account (75% at least 90 days old, the rest 14 to 89 days, always with an earlier order) from a new device and one IP for the session, in the victim's country (60%) or abroad, usually resets or changes the password or the email (75%), enters a drop address at checkout (80%) and places 1 to 3 orders, mostly at resale merchants, with the stored card (a stolen card 15% of the time). | The owner reports the orders 1 to 21 days after the last one (65%), disputes each with the card issuer 7 to 40 days after it (20%, lost 85% of the time) or never notices (15%). Installments on the card are collected until the owner reports or first disputes, and fail from then on. |
+| Stolen card (`P-STOLEN`) | 95 | A new account (60% from a phone) with a stolen card, from an IP abroad 40% of the time; 35% first test 3 to 6 stolen cards in minutes from one IP (processor declines); 1 to 3 orders. A quarter are sleeper accounts opened 60 to 300 days earlier, kept warm with logins and sometimes a small repaid order, then used with a newly added stolen card. | The cardholder has the card blocked 2 to 30 days after its first misuse, or at the first dispute if sooner; installments on it are collected until then and fail afterwards. Each charge is disputed 5 to 40 days after it (75%, lost 90% of the time). |
+| Synthetic ring (`P-SYNTH`) | 18 | 3 to 5 synthetic identities (young adults born 22 to 38 calendar years before signup, thin files) opened over weeks; 45% share 1 or 2 devices, 30% share drop addresses and 25% share neither; 40% use spellings of one email address. Each repays one small warm-up order, then all place 1 or 2 large orders at resale merchants within 72 hours and never pay. | Never-pay through the shared device, address or email, or unlabelled credit loss when nothing links them. |
 | Never-pay (`P-NEVERPAY`) | 75 | First-party: single orders (45%), bursts of 2 to 4 plans within 6 days (30%) and linked groups of 2 to 4 accounts sharing a device, an address or an email (25%). Nothing is paid after checkout. | Bursts and groups meet the never-pay marker; single orders read as credit loss. |
 | Promotion farm (`P-PROMO`) | 40 | 3 to 6 new accounts over 3 weeks, each using FIRST10 once; 50% share devices, 25% email spellings, 25% only an address. 70% repay. | Promotion abuse when linked by device or email; address-only farms stay unlabelled, like households. |
 | Item-not-received abuse (`P-INR-ABUSE`) | 16 | An account opened weeks earlier orders 3 to 6 times, pays, and claims 1 to 3 delivered orders never arrived; 85% of claims are rejected. | Abuse once two rejected claims on delivered orders are known. |

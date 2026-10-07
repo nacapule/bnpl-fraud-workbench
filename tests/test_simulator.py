@@ -45,6 +45,15 @@ def base(worlds) -> dict[str, pd.DataFrame]:
     return worlds["baseline"]
 
 
+@pytest.fixture(scope="module")
+def fraud_heavy() -> dict[str, pd.DataFrame]:
+    """A small world with eight times the fraud episodes, for checks on fraud mechanics."""
+    cfg = config.load("world")
+    for pattern in cfg["fraud"].values():
+        pattern["episodes_per_100k_orders"] *= 8
+    return build_world(SEED, "baseline", scale=SCALE, cfg=cfg)[0]
+
+
 def _orders(tables: Tables) -> pd.DataFrame:
     return tables["order_attempts"].merge(tables["latent_orders"], on="order_id").merge(
         tables["accounts"][["user_id", "created_at", "home_country"]], on="user_id")
@@ -477,19 +486,22 @@ def test_a_vanishing_merchant_delivers_to_no_buyer() -> None:
     assert max(shipments.shipped[1:]) < 910 * DAY
 
 
-def test_collections_on_a_victims_card_succeed_until_the_owner_notices(base) -> None:
-    orders = _orders(base)
-    third_party = orders.loc[orders["pattern_id"].isin(["P-ATO", "P-STOLEN"]), "order_id"]
-    reports = base["victim_reports"].groupby("order_id")["occurred_at"].min()
-    unauthorized = base["dispute_openings"]
-    unauthorized = unauthorized[unauthorized["reason"] == "unauthorized"]
-    notice = pd.concat([reports, unauthorized.groupby("order_id")["occurred_at"].min()])
-    notice = notice.groupby(level=0).min()
-    notice = notice[notice.index.isin(third_party)]
-    pays = base["payment_attempts"].merge(base["plans"][["plan_id", "order_id"]], on="plan_id")
-    pays = pays[pays["order_id"].isin(notice.index) & (pays["seq"] > 0)]
-    before = pays[pays["occurred_at"] < pays["order_id"].map(notice)]
-    assert len(notice) >= 5 and len(before) > 0
+def test_collections_on_a_victims_card_succeed_until_the_owner_notices(fraud_heavy) -> None:
+    """A takeover victim pays the plans on their card until they first report or
+    dispute any of the takeover's orders."""
+    w = fraud_heavy
+    orders = _orders(w)
+    taken = orders.loc[orders["pattern_id"] == "P-ATO", ["order_id", "card_id"]]
+    reports = w["victim_reports"][["order_id", "occurred_at"]]
+    disputes = w["dispute_openings"]
+    disputes = disputes.loc[disputes["reason"] == "unauthorized", ["order_id", "occurred_at"]]
+    notice = pd.concat([reports, disputes]).merge(taken, on="order_id")
+    notice = notice.groupby("card_id")["occurred_at"].min()
+    pays = w["payment_attempts"].merge(w["plans"][["plan_id", "order_id"]], on="plan_id")
+    pays = pays.merge(taken, on="order_id")
+    pays = pays[pays["card_id"].isin(notice.index) & (pays["seq"] > 0)]
+    before = pays[pays["occurred_at"] < pays["card_id"].map(notice)]
+    assert notice.size >= 10 and len(before) > 0
     assert (before["result"] == "success").all()
 
 
@@ -504,6 +516,48 @@ def test_fraud_accounts_use_promotions_and_networks_as_customers_do(base) -> Non
     repeat = approved[approved["pattern_id"].isin(["P-INR-ABUSE", "P-NEVERPAY", "P-SYNTH"])]
     ips = repeat.groupby("user_id")["ip"].nunique()[repeat.groupby("user_id").size() >= 3]
     assert len(ips) >= 3 and (ips > 1).mean() > 0.3
+
+
+def test_shared_devices_and_addresses_are_first_seen_at_their_first_use(base, fraud_heavy):
+    for tables in (base, fraud_heavy):
+        for entity, key in (("devices", "device_id"), ("addresses", "address_id")):
+            links = tables[{"devices": "device_links", "addresses": "address_links"}[entity]]
+            first_use = links.groupby(key)["created_at"].min()
+            seen = tables[entity].set_index(key)["created_at"]
+            assert len(first_use) == len(seen)
+            assert (seen.loc[first_use.index] == first_use).all(), entity
+
+
+def test_collections_on_a_card_stop_for_good_once_it_is_blocked(fraud_heavy) -> None:
+    orders = _orders(fraud_heavy)
+    third_party = orders[orders["pattern_id"].isin(["P-ATO", "P-STOLEN"])
+                         & (orders["processor_result"] == "approved")]
+    pays = fraud_heavy["payment_attempts"].merge(
+        fraud_heavy["plans"][["plan_id", "order_id"]], on="plan_id").merge(
+        third_party[["order_id", "card_id"]], on="order_id")
+    pays = pays[pays["seq"] > 0]
+    first_failure = pays[pays["result"] == "failed"].groupby("card_id")["occurred_at"].min()
+    later = pays[(pays["result"] == "success")
+                 & (pays["occurred_at"] > pays["card_id"].map(first_failure))]
+    assert first_failure.size >= 20 and later.empty
+
+
+def test_account_holders_are_adults_at_signup(base, fraud_heavy) -> None:
+    for tables in (base, fraud_heavy):
+        accounts = tables["accounts"]
+        assert (accounts["created_at"].dt.year - accounts["dob_year"]).min() >= 19
+
+
+def test_bustout_merchants_are_onboarded_by_the_rule_every_merchant_follows() -> None:
+    cfg = config.load("world")
+    cfg["fraud"]["P-MERCH"]["episodes_per_100k_orders"] *= 200
+    tables, bustouts = build_world(SEED, "baseline", scale=0.02, cfg=cfg)
+    merchants = tables["merchants"].set_index("merchant_id")
+    vanished = merchants.loc[bustouts]
+    assert len(vanished) >= 25
+    assert (vanished["risk_tier"] == 1).any()
+    hours = vanished["fulfilment_median_hours"]
+    assert ((hours < 8) | (hours > 24)).any()
 
 
 class _Unsearchable(list):

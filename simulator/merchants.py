@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 
 from simulator.builder import DAY, Actor, Builder
-from simulator.population import CATEGORIES
+from simulator.population import CATEGORIES, RESALE_CATEGORIES
 
 ADJECTIVES = ["urban", "nova", "prime", "lux", "peak", "true", "bright", "swift", "pure",
               "north", "blue", "gold", "iron", "cedar", "atlas", "amber", "coast", "maple"]
@@ -78,9 +78,20 @@ class Market:
         raise RuntimeError("no merchant trading at this time")
 
 
+def onboarding_profile(rng: np.random.Generator, category: str, cfg: dict) -> tuple[int, float]:
+    """(risk tier, median hours to shipment) for any merchant joining the platform: the
+    tier by the platform's rule for the category, the median from the merchants' spread."""
+    tiers = cfg["merchants"]["risk_tiers"]["resale" if category in RESALE_CATEGORIES
+                                           else "other"]
+    tier = int(rng.choice([1, 2, 3], p=tiers))
+    hours = float(np.exp(rng.normal(np.log(cfg["fulfilment"]["median_lag_hours"]),
+                                    cfg["merchants"]["fulfilment_median_sigma"])))
+    return tier, round(float(np.clip(hours, 2, 72)), 1)
+
+
 def legit_merchants(b: Builder, market: Market, a: Actor, n: int, order_start: int,
                     order_end: int, since: int, onboarding_share: float,
-                    median_hours: float, median_sigma: float) -> None:
+                    cfg: dict) -> None:
     """The ordinary merchants: most trade from before the horizon, some join during it."""
     rng = a.rng
     names = [c[0] for c in CATEGORIES]
@@ -92,7 +103,6 @@ def legit_merchants(b: Builder, market: Market, a: Actor, n: int, order_start: i
             created = order_start + int(rng.uniform(0, order_end - order_start - 60 * DAY))
         else:
             created = since + int(rng.uniform(0, order_start - since))
-        hours = float(np.clip(np.exp(rng.normal(np.log(median_hours), median_sigma)), 2, 72))
-        tier = int(rng.choice([1, 2, 3], p=[0.6, 0.3, 0.1]))
-        pk = b.merchant(a, created, market.name(rng), category, tier, round(hours, 1))
+        tier, hours = onboarding_profile(rng, category, cfg)
+        pk = b.merchant(a, created, market.name(rng), category, tier, hours)
         market.add(pk, float(popularity[k]))

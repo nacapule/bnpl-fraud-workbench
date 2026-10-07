@@ -18,6 +18,7 @@ policy can call fraud.
 from __future__ import annotations
 
 import bisect
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -26,7 +27,7 @@ import numpy as np
 from simulator import population as pop
 from simulator.builder import DAY, Actor, Builder, Order
 from simulator.legit import Customers, Household
-from simulator.merchants import Market
+from simulator.merchants import Market, onboarding_profile
 from simulator.outcomes import Outcomes
 from simulator.timing import HOUR, Clock, session_gap
 
@@ -34,6 +35,22 @@ from simulator.timing import HOUR, Clock, session_gap
 ATO, STOLEN, SLEEPER_POOL, SYNTH, NEVERPAY, PROMO, INR, MERCH = 10, 11, 12, 13, 14, 15, 16, 17
 MERCH_BUYERS = 18
 FAMILY_ATO, FAMILY_SLEEPER = 30, 31
+
+
+class _Shared:
+    """Entities a group of accounts shares, ``n`` of them used in turn; each is registered
+    when the first account uses it, the moment the platform first sees it."""
+
+    def __init__(self, n: int) -> None:
+        self.items: list[int | None] = [None] * n
+
+    def get(self, k: int, create: Callable[[], int]) -> int | None:
+        if not self.items:
+            return None
+        j = k % len(self.items)
+        if self.items[j] is None:
+            self.items[j] = create()
+        return self.items[j]
 
 
 @dataclass
@@ -52,6 +69,7 @@ class Fraud:
                  promotions: dict[str, int], scale: float) -> None:
         self.b, self.clock, self.market, self.out = b, clock, market, outcomes
         self.customers = customers
+        self.cfg = cfg
         self.f = cfg["fraud"]
         self.pay = cfg["payments"]
         self.seed = seed
@@ -82,7 +100,7 @@ class Fraud:
                   disposable_p: float, foreign_ip_p: float, card_bin: str | None = None,
                   device: int | None = None, address: int | None = None,
                   email: str | None = None, country: str | None = None,
-                  dob: tuple[int, int] = (1955, 2007), mobile_p: float = 1.0) -> Identity:
+                  ages: tuple[int, int] = (19, 78), mobile_p: float = 1.0) -> Identity:
         """A new account opened at ``t`` the way a customer opens one: a device and a
         home address at signup, a card within the first minute."""
         b, rng = self.b, a.rng
@@ -90,7 +108,7 @@ class Fraud:
         if email is None:
             first, last = pop.person_name(rng)
             email = pop.email_address(rng, first, last, disposable=rng.random() < disposable_p)
-        user = b.account(a, t, email, country, int(rng.integers(*dob)), actor=actor,
+        user = b.account(a, t, email, country, pop.birth_year(rng, t, ages), actor=actor,
                          episode=episode, tags=tags)
         if device is None:
             device = b.device(a, t, pop.device_ua(rng, mobile=rng.random() < mobile_p),
@@ -104,6 +122,13 @@ class Fraud:
                       pop.card_network(rng), pop.last4(rng))
         ip, ip_country = self._ip(rng, country, foreign_ip_p)
         return Identity(user, device, address, card, ip, ip_country)
+
+    def _device(self, a: Actor, t: int) -> int:
+        return self.b.device(a, t, pop.device_ua(a.rng), pop.fingerprint(a.rng))
+
+    def _address(self, a: Actor, t: int, country: str) -> int:
+        city, region = pop.home_city(a.rng, country)
+        return self.b.address(a, t, pop.line_hash(a.rng), city, region, country)
 
     def _order(self, a: Actor, who: Identity, t: int, *, pattern: str, episode: int,
                intent: str = "fraud", categories: tuple[str, ...] | None = None,
@@ -232,16 +257,17 @@ class Fraud:
         # or never notices; collections on the card succeed until then.
         noticed = pop.pick(rng, tuple(p["noticed"].items()))
         report_at = self.clock.after(rng, orders[-1].t, *p["report_days"])
+        filed = {o.pk: self.clock.after(rng, o.t, *p["dispute_days"]) for o in orders}
+        first_filed = min(filed.values())  # the owner stops paying when first disputing
         for o in orders:
             self.out.fulfil(a, o)
             if noticed == "report":
                 self.out.collect(a, o, "paid", stop_at=report_at)
                 b.victim_report(a, o, report_at)
             elif noticed == "dispute":
-                filed = self.clock.after(rng, o.t, *p["dispute_days"])
-                self.out.collect(a, o, "paid", stop_at=filed)
+                self.out.collect(a, o, "paid", stop_at=first_filed)
                 outcome = "lost" if rng.random() < p["dispute_lost"] else "won"
-                self.out.dispute(a, o, "unauthorized", filed, outcome)
+                self.out.dispute(a, o, "unauthorized", filed[o.pk], outcome)
             else:
                 self.out.collect(a, o, "paid")
         if noticed == "report":
@@ -299,18 +325,21 @@ class Fraud:
                 categories=pop.RESALE_CATEGORIES if rng.random() < p["resale"] else None,
                 multiplier=tuple(p["amount_multiplier"]), avs_fail=p["avs_fail"],
                 cvv_fail=p["cvv_fail"]))
-        # The cardholder notices: disputes the charge, or only has the card blocked.
-        # Collections on the stolen card succeed until then.
-        for o in orders:
+        if not orders:
+            return
+        # The cardholder notices: the card is blocked some days after its first misuse,
+        # or when the first charge is disputed if that is sooner, and collections on it
+        # fail from then on; each charge is disputed or not.
+        filed = [self.clock.after(rng, o.t, *p["dispute_days"]) if rng.random() < p["disputed"]
+                 else None for o in orders]
+        blocked = min([self.clock.after(rng, orders[0].t, *p["blocked_days"])]
+                      + [f for f in filed if f is not None])
+        for o, f in zip(orders, filed, strict=True):
             self.out.fulfil(a, o)
-            if rng.random() < p["disputed"]:
-                filed = self.clock.after(rng, o.t, *p["dispute_days"])
-                self.out.collect(a, o, "paid", stop_at=filed)
+            self.out.collect(a, o, "paid", stop_at=blocked)
+            if f is not None:
                 outcome = "lost" if rng.random() < p["dispute_lost"] else "won"
-                self.out.dispute(a, o, "unauthorized", filed, outcome)
-            else:
-                self.out.collect(a, o, "paid",
-                                 stop_at=self.clock.after(rng, o.t, *p["blocked_days"]))
+                self.out.dispute(a, o, "unauthorized", f, outcome)
 
     def sleeper(self, a: Actor, activation: int, *, created: int | None = None,
                 activate: bool = True, warm_until: int | None = None) -> tuple[Identity, int]:
@@ -355,28 +384,24 @@ class Fraud:
         ep = b.episode(a, "P-SYNTH", opened)
         sharing = pop.pick(rng, tuple(p["sharing"].items()))
         country = pop.pick(rng, pop.HOME_COUNTRIES)
-        devices = [b.device(a, opened, pop.device_ua(rng), pop.fingerprint(rng))
-                   for _ in range(int(rng.integers(1, 3)))] if sharing == "device" else []
-        drops = []
-        if sharing == "address":
-            for _ in range(int(rng.integers(1, 3))):
-                city, region = pop.home_city(rng, country)
-                drops.append(b.address(a, opened, pop.line_hash(rng), city, region, country))
+        devices = _Shared(int(rng.integers(1, 3)) if sharing == "device" else 0)
+        drops = _Shared(int(rng.integers(1, 3)) if sharing == "address" else 0)
         root = None
         if rng.random() < p["email_variants"]:
             first, last = pop.person_name(rng)
             root = pop.email_address(rng, first, last, domain="gmail.com")
         ring_ips = [pop.ip_address(rng, country) for _ in range(int(rng.integers(1, 4)))]
+        signups = sorted(self.clock.between(rng, opened + 60, max(opened + DAY, burst - 20 * DAY))
+                         for _ in range(size))
         members = []
-        for k in range(size):
-            t = self.clock.between(rng, opened + 60, max(opened + DAY, burst - 20 * DAY))
+        for k, t in enumerate(signups):
             who = self._identity(
                 a, t, actor="synthetic_identity", episode=ep, tags=("ring_member",),
                 disposable_p=p["disposable_email"], foreign_ip_p=0.0, country=country,
-                device=devices[k % len(devices)] if devices else None,
-                address=drops[k % len(drops)] if drops else None,
-                email=pop.email_variant(rng, root, k) if root else None, dob=(1986, 2003),
-                mobile_p=p["mobile_device"])
+                device=devices.get(k, lambda t=t: self._device(a, t)),
+                address=drops.get(k, lambda t=t: self._address(a, t, country)),
+                email=pop.email_variant(rng, root, k) if root else None,
+                ages=tuple(p["ages"]), mobile_p=p["mobile_device"])
             members.append(who)
         for who in members:
             who.ip = ring_ips[int(rng.integers(0, len(ring_ips)))] if rng.random() < 0.7 \
@@ -421,21 +446,21 @@ class Fraud:
             return
         country = pop.pick(rng, pop.HOME_COUNTRIES)
         sharing = pop.pick(rng, tuple(p["group_sharing"].items()))
-        device = b.device(a, t, pop.device_ua(rng), pop.fingerprint(rng)) \
-            if sharing == "device" else None
-        address = None
-        if sharing == "address":
-            city, region = pop.home_city(rng, country)
-            address = b.address(a, t, pop.line_hash(rng), city, region, country)
+        device = _Shared(1 if sharing == "device" else 0)
+        address = _Shared(1 if sharing == "address" else 0)
         root = None
         if sharing == "email":
             first, last = pop.person_name(rng)
             root = pop.email_address(rng, first, last)
-        for k in range(int(rng.integers(*p["group_size"]))):
-            signup = t if k == 0 else self.clock.after(rng, t, 0.2, p["group_days"])
+        n = int(rng.integers(*p["group_size"]))
+        signups = [t] + sorted(self.clock.after(rng, t, 0.2, p["group_days"])
+                               for _ in range(n - 1))
+        for k, signup in enumerate(signups):
             who = self._identity(a, signup, actor="fraudster", episode=ep, tags=tags,
                                  disposable_p=0.0, foreign_ip_p=0.0, country=country,
-                                 device=device, address=address,
+                                 device=device.get(k, lambda t=signup: self._device(a, t)),
+                                 address=address.get(k, lambda t=signup: self._address(
+                                     a, t, country)),
                                  email=pop.email_variant(rng, root, k) if root else None)
             who.ip = pop.ip_address(rng, country)
             first = signup + session_gap(rng, 8)
@@ -462,24 +487,23 @@ class Fraud:
         ep = b.episode(a, "P-PROMO", t)
         sharing = pop.pick(rng, tuple(p["sharing"].items()))
         country = pop.pick(rng, pop.HOME_COUNTRIES)
-        devices = [b.device(a, t, pop.device_ua(rng), pop.fingerprint(rng))
-                   for _ in range(int(rng.integers(1, 3)))] if sharing == "device" else []
-        address = None
-        if sharing == "address":
-            city, region = pop.home_city(rng, country)
-            address = b.address(a, t, pop.line_hash(rng), city, region, country)
+        devices = _Shared(int(rng.integers(1, 3)) if sharing == "device" else 0)
+        address = _Shared(1 if sharing == "address" else 0)
         root = None
         if sharing == "email":
             first, last = pop.person_name(rng)
             root = pop.email_address(rng, first, last, domain="gmail.com")
         home_ip = pop.ip_address(rng, country)
-        for k in range(int(rng.integers(*p["cluster_size"]))):
-            signup = t if k == 0 else self.clock.after(rng, t, 0.05, p["spread_days"])
+        n = int(rng.integers(*p["cluster_size"]))
+        signups = [t] + sorted(self.clock.after(rng, t, 0.05, p["spread_days"])
+                               for _ in range(n - 1))
+        for k, signup in enumerate(signups):
             who = self._identity(a, signup, actor="fraudster", episode=ep, tags=("promo_farm",),
                                  disposable_p=p["disposable_email"], foreign_ip_p=0.0,
                                  country=country,
-                                 device=devices[k % len(devices)] if devices else None,
-                                 address=address,
+                                 device=devices.get(k, lambda t=signup: self._device(a, t)),
+                                 address=address.get(k, lambda t=signup: self._address(
+                                     a, t, country)),
                                  email=pop.email_variant(rng, root, k) if root else None)
             who.ip = home_ip if rng.random() < 0.6 else pop.ip_address(rng, country)
             when = signup + session_gap(rng, 8)
@@ -531,9 +555,9 @@ class Fraud:
         bust_from = closed - int(bust_days * DAY)
         onboard = self.clock.around(rng, bust_from - int(ramp_days * DAY))
         category = pop.RESALE_CATEGORIES[int(rng.integers(0, len(pop.RESALE_CATEGORIES)))]
-        merchant = b.merchant(a, onboard, self.market.name(rng), category,
-                              int(rng.choice([2, 3], p=[0.4, 0.6])),
-                              round(float(rng.uniform(8, 24)), 1), closed_at=closed)
+        tier, hours = onboarding_profile(rng, category, self.cfg)
+        merchant = b.merchant(a, onboard, self.market.name(rng), category, tier, hours,
+                              closed_at=closed)
         ep = b.episode(a, "P-MERCH", onboard)
         b.merchants[merchant]["bustout_from"] = bust_from
         b.merchants[merchant]["episode"] = ep

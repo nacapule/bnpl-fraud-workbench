@@ -43,6 +43,9 @@ merchants:
   trading_since: "2020-06-01"    # ordinary merchants open between this date and the horizon
   onboarding_share: 0.10         # ... or join during the horizon
   fulfilment_median_sigma: 0.5   # spread of merchants' median hours to shipment
+  risk_tiers:                    # onboarding tier 1/2/3 shares, the same rule for every merchant
+    other: [0.65, 0.28, 0.07]
+    resale: [0.30, 0.45, 0.25]   # resale categories are rated riskier
 
 fulfilment:
   median_lag_hours: 12           # median of the merchants' medians
@@ -170,11 +173,13 @@ fraud:
     cvv_fail: 0.10
     disputed: 0.75
     dispute_days: [5, 40]
-    blocked_days: [2, 30]          # cardholders who do not dispute have the card blocked
+    blocked_days: [2, 30]          # the card is blocked after its first misuse (or at the
+                                   # first dispute, if sooner)
     dispute_lost: 0.90
   P-SYNTH:
     episodes_per_100k_orders: 18
     ring_size: [3, 6]
+    ages: [22, 39]                 # synthetic identities are young adults (thin files)
     lead_days: [45, 110]           # from the first account to the coordinated burst
     sharing: {device: 0.45, address: 0.30, none: 0.25}
     email_variants: 0.40           # spellings of one address

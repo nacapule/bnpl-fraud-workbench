@@ -8,6 +8,8 @@ decides the country of their home IP (F13).
 
 from __future__ import annotations
 
+import time
+
 import numpy as np
 
 BENIGN_DOMAINS = [
@@ -159,6 +161,12 @@ def email_variant(rng: np.random.Generator, root_email: str, n: int) -> str:
         cut = 1 + int(rng.integers(0, max(1, len(bare) - 1)))
         return f"{bare[:cut]}.{bare[cut:]}@{domain}" if n % 2 else f"{bare}+{n}@{domain}"
     return f"{local}+{n}@{domain}"
+
+
+def birth_year(rng: np.random.Generator, t: int, ages: tuple[int, int] = (19, 78)) -> int:
+    """The birth year of an adult opening an account at ``t``: born ``ages`` calendar
+    years earlier (at least 19, so at least 18 years old whatever the birthday)."""
+    return time.gmtime(t).tm_year - int(rng.integers(*ages))
 
 
 def device_ua(rng: np.random.Generator, mobile: bool = True) -> str:
