@@ -1,24 +1,19 @@
-"""Lint for numbers and directional sentences in the published documents.
+"""Lint for numbers and comparisons typed into the published documents' templates.
 
-Two checks, configured in ``report/lint.yaml``:
+Two checks on a template's own text (everything outside placeholders, code,
+comments and link targets), configured in ``report/lint.yaml``:
 
-* **numbers**: a template's own text (everything outside placeholders, code,
-  comments and link targets) may hold no digits, except identifiers such as
-  rule ids (R01), policy clauses (FP-2 §6.3), queue priorities (P0), SQL
-  queries (Q12), case ids (CASE-01), numbered-list and footnote markers, and the
-  phrases the configuration allows. Every published number therefore comes
-  from a rendered result key or setting.
-* **directional sentences**: in the documents named under ``directional``, a
-  visible sentence with comparative wording (more, fewer, higher, lower,
-  better, beats, ...) must be the sentence of a claim in ``report/claims.yaml``
-  (``report/claims.py`` tests it); comparisons that state no result are
-  allowed by listing the sentence.
-* **readable Markdown**: sentences are read from the rendered Markdown. In the
-  directional documents (and, through the claims check, in every document with
-  a claim) the constructs that reader does not follow are refused rather than
-  guessed at: fenced code inside a list or block quote, indented code inside a
-  list or block quote, and block quotes inside list items. Top-level fences,
-  lists, nested lists and top-level block quotes are read as Markdown shows them.
+* **numbers**: no digits, except identifiers such as rule ids (R01), policy
+  clauses (FP-2 §6.3), queue priorities (P0), SQL queries (Q12), case ids
+  (CASE-01), numbered-list and footnote markers, and the phrases the
+  configuration allows. Every published number therefore comes from a rendered
+  result key or setting.
+* **comparisons**: in the templates of the documents named under
+  ``directional``, no comparative word (more, fewer, higher, better, beats,
+  ...). A published comparison is a claim placed with ``{{ claim:<id> }}`` and
+  written from the results (``report/claims.py``); a sentence that compares
+  without stating a result ("a lower threshold holds more orders") is allowed
+  by listing it under ``allowed_sentences``.
 
 Documents matching ``documents`` must have a template, except those listed
 under ``not_yet_templated``: the hand-written documents that predate the
@@ -29,7 +24,7 @@ templates. That list may only shrink: it must stay within
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -76,36 +71,17 @@ QUOTE = re.compile(r"^ {0,3}> ?")
 # A fence opens with three or more backticks (whose info string holds no
 # backtick: ```make final``` is inline code) or three or more tildes.
 FENCE_OPEN = re.compile(r"^(?:(`{3,})(?![^\n]*`)|(~{3,}))")
-TABLE_DELIMITER = re.compile(r"^\|?\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)*\|?$")
-BREAK = re.compile(r"^ {0,3}(?:=+|-{2,}|\*{3,}|_{3,})\s*$")  # heading underline or rule
-INLINE = (  # Markdown that is not visible text, and what is shown instead
-    (re.compile(r"!\[([^\]]*)\]\([^)]*\)"), r"\1"),  # image: its alt text
-    (re.compile(r"\[([^\]]+)\]\([^)]*\)"), r"\1"),  # link: its text
-    (re.compile(r"\[([^\]]+)\]\[[^\]]*\]"), r"\1"),  # reference link: its text
-    (re.compile(r"\[\^[^\]\s]+\]"), ""),  # footnote marker
-    (re.compile(r"`([^`]*)`"), r"\1"),  # inline code: its content
-    (re.compile(r"</?[A-Za-z][^>\n]*>"), ""),  # inline HTML
-    (re.compile(r"(?<!\w)[*_]+|[*_]+(?!\w)"), ""),  # emphasis delimiters
-)
-BLOCK_START = re.compile(r"^\s*(?:#+|[-*+>]|\d+[.)])\s")
-LEAD = re.compile(r"^(?:#+|[-*+>]|\d+[.)])\s+")
-SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
-ABBREVIATIONS = ("e.g.", "i.e.", "etc.", "vs.", "cf.", "approx.")
-HIDDEN_DOT = "․"
 
 
 @dataclass(frozen=True)
 class Finding:
     path: str
     line: int
-    kind: str  # "number", "directional" or "markdown"
+    kind: str  # "number" or "comparison"
     text: str
 
     def __str__(self) -> str:
         return f"{self.path}:{self.line}: {self.kind}: {self.text}"
-
-
-SIGNS = ("up", "down", "good", "bad")
 
 
 def _words(value: Any, where: str) -> list[str]:
@@ -118,29 +94,13 @@ def _words(value: Any, where: str) -> list[str]:
 
 def load_config(path: Path = CONFIG) -> dict[str, Any]:
     data = yaml.safe_load(path.read_text()) or {}
-    comparatives = {str(sign): _words(words, f"comparatives.{sign}")
-                    for sign, words in (data.get("comparatives") or {}).items()}
-    if unknown := sorted(set(comparatives) - set(SIGNS)):
-        raise ValueError(f"comparatives: unknown groups {unknown}; use {SIGNS}")
     return {
         "documents": list(data.get("documents", [])),
         "not_yet_templated": list(data.get("not_yet_templated", [])),
-        "allowed_phrases": list(data.get("allowed_phrases", [])),
+        "allowed_phrases": _words(data.get("allowed_phrases"), "allowed_phrases"),
         "directional": list(data.get("directional", [])),
-        "comparatives": comparatives,
-        "directional_words": [word for words in comparatives.values() for word in words],
-        "negations": _words(data.get("negations"), "negations"),
-        "refused_words": _words(data.get("refused_words"), "refused_words"),
-        "average_words": _words(data.get("average_words"), "average_words"),
-        "polarity": {str(key): str(value) for key, value in (data.get("polarity") or {}).items()},
-        "defaults": {str(key): str(value) for key, value in (data.get("defaults") or {}).items()},
-        "allowed_sentences": list(data.get("allowed_sentences", [])),
-        "names": {
-            str(group): {str(name): _words(phrases, f"names.{group}.{name}")
-                         for name, phrases in (entries or {}).items()}
-            for group, entries in (data.get("names") or {}).items()
-        },
-        "references": list(data.get("references", [])),
+        "comparatives": _words(data.get("comparatives"), "comparatives"),
+        "allowed_sentences": _words(data.get("allowed_sentences"), "allowed_sentences"),
     }
 
 
@@ -198,219 +158,63 @@ def _closes(fence: str, stripped: str) -> bool:
     return stripped.startswith(fence) and set(stripped) == {fence[0]}
 
 
-def _cells(row: str) -> int:
-    """How many cells a table row has: unescaped pipes, outer ones not counted."""
-    row = row.strip()
-    row = row[1:] if row.startswith("|") else row
-    row = row[:-1] if row.endswith("|") and not row.endswith("\\|") else row
-    return len(re.split(r"(?<!\\)\|", row))
+def _strip_quotes(line: str, most: int) -> tuple[int, str]:
+    """``line`` without up to ``most`` block-quote marks: (marks removed, the rest)."""
+    removed = 0
+    while removed < most and (marker := QUOTE.match(line)):
+        line = line[marker.end():]
+        removed += 1
+    return removed, line
 
 
 def _blank_fences(text: str) -> str:
-    """Fenced code blanked wherever it sits (in lists and quotes too), for the number lint.
+    """Fenced code blanked wherever it sits (in lists and quotes too), for the lints.
 
-    An open fence's lines are read as its content before any container mark; the
-    fence ends at its closer or where its container ends (fewer quote marks, or a
-    line indented less than its list item's content).
+    An open fence's lines are read as its content first, inside exactly the
+    quote marks it opened in; it ends at its closer (indented at most three
+    columns past the content column of the list item it is in) or where its
+    container ends (fewer quote marks, or a line indented less than that column).
     """
     out: list[str] = []
     fence: tuple[str, int, int] | None = None  # marker, quote depth, content column
+    lists: list[int] = []  # content columns of the open list items
+    blank = True
     for line in text.split("\n"):
         if fence is not None:
             marker, depth, column = fence
-            quotes, rest, _ = _unquote(line) if depth else (0, line, 0)
+            quotes, rest = _strip_quotes(line, depth)
             ended = quotes < depth or (column and rest.strip() and _indent(rest) < column)
             if not ended:
                 if _indent(rest) <= column + 3 and _closes(marker, rest.strip()):
-                    fence = None
+                    fence, blank = None, True
                 out.append(" " * len(line))
                 continue
             fence = None
         depth, rest, _ = _unquote(line)
+        if not rest.strip():
+            blank = True
+            out.append(line)
+            continue
+        indent = _indent(rest)
         item = LIST_ITEM.match(rest)
+        if blank or item:  # a new block belongs to the items it is indented under
+            while lists and lists[-1] > indent:
+                lists.pop()
+        if item:
+            lists.append(len(item.group(0).replace("\t", "    ")))
+        blank = False
         content = (rest[item.end():] if item else rest).strip()
         if opened := _fence(content):
-            column = len(item.group(0).replace("\t", "    ")) if item else _indent(rest)
-            fence = (opened, depth, column if item else 0)
+            column = lists[-1] if lists and (item or indent >= lists[-1]) else 0
+            fence = (opened, depth, column)
             out.append(" " * len(line))
         else:
             out.append(line)
     return "\n".join(out)
 
 
-def _scan(text: str) -> tuple[list[tuple[int, str]], list[tuple[int, str]]]:
-    """Rendered Markdown's prose lines as (block-quote depth, text), and the lines
-    holding constructs this reader does not follow, with the reason.
-
-    Comments, fenced code, indented code (four columns past the enclosing list
-    item's content, or right after a heading), tables (a header row, a delimiter
-    row and the rows up to a blank line or another block), rules and heading
-    underlines become empty lines, so line numbers hold. Block-quote marks are
-    removed, and a quoted paragraph continued without its mark keeps its depth.
-    """
-    lines = COMMENT.sub(_blank, text).split("\n")
-    out: list[tuple[int, str]] = []
-    unsupported: list[tuple[int, str]] = []
-    # Per block-quote depth: after a blank line or a block's end; inside indented
-    # code; the open fence and how far its closer may be indented; inside a
-    # table; the content columns of the open list items.
-    state: dict[int, dict[str, Any]] = {}
-    previous_depth, previous_prose = 0, False
-    for number, raw in enumerate(lines, start=1):
-        top = state.get(0)
-        if top and top["fence"]:  # a top-level fence holds everything up to its closer
-            fence, limit = top["fence"]
-            if _indent(raw) <= limit and _closes(fence, raw.strip()):
-                top.update(fence=None, blank=True)
-            out.append((0, ""))
-            continue
-        depth, line, quote_indent = _unquote(raw)
-        stripped = line.strip()
-        if (depth < previous_depth and previous_prose and stripped
-                and not BLOCK_START.match(line) and not _fence(stripped)
-                and not BREAK.match(line)):
-            out.append((previous_depth, line))  # a lazy continuation of the quote
-            continue
-        if depth and quote_indent and state.get(0, {}).get("lists"):
-            unsupported.append((number, "a block quote inside a list item"))
-        for deeper in [key for key in state if key > depth]:
-            del state[deeper]
-        context = state.setdefault(
-            depth, {"blank": True, "code": False, "fence": None, "table": None, "lists": []})
-        previous_depth, previous_prose = depth, False
-        if context["fence"]:
-            fence, limit = context["fence"]
-            if _indent(line) <= limit and _closes(fence, stripped):
-                context.update(fence=None, blank=True)
-            out.append((depth, ""))
-            continue
-        if not stripped:
-            context.update(blank=True, table=None)
-            out.append((depth, ""))
-            continue
-        if context["table"] is not None:
-            if not (BLOCK_START.match(line) or _fence(stripped) or BREAK.match(line)
-                    or _indent(line) < context["table"]):
-                out.append((depth, ""))  # a table row
-                continue
-            context["table"] = None  # another block, or the list item it was in has ended
-        indent = _indent(line)
-        item = LIST_ITEM.match(line)
-        lists = context["lists"]
-        if context["blank"] or item:  # a new block belongs to the items it is indented under
-            while lists and lists[-1] > indent:
-                lists.pop()
-        threshold = (lists[-1] if lists else 0) + 4
-        if indent >= threshold and (context["code"] or context["blank"]):
-            if (lists or depth) and not context["code"]:
-                unsupported.append((number, "indented code inside a list or block quote"))
-            context.update(code=True, blank=False)
-            out.append((depth, ""))
-            continue
-        context["code"] = False
-        content = line[item.end():].strip() if item else stripped
-        if fence := _fence(content):
-            if item or lists or depth or indent:
-                unsupported.append((number, "fenced code inside a list or block quote"))
-            column = len(item.group(0).replace("\t", "    ")) if item else (
-                lists[-1] if lists else 0)
-            context.update(fence=(fence, column + 3), blank=False)
-            out.append((depth, ""))
-            continue
-        if content.startswith(">"):
-            unsupported.append((number, "a block quote inside a list item"))
-        if "|" in content and number < len(lines):
-            next_depth, next_line, _ = _unquote(lines[number])
-            if next_depth == depth and "|" in next_line and \
-                    TABLE_DELIMITER.match(next_line.strip()) and \
-                    _cells(content) == _cells(next_line):
-                if item or lists or depth:
-                    unsupported.append((number, "a table inside a list or block quote"))
-                context.update(table=indent, blank=False)
-                out.append((depth, ""))  # the header row
-                continue
-        if BREAK.match(line):
-            context["blank"] = True
-            out.append((depth, ""))
-            continue
-        if item:
-            lists.append(len(item.group(0).replace("\t", "    ")))
-        # A heading ends its block: an indented line after it is code.
-        context["blank"] = stripped.startswith("#")
-        previous_prose = not context["blank"]
-        out.append((depth, line))
-    return out, unsupported
-
-
-def visible_lines(text: str) -> list[tuple[int, str]]:
-    """Rendered Markdown's prose lines as (block-quote depth, text); see :func:`_scan`."""
-    return _scan(text)[0]
-
-
-def markdown_problems(text: str) -> list[tuple[int, str]]:
-    """Lines whose Markdown the sentence reader does not follow, with the construct."""
-    return _scan(text)[1]
-
-
-def inline_text(line: str) -> str:
-    """A line's visible text: link and image text kept, markup removed."""
-    for pattern, replacement in INLINE:
-        line = pattern.sub(replacement, line)
-    return line
-
-
 def normalize(text: str) -> str:
     return " ".join(text.split())
-
-
-def _protect(text: str) -> str:
-    for abbreviation in ABBREVIATIONS:
-        text = re.sub(re.escape(abbreviation), abbreviation.replace(".", HIDDEN_DOT), text,
-                      flags=re.IGNORECASE)
-    return text
-
-
-def sentences(text: str) -> list[tuple[int, str]]:
-    """Visible prose sentences with their starting line.
-
-    Paragraphs, headings (each alone), list items and block quotes (lines of
-    one quoted paragraph joined) are separate blocks; within a block, sentences
-    split at ``.``, ``!`` or ``?`` followed by space, except after common
-    abbreviations. Markup is removed first (:func:`inline_text`), so emphasis
-    and links read as their text.
-    """
-    blocks: list[tuple[int, list[str]]] = []
-    previous_depth = 0
-    for number, (depth, line) in enumerate(visible_lines(text), start=1):
-        marker = BLOCK_START.match(line)  # a list mark is not emphasis
-        line = line[:marker.end()] + inline_text(line[marker.end():]) if marker \
-            else inline_text(line)
-        if not line.strip():
-            blocks.append((number + 1, []))
-        elif (BLOCK_START.match(line) or not blocks or not blocks[-1][1]
-              or depth != previous_depth):
-            blocks.append((number, [line]))
-            if line.lstrip().startswith("#"):
-                blocks.append((number + 1, []))  # a heading stands alone
-        else:
-            blocks[-1][1].append(line)
-        previous_depth = depth
-    out = []
-    for start, lines in blocks:
-        if not lines:
-            continue
-        block = _protect("\n".join(lines))
-        marker = BLOCK_START.match(block)  # a list or heading mark is not a sentence
-        if marker:
-            block = " " * marker.end() + block[marker.end():]
-        position = 0
-        for piece in SENTENCE_END.split(block):
-            offset = block.find(piece, position)
-            position = offset + len(piece)
-            sentence = LEAD.sub("", normalize(piece)).replace(HIDDEN_DOT, ".")
-            if sentence:
-                out.append((start + block.count("\n", 0, offset), sentence))
-    return out
 
 
 def phrase_spans(phrases: Iterable[str], text: str) -> list[tuple[int, int]]:
@@ -424,17 +228,23 @@ def phrase_spans(phrases: Iterable[str], text: str) -> list[tuple[int, int]]:
     return [match.span() for match in pattern.finditer(text)]
 
 
-def directional_findings(name: str, rendered: str, claimed: Iterable[str],
-                         words: Iterable[str], allowed: Iterable[str] = ()) -> list[Finding]:
-    """Comparative sentences that are neither a claim's sentence (``claimed``) nor allowed."""
-    words = list(words)
-    claims = {normalize(sentence) for sentence in claimed}
-    allowed = {normalize(text) for text in allowed}
-    return [
-        Finding(name, line, "directional", sentence)
-        for line, sentence in sentences(rendered)
-        if phrase_spans(words, sentence) and sentence not in allowed and sentence not in claims
-    ]
+def directional_findings(name: str, template: str, words: Iterable[str],
+                         allowed_phrases: Iterable[str] = (),
+                         allowed_sentences: Iterable[str] = ()) -> list[Finding]:
+    """Comparative words in a template's own text, outside the allowed sentences."""
+    text = literal_text(template, allowed_phrases)
+    for allowed in allowed_sentences:
+        words_of = [re.escape(word) for word in normalize(allowed).split()]
+        if words_of:
+            text = re.sub(r"\s+".join(words_of), _blank, text)
+    findings = []
+    for number, line in enumerate(text.split("\n"), start=1):
+        for start, end in phrase_spans(words, line):
+            findings.append(Finding(name, number, "comparison",
+                                    f"{line[start:end]!r} in the template's own text; place a "
+                                    "{{ claim:<id> }} or list the sentence under "
+                                    "allowed_sentences"))
+    return findings
 
 
 def missing_templates(config: dict[str, Any], root: Path = REPO,
@@ -458,30 +268,15 @@ def missing_templates(config: dict[str, Any], root: Path = REPO,
     return problems
 
 
-def lint(config: dict[str, Any], claimed: Mapping[str, Iterable[str]],
-         root: Path = REPO, templates: Path = TEMPLATES) -> list[str]:
-    """Every lint problem in the repository's templates and rendered documents.
-
-    ``claimed`` maps each document to its claims' sentences. Unreadable Markdown
-    in a document with claims is reported by the claims check instead.
-    """
+def lint(config: dict[str, Any], root: Path = REPO, templates: Path = TEMPLATES) -> list[str]:
+    """Every lint problem in the repository's templates."""
     problems = missing_templates(config, root, templates)
     for doc in documents(templates):
-        problems += [
-            str(finding)
-            for finding in number_findings(doc.name, doc.template.read_text(),
-                                           config["allowed_phrases"])
-        ]
-        if doc.name in config["directional"] and (root / doc.output).exists():
-            rendered = (root / doc.output).read_text()
-            problems += [
-                str(finding)
-                for finding in directional_findings(
-                    doc.name, rendered, claimed.get(doc.name, ()),
-                    config["directional_words"], config["allowed_sentences"],
-                )
-            ]
-            if doc.name not in claimed:
-                problems += [str(Finding(doc.name, line, "markdown", reason))
-                             for line, reason in markdown_problems(rendered)]
+        template = doc.template.read_text()
+        problems += [str(finding) for finding in
+                     number_findings(doc.name, template, config["allowed_phrases"])]
+        if doc.name in config["directional"]:
+            problems += [str(finding) for finding in directional_findings(
+                doc.name, template, config["comparatives"], config["allowed_phrases"],
+                config["allowed_sentences"])]
     return problems

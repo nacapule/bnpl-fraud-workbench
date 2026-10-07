@@ -7,8 +7,8 @@
 documents are written only from the committed ``results/summary.json``; a
 summary from another run renders into ``--out`` elsewhere. ``check`` changes
 nothing: it fails when a committed document differs from a fresh render, a
-claim no longer holds or is missing from its document, or the lint finds a
-number outside a rendered value or an unlisted directional sentence.
+claim no longer holds or no template places it, or the lint finds a number or
+a comparative word typed into a template.
 """
 
 from __future__ import annotations
@@ -31,20 +31,14 @@ def _sources(summary_path: Path) -> Sources:
 
 def check(summary_path: Path = SUMMARY, root: Path = REPO) -> list[str]:
     """Every problem with the committed documents, claims and templates."""
-    claims = claims_module.load_claims()
-    config = lint_module.load_config()
-    problems = lint_module.lint(config, claims_module.sentences_by_document(claims), root)
+    claims, wording = claims_module.load_claims(root / "report" / "claims.yaml")
+    problems = lint_module.lint(lint_module.load_config(), root)
     if not documents() and not claims:
         return problems
     sources = _sources(summary_path)
     problems += out_of_sync(sources, root)
-
-    def read(name: str) -> str | None:
-        path = root / name
-        return path.read_text() if path.exists() else None
-
-    vocabulary = claims_module.Vocabulary.from_config(config)
-    problems += claims_module.check_claims(claims, sources.summary, read, vocabulary)
+    used = claims_module.placed(doc.template.read_text() for doc in documents())
+    problems += claims_module.check_claims(claims, sources.summary, wording, used)
     return problems
 
 

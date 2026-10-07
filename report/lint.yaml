@@ -2,115 +2,39 @@
 
 # Published documents: each needs a template under report/templates/.
 documents:
-  - README.md
-  - reports/operating-review.md
-  - reports/appendix-*.md
-  - cases/*.md
+  - "README.md"
+  - "reports/operating-review.md"
+  - "reports/appendix-*.md"
+  - "cases/*.md"
 
 # Hand-written documents not yet rewritten as templates. This list only shrinks.
 not_yet_templated:
-  - README.md
-  - cases/CASE-01-account-takeover.md
-  - cases/CASE-02-card-testing-stolen-card.md
-  - cases/CASE-03-synthetic-ring-bustout.md
-  - cases/CASE-04-neverpay-vs-hardship.md
-  - cases/CASE-05-traveler-cleared.md
+  - "README.md"
+  - "cases/CASE-01-account-takeover.md"
+  - "cases/CASE-02-card-testing-stolen-card.md"
+  - "cases/CASE-03-synthetic-ring-bustout.md"
+  - "cases/CASE-04-neverpay-vs-hardship.md"
+  - "cases/CASE-05-traveler-cleared.md"
 
 # Phrases with digits that are names, not results.
 allowed_phrases:
-  - pay-in-4
+  - "pay-in-4"
 
-# Documents whose comparative sentences must each be a listed claim.
+# Documents whose templates may state a comparison only through a claim,
+# {{ claim:<id> }} (report/claims.yaml).
 directional:
-  - README.md
-  - reports/operating-review.md
+  - "README.md"
+  - "reports/operating-review.md"
 
-# Comparative words, by what they assert about the named policy's value against
-# the reference's: up (higher), down (lower), good or bad (better or worse, by
-# the metric's polarity below). A claim's sentence holds exactly one.
-comparatives:
-  up: [more, higher, larger, increases, increased, exceeds, exceeded, costlier, most]
-  down: [less, fewer, lower, smaller, reduces, reduced, cheaper, least]
-  good: [better, beats, beat, outperforms, outperformed, improves, improved, best]
-  bad: [worse, worst]
+# Comparative words: in a directional template's own text, each is a finding.
+comparatives: ["more", "less", "fewer", "higher", "lower", "larger", "smaller", "better",
+               "worse", "best", "worst", "most", "least", "beats", "beat", "beating",
+               "outperforms", "outperformed", "outperforming", "underperforms",
+               "underperformed", "exceeds", "exceeded", "exceeding", "surpasses",
+               "surpassed", "trails", "trailed", "lags", "lagged", "improves", "improved",
+               "improving", "reduces", "reduced", "reducing", "increases", "increased",
+               "increasing", "cheaper", "costlier", "outearned", "dominates", "dominated"]
 
-# Negation is read only directly before the comparative word ("no more than",
-# "not higher than"); such a claim is tested as no_detected_difference or
-# equivalent. Quoted: YAML reads a bare no as false.
-negations: ["not", "no"]
-
-# Words a claim's sentence may not hold, because they change what its
-# comparison says in ways the checks cannot follow: negation away from the
-# comparative word, exceptions, hedges and magnitudes (state a magnitude with a
-# rendered number instead).
-# Universal and exclusive words ("every seed", "never", "only") claim more than a
-# test over seeds shows; a count of seeds is a rendered value ({{ key | signs }}).
-# Words inside a name ("approve-all") do not count.
-refused_words: ["without", "except", "excluding", "unless", "unlike", "whereas", "neither",
-                "nor", "none", "never", "cannot", "can't", "didn't", "doesn't", "don't",
-                "isn't", "wasn't", "aren't", "weren't", "hasn't", "haven't", "hadn't", "won't",
-                "wouldn't", "fail", "fails", "failed", "barely", "hardly", "scarcely",
-                "rarely", "nearly", "almost", "slightly", "marginally", "somewhat", "far",
-                "much", "substantially", "considerably", "dramatically", "vastly", "greatly",
-                "every", "each", "all", "any", "always", "consistently", "uniformly",
-                "invariably", "only", "solely", "exclusively"]
-
-# Words that make a sentence about the mean difference over seeds, which takes an
-# interval check of the mean difference rather than a sign test.
-average_words: ["mean", "average", "averaged", "averages"]
-
-# Comparative sentences that state no result (exact sentence text).
+# Sentences that compare without stating a result, such as how a mechanism works
+# ("A lower threshold holds more orders for review."), as written in the template.
 allowed_sentences: []
-
-# Names that tie a claim's sentence to its checks (report/claims.py), grouped.
-# Each name is a result-key segment (vs_<name> counts) and its phrases are how
-# documents say it: whole words, matched longest first, and a comparative word
-# may sit inside a phrase ("held fewer legitimate orders"). Metric phrases are
-# specific, so ordinary words ("held its thresholds") do not name a metric.
-names:
-  policies:
-    approve_all: [approve-all, approve all, approving everything]
-    incumbent_rules: [incumbent rules, incumbent]
-    tree_depth3: [depth-3 tree, decision tree, shallow tree]
-    logistic: [logistic regression, logistic]
-    boosting: [gradient boosting, boosting]
-    hybrid: [hybrid]
-    expected_loss: [expected-loss, expected loss]
-  metrics:
-    net_contribution: [net contribution, contribution, net cash, earned, earns, earnings,
-                        profit]
-    loss_of_gmv: [loss of GMV, loss rate, fraud loss, fraud losses, losses, loss]
-    legitimate_held_per_10k: [legitimate orders held, good orders held,
-                              held legitimate orders, held good orders, legitimate holds]
-    legitimate_declined_per_10k: [legitimate orders declined, good orders declined,
-                                   declined legitimate orders, declined good orders,
-                                   false declines]
-    review_minutes_used_share: [review minutes, reviewer minutes, review time, reviewer time]
-    decided_after_shipping: [decided after shipping, decided after they shipped,
-                             decisions after shipping, late decisions]
-  families:
-    baseline: [baseline family, baseline world]
-    acquisition_surge: [acquisition surge, surge]
-    fraud_mix_shift: [fraud-mix shift, fraud mix shift, mix shift]
-  capacities:
-    low: [low capacity, low staffing]
-    base: [base capacity, base staffing]
-    high: [high capacity, high staffing]
-    redesigned_layout: [redesigned layout, redesigned shift layout, evening layout]
-
-# The policies every contrast is taken against (vs_<reference> keys).
-references: [approve_all, incumbent_rules]
-
-# Whether a higher value of a metric is better (for better, beats, worse, ...).
-# A metric without one takes only up and down words.
-polarity:
-  net_contribution: higher
-  loss_of_gmv: lower
-  legitimate_held_per_10k: lower
-  legitimate_declined_per_10k: lower
-  decided_after_shipping: lower
-
-# The world family and capacity level a claim means when its sentence names none.
-defaults:
-  families: baseline
-  capacities: base

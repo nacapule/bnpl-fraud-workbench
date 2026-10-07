@@ -1,22 +1,76 @@
-# Every directional sentence in the README and the operating review, with the
-# paired results and the test behind its comparison (report/claims.py). A
-# claim's sentence makes exactly one comparison; the policies, metrics, family
-# and capacity level it names (names in report/lint.yaml) must match its checks
-# one for one, and its comparative word sets their direction. A claim fails
-# when its sentence leaves the rendered document or a check stops holding.
+# The directional claims of the published documents (report/claims.py). A
+# template places a claim with {{ claim:<id> }}; its sentence is written from
+# the record below and the results, with the evidence, and the render fails
+# when the results no longer support it.
 #
-# - id: short-name
-#   document: README.md                       # rendered document path
-#   sentence: "The hybrid policy earned more than the incumbent rules and approve-all."
-#   checks:                                   # one per policy, reference, metric, ...
-#     - test: sign                            # sign | interval | mcnemar
-#       direction: positive                   # positive | negative |
+# claims:
+#   - id: hybrid-net-vs-rules                 # lower-case letters, digits, - and _
+#     policy: hybrid                          # what is compared ...
+#     reference: incumbent_rules              # ... against which reference
+#     metric: net_contribution
+#     test: sign                              # sign | interval | mcnemar
+#     direction: positive                     # positive | negative |
 #                                             # no_detected_difference | equivalent
-#       key: evaluate.net_contribution.vs_incumbent_rules.baseline.base.hybrid
-#     - test: sign
-#       direction: positive
-#       key: evaluate.net_contribution.vs_approve_all.baseline.base.hybrid
-#       # keys: [only_first.key, only_second.key]   # mcnemar instead of key
-#       # alpha: 0.05                         # optional
-#       # margin: 50000                       # equivalent only, in the metric's unit
+#     # family: acquisition_surge             # optional; the default below otherwise
+#     # capacity: high                        # optional
+#     # margin: 50000                         # equivalent only, in the metric's unit
+#     # alpha: 0.05                           # optional
+#     # key: evaluate.net_contribution...     # optional: another result key
+#     # keys: [<...>.only_policy, <...>.only_reference]   # mcnemar instead of key
 claims: []
+
+# How sentences name things. A metric's more and less read "<policy> <more>
+# <reference>"; its noun names it in no-difference and equivalence sentences;
+# its format prints its differences (report/formats.py).
+wording:
+  policies:
+    approve_all: "approve-all"
+    incumbent_rules: "the incumbent rules"
+    tree_depth3: "the depth-3 tree"
+    logistic: "the logistic regression"
+    boosting: "the gradient-boosting policy"
+    hybrid: "the hybrid policy"
+    expected_loss: "the expected-loss policy"
+  metrics:
+    net_contribution:
+      more: "earned more net contribution than"
+      less: "earned less net contribution than"
+      noun: "net contribution"
+      format: "usd"
+    loss_of_gmv:
+      more: "lost a larger share of GMV to fraud and abuse than"
+      less: "lost a smaller share of GMV to fraud and abuse than"
+      noun: "loss as a share of GMV"
+      format: "bps"
+    legitimate_held_per_10k:
+      more: "held more legitimate orders than"
+      less: "held fewer legitimate orders than"
+      noun: "legitimate orders held per 10,000"
+      format: "per_10k"
+    legitimate_declined_per_10k:
+      more: "declined more legitimate orders than"
+      less: "declined fewer legitimate orders than"
+      noun: "legitimate orders declined per 10,000"
+      format: "per_10k"
+    review_minutes_used_share:
+      more: "used a larger share of review minutes than"
+      less: "used a smaller share of review minutes than"
+      noun: "share of review minutes used"
+      format: "pp"
+    decided_after_shipping:
+      more: "decided more orders after they shipped than"
+      less: "decided fewer orders after they shipped than"
+      noun: "orders decided after shipping"
+      format: "count"
+  families:
+    baseline: "the baseline world"
+    acquisition_surge: "the acquisition surge"
+    fraud_mix_shift: "the fraud-mix shift"
+  capacities:
+    low: "low review capacity"
+    base: "base review capacity"
+    high: "high review capacity"
+    redesigned_layout: "the redesigned shift layout"
+  defaults:
+    family: "baseline"
+    capacity: "base"

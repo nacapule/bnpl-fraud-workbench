@@ -14,7 +14,11 @@ A template is Markdown whose numbers come only from placeholders:
     a fixed definition from ``config/<name>.yaml``;
 ``{{ table:name | column "Header" format, column "Header", ... }}``
     on a line of its own: a generated Markdown table from a result table, with
-    the columns named (``format`` optional).
+    the columns named (``format`` optional);
+``{{ claim:<id> }}``
+    a directional claim from ``report/claims.yaml``, written from its record and
+    the results with its evidence (:mod:`report.claims`); it fails to render
+    when the results no longer support it.
 
 Rendering fails, listing every problem with its line, on a missing key, an
 unknown format or a format that does not fit the unit. Templates live under
@@ -33,7 +37,9 @@ from typing import Any
 import yaml
 
 from core.results import Metric, metric, table
+from report import claims as claims_module
 from report import formats
+from report.claims import is_contrast
 from report.formats import FormatError, Value
 
 REPO = Path(__file__).resolve().parent.parent
@@ -63,6 +69,8 @@ class Sources:
     summary: Mapping[str, Any]
     protocol: Mapping[str, Any] = field(default_factory=dict)
     configs: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
+    claims: Mapping[str, claims_module.Claim] = field(default_factory=dict)
+    wording: claims_module.Wording | None = None
 
     @classmethod
     def from_repo(cls, summary: Mapping[str, Any], root: Path = REPO) -> Sources:
@@ -71,7 +79,9 @@ class Sources:
             path.stem: yaml.safe_load(path.read_text())
             for path in sorted((root / "config").glob("*.yaml"))
         }
-        return cls(summary=summary, protocol=protocol, configs=configs)
+        claims, wording = claims_module.load_claims(root / "report" / "claims.yaml")
+        return cls(summary=summary, protocol=protocol, configs=configs,
+                   claims={claim.id: claim for claim in claims}, wording=wording)
 
 
 def _path(data: Any, dotted: str, what: str) -> Any:
@@ -103,11 +113,6 @@ def _resolve(expression: str, sources: Sources) -> Value:
     return Value(metric=_metric(expression, sources), contrast=is_contrast(expression))
 
 
-def is_contrast(key: str) -> bool:
-    """A paired difference against a reference: a key with a ``vs_<reference>`` segment."""
-    return any(part.startswith("vs_") for part in key.split("."))
-
-
 def _setting(value: Any, dotted: str) -> Value:
     return Value(plain=value, unit=formats.unit_from_name(dotted.rsplit(".", 1)[-1]),
                  setting=True)
@@ -135,6 +140,11 @@ def _split(body: str) -> tuple[str, str, list[str]]:
 
 def render_value(body: str, sources: Sources) -> str:
     """Render one inline placeholder body (the text between the braces)."""
+    if body.strip().startswith("claim:"):
+        claim_id = body.strip()[len("claim:"):].strip()
+        if claim_id not in sources.claims or sources.wording is None:
+            raise KeyError(f"no claim {claim_id!r} in report/claims.yaml")
+        return claims_module.sentence(sources.claims[claim_id], sources.summary, sources.wording)
     expression, name, args = _split(body)
     return formats.apply(name, _resolve(expression, sources), args)
 
