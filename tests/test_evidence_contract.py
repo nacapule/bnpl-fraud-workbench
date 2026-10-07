@@ -55,10 +55,23 @@ def test_example_is_one_card_condition_before_its_check() -> None:
 
 
 def test_example_conditions_rest_on_asof_columns() -> None:
-    ev = evidence.EXAMPLE_EVIDENCE
-    for item in (*ev.conditions, *ev.household_exceptions, *ev.benign, *ev.settlements):
-        assert item.columns
-        assert set(item.columns) <= set(asof.COLUMN_NAMES)
+    for ev in (evidence.EXAMPLE_EVIDENCE, evidence.EXAMPLE_SETTLED_EVIDENCE):
+        for item in (*ev.conditions, *ev.household_exceptions, *ev.benign, *ev.settlements):
+            assert item.columns
+            assert set(item.columns) <= set(asof.COLUMN_NAMES)
+
+
+def test_a_settlement_known_at_review_decides_the_waiting_order() -> None:
+    """Rule columns stay anchored at the order; the settlement is outcome-derived, so a
+    re-evaluation at review sees it, and row (a) overrides the pending check."""
+    ev, result = evidence.EXAMPLE_SETTLED_EVIDENCE, evidence.EXAMPLE_SETTLED_ACTIONS
+    assert ev.conditions == evidence.EXAMPLE_EVIDENCE.conditions
+    for column in ev.conditions[0].columns:
+        assert column not in asof.OUTCOME_COLUMNS
+    assert set(ev.settlements[0].columns) <= set(asof.OUTCOME_COLUMNS)
+    assert result.row == "§6.6(a)" and result.standard == {"decline"}
+    assert {"clear", "hold", "needs_check"} <= result.prohibited
+    assert not result.required_checks
 
 
 def test_household_exception_stops_the_rule_counting_but_not_holding() -> None:

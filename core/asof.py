@@ -6,13 +6,16 @@ module outside ``core/`` computes history, linkage, repayment state or exposure
 never reads labels or latent truth.
 
 Decision point. A context row describes one order attempt at one decision time
-``decision_at``. The fraud policy states its conditions relative to the order,
-so rules, ML, the reviewer, packets and the referee all read the checkout row
-(``decision_at`` = the attempt's own ``known_at``); a review adds only the
-outcomes of the checks run since (core.evidence). Other decision times are for
-analysis. A row sees an event only if the event precedes the decision in the
-world's total order ``(known_at, kind rank, event_id)``; at checkout that means
-everything ordered before the attempt itself. Entities are
+``decision_at``: checkout (the attempt's own ``known_at``) for routing, rules
+and ML; the review and each check's completion for the reviewer, packets and
+the referee, which re-evaluate the policy on the evidence known then (fraud
+policy §6.6). The policy states its rule windows relative to the order, so
+attempt-derived columns are anchored at the attempt whatever the decision time:
+they see the events ordered before the attempt in the world's total order
+``(known_at, kind rank, event_id)``, and "before the decision" in their windows
+means before the order. Outcome-derived columns see the events known before
+``decision_at`` under the policy: earlier outcomes that settle an order,
+repayment, disputes, shipment and cancellation status, blocks. Entities are
 visible from their creation time. "Current" below means the attempt being
 decided; a column that includes it says so.
 
@@ -40,10 +43,11 @@ timestamps, leaves earlier rows unchanged) and a label-mutation test.
 Email identity has one rule, :func:`normalize_email`: lower-case; remove a
 ``+tag`` from the local part for every provider; remove dots from the local
 part only for Gmail (``gmail.com``, ``googlemail.com``, folded to ``gmail.com``);
-never strip digits. An account holds every address in its history
-(:func:`email_history`: the signup email, then each ``email_change``'s new
-address from its ``known_at``); two accounts share an email at a time when any
-addresses they held by then normalize alike. Its current email is the latest one.
+never strip digits. An account holds one address at a time
+(:func:`email_history`: the signup email from ``created_at``, then each
+``email_change``'s new address from its ``known_at`` until the next change).
+Two accounts share an email while they hold addresses that normalize alike at
+the same time, as two accounts share a device while their links overlap.
 
 Implemented here: the specification, :class:`PolicyState`,
 :func:`normalize_email` and :func:`email_history`. The builders raise
@@ -126,8 +130,9 @@ COLUMNS: tuple[AsofColumn, ...] = (
          "Of the account's current email: 0 common provider, 1 other, 2 disposable (lists "
          "in this module).", "the account", "at the decision", None, *ALL),
     _col("email_root_other_accounts", A, "int64",
-         "Other accounts sharing an email with this one (email_history, normalize_email).",
-         "addresses held at or before the decision", "ever", False, *ALL),
+         "Other accounts holding, at the decision, an address that normalizes like this "
+         "account's current one (email_history).", "accounts and their email holdings",
+         "at the decision", False, *ALL),
     _col("amount_over_category_median", A, "float64",
          "Amount over the median amount of earlier processor-approved attempts in the "
          "merchant's category.", "processor-approved attempts in the category",
@@ -265,9 +270,9 @@ COLUMNS: tuple[AsofColumn, ...] = (
     _col("promo_redemptions_user", OC, "int64", "Promotions used on the account's orders.",
          "policy-approved orders", "ever, before the decision", False, "rules", "ml"),
     _col("promo_uses_linked_accounts", OC, "int64",
-         "Accounts linked to this one by a shared device or normalized email (not an "
-         "address) that used the same first-purchase promotion, including this account's "
-         "use.", "policy-approved orders",
+         "Accounts that shared a device (overlapping links) or a normalized email "
+         "(overlapping holdings) with this one, not an address, and used the same "
+         "first-purchase promotion, including this account's use.", "policy-approved orders",
          "ever, before the decision", True, *ALL),
     _col("shipped_at_decision", OC, "int8",
          "The order's fulfilment is known at the decision (always 0 at checkout).",
@@ -303,20 +308,22 @@ def normalize_email(email: str) -> str:
 
 
 def email_history(accounts: pd.DataFrame, account_events: pd.DataFrame) -> pd.DataFrame:
-    """Every normalized address each account has held: user_id, email_root, since.
+    """Each account's addresses as holding intervals: user_id, email_root, since, until.
 
-    The signup email counts from the account's ``created_at``, each
-    ``email_change``'s new address from its ``known_at``; an address once held
-    stays in the history.
+    The signup email is held from the account's ``created_at``, each
+    ``email_change``'s new address from its ``known_at``; a holding ends when the
+    next change is known (``until`` is NaT for the current address). Changing back
+    to an earlier address starts a new interval.
     """
     changes = account_events.loc[account_events["kind"] == "email_change",
                                  ["user_id", "email", "known_at"]]
     history = pd.concat([
         accounts[["user_id", "email", "created_at"]].rename(columns={"created_at": "since"}),
         changes.rename(columns={"known_at": "since"}),
-    ], ignore_index=True)
+    ], ignore_index=True).sort_values(["user_id", "since"], kind="stable")
+    history["until"] = history.groupby("user_id")["since"].shift(-1)
     history["email_root"] = [normalize_email(email) for email in history["email"]]
-    return history.groupby(["user_id", "email_root"], as_index=False)["since"].min()
+    return history[["user_id", "email_root", "since", "until"]].reset_index(drop=True)
 
 
 def _frame(**columns: str) -> pd.DataFrame:
@@ -334,10 +341,15 @@ class PolicyState:
     void and gains its refunds) together with this state:
 
     * ``approved``: order_id, approved_at, when the order went through (checkout,
-      or a hold's release);
+      or the release of a hold placed before shipment);
     * ``held``: order_id, held_at, released_at (NaT while the hold is pending),
-      outcome (``cleared``, ``cancelled`` or ``declined``; null while pending). A
-      held order counts as neither approved nor voided until it is released;
+      outcome (``cleared``, ``cancelled`` or ``declined``; null while pending),
+      before_shipment. A hold placed before shipment pauses the order: until its
+      release the order is neither approved nor voided, and the realized tables
+      move its shipment and later schedule after the release (or cancel it and
+      refund the checkout payment). A hold placed after shipment pauses nothing:
+      the order stays approved from checkout and its realized events stand; only a
+      decline after a failed check applies;
     * ``voided``: order_id, at (decline, void, cancellation or abandonment before
       shipping);
     * ``blocked``: user_id, at.
@@ -352,7 +364,7 @@ class PolicyState:
     blocked: pd.DataFrame
     held: pd.DataFrame = field(default_factory=lambda: _frame(
         order_id="int64", held_at="datetime64[s]", released_at="datetime64[s]",
-        outcome="object"))
+        outcome="object", before_shipment="bool"))
 
     @classmethod
     def approve_all(cls, tables: Mapping[str, pd.DataFrame]) -> PolicyState:

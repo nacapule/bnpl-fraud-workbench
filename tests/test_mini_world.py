@@ -259,6 +259,27 @@ def test_an_email_change_links_accounts_from_when_it_is_known(tables) -> None:
     assert nr1[["basis", "label_known_at"]].values.tolist() == [["never_pay", moved]]
 
 
+def test_an_address_held_one_after_another_is_not_shared(tables) -> None:
+    """nr1 leaves its mailbox before nr2 and nr3 take variants of it: no concurrent holding."""
+    changed = dict(tables)
+    accounts = tables["accounts"].set_index("email")
+    ring = [accounts.loc[f"nr{n}.98@gmail.com", "user_id"] for n in (1, 2, 3)]
+    links = tables["device_links"]
+    changed["device_links"] = links[~links["user_id"].isin(ring)]
+    events = tables["account_events"]
+    left, joined = pd.Timestamp("2025-03-09 09:00"), pd.Timestamp("2025-03-10 09:00")
+    changes = pd.DataFrame({
+        "event_id": [10**6, 10**6 + 1, 10**6 + 2], "occurred_at": [left, joined, joined],
+        "known_at": [left, joined, joined], "user_id": ring, "kind": "email_change",
+        "device_id": events["device_id"].iloc[0], "ip": "24.16.4.9", "ip_country": "US",
+        "email": ["nr1.new@outlook.com", "N.R1.98+b@gmail.com", "nr1.98+c@googlemail.com"]})
+    changed["account_events"] = pd.concat([events, changes], ignore_index=True)
+    labels = _relabel(changed)
+    ring_orders = [_order(tables, f"nr{n}.98@gmail.com", amount)
+                   for n, amount in ((1, 32000), (2, 27500), (3, 41000))]
+    assert "never_pay" not in labels.loc[labels["order_id"].isin(ring_orders), "basis"].tolist()
+
+
 def _with_plain_reorder(tables, email: str, amount: int, at: str) -> dict:
     """The account orders again without a promotion at ``at``."""
     changed = dict(tables)
@@ -337,6 +358,19 @@ def test_promo_abuse_ignores_shared_addresses(tables) -> None:
     changed["device_links"] = links[links["device_id"] != farm]
     changed["address_links"] = pd.concat([tables["address_links"], *moved], ignore_index=True)
     assert "promo_abuse" not in _relabel(changed)["basis"].tolist()
+
+
+def test_promo_abuse_needs_the_device_held_at_the_same_time(tables) -> None:
+    """Each account leaves the phone before the next one signs up on it."""
+    changed = dict(tables)
+    accounts = tables["accounts"].set_index("email")
+    farm = [accounts.loc[f"pf{n}.0@gmail.com", "user_id"] for n in (1, 2, 3)]
+    links = tables["device_links"].copy()
+    created = links.loc[links["user_id"].isin(farm)].set_index("user_id")["created_at"]
+    for this, after in zip(farm, farm[1:], strict=False):
+        links.loc[links["user_id"] == this, "removed_at"] = created[after] - pd.Timedelta(minutes=1)
+    changed["device_links"] = links
+    assert "promo_abuse" not in _relabel(changed, "2026-12-31")["basis"].tolist()
 
 
 def test_bustout_needs_the_merchant_closed_before_the_claim_is_upheld(tables) -> None:

@@ -57,19 +57,20 @@ def test_email_normalization_rejects_non_addresses() -> None:
         asof.normalize_email("not-an-address")
 
 
-def test_email_history_keeps_every_address_from_when_it_was_known() -> None:
+def test_email_history_holds_one_address_at_a_time() -> None:
     accounts = pd.DataFrame({"user_id": [1, 2], "email": ["Ann.B@gmail.com", "cy@outlook.com"],
                              "created_at": pd.to_datetime(["2025-01-01", "2025-01-02"])})
     events = pd.DataFrame({
-        "user_id": [2, 2, 1], "kind": ["email_change", "login", "email_change"],
-        "email": ["annb+x@googlemail.com", None, "ann@proton.me"],
-        "known_at": pd.to_datetime(["2025-02-01", "2025-02-02", "2025-03-01"])})
-    history = asof.email_history(accounts, events).sort_values(["user_id", "since"])
-    assert history.values.tolist() == [
-        [1, "annb@gmail.com", pd.Timestamp("2025-01-01")],
-        [1, "ann@proton.me", pd.Timestamp("2025-03-01")],
-        [2, "cy@outlook.com", pd.Timestamp("2025-01-02")],
-        [2, "annb@gmail.com", pd.Timestamp("2025-02-01")],
+        "user_id": [2, 2, 1, 1], "kind": ["email_change", "login", "email_change", "email_change"],
+        "email": ["annb+x@googlemail.com", None, "ann@proton.me", "a.n.n.b@gmail.com"],
+        "known_at": pd.to_datetime(["2025-02-01", "2025-02-02", "2025-03-01", "2025-04-01"])})
+    T = pd.Timestamp
+    assert asof.email_history(accounts, events).values.tolist() == [
+        [1, "annb@gmail.com", T("2025-01-01"), T("2025-03-01")],
+        [1, "ann@proton.me", T("2025-03-01"), T("2025-04-01")],
+        [1, "annb@gmail.com", T("2025-04-01"), pd.NaT],  # changed back: a new holding
+        [2, "cy@outlook.com", T("2025-01-02"), T("2025-02-01")],
+        [2, "annb@gmail.com", T("2025-02-01"), pd.NaT],
     ]
 
 
@@ -78,5 +79,6 @@ def test_policy_state_records_pending_holds() -> None:
         "order_id": [1, 2], "processor_result": ["approved", "declined"],
         "known_at": pd.to_datetime(["2025-01-01", "2025-01-02"])})})
     assert state.approved["order_id"].tolist() == [1]
-    assert list(state.held.columns) == ["order_id", "held_at", "released_at", "outcome"]
+    assert list(state.held.columns) == ["order_id", "held_at", "released_at", "outcome",
+                                        "before_shipment"]
     assert state.held.empty and state.voided.empty and state.blocked.empty

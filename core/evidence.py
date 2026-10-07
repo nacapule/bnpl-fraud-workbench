@@ -1,9 +1,10 @@
 """Evidence classification shared by the simulated reviewer and the LLM referee (contract).
 
 One written standard drives both: the fraud policy (``policy/fraud-policy.md``,
-:data:`POLICY`). Classification reads the order's checkout row of the as-of
-context (core.asof; the policy states its conditions relative to the order) plus
-the outcomes of at most two verification checks
+:data:`POLICY`). Classification reads the order's as-of context row at the
+evaluation time (core.asof: rule columns anchored at the order, earlier outcomes
+and shipment status as known at the evaluation time) plus the outcomes of at
+most two verification checks
 (core.actions.Check), each run at most once (§5.1). It never reads labels or
 latent tables. Latent truth may generate check outcomes, at stated per-pattern
 rates keyed to the order's stable id, but never chooses an action; sparse
@@ -25,7 +26,9 @@ on the evidence known then (§6.6). One evaluation has two steps:
 Clause ids are strings in the policy's own form (``"§6.2"``, ``"§6.6(b)"``); rule
 ids are the §6.2 table's (``"R01"``, ``"R06(b)"``; R12 is retired). A citation
 reads ``f"{POLICY} {clause}, {rule}"``, as in "FP-2 §6.6(b), R03".
-:data:`EXAMPLE_EVIDENCE` and :data:`EXAMPLE_ACTIONS` are one hand-checked case.
+:data:`EXAMPLE_EVIDENCE` and :data:`EXAMPLE_ACTIONS` are one hand-checked case;
+:data:`EXAMPLE_SETTLED_EVIDENCE` and :data:`EXAMPLE_SETTLED_ACTIONS` are the same order
+re-evaluated after an earlier outcome that settles it became known while it waited.
 
 The reviewer's procedure (which check to run next, which disposition to take) is
 built on these two functions and frozen with the generator parameters; if it
@@ -121,7 +124,7 @@ class Evidence:
     conditions: tuple[Condition, ...] = ()  # every §6.2 condition that holds, excepted or not
     household_exceptions: tuple[Citation, ...] = ()  # §6.4(a) for R02, §6.4(b) for R08
     benign: tuple[Citation, ...] = ()  # §6.5 items a memo weighs
-    settlements: tuple[Citation, ...] = ()  # §6.3 items known at checkout
+    settlements: tuple[Citation, ...] = ()  # §6.3 items known at the evaluation time
     checks: tuple[CheckResult, ...] = ()  # completed by the evaluation time
 
     def __post_init__(self) -> None:
@@ -176,13 +179,15 @@ class PermittedActions:
 
 
 def classify(context_row: Mapping[str, Any], checks: Sequence[CheckResult]) -> Evidence:
-    """The evidence in an order's checkout context row and the checks completed so far.
+    """The evidence in an order's context row at an evaluation time and the checks so far.
 
-    ``context_row`` is the order's checkout row of the as-of context (core.asof
-    KEY_COLUMNS plus COLUMN_NAMES, outcome-derived columns under the policy being
-    replayed), as a pandas Series or a mapping. ``checks`` are the results completed
-    by the evaluation time (the review, or a check's completion), at most one per
-    check. Nothing else is read: no labels, latent tables or world.
+    ``context_row`` is the order's as-of context row (core.asof KEY_COLUMNS plus
+    COLUMN_NAMES) with ``decision_at`` the evaluation time (the review, or a check's
+    completion): attempt-derived columns anchored at the order, outcome-derived ones
+    under the policy being replayed and known by then, so an earlier outcome that
+    settles the order (§6.3) counts as soon as it is known. It is a pandas Series or
+    a mapping. ``checks`` are the results completed by then, at most one per check.
+    Nothing else is read: no labels, latent tables or world.
     """
     raise NotImplementedError("evidence classification is implemented with the reviewer")
 
@@ -216,4 +221,23 @@ EXAMPLE_ACTIONS = PermittedActions(
     clauses={"hold": "§6.6(b)", "needs_check": "§4.3", "clear": "§6.6(b)",
              "decline": "§6.6(b)", "escalate": "§6.6(b)"},
     required_checks=frozenset({Check.ID_CHECK}),
+)
+
+# The same order at its review: meanwhile an unauthorized dispute on an earlier order of
+# the account was resolved lost, and the holder reported no takeover (§6.3(a)). Row (a)
+# overrides the checks: decline (escalate would need Linkage); clear, hold and
+# needs_check are prohibited.
+EXAMPLE_SETTLED_EVIDENCE = Evidence(
+    conditions=EXAMPLE_EVIDENCE.conditions,
+    settlements=(Citation("§6.3(a)", ("unauthorized_disputes_lost_user",
+                                      "victim_reports_user")),),
+)
+EXAMPLE_SETTLED_ACTIONS = PermittedActions(
+    row="§6.6(a)",
+    standard=frozenset({"decline"}),
+    permitted=frozenset(),
+    prohibited=frozenset({"clear", "hold", "needs_check"}),
+    clauses={"decline": "§6.6(a)", "clear": "§6.6(a)", "hold": "§6.6(a)",
+             "needs_check": "§6.6(a)"},
+    required_checks=frozenset(),
 )

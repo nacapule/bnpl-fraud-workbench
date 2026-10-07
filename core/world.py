@@ -64,6 +64,7 @@ DTYPES = {
     "bool": "bool",
 }
 NULLABLE_DTYPES = {"id": "Int64", "int": "Int64", "cents": "Int64"}
+INTEGER_TYPES = frozenset(NULLABLE_DTYPES)
 
 LAYERS = ("observable", "latent", "adjudicated")
 ROLES = ("entity", "schedule", "event", "truth", "label")
@@ -496,8 +497,10 @@ def coerce(name: str, frame: pd.DataFrame) -> pd.DataFrame:
             elif column.type == "str":
                 values = values.astype("str")
             else:
-                if values.dtype.kind == "f" and (values.notna() & (values % 1 != 0)).any():
-                    raise ValueError("fractional values in an integer column")
+                if column.type in INTEGER_TYPES and values.dtype.kind not in "iub":
+                    numeric = pd.to_numeric(values, errors="coerce")
+                    if (numeric.notna() & (numeric % 1 != 0)).any():
+                        raise ValueError("fractional values in an integer column")
                 values = values.astype(column.dtype)
         except (ValueError, TypeError) as error:
             raise SchemaError(f"{name}.{column.name}: {error}") from error
@@ -944,33 +947,37 @@ def _zero_effort_defaults(
 def _shared_accounts(
     tables: Mapping[str, pd.DataFrame], orders: pd.DataFrame, *, shipping: bool = True
 ) -> pd.DataFrame:
-    """Pairs of accounts sharing a device, a normalized email or (``shipping``) an
+    """Pairs of accounts that shared a device, a normalized email or (``shipping``) an
     address an approved order shipped to.
 
-    Columns user_id, other_id, shared_at (when both sides of the earliest shared
-    item were known).
+    Sharing means holding the same item at the same time: overlapping device links,
+    overlapping email holdings (core.asof.email_history); a shipping address counts
+    from the account's first approved order to it. Columns user_id, other_id,
+    shared_at (the start of the earliest overlap).
     """
     from core.asof import email_history
 
     emails = email_history(tables["accounts"], tables["account_events"])
-    emails = emails.rename(columns={"since": "created_at"}).assign(
+    emails = emails.rename(columns={"since": "start", "until": "end"}).assign(
         item="e" + emails["email_root"])
-    devices = tables["device_links"][["user_id", "device_id", "created_at"]]
-    devices = devices.assign(item="d" + devices["device_id"].astype(str))
+    links = tables["device_links"]
+    devices = links.rename(columns={"created_at": "start", "removed_at": "end"}).assign(
+        item="d" + links["device_id"].astype(str))
     frames = [emails, devices]
     if shipping:
         shipped = orders.merge(tables["order_attempts"][["order_id", "ship_address_id"]],
                                on="order_id")
         shipped = shipped.groupby(["user_id", "ship_address_id"],
                                   as_index=False)["occurred_at"].min()
-        frames.append(shipped.rename(columns={"occurred_at": "created_at"}).assign(
-            item="a" + shipped["ship_address_id"].astype(str)))
-    items = pd.concat([frame[["user_id", "item", "created_at"]] for frame in frames],
+        frames.append(shipped.rename(columns={"occurred_at": "start"}).assign(
+            end=pd.NaT, item="a" + shipped["ship_address_id"].astype(str)))
+    items = pd.concat([frame[["user_id", "item", "start", "end"]] for frame in frames],
                       ignore_index=True)
-    items = items.groupby(["user_id", "item"], as_index=False)["created_at"].min()
     pairs = items.merge(items, on="item", suffixes=("", "_other"))
     pairs = pairs[pairs["user_id"] != pairs["user_id_other"]]
-    pairs = pairs.assign(shared_at=pairs[["created_at", "created_at_other"]].max(axis=1))
+    shared_at = pairs[["start", "start_other"]].max(axis=1)
+    ends = pairs[["end", "end_other"]].min(axis=1)  # NaT (still held) is skipped
+    pairs = pairs.assign(shared_at=shared_at)[ends.isna() | (shared_at < ends)]
     return pairs.rename(columns={"user_id_other": "other_id"}).groupby(
         ["user_id", "other_id"], as_index=False)["shared_at"].min()
 

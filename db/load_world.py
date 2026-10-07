@@ -92,22 +92,28 @@ SELECT s.plan_id, s.seq, s.due_at AS due_ts,
        END AS outcome
 FROM installment_schedule s
 LEFT JOIN (
-  -- paid in full: when the standing cents (payments less their reversals) first
-  -- reach the scheduled amount
-  SELECT plan_id, seq, MIN(CASE WHEN standing >= amount_cents THEN occurred_at END) AS paid_at
+  -- paid in full: from the event after which the standing cents (payments less
+  -- reversals, each at its own time, in event order) never again fall short of
+  -- the scheduled amount; never when they end short
+  SELECT plan_id, seq, MIN(CASE WHEN n > COALESCE(last_short, 0) THEN moved_at END) AS paid_at
   FROM (
-    SELECT a.plan_id, a.seq, a.occurred_at, s2.amount_cents,
-           SUM(a.amount_cents - COALESCE(r.reversed_cents, 0)) OVER (
-             PARTITION BY a.plan_id, a.seq ORDER BY a.occurred_at, a.event_id
-           ) AS standing
-    FROM payment_attempts a
-    JOIN installment_schedule s2 ON s2.plan_id = a.plan_id AND s2.seq = a.seq
-    LEFT JOIN (
-      SELECT payment_event_id, SUM(amount_cents) AS reversed_cents
-      FROM payment_reversals GROUP BY payment_event_id
-    ) r ON r.payment_event_id = a.event_id
-    WHERE a.result = 'success'
-  ) running
+    SELECT plan_id, seq, moved_at, n,
+           MAX(CASE WHEN standing < amount_cents THEN n END)
+             OVER (PARTITION BY plan_id, seq) AS last_short
+    FROM (
+      SELECT x.plan_id, x.seq, x.moved_at, s2.amount_cents,
+             ROW_NUMBER() OVER by_time AS n, SUM(x.cents) OVER by_time AS standing
+      FROM (
+        SELECT plan_id, seq, occurred_at AS moved_at, event_id, amount_cents AS cents
+        FROM payment_attempts WHERE result = 'success'
+        UNION ALL
+        SELECT a.plan_id, a.seq, r.occurred_at, r.event_id, -r.amount_cents
+        FROM payment_reversals r JOIN payment_attempts a ON a.event_id = r.payment_event_id
+      ) x
+      JOIN installment_schedule s2 ON s2.plan_id = x.plan_id AND s2.seq = x.seq
+      WINDOW by_time AS (PARTITION BY x.plan_id, x.seq ORDER BY x.moved_at, x.event_id)
+    ) running
+  ) marked
   GROUP BY plan_id, seq
 ) paid ON paid.plan_id = s.plan_id AND paid.seq = s.seq
 LEFT JOIN (SELECT DISTINCT plan_id FROM plan_writeoffs) w ON w.plan_id = s.plan_id

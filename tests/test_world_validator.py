@@ -10,6 +10,7 @@ that end before they start), plus the other contract rules.
 from __future__ import annotations
 
 from collections.abc import Callable
+from decimal import Decimal
 from pathlib import Path
 
 import pandas as pd
@@ -217,6 +218,18 @@ def fractional_cents(t) -> None:
     cash.loc[0, "amount_cents"] += 0.5
 
 
+def fractional_cents_as_objects(t) -> None:
+    cash = t["cash_events"]
+    cash["amount_cents"] = cash["amount_cents"].astype(object)
+    cash.loc[0, "amount_cents"] = Decimal(int(cash.loc[0, "amount_cents"])) + Decimal("0.5")
+
+
+def fractional_id_as_text(t) -> None:
+    orders = t["order_attempts"]
+    orders["merchant_id"] = orders["merchant_id"].astype(str)
+    orders.loc[0, "merchant_id"] = orders.loc[0, "merchant_id"] + ".5"
+
+
 def delivery_before_shipment(t) -> None:
     deliveries = t["deliveries"]
     deliveries.loc[0, "occurred_at"] = deliveries.loc[0, "occurred_at"] - H(days=10)
@@ -257,6 +270,8 @@ OTHER_RULES = [
     ("cash_mismatch", cash_wrong_amount),
     ("cash_mismatch", cash_extra),
     ("schema", fractional_cents),
+    ("schema", fractional_cents_as_objects),
+    ("schema", fractional_id_as_text),
     ("delivery_before_fulfilment", delivery_before_shipment),
     ("schedule_mismatch", schedule_does_not_sum),
     ("label_before_order", label_before_order),
@@ -280,6 +295,12 @@ def test_validator_rejects(valid, check: str, mutate: Callable) -> None:
 
 def test_valid_world_passes(valid) -> None:
     assert world.check_world(valid) == []
+
+
+def test_fractional_values_stay_valid_in_float_columns(valid) -> None:
+    tables = _copy(valid)
+    tables["merchants"].loc[0, "fulfilment_median_hours"] = 12.5
+    assert world.check_world(tables) == []
 
 
 def test_missing_table_is_reported(valid) -> None:

@@ -18,10 +18,12 @@ fixed in advance (no within-day ranking):
 Analyst dispositions, applied when the review completes:
 
 * ``clear``: nothing changes.
-* ``hold``: pauses fulfilment and settlement for verification, up to
-  ``config/policy.yaml`` actions.hold_max_hours; a legitimate customer may verify
-  late (the repayment schedule shifts) or not respond, which cancels the order,
-  refunds the checkout payment and counts as friction (no block).
+* ``hold``: runs the verification checks. Before shipment it pauses shipment and
+  merchant settlement up to ``config/policy.yaml`` actions.hold_max_hours; a
+  customer who verifies is released (shipment and the repayment schedule shift
+  after the release), and one who does not respond is cancelled with the checkout
+  payment refunded and no block (friction). After shipment nothing is paused and
+  no response changes nothing; a failed check still declines and the loss stands.
 * ``decline``: before shipment, voids the order (cash already moved stays and is
   refunded); after shipment the loss stands, the account is blocked and later
   orders are declined.
