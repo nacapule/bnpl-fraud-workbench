@@ -16,29 +16,29 @@ label_horizon_days: 60
 # Half-open windows [start, end) in platform-local time, contiguous and in
 # order. Orders in gaps and the embargo still count as feature history.
 windows:
-  warm_up:      {start: 2025-01-01, end: 2025-04-01}  # history only
-  fit:          {start: 2025-04-01, end: 2025-08-01}  # classifiers
-  gap_1:        {start: 2025-08-01, end: 2025-10-01}  # fit labels mature
-  calibration:  {start: 2025-10-01, end: 2025-11-01}  # calibrator; never used to fit classifiers
-  gap_2:        {start: 2025-11-01, end: 2026-01-01}  # calibration labels mature
-  validation:   {start: 2026-01-01, end: 2026-04-01}  # bands, thresholds, policy choice
-  embargo:      {start: 2026-04-01, end: 2026-06-01}  # validation labels mature
-  test:         {start: 2026-06-01, end: 2026-09-01}  # frozen policies evaluated
-  follow_up:    {start: 2026-09-01, end: 2026-12-30}  # no new orders; outcomes mature (120 days)
+  warm_up:      {start: 2024-01-01, end: 2024-04-01}  # history only
+  fit:          {start: 2024-04-01, end: 2024-08-01}  # classifiers
+  gap_1:        {start: 2024-08-01, end: 2024-10-01}  # fit labels mature
+  calibration:  {start: 2024-10-01, end: 2024-11-01}  # calibrator; never used to fit classifiers
+  gap_2:        {start: 2024-11-01, end: 2025-01-01}  # calibration labels mature
+  validation:   {start: 2025-01-01, end: 2025-04-01}  # bands, thresholds, policy choice
+  embargo:      {start: 2025-04-01, end: 2025-06-01}  # validation labels mature
+  test:         {start: 2025-06-01, end: 2025-09-01}  # frozen policies evaluated
+  follow_up:    {start: 2025-09-01, end: 2025-12-30}  # no new orders; outcomes mature (120 days)
 
 # Freeze instants (00:00 on the date). Training and tuning at a freeze use only
 # labels with label_known_at before it; negatives count only once known.
 freezes:
-  classifier: 2025-10-01   # >= fit end + horizon (2025-09-30), before calibration starts
-  calibrator: 2026-01-01   # >= calibration end + horizon (2025-12-31), before validation
-  policy: 2026-06-01       # >= validation end + horizon (2026-05-31), before test
+  classifier: 2024-10-01   # >= fit end + horizon (2024-09-30), before calibration starts
+  calibrator: 2025-01-01   # >= calibration end + horizon (2024-12-31), before validation
+  policy: 2025-06-01       # >= validation end + horizon (2025-05-31), before test
 
 # Order attempts fall in [warm_up start, test end); outcomes are observed until
 # the end of follow-up. Accounts and merchants may be created before the start.
 world_horizon:
-  order_start: 2025-01-01
-  order_end: 2026-09-01
-  observed_end: 2026-12-30
+  order_start: 2024-01-01
+  order_end: 2025-09-01
+  observed_end: 2025-12-30
 
 # Families share every event before their start, so each seed is fitted and
 # tuned once and tested on three futures. Parameters: config/world.yaml families.
@@ -47,10 +47,10 @@ families:
     starts: null
     description: the world as generated
   acquisition_surge:
-    starts: 2026-06-01
+    starts: 2025-06-01
     description: about twice the inflow of new legitimate customers, with a first-purchase promotion
   fraud_mix_shift:
-    starts: 2026-06-01
+    starts: 2025-06-01
     description: aged stolen-card sleeper accounts and a larger account-takeover share
 
 seeds:

@@ -26,9 +26,9 @@ H = pd.Timedelta
 TERMS = ledger.ProductTerms.from_config()
 SEED = 0
 FAMILY = "baseline"
-ORDER_START = "2025-12-01 00:00:00"
-ORDER_END = "2026-06-30 00:00:00"
-OBSERVED_UNTIL = T("2026-06-30 23:59:59")
+ORDER_START = "2024-12-01 00:00:00"
+ORDER_END = "2025-06-30 00:00:00"
+OBSERVED_UNTIL = T("2025-06-30 23:59:59")
 HORIZON_DAYS = 60
 ENTITY_IDS = {
     "accounts": "user_id",
@@ -282,25 +282,25 @@ class MiniWorld:
 
 def build() -> dict[str, pd.DataFrame]:
     w = MiniWorld()
-    w.entity("merchants", "m_home", "2024-03-01 09:00", name="north-goods-14", category="home",
+    w.entity("merchants", "m_home", "2023-03-01 09:00", name="north-goods-14", category="home",
              risk_tier=1, fulfilment_median_hours=12.0, closed_at=None)
-    w.entity("merchants", "m_tech", "2024-06-10 09:00", name="volt-tech-31",
+    w.entity("merchants", "m_tech", "2023-06-10 09:00", name="volt-tech-31",
              category="electronics", risk_tier=2, fulfilment_median_hours=18.0, closed_at=None)
-    w.entity("merchants", "m_flash", "2025-12-15 09:00", name="flash-gems-70",
+    w.entity("merchants", "m_flash", "2024-12-15 09:00", name="flash-gems-70",
              category="jewelry", risk_tier=3, fulfilment_median_hours=10.0,
-             closed_at=T("2026-02-20 12:00"))
-    w.entity("promotions", "first10", "2025-12-01 00:00", code="FIRST10", discount_bps=1000,
-             first_purchase_only=True, valid_to=T("2026-12-01 00:00"))
+             closed_at=T("2025-02-20 12:00"))
+    w.entity("promotions", "first10", "2024-12-01 00:00", code="FIRST10", discount_bps=1000,
+             first_purchase_only=True, valid_to=T("2025-12-01 00:00"))
 
     # ana: long-tenured customer; one installment bounces and is paid on retry.
-    w.customer("ana", "2024-05-02 10:00")
-    w.account_event("ana", "login", "2026-01-05 19:10")
-    w.order("ana1", "ana", "m_home", "2026-01-05 19:20", 8450, ship_hours=14, deliver_days=3)
+    w.customer("ana", "2023-05-02 10:00")
+    w.account_event("ana", "login", "2025-01-05 19:10")
+    w.order("ana1", "ana", "m_home", "2025-01-05 19:20", 8450, ship_hours=14, deliver_days=3)
     w.repay("ana1")
-    w.order("ana2", "ana", "m_tech", "2026-02-10 20:05", 43000, ship_hours=20)
+    w.order("ana2", "ana", "m_tech", "2025-02-10 20:05", 43000, ship_hours=20)
     bounced = w.pay("ana2", 1)
-    w.reverse("ana2", bounced, "2026-02-26 20:05", "bank_return")
-    w.pay("ana2", 1, "2026-02-28 20:05", attempt_no=2)
+    w.reverse("ana2", bounced, "2025-02-26 20:05", "bank_return")
+    w.pay("ana2", 1, "2025-02-28 20:05", attempt_no=2)
     w.repay("ana2", [2, 3])
     w.truth("ana")
     w.order_truth("ana1")
@@ -308,20 +308,20 @@ def build() -> dict[str, pd.DataFrame]:
 
     # cara and ben: a household sharing an address and a tablet; ben is a new
     # customer whose first order is large. Both use the first-purchase promotion.
-    w.customer("cara", "2025-08-20 14:00")
-    w.device("d_tablet", "2025-08-20 14:20", ua="Android")
-    w.link_device("cara", "d_tablet", "2025-08-20 14:20")
-    w.account_event("cara", "email_change", "2026-01-02 08:30")
-    w.account("ben", "2026-01-12 18:00", dob=1999)
-    w.device("d_ben", "2026-01-12 18:00", ua="Android")
-    w.link_device("ben", "d_ben", "2026-01-12 18:00")
-    w.link_address("ben", "a_cara", "2026-01-12 18:00")
-    w.card("c_ben", "ben", "2026-01-12 18:05")
-    w.order("ben1", "ben", "m_tech", "2026-01-12 18:40", 129999, address="a_cara",
+    w.customer("cara", "2024-08-20 14:00")
+    w.device("d_tablet", "2024-08-20 14:20", ua="Android")
+    w.link_device("cara", "d_tablet", "2024-08-20 14:20")
+    w.account_event("cara", "email_change", "2025-01-02 08:30")
+    w.account("ben", "2025-01-12 18:00", dob=1999)
+    w.device("d_ben", "2025-01-12 18:00", ua="Android")
+    w.link_device("ben", "d_ben", "2025-01-12 18:00")
+    w.link_address("ben", "a_cara", "2025-01-12 18:00")
+    w.card("c_ben", "ben", "2025-01-12 18:05")
+    w.order("ben1", "ben", "m_tech", "2025-01-12 18:40", 129999, address="a_cara",
             promo="first10", ship_hours=16)
     w.repay("ben1")
-    w.link_device("ben", "d_tablet", "2026-01-20 09:00")
-    w.order("cara1", "cara", "m_home", "2026-01-20 19:00", 6200, device="d_tablet",
+    w.link_device("ben", "d_tablet", "2025-01-20 09:00")
+    w.order("cara1", "cara", "m_home", "2025-01-20 19:00", 6200, device="d_tablet",
             promo="first10", ship_hours=10)
     w.repay("cara1")
     w.truth("cara", profile="household")
@@ -330,21 +330,21 @@ def build() -> dict[str, pd.DataFrame]:
     w.order_truth("cara1", mimic="household_promotion")
 
     # dan: account takeover. New device, password reset, new drop address, one order.
-    w.episode("e_ato", "P-ATO", "2026-02-03 02:10", "2026-02-03 02:20")
-    w.customer("dan", "2023-09-01 08:00", dob=1971)
-    w.order("dan1", "dan", "m_home", "2025-12-20 13:00", 4500)
+    w.episode("e_ato", "P-ATO", "2025-02-03 02:10", "2025-02-03 02:20")
+    w.customer("dan", "2022-09-01 08:00", dob=1971)
+    w.order("dan1", "dan", "m_home", "2024-12-20 13:00", 4500)
     w.repay("dan1")
-    w.device("d_ato", "2026-02-03 02:10", ua="Chrome")
-    w.link_device("dan", "d_ato", "2026-02-03 02:10")
-    w.account_event("dan", "login", "2026-02-03 02:10", device="d_ato", ip="185.12.9.40",
+    w.device("d_ato", "2025-02-03 02:10", ua="Chrome")
+    w.link_device("dan", "d_ato", "2025-02-03 02:10")
+    w.account_event("dan", "login", "2025-02-03 02:10", device="d_ato", ip="185.12.9.40",
                     ip_country="RO")
-    w.account_event("dan", "password_reset", "2026-02-03 02:12", device="d_ato",
+    w.account_event("dan", "password_reset", "2025-02-03 02:12", device="d_ato",
                     ip="185.12.9.40", ip_country="RO")
-    w.address("a_drop", "2026-02-03 02:15", city="Houston", region="TX")
-    w.link_address("dan", "a_drop", "2026-02-03 02:15", role="shipping")
-    w.order("dan2", "dan", "m_tech", "2026-02-03 02:20", 89900, device="d_ato",
+    w.address("a_drop", "2025-02-03 02:15", city="Houston", region="TX")
+    w.link_address("dan", "a_drop", "2025-02-03 02:15", role="shipping")
+    w.order("dan2", "dan", "m_tech", "2025-02-03 02:20", 89900, device="d_ato",
             address="a_drop", ip="185.12.9.40", ip_country="RO", ship_hours=6)
-    w.event("victim_reports", T("2026-02-09 10:00"), user_id="dan", order_id="dan2")
+    w.event("victim_reports", T("2025-02-09 10:00"), user_id="dan", order_id="dan2")
     w.miss("dan2")
     w.write_off("dan2")
     w.truth("dan")
@@ -352,32 +352,32 @@ def build() -> dict[str, pd.DataFrame]:
     w.order_truth("dan2", "P-ATO", "e_ato", "fraud")
 
     # eve: new account testing stolen cards; two processor declines, then one approval.
-    w.episode("e_stolen", "P-STOLEN", "2026-02-14 01:00", "2026-02-14 01:40")
-    w.account("eve", "2026-02-14 01:00", dob=1995)
-    w.device("d_eve", "2026-02-14 01:00", ua="Chrome")
-    w.link_device("eve", "d_eve", "2026-02-14 01:00")
-    w.address("a_eve", "2026-02-14 01:00", city="Miami", region="FL")
-    w.link_address("eve", "a_eve", "2026-02-14 01:00")
+    w.episode("e_stolen", "P-STOLEN", "2025-02-14 01:00", "2025-02-14 01:40")
+    w.account("eve", "2025-02-14 01:00", dob=1995)
+    w.device("d_eve", "2025-02-14 01:00", ua="Chrome")
+    w.link_device("eve", "d_eve", "2025-02-14 01:00")
+    w.address("a_eve", "2025-02-14 01:00", city="Miami", region="FL")
+    w.link_address("eve", "a_eve", "2025-02-14 01:00")
     for n, minute in ((1, 5), (2, 15), (3, 30)):
-        w.card(f"c_eve{n}", "eve", f"2026-02-14 01:{minute:02d}", bin_country="GB")
+        w.card(f"c_eve{n}", "eve", f"2025-02-14 01:{minute:02d}", bin_country="GB")
     for n, minute in ((1, 10), (2, 20)):
-        w.order(f"eve{n}", "eve", "m_tech", f"2026-02-14 01:{minute:02d}", 64999,
+        w.order(f"eve{n}", "eve", "m_tech", f"2025-02-14 01:{minute:02d}", 64999,
                 card=f"c_eve{n}", ip="91.200.3.7", ip_country="RO", avs="N", cvv="N",
                 declined=True)
-    w.order("eve3", "eve", "m_tech", "2026-02-14 01:40", 65000, card="c_eve3",
+    w.order("eve3", "eve", "m_tech", "2025-02-14 01:40", 65000, card="c_eve3",
             ip="91.200.3.7", ip_country="RO", avs="N", ship_hours=8)
     w.miss("eve3")
-    w.dispute("eve3", "unauthorized", "2026-03-01 09:00", "2026-03-03 09:00",
-              ("2026-04-08 09:00", "2026-04-10 09:00"), "lost")
+    w.dispute("eve3", "unauthorized", "2025-03-01 09:00", "2025-03-03 09:00",
+              ("2025-04-08 09:00", "2025-04-10 09:00"), "lost")
     w.write_off("eve3")
     w.truth("eve", "fraudster", "e_stolen")
     for n in (1, 2, 3):
         w.order_truth(f"eve{n}", "P-STOLEN", "e_stolen", "fraud")
 
     # fay: new customer who never pays after checkout (never-pay determination).
-    w.episode("e_neverpay", "P-NEVERPAY", "2026-02-01 12:00", "2026-03-15 12:30")
-    w.customer("fay", "2026-02-01 12:00", dob=2001)
-    w.order("fay1", "fay", "m_tech", "2026-02-01 12:30", 52000, ship_hours=18)
+    w.episode("e_neverpay", "P-NEVERPAY", "2025-02-01 12:00", "2025-03-15 12:30")
+    w.customer("fay", "2025-02-01 12:00", dob=2001)
+    w.order("fay1", "fay", "m_tech", "2025-02-01 12:30", 52000, ship_hours=18)
     w.miss("fay1")
     w.write_off("fay1")
     w.truth("fay", "fraudster", "e_neverpay")
@@ -385,11 +385,11 @@ def build() -> dict[str, pd.DataFrame]:
 
     # gus: returning customer in hardship; a zero-effort default after a repaid plan
     # is a credit loss, not never-pay.
-    w.customer("gus", "2024-11-11 11:00", dob=1980)
-    w.account_event("gus", "phone_change", "2026-01-10 09:00")
-    w.order("gus1", "gus", "m_home", "2025-12-05 12:00", 12000)
+    w.customer("gus", "2023-11-11 11:00", dob=1980)
+    w.account_event("gus", "phone_change", "2025-01-10 09:00")
+    w.order("gus1", "gus", "m_home", "2024-12-05 12:00", 12000)
     w.repay("gus1")
-    w.order("gus2", "gus", "m_home", "2026-01-25 21:00", 24000)
+    w.order("gus2", "gus", "m_home", "2025-01-25 21:00", 24000)
     w.miss("gus2")
     w.write_off("gus2")
     w.truth("gus", profile="hardship")
@@ -397,64 +397,64 @@ def build() -> dict[str, pd.DataFrame]:
     w.order_truth("gus2", mimic="hardship_default")
 
     # hal: repays, then claims two delivered orders never arrived; both claims rejected.
-    w.episode("e_inr", "P-INR-ABUSE", "2025-12-10 18:00", "2026-03-10 10:00")
-    w.customer("hal", "2025-06-01 09:00", dob=1990)
-    w.order("hal1", "hal", "m_home", "2025-12-10 18:00", 7500)
+    w.episode("e_inr", "P-INR-ABUSE", "2024-12-10 18:00", "2025-03-10 10:00")
+    w.customer("hal", "2024-06-01 09:00", dob=1990)
+    w.order("hal1", "hal", "m_home", "2024-12-10 18:00", 7500)
     w.repay("hal1")
-    w.dispute("hal1", "item_not_received", "2026-01-02 10:00", "2026-01-04 10:00",
-              ("2026-02-01 10:00", "2026-02-02 10:00"), "won")
-    w.order("hal2", "hal", "m_home", "2026-01-15 19:00", 9500)
+    w.dispute("hal1", "item_not_received", "2025-01-02 10:00", "2025-01-04 10:00",
+              ("2025-02-01 10:00", "2025-02-02 10:00"), "won")
+    w.order("hal2", "hal", "m_home", "2025-01-15 19:00", 9500)
     w.repay("hal2")
-    w.dispute("hal2", "item_not_received", "2026-02-10 10:00", "2026-02-12 10:00",
-              ("2026-03-09 10:00", "2026-03-10 10:00"), "won")
+    w.dispute("hal2", "item_not_received", "2025-02-10 10:00", "2025-02-12 10:00",
+              ("2025-03-09 10:00", "2025-03-10 10:00"), "won")
     w.truth("hal", "fraudster", "e_inr")
     w.order_truth("hal1", "P-INR-ABUSE", "e_inr", "abuse")
     w.order_truth("hal2", "P-INR-ABUSE", "e_inr", "abuse")
 
     # ivy: parcel lost by the carrier; her claim wins and the merchant reimburses.
-    w.customer("ivy", "2025-03-03 16:00", dob=1984)
-    w.order("ivy1", "ivy", "m_tech", "2026-01-08 15:00", 21000, ship_hours=20,
+    w.customer("ivy", "2024-03-03 16:00", dob=1984)
+    w.order("ivy1", "ivy", "m_tech", "2025-01-08 15:00", 21000, ship_hours=20,
             deliver_days=None)
     w.repay("ivy1")
-    w.dispute("ivy1", "item_not_received", "2026-02-04 09:00", "2026-02-05 09:00",
-              ("2026-03-18 09:00", "2026-03-20 09:00"), "lost")
+    w.dispute("ivy1", "item_not_received", "2025-02-04 09:00", "2025-02-05 09:00",
+              ("2025-03-18 09:00", "2025-03-20 09:00"), "lost")
     w.truth("ivy")
     w.order_truth("ivy1", mimic="genuine_non_delivery")
 
     # jay and kim: customers of a merchant that stops shipping and disappears.
-    w.episode("e_merch", "P-MERCH", "2025-12-15 09:00", "2026-02-20 12:00")
-    w.customer("kim", "2025-07-07 07:00", dob=1993)
-    w.order("kim1", "kim", "m_flash", "2026-01-10 11:00", 41000, ship_hours=9)
+    w.episode("e_merch", "P-MERCH", "2024-12-15 09:00", "2025-02-20 12:00")
+    w.customer("kim", "2024-07-07 07:00", dob=1993)
+    w.order("kim1", "kim", "m_flash", "2025-01-10 11:00", 41000, ship_hours=9)
     w.repay("kim1")
-    w.customer("jay", "2025-10-10 10:00", dob=1986)
-    w.order("jay1", "jay", "m_flash", "2026-02-12 16:00", 78000, ship_hours=10,
+    w.customer("jay", "2024-10-10 10:00", dob=1986)
+    w.order("jay1", "jay", "m_flash", "2025-02-12 16:00", 78000, ship_hours=10,
             deliver_days=None)
     w.repay("jay1")
-    w.dispute("jay1", "item_not_received", "2026-03-05 10:00", "2026-03-06 10:00",
-              ("2026-04-03 10:00", "2026-04-05 10:00"), "lost")
+    w.dispute("jay1", "item_not_received", "2025-03-05 10:00", "2025-03-06 10:00",
+              ("2025-04-03 10:00", "2025-04-05 10:00"), "lost")
     w.truth("kim")
     w.truth("jay")
     w.order_truth("kim1")
     w.order_truth("jay1", "P-MERCH", "e_merch", "fraud")
 
     # lee: travelling; orders from a French IP to the home address.
-    w.customer("lee", "2024-02-02 12:00", dob=1977)
-    w.account_event("lee", "login", "2026-03-01 08:00", ip="81.250.1.4", ip_country="FR")
-    w.account_event("lee", "password_change", "2026-03-01 08:05", ip="81.250.1.4",
+    w.customer("lee", "2023-02-02 12:00", dob=1977)
+    w.account_event("lee", "login", "2025-03-01 08:00", ip="81.250.1.4", ip_country="FR")
+    w.account_event("lee", "password_change", "2025-03-01 08:05", ip="81.250.1.4",
                     ip_country="FR")
-    w.order("lee1", "lee", "m_home", "2026-03-02 13:00", 15500, ip="81.250.1.4",
+    w.order("lee1", "lee", "m_home", "2025-03-02 13:00", 15500, ip="81.250.1.4",
             ip_country="FR")
     w.repay("lee1")
     w.truth("lee", profile="traveller")
     w.order_truth("lee1", mimic="travel")
 
     # pf1-pf3: three new accounts on one device each take the first-purchase promotion.
-    w.episode("e_promo", "P-PROMO", "2026-03-10 20:00", "2026-03-12 21:20")
-    w.device("d_farm", "2026-03-10 20:00", ua="Android")
+    w.episode("e_promo", "P-PROMO", "2025-03-10 20:00", "2025-03-12 21:20")
+    w.device("d_farm", "2025-03-10 20:00", ua="Android")
     for n, (signup, ordered, amount) in enumerate(
-        (("2026-03-10 20:00", "2026-03-10 20:20", 5500),
-         ("2026-03-11 20:30", "2026-03-11 20:50", 5800),
-         ("2026-03-12 21:00", "2026-03-12 21:20", 6000)), start=1):
+        (("2025-03-10 20:00", "2025-03-10 20:20", 5500),
+         ("2025-03-11 20:30", "2025-03-11 20:50", 5800),
+         ("2025-03-12 21:00", "2025-03-12 21:20", 6000)), start=1):
         user = f"pf{n}"
         w.account(user, signup, dob=2000)
         w.link_device(user, "d_farm", signup)
@@ -467,8 +467,8 @@ def build() -> dict[str, pd.DataFrame]:
         w.order_truth(f"{user}1", "P-PROMO", "e_promo", "abuse")
 
     # mo: an order too recent for any label by the end of observation.
-    w.customer("mo", "2026-05-20 15:00", dob=1997)
-    w.order("mo1", "mo", "m_home", "2026-06-10 10:00", 3000)
+    w.customer("mo", "2025-05-20 15:00", dob=1997)
+    w.order("mo1", "mo", "m_home", "2025-06-10 10:00", 3000)
     w.repay("mo1", [1])
     w.truth("mo")
     w.order_truth("mo1")

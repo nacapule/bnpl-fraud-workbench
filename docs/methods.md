@@ -50,18 +50,18 @@ pre-registered in `experiments/protocol.yaml` and checked by
 
 | Window | Dates (end exclusive) | Use |
 | --- | --- | --- |
-| Warm-up | 2025-01-01 to 2025-04-01 | History only |
-| Fit | 2025-04-01 to 2025-08-01 | Classifiers |
-| Gap | 2025-08-01 to 2025-10-01 | Fit labels mature |
-| Calibration | 2025-10-01 to 2025-11-01 | Calibrator; never used to fit classifiers |
-| Gap | 2025-11-01 to 2026-01-01 | Calibration labels mature |
-| Validation | 2026-01-01 to 2026-04-01 | Bands, thresholds, policy choice |
-| Embargo | 2026-04-01 to 2026-06-01 | Validation labels mature |
-| Test | 2026-06-01 to 2026-09-01 | Frozen policies evaluated |
-| Follow-up | 2026-09-01 to 2026-12-30 | No new orders; outcomes mature |
+| Warm-up | 2024-01-01 to 2024-04-01 | History only |
+| Fit | 2024-04-01 to 2024-08-01 | Classifiers |
+| Gap | 2024-08-01 to 2024-10-01 | Fit labels mature |
+| Calibration | 2024-10-01 to 2024-11-01 | Calibrator; never used to fit classifiers |
+| Gap | 2024-11-01 to 2025-01-01 | Calibration labels mature |
+| Validation | 2025-01-01 to 2025-04-01 | Bands, thresholds, policy choice |
+| Embargo | 2025-04-01 to 2025-06-01 | Validation labels mature |
+| Test | 2025-06-01 to 2025-09-01 | Frozen policies evaluated |
+| Follow-up | 2025-09-01 to 2025-12-30 | No new orders; outcomes mature |
 
-The classifier freezes on 2025-10-01, the calibrator on 2026-01-01 and the
-policy on 2026-06-01; each uses only labels known before its freeze. The ten
+The classifier freezes on 2024-10-01, the calibrator on 2025-01-01 and the
+policy on 2025-06-01; each uses only labels known before its freeze. The ten
 final seeds were drawn before any final world existed, and no final-seed world
 can be generated before the freeze commit.
 

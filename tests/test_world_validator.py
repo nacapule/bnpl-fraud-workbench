@@ -147,7 +147,7 @@ def order_after_merchant_closed(t) -> None:
 
 
 def promotion_out_of_validity(t) -> None:
-    t["promotions"].loc[0, "valid_to"] = pd.Timestamp("2026-01-01")
+    t["promotions"].loc[0, "valid_to"] = pd.Timestamp("2025-01-01")
 
 
 def cash_sign(t) -> None:
@@ -159,7 +159,7 @@ def cash_sign(t) -> None:
 def cash_before_cause(t) -> None:
     cash = t["cash_events"]
     first = cash.index[cash["kind"] == "recovery"][0]
-    cash.loc[first, ["occurred_at"]] = pd.Timestamp("2025-01-01")
+    cash.loc[first, ["occurred_at"]] = pd.Timestamp("2024-01-01")
 
 
 def writeoff_before_due(t) -> None:
@@ -169,7 +169,7 @@ def writeoff_before_due(t) -> None:
 
 def resolution_before_opening(t) -> None:
     resolutions = t["dispute_resolutions"]
-    resolutions.loc[0, "known_at"] = pd.Timestamp("2025-12-01")
+    resolutions.loc[0, "known_at"] = pd.Timestamp("2024-12-01")
 
 
 def delivery_before_shipment(t) -> None:
@@ -182,7 +182,7 @@ def schedule_does_not_sum(t) -> None:
 
 
 def label_before_order(t) -> None:
-    t["labels"].loc[0, "label_known_at"] = pd.Timestamp("2024-01-01")
+    t["labels"].loc[0, "label_known_at"] = pd.Timestamp("2023-01-01")
 
 
 def missing_reference(t) -> None:

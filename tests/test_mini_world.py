@@ -106,25 +106,25 @@ def test_declined_attempts_have_no_plan_cash_or_label(tables) -> None:
 @pytest.mark.parametrize(
     ("email", "amount", "expected"),
     [
-        ("dan.71@gmail.com", 89900, [(1, "account_takeover", "2026-02-09 10:00:00")]),
+        ("dan.71@gmail.com", 89900, [(1, "account_takeover", "2025-02-09 10:00:00")]),
         # the stolen-card order's first determination is the zero-effort default
         # (installment 1 due 02-28, unpaid 30 days later), before the lost dispute
-        ("eve.95@gmail.com", 65000, [(1, "never_pay", "2026-03-30 01:40:00")]),
-        ("fay.1@gmail.com", 52000, [(1, "never_pay", "2026-03-17 12:30:00")]),
+        ("eve.95@gmail.com", 65000, [(1, "never_pay", "2025-03-30 01:40:00")]),
+        ("fay.1@gmail.com", 52000, [(1, "never_pay", "2025-03-17 12:30:00")]),
         # a zero-effort default after a repaid plan is a credit loss
-        ("gus.80@gmail.com", 24000, [(0, "credit_loss", "2026-03-26 21:00:00")]),
+        ("gus.80@gmail.com", 24000, [(0, "credit_loss", "2025-03-26 21:00:00")]),
         # clean at the horizon, then the second rejected claim
-        ("hal.90@gmail.com", 7500, [(0, "no_finding", "2026-02-08 18:00:00"),
-                                    (1, "inr_abuse", "2026-03-10 10:00:00")]),
-        ("hal.90@gmail.com", 9500, [(1, "inr_abuse", "2026-03-10 10:00:00")]),
+        ("hal.90@gmail.com", 7500, [(0, "no_finding", "2025-02-08 18:00:00"),
+                                    (1, "inr_abuse", "2025-03-10 10:00:00")]),
+        ("hal.90@gmail.com", 9500, [(1, "inr_abuse", "2025-03-10 10:00:00")]),
         # dispute pending at the horizon postpones the negative to its resolution
-        ("ivy.84@gmail.com", 21000, [(0, "no_finding", "2026-03-20 09:00:00")]),
-        ("jay.86@gmail.com", 78000, [(1, "merchant_bustout", "2026-02-20 12:00:00")]),
-        ("kim.93@gmail.com", 41000, [(0, "no_finding", "2026-03-11 11:00:00")]),
+        ("ivy.84@gmail.com", 21000, [(0, "no_finding", "2025-03-20 09:00:00")]),
+        ("jay.86@gmail.com", 78000, [(1, "merchant_bustout", "2025-02-20 12:00:00")]),
+        ("kim.93@gmail.com", 41000, [(0, "no_finding", "2025-03-11 11:00:00")]),
         # household of two on one promotion is not promotion abuse
-        ("ben.99@gmail.com", 129999, [(0, "no_finding", "2026-03-13 18:40:00")]),
-        ("pf3.0@gmail.com", 6000, [(1, "promo_abuse", "2026-03-12 21:20:00")]),
-        ("pf1.0@gmail.com", 5500, [(1, "promo_abuse", "2026-03-12 21:20:00")]),
+        ("ben.99@gmail.com", 129999, [(0, "no_finding", "2025-03-13 18:40:00")]),
+        ("pf3.0@gmail.com", 6000, [(1, "promo_abuse", "2025-03-12 21:20:00")]),
+        ("pf1.0@gmail.com", 5500, [(1, "promo_abuse", "2025-03-12 21:20:00")]),
         # too recent: no label by the end of observation
         ("mo.97@outlook.com", 3000, []),
     ],
@@ -150,9 +150,9 @@ def test_unknown_is_not_negative(tables) -> None:
         known = world.labels_as_of(tables["labels"], at)
         row = known[known["order_id"] == order]
         return None if row.empty else int(row["label"].iloc[0])
-    assert label_at("2026-02-01 00:00:00") is None
-    assert label_at("2026-02-09 00:00:00") == 0
-    assert label_at("2026-03-11 00:00:00") == 1
+    assert label_at("2025-02-01 00:00:00") is None
+    assert label_at("2025-02-09 00:00:00") == 0
+    assert label_at("2025-03-11 00:00:00") == 1
 
 
 def test_event_ids_follow_the_total_order(tables) -> None:

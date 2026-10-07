@@ -7,8 +7,8 @@ files; `tests/test_mini_world.py` checks they equal a fresh build, pass the
 validator and carry the hand-checked cash and labels below, and
 `tests/test_mini_world_mysql.py` loads them into MySQL (`db/load_world.py`).
 
-Orders run from 2025-12-05 to 2026-06-10; outcomes are observed until
-2026-06-30 23:59:59; the label horizon is 60 days.
+Orders run from 2024-12-05 to 2025-06-10; outcomes are observed until
+2025-06-30 23:59:59; the label horizon is 60 days.
 
 | Account | Story | Net cash (cents) | Adjudicated label |
 | --- | --- | ---: | --- |

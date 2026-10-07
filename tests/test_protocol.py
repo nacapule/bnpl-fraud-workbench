@@ -22,8 +22,8 @@ def raw() -> dict:
 
 def test_committed_protocol_is_valid(raw: dict) -> None:
     p = proto.parse_protocol(raw)
-    assert p.windows["test"].start == pd.Timestamp("2026-06-01")
-    assert p.observed_until == pd.Timestamp("2026-12-29 23:59:59")
+    assert p.windows["test"].start == pd.Timestamp("2025-06-01")
+    assert p.observed_until == pd.Timestamp("2025-12-29 23:59:59")
     assert 416 in p.development_seeds and len(p.final_seeds) == 10
 
 
@@ -32,15 +32,15 @@ def test_gaps_cover_the_label_horizon(raw: dict) -> None:
     for name in proto.GAPS:
         assert p.windows[name].days >= p.label_horizon_days
     # freeze instants: fitted window end + horizon <= freeze <= next window start
-    assert p.freezes["classifier"] >= pd.Timestamp("2025-08-01") + pd.Timedelta(days=60)
+    assert p.freezes["classifier"] >= pd.Timestamp("2024-08-01") + pd.Timedelta(days=60)
     assert p.freezes["policy"] <= p.windows["test"].start
 
 
 def test_window_assignment(raw: dict) -> None:
     p = proto.parse_protocol(raw)
     stamps = pd.Series(pd.to_datetime([
-        "2025-03-31 23:59:59", "2025-04-01 00:00:00", "2026-08-31 12:00:00",
-        "2027-01-01 00:00:00",
+        "2024-03-31 23:59:59", "2024-04-01 00:00:00", "2025-08-31 12:00:00",
+        "2026-01-01 00:00:00",
     ]))
     assert p.window_of(stamps).tolist() == ["warm_up", "fit", "test", pd.NA]
 
@@ -48,12 +48,12 @@ def test_window_assignment(raw: dict) -> None:
 @pytest.mark.parametrize(
     ("path", "value", "message"),
     [
-        (("windows", "gap_1", "end"), "2025-09-01", "not contiguous"),
+        (("windows", "gap_1", "end"), "2024-09-01", "not contiguous"),
         (("label_horizon_days",), 90, "shorter than the label horizon"),
-        (("freezes", "policy"), "2026-05-15", "before validation labels can mature"),
-        (("freezes", "calibrator"), "2026-01-15", "after validation starts"),
-        (("windows", "follow_up", "end"), "2026-10-01", "follow-up is shorter"),
-        (("families", "fraud_mix_shift", "starts"), "2026-05-01", "must start at the test"),
+        (("freezes", "policy"), "2025-05-15", "before validation labels can mature"),
+        (("freezes", "calibrator"), "2025-01-15", "after validation starts"),
+        (("windows", "follow_up", "end"), "2025-10-01", "follow-up is shorter"),
+        (("families", "fraud_mix_shift", "starts"), "2025-05-01", "must start at the test"),
     ],
 )
 def test_broken_protocols_are_rejected(raw: dict, path: tuple, value, message: str) -> None:
