@@ -287,56 +287,163 @@ def test_numbers_typed_into_a_template_are_flagged() -> None:
     ]
 
 
-def test_inline_code_with_three_backticks_does_not_open_a_fence() -> None:
-    template = "```make final``` runs it.\n\nThe loss was 84% of GMV.\n```\ncode 12\n```\n"
-    assert [f.text for f in lint.number_findings("README.md", template)] == ["84"]
+SHOWN = "Hybrid earned more at 84%."
 
 
 @pytest.mark.parametrize("template", [
-    "```markdown\n> ```text\n> example 12\n> ```\n```\n\nLoss was 84% of GMV.\n",  # quoted
-    "- ```\n  code 12\nLoss was 84% of GMV.\n",  # the list item, and its fence, ended
-    "> ```\n> code 12\n\nLoss was 84% of GMV.\n",  # the quote, and its fence, ended
-    "- Example:\n\n  ```text\n  code 12\n    ```\n\nLoss was 84% of GMV.\n",  # in an item
-    "> ```markdown\n> > ```\n> example 12\n> ```\n>\n> Loss was 84% of GMV.\n",  # a > in code
-    "- - ```text\n    code 12\n    ```\n\n    Loss was 84% of GMV.\n",  # two list marks
-    "    ```text\n    example 12\n    ```\n\nLoss was 84% of GMV.\n",  # indented code, no fence
-    "- > ```text\n  > example 12\n  > ```\n  >\n  > Loss was 84% of GMV.\n",  # a quote in an item
-    "- Item.\n\n        code 12\n\nLoss was 84% of GMV.\n",  # indented code in an item
-    "- > > ```text\n  > > example 12\n  > > ```\n  > >\n  > > Loss was 84% of GMV.\n",
-    "Method\n===\n    example 12\n\nLoss was 84% of GMV.\n",  # code after a setext heading
-    "<!-- a note on 12 -->\nText <!-- and 12 --> here.\n\nLoss was 84% of GMV.\n",  # comments
-    '[1]: https://example.com/2025/x "Version 12"\nLoss was 84% of GMV.\n',  # a definition
+    # fences that end with their container, or that are not fences
+    "```markdown\n> ```text\n> example 12\n> ```\n```\n\n" + SHOWN + "\n",
+    "- ```\n  code 12\n" + SHOWN + "\n",
+    "> ```\n> code 12\n\n" + SHOWN + "\n",
+    "- Example:\n\n  ```text\n  code 12\n    ```\n\n" + SHOWN + "\n",
+    "> ```markdown\n> > ```\n> example 12\n> ```\n>\n> " + SHOWN + "\n",
+    "- - ```text\n    code 12\n    ```\n\n    " + SHOWN + "\n",
+    "    ```text\n    example 12\n    ```\n\n" + SHOWN + "\n",
+    "- > ```text\n  > example 12\n  > ```\n  >\n  > " + SHOWN + "\n",
+    "- > > ```text\n  > > example\n  > > ```\n  > >\n  > > " + SHOWN + "\n",
+    "> Method.\n    ```text\n    example\n    ```\n    " + SHOWN + "\n",
+    "- Results:\n\n  |Policy|Net|\n  |---|---|\n  |Hybrid|ok|\n" + SHOWN + "\n",
+    # fence marks that would pair across prose if a fence were misread
+    "  ```\ncode\n```\n" + SHOWN + "\n```\n",
+    "~~~\n\n```text\n~~~\n" + SHOWN + "\n\n```\n",
+    "- item\n  ```\n" + SHOWN + "\n```\n",
+    "Context.\n\n  ```\ncode\n```\n" + SHOWN + "\n```\n",
+    "<span>Note</span> text\n```\ncode\n\nmore code\n```\n" + SHOWN + "\n```\n",
+    "Context.\n<div>\n```\n" + SHOWN + "\n```\n</div>\n",
+    "<pre>\n\n```\n" + SHOWN + "\n```\n</pre>\n",
+    "```\ncode\n\t```\n```\n" + SHOWN + "\n```\ncode\n```\n",
+    "  <!--\n\n```text\n-->\n" + SHOWN + "\n\n```\n",
+    "- item\n\n  <!--\n\n```text\ncode\n```\n" + SHOWN + "\n-->\n",
+    # containers, continuations and tables
+    "- > Context.\n  >\n  > Method.\n\n    " + SHOWN + "\n",
+    "-\n    First paragraph.\n\n    " + SHOWN + "\n",
+    "> Context\n" + SHOWN + "\n",
+    "1. First.\n2. " + SHOWN + "\n",
+    "- Item.\n\n  " + SHOWN + "\n",
+    "| a | b |\n|---|---|\n| " + SHOWN + " | x |\n",
+    "| " + SHOWN + "\n",
+    # comments: kept where a CommonMark version or a browser shows the text
+    "Context. <!-- editorial\nnote -->\n    " + SHOWN + "\n",
+    "`<!--` " + SHOWN + " `-->`\n",
+    "<!--\n```\n-->\n" + SHOWN + "\n",
+    "Text <!-- never closed, so shown\n" + SHOWN + "\n",
+    "<!-- check the denominator --> " + SHOWN + "\n",
+    "<!-- check\nthe denominator --> " + SHOWN + "\n",
+    "<!--> " + SHOWN + " -->\n",
+    "Text <!--> " + SHOWN + " -->\n",
+    "<!-- note --!> " + SHOWN + " -->\n",
+    "Text <!-- a -- b --> " + SHOWN + "\n",
+    "<!-- `\n-->" + SHOWN + " `x`\n",
+    "x <!-- -- ` --> " + SHOWN + " `\n",
+    "<!-- ` --> " + SHOWN + " `x`\n",
+    "Use `<!--\n`. " + SHOWN + " `-->\n`.\n",
+    # raw HTML
+    "<div>\n<!-- verify denominator -->\n    <p>" + SHOWN + "</p>\n</div>\n",
+    "<div>\n" + SHOWN + "\n</div>\n",
+    "<div>\n<!--\n\n" + SHOWN + "\n-->\n</div>\n",
+    "<b>x</b> Note: <!-- " + SHOWN + " --!>\n",
+    "<b>x</b> `<!--` " + SHOWN + " `-->`\n",
+    "<textarea>\n<!-- " + SHOWN + " -->\n</textarea>\n",
+    "a <textarea>\n\n<!-- " + SHOWN + " -->\n",
+    "<div>Hybrid earned `more` at `84%`</div>\n",
+    "- <div>\n  Hybrid earned `more` at `84%`.\n  </div>\n",
+    "<svg><text><![CDATA[" + SHOWN + "]]></text></svg>\n",
+    "Enter <input value='84'> more\n",
+    # code spans
+    "Use ``a`b``. " + SHOWN + " See ``c`d``.\n",
+    "Use `x\ny` and `z` " + SHOWN + " w`\n",
+    "Use `x\ny` " + SHOWN + " `z`\n",
+    "# Heading `a\npara b` " + SHOWN + "\n",
+    "<span title='`'>" + SHOWN + "</span> `x`\n",
+    "x <span title='`'>" + SHOWN + "</span> `x`\n",
+    "<http://a`b> " + SHOWN + " `x`\n",
+    "x <a\nhref='`'>" + SHOWN + " `x`\n",
+    "| `Hybrid earned | more at 84%` |\n|---|---|\n",
+    "{{ a }}`x\n" + SHOWN + " `\n",
+    # links: a target is skipped only where a link certainly forms
+    "[operating review](reports/operating.md\n\n" + SHOWN + "\n",
+    "[a] b](more) at 84%\n",
+    "Hybrid earned](more-84)\n",
+    "\\[see](more-84) " + SHOWN + "\n",
+    "[a][b](more-84) " + SHOWN + "\n",
+    "[a [b](x) c](more-84) " + SHOWN + "\n",
+    "[x](<" + SHOWN + "\\>)\n",
+    "[^1](more-84) " + SHOWN + "\n",
+    "| a | b |\n|---|---|\n| [Hybrid earned | more](at-84) |\n",
+    "See [^84] for more.\n",
+    # reference definitions: only valid ones, where a paragraph starts
+    "[note]: Loss was 84% of GMV, more than incumbent rules.\n",
+    '[ref]: https://example.com/report) "Loss was more at 84%."\n',
+    "[ref]: target\n===\n    " + SHOWN + "\n",
+    "Context.\n\n[ref]: target\n===\n    " + SHOWN + "\n",
+    "[ref]:\ntarget\n===\n    " + SHOWN + "\n",
+    "[ref]: target\n---\n    " + SHOWN + "\n",
+    "[ref]: target\n    " + SHOWN + "\n",
+    '[a[b]: /url "' + SHOWN + '"\n',
+    "[ ]: /url '" + SHOWN + "'\n",
+    "[ref]: <84% more\n",
+    "Context.\n[ref]: /url '" + SHOWN + "'\n",
+    "`x`\n[ref]: /url '" + SHOWN + "'\n",
+    "- <pre>\n\n  [ref]: x '" + SHOWN + "'\n  </pre>\n",
+    "<pre>\n\n[ref]: x '" + SHOWN + "'\n</pre>\n",
+    "[ref]: /url '" + SHOWN + "'\n---\n",
+    "[a]: /a '" + SHOWN + "'\n[b]: /b\n===\n",
+    "Context {{ x\n}}\n[ref]: /url '" + SHOWN + "'\n",
+    "Context\n\u00a0\n[ref]: /url '" + SHOWN + "'\n",  # not a blank line
+    # list numbers: only where an item certainly starts
+    "Context\n84. " + SHOWN + "\n",
+    "`x`\n84. " + SHOWN + "\n",
+    "Context\n    1. a\n    84. " + SHOWN + "\n",
+    "Context\n1.\n84. " + SHOWN + "\n",
+    "- x\n  1. a\n84. " + SHOWN + "\n",
+    "[ref]: /url\n84. " + SHOWN + "\n",
+    "<pre>\n\n84. " + SHOWN + "\n</pre>\n",
+    "- <pre>\n\n  84. " + SHOWN + "\n  </pre>\n",
+    "Context\n\u00a0\n84. " + SHOWN + "\n",
 ])
-def test_a_fence_ends_with_its_closer_or_its_container(template: str) -> None:
-    """Fence content is read as content first; a fence never outlives its container."""
-    assert [f.text for f in lint.number_findings("README.md", template)] == ["84"]
+def test_visible_text_is_never_hidden(template: str) -> None:
+    """The lints skip only what they can place for certain as code or as hidden."""
+    assert "84" in [f.text for f in lint.number_findings("README.md", template)]
+    assert "'more'" in [f.text.split(" in ")[0] for f in lint.directional_findings(
+        "README.md", template, ["more"])]
 
 
 @pytest.mark.parametrize("template", [
-    "- > Context.\n  >\n  > Method.\n\n    Loss was 84% of GMV.\n",  # a list paragraph
-    "-\n    First paragraph.\n\n    Loss was 84% of GMV.\n",  # an item opened by a bare mark
-    "> Context\nLoss was 84% of GMV.\n",  # a quoted paragraph continued without its mark
-    "1. First.\n2. Loss was 84% of GMV.\n",  # the next item, not a continuation
-    "- Item.\n\n  Loss was 84% of GMV.\n",
-    "| a | b |\n|---|---|\n| Loss was 84% of GMV. | x |\n",
-    "> Method.\n    ```text\n    example\n    ```\n    Loss was 84% of GMV.\n",  # lazy, not code
-    "Context. <!-- editorial\nnote -->\n    Loss was 84% of GMV.\n",  # a comment inside text
-    "`<!--` Loss was 84% of GMV. `-->`\n",  # comment marks inside code spans
-    "<!--\n```\n-->\nLoss was 84% of GMV.\n",  # a fence mark inside a comment block
-    "Text <!-- never closed, so shown\nLoss was 84% of GMV.\n",
-    "<!-- check the denominator --> Loss was 84% of GMV.\n",  # text after a comment block
-    "<!-- check\nthe denominator --> Loss was 84% of GMV.\n",
-    "Use ``a`b``. Loss was 84% of GMV. See ``c`d``.\n",  # code spans of two backticks
-    "[ref]: target\n===\n    Loss was 84% of GMV.\n",  # no heading text, so no heading
-    "Context.\n\n[ref]: target\n===\n    Loss was 84% of GMV.\n",
-    "[note]: Loss was 84% of GMV.\n",  # not a reference definition: prose
-    "[ref]: target\n    Loss was 84% of GMV.\n",  # text after a definition is not code
+    "```text\ncode 12\n```\n",
+    "~~~\ncode 12\n~~~\n",
+    "```\ncode\n    ```\nstill code 12\n```\n",  # four spaces: not a closer
+    "```make final``` runs\n\n```\ncode 12\n```\n",  # inline backticks do not open a fence
+    "Run `make 12` now.\n",
+    'See [the policy](policy/x-12.md "Title 12").\n',
+    "<!-- note 12 -->\n",
+    "Text <!-- note 12 --> here.\n",
+    "<!--\nmulti 12\nline\n-->\n",
+    "<div>\n<!-- note 12 -->\n</div>\n",
+    "[ref]: https://example.com/2025 'Title 12'\n",
+    "Text.\n\n[a]: /a-1\n[b]: /b-2\n",
+    "1. a\n2. b\n3. c\n",
+    "1. First item that wraps\n   onto a second line.\n2. Second item.\n",
+    "- a\n\n1. x\n2. y\n",
+    "> 1. a\n> 2. b\n",
+    "Note[^1].\n\n[^1]: A note.\n",
+    "<details>\n<summary>Detail</summary>\n\n```text\n12\n```\n\n</details>\n",
+    "> quote\n\n```\n12\n```\n",
+    "| a | b |\n|---|---|\n| `x 12` | y |\n",
 ])
-def test_visible_text_is_never_taken_for_code(template: str) -> None:
-    """Container marks are read as CommonMark reads them, so prose stays prose."""
-    assert [f.text for f in lint.number_findings("README.md", template)] == ["84"]
-    assert [f.text.split(" in ")[0] for f in lint.directional_findings(
-        "README.md", template.replace("Loss was", "Loss was more,"), ["more"])] == ["'more'"]
+def test_code_comments_targets_and_markers_in_plain_forms_are_skipped(template: str) -> None:
+    assert lint.number_findings("README.md", template) == []
+
+
+@pytest.mark.parametrize("template", [
+    "- ```text\n  example 12\n  ```\n",  # inside a list item
+    "> ```\n> example 12\n> ```\n",  # inside a quote
+    "  ```\n  example 12\n  ```\n",  # indented: perhaps inside a list item
+    "Method\n===\n    example 12\n",  # indented code
+    "Context\n<custom>\n\n```\nexample 12\n```\n",  # after HTML that may be text
+])
+def test_code_the_lints_cannot_place_is_read_as_text(template: str) -> None:
+    """Over-reporting is the price of never hiding: such code moves to a fence at the margin."""
+    assert [f.text for f in lint.number_findings("README.md", template)] == ["12"]
 
 
 def test_identifiers_code_links_and_list_markers_are_not_numbers() -> None:
