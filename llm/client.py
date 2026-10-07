@@ -110,15 +110,19 @@ CODEX_FLAGS = (
     "--skip-git-repo-check", "--ephemeral", "--ignore-user-config", "--ignore-rules",
     "--sandbox", "read-only", "--json",
 )
+# One model turn: a reply that calls a tool (none is offered) ends the call instead of
+# starting another turn, which would reset the CLI's recovery counts.
 CLAUDE_FLAGS = ("-p", "--output-format", "stream-json", "--verbose", "--include-hook-events",
                 "--setting-sources", "", "--tools", "", "--strict-mcp-config",
-                "--disable-slash-commands")
+                "--disable-slash-commands", "--max-turns", "1")
 CLAUDE_SETTINGS_ENV = {"CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1",
                        "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
                        # no requests beyond those the token bound counts: no compaction,
-                       # no other model and no repeat of a broken stream without streaming
+                       # no other model, no retry after a refusal and no repeat of a
+                       # broken stream without streaming
                        "DISABLE_COMPACT": "1", "DISABLE_AUTO_COMPACT": "1",
                        "CLAUDE_CODE_NO_MODEL_FALLBACK": "1",
+                       "CLAUDE_CODE_DISABLE_REFUSAL_RETRY": "1",
                        "CLAUDE_CODE_DISABLE_NONSTREAMING_FALLBACK": "1"}
 # Event types and system subtypes in a tool-less Claude stream-json log; anything else
 # (including any user event: a tool-less call has none) is not recognised.

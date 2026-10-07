@@ -218,9 +218,12 @@ def test_claude_call_has_no_tools_and_replaces_the_system_prompt(monkeypatch) ->
     assert command[command.index("--effort") + 1] == "high"
     assert command[command.index("--model") + 1] == "claude-opus-5-5"
     assert env["CLAUDE_CODE_DISABLE_CLAUDE_MDS"] == "1"
-    # no requests beyond those a call's token bound counts
+    # no requests beyond those a call's token bound counts: one turn, so a reply that
+    # calls a tool ends the call; no compaction, fallback model or repeated request
+    assert command[command.index("--max-turns") + 1] == "1"
     assert all(env[name] == "1" for name in ("DISABLE_COMPACT", "DISABLE_AUTO_COMPACT",
                                               "CLAUDE_CODE_NO_MODEL_FALLBACK",
+                                              "CLAUDE_CODE_DISABLE_REFUSAL_RETRY",
                                               "CLAUDE_CODE_DISABLE_NONSTREAMING_FALLBACK"))
     assert "PACKET" not in command  # the packet goes on standard input
 
