@@ -227,16 +227,16 @@ COLUMNS: tuple[AsofColumn, ...] = (
          "attempts and address_links", "ever", True, "ml", "packets"),
     # ---- credential changes
     _col("hours_since_password_change", A, "float64",
-         "Hours since the last password change (10,000 when none).",
+         "Hours since the last password change, capped at 10,000 (also when none).",
          "account_events kind password_change", "ever", None, *ALL),
     _col("hours_since_password_reset", A, "float64",
-         "Hours since the last password reset (10,000 when none).",
+         "Hours since the last password reset, capped at 10,000 (also when none).",
          "account_events kind password_reset", "ever", None, *ALL),
     _col("hours_since_email_change", A, "float64",
-         "Hours since the last email change (10,000 when none).",
+         "Hours since the last email change, capped at 10,000 (also when none).",
          "account_events kind email_change", "ever", None, *ALL),
     _col("hours_since_phone_change", A, "float64",
-         "Hours since the last phone change (10,000 when none).",
+         "Hours since the last phone change, capped at 10,000 (also when none).",
          "account_events kind phone_change", "ever", None, *ALL),
     _col("hours_since_credential_change", A, "float64",
          "Minimum of the password change, password reset and email change columns.",
@@ -1101,8 +1101,9 @@ def _state_keys(state: PolicyState, attempts: pd.DataFrame,
     at_checkout = present & (approved_sec == _pick(order_sec, row))
     approved_key = np.where(at_checkout, _pick(a_key, row), _derived_key(approved_sec))
     held = state.held
+    # a hold placed after shipment pauses nothing, so its end never cancels the order
     cancelled = held[held["outcome"].isin(["cancelled", "declined"])
-                     & held["released_at"].notna()]
+                     & held["released_at"].notna() & held["before_shipment"].astype(bool)]
     blocked = state.blocked
     blocked_key = pd.Series(_derived_key(_seconds(blocked["at"])),
                             index=blocked["user_id"].to_numpy(np.int64))
