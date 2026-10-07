@@ -1,18 +1,16 @@
 """History, linkage, repayment state and exposure are computed only in core/.
 
 Consumers (rules, models, the replay, packets, analysis, reports) read the
-as-of context from core.asof. Modules listed in LEGACY still compute their own
-history and are replaced by the as-of context; the list must only shrink, and
-the last test passes once it is empty. The SQL investigation library
-(db/queries) is checked against the context by its own tests instead.
+as-of context from core.asof. LEGACY, now empty, listed the modules that still
+computed their own history until they read the as-of context. The SQL
+investigation library (db/queries) is checked against the context by its own
+tests instead.
 """
 
 from __future__ import annotations
 
 import re
 from pathlib import Path
-
-import pytest
 
 REPO = Path(__file__).resolve().parents[1]
 SCANNED = ("rules", "model", "queue_sim", "llm", "analysis", "report", "pipeline.py")
@@ -24,9 +22,7 @@ HISTORY = re.compile(
     r"|\bprincipal\b|\bcollected\b"
 )
 # Modules that still compute history, linkage, repayment state or exposure.
-LEGACY = {
-    "llm/packet.py",
-}
+LEGACY: set[str] = set()
 # Lines that match the pattern but compute no order history, each read and listed here.
 NOT_HISTORY = {
     # the share of scores at or above each value (a score distribution's upper tail)
@@ -67,10 +63,5 @@ def test_no_new_module_computes_history_outside_core() -> None:
     assert _computing_history() - LEGACY == set()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="legacy history code remains in the modules listed in LEGACY until they read "
-    "core.asof; remove this mark when LEGACY is empty",
-)
 def test_history_is_computed_only_in_core() -> None:
     assert _computing_history() == set()
