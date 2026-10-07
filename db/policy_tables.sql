@@ -6,7 +6,7 @@
 -- at the next world load.
 
 CREATE TABLE IF NOT EXISTS alerts (
-  alert_id VARCHAR(80) NOT NULL COMMENT 'Stable alert id: order id and policy version.',
+  alert_id VARCHAR(64) NOT NULL COMMENT 'Stable alert id: order id and policy version.',
   order_id INT NOT NULL COMMENT 'Routed order.',
   user_id INT NOT NULL COMMENT 'Ordering account.',
   ts DATETIME NOT NULL COMMENT 'When the routing decision was made: the checkout known_at.',

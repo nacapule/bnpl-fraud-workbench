@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import copy
 import re
 from pathlib import Path
 
 import pytest
 
+from core import config
 from core import protocol as proto
 from core.results import Interval, Metric, SeedSpread, StageResult, assemble_summary, metric
 from report import claims as claims_module
@@ -773,7 +775,17 @@ def test_the_repository_wording_covers_what_the_evaluation_compares() -> None:
     assert set(pipeline.REFERENCES) <= set(wording.policies)
     assert set(pipeline.OUTCOME_METRICS) == set(wording.metrics)
     assert set(protocol.raw["families"]) <= set(wording.families)
-    assert set(pipeline.expected_capacities(protocol)) <= set(wording.capacities)
+    # once the capacity levels and the redesigned layout are configured
+    policy_cfg = copy.deepcopy(config.load("policy"))
+    staff = {"analysts_per_shift": dict(policy_cfg["roster"]["analysts_per_shift"])}
+    policy_cfg["capacity"]["levels"] = {level: staff
+                                        for level in protocol.raw["capacity"]["levels"]}
+    policy_cfg["capacity"]["redesigned"] = {
+        "layout": next(name for name in policy_cfg["roster"]["layouts"]
+                       if name != policy_cfg["roster"]["layout"]), **staff}
+    names = {pipeline.capacity_name(cell, policy_cfg["roster"]["layout"])
+             for cell in pipeline.expected_cells(policy_cfg)}
+    assert names == set(wording.capacities)
     for name, words in wording.metrics.items():  # each difference prints in its own unit
         unit, _, denominator, _ = pipeline.OUTCOME_METRICS[name]
         formats.apply(words["format"], formats.Value(

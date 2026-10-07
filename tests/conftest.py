@@ -75,4 +75,4 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
             pytest.fail(message)
         pytest.skip(message)
     if item.get_closest_marker("legacy_world") and not _legacy_world_loaded():
-        pytest.skip("the current simulator's world is not loaded (python db/load.py)")
+        pytest.skip("the world these tests read is not loaded (python db/load_world.py DIR)")

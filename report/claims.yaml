@@ -67,11 +67,14 @@ wording:
     baseline: "the baseline world"
     acquisition_surge: "the acquisition surge"
     fraud_mix_shift: "the fraud-mix shift"
-  capacities:
+  capacities:  # a capacity level, the redesigned layout, or a variant of the base replay
     low: "low review capacity"
     base: "base review capacity"
     high: "high review capacity"
     redesigned_layout: "the redesigned shift layout"
+    base_frozen_history: "base review capacity, with every policy seeing the history of approving every order"
+    base_perfect_reviewer: "base review capacity, with a reviewer who always decides correctly"
+    base_weak_verification: "base review capacity, with weaker verification checks"
   defaults:
     family: "baseline"
     capacity: "base"

@@ -10,7 +10,11 @@
 Stages run in this order, each in the same process: world, validate, load,
 context, fit, tune, replay, alerts, evaluate, llm, then the summary and the
 documents. Options ``--from`` and ``--until`` run part of the list on an
-existing run directory.
+existing run directory; the fitted models and tuned policies stay in memory, so a
+run that needs them starts at the fit stage. ``--workers N`` spreads the replays
+over N processes (``BNPL_REPLAY_WORKERS`` otherwise; results do not depend on it),
+and ``--tuning-history policy|frozen`` overrides the protocol's ``tuning.history``
+(the replay's default when the protocol names none) for a trial run.
 
 A run lives in ``runs/<name>/`` (not committed): the generated worlds under
 ``worlds/<seed>-<family>/``, each stage's artifacts under its own directory,
@@ -54,6 +58,7 @@ REPO = Path(__file__).resolve().parent
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
+from core import config as config_module  # noqa: E402
 from core import protocol as protocol_module  # noqa: E402
 from core import world as world_module  # noqa: E402
 from core.config import db_settings, mysql_reachable  # noqa: E402
@@ -75,9 +80,10 @@ RUNS = REPO / "runs"
 RESULTS = REPO / "results"
 RUN_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 POLICY_TABLES_SQL = REPO / "db" / "policy_tables.sql"
-CI_SCALE = 0.1  # the CI world: small enough to generate within two minutes
+CI_SCALE = 0.1  # the CI world: about 15,700 orders, with every pattern present
 BASELINE = "baseline"
 REFERENCES = ("approve_all", "incumbent_rules")
+TUNING_HISTORIES = ("policy", "frozen")  # queue_sim.stage.tune's history
 VERSION_FILES = {
     "features": ("core/asof.py",),
     "policy": ("config/policy.yaml", "policy/fraud-policy.md", "core/actions.py",
@@ -155,6 +161,8 @@ class Run:
     scale: float
     database_world: WorldRef | None
     source: Path | None = None
+    workers: int | None = None  # replay worker processes (queue_sim.stage.workers)
+    tuning_history: str | None = None  # None: the protocol's, else the replay's default
     memory: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -213,9 +221,21 @@ class Run:
 def make_run(profile: Profile, *, name: str | None = None, seeds: list[int] | None = None,
              families: list[str] | None = None, world: Path | None = None,
              scale: float | None = None, runs: Path = RUNS, results: Path = RESULTS,
-             docs: Path = REPO, protocol_path: Path | None = None) -> Run:
-    """Resolve a profile and overrides into a :class:`Run`."""
+             docs: Path = REPO, protocol_path: Path | None = None,
+             workers: int | None = None, tuning_history: str | None = None) -> Run:
+    """Resolve a profile and overrides into a :class:`Run`.
+
+    ``workers`` only spreads the replays over processes (results do not depend on
+    it); ``tuning_history`` overrides the protocol's ``tuning.history`` and, like
+    every other override, makes the run a trial run.
+    """
     protocol = protocol_module.load_protocol(protocol_path)
+    if workers is not None and (isinstance(workers, bool) or not isinstance(workers, int)
+                                or workers < 1):
+        raise PipelineError(f"workers must be a positive integer, got {workers!r}")
+    if tuning_history is not None and tuning_history not in TUNING_HISTORIES:
+        raise PipelineError(f"tuning history must be one of {TUNING_HISTORIES}, "
+                            f"got {tuning_history!r}")
     if world is not None:
         manifest_path = Path(world) / "manifest.json"
         if not manifest_path.exists():
@@ -252,7 +272,8 @@ def make_run(profile: Profile, *, name: str | None = None, seeds: list[int] | No
         raise PipelineError(f"run name {run_name!r} must be a plain directory name")
     directory = Path(runs) / run_name
     # Only the profile as registered publishes: any override makes it a trial run.
-    publish = profile.publish and world is None and not seeds and not families and scale is None
+    publish = profile.publish and world is None and not seeds and not families \
+        and scale is None and tuning_history is None
     return Run(
         name=run_name,
         directory=directory,
@@ -264,6 +285,8 @@ def make_run(profile: Profile, *, name: str | None = None, seeds: list[int] | No
         scale=profile.scale if scale is None else scale,
         database_world=database,
         source=Path(world) if world is not None else None,
+        workers=workers,
+        tuning_history=tuning_history,
     )
 
 
@@ -301,6 +324,38 @@ class Stage:
     versions: tuple[str, ...]
     description: str
     inputs: Callable[[Run], list[str]] = field(default=lambda run: [])
+
+
+def stage_output(value: Any, stage: str) -> StageOutput:
+    """A stage's return value as a :class:`StageOutput`.
+
+    Another module's dataclass with the same fields (``queue_sim.stage.StageOutput``)
+    is converted. Its metrics must be ``core.results.Metric``; files it says it read
+    (``inputs``) are refused, since what a stage reads is declared by the stage.
+    """
+    if isinstance(value, StageOutput):
+        return value
+    try:
+        metrics, tables, notes = dict(value.metrics), dict(value.tables), list(value.notes)
+        outputs = [Path(path) for path in getattr(value, "outputs", None) or []]
+        read = dict(getattr(value, "inputs", None) or {})
+    except (AttributeError, TypeError, ValueError) as error:
+        raise PipelineError(f"{stage}: returned {type(value).__name__}, "
+                            "not a stage output") from error
+    if wrong := sorted(key for key, item in metrics.items() if not isinstance(item, Metric)):
+        raise PipelineError(f"{stage}: metrics {wrong} are not core.results.Metric")
+    if read:
+        raise PipelineError(f"{stage}: reports reading {sorted(read)}; declare them as the "
+                            "stage's inputs")
+    return StageOutput(metrics=metrics, tables=tables, notes=notes, outputs=outputs)
+
+
+def _kept(run: Run, key: str, what: str, stage: str, first: str) -> None:
+    """Refuse a stage whose in-memory inputs (models, tuned policies) were not built in
+    this process."""
+    if key not in run.memory:
+        raise PipelineError(f"{stage}: the {what} are kept in memory: run from the {first} "
+                            "stage")
 
 
 def entry(stage: str, module: str, name: str) -> Callable[..., Any]:
@@ -562,10 +617,28 @@ def stage_fit(run: Run) -> StageOutput:
     return StageOutput(metrics=metrics, outputs=outputs)
 
 
+def tuning_history(run: Run) -> str | None:
+    """The history tuning replays under: the run's override, else the protocol's
+    ``tuning.history``; None leaves the replay's default."""
+    if run.tuning_history is not None:
+        return run.tuning_history
+    tuning = run.protocol.raw.get("tuning") or {}
+    history = tuning.get("history") if isinstance(tuning, Mapping) else None
+    if history is None:
+        return None
+    if history not in TUNING_HISTORIES:
+        raise PipelineError(f"protocol tuning.history must be one of {TUNING_HISTORIES}, "
+                            f"got {history!r}")
+    return history
+
+
 def stage_tune(run: Run) -> StageOutput:
     """Choose each policy's thresholds on the validation window through the replay."""
-    tune = entry("tune", "queue_sim.replay", "tune")
-    output = tune(run)
+    tune = entry("tune", "queue_sim.stage", "tune")
+    _kept(run, "scorers", "fitted models", "tune", "fit")
+    history = tuning_history(run)
+    output = stage_output(tune(run) if history is None else tune(run, history=history), "tune")
+    output.notes.append(f"tuning history: {history or 'the replay default'}")
     return output
 
 
@@ -579,14 +652,15 @@ def stage_replay(run: Run) -> StageOutput:
     (with the context rows and completed checks behind them) in
     ``worlds/<seed>-<family>/review_decisions.pkl`` for case selection.
     """
-    replay = entry("replay", "queue_sim.replay", "replay")
-    decisions = entry("replay", "queue_sim.replay", "review_decisions")
-    output = replay(run)
+    replay = entry("replay", "queue_sim.stage", "replay")
+    decisions = entry("replay", "queue_sim.stage", "review_decisions")
+    _kept(run, "tuned", "tuned policies", "replay", "tune")
+    output = stage_output(replay(run), "replay")
     if "replay.outcomes" not in output.tables:
         raise PipelineError("replay: no replay.outcomes table")
-    for ref in run.all_worlds:
+    for ref in run.all_worlds:  # after the replay, whose incumbent runs they come from
         path = run.world_dir(ref) / REVIEW_DECISIONS
-        frame = decisions(run.tables(ref), context_of(run, ref), run.scorers(ref.seed))
+        frame = decisions(run, ref)
         if not isinstance(frame, pd.DataFrame):
             raise PipelineError(f"replay: review decisions of {ref.name} are not a data frame")
         frame.to_pickle(path)
@@ -607,7 +681,8 @@ def stage_alerts(run: Run) -> StageOutput:
     ref = run.database_world
     if ref is None:
         return StageOutput(notes=["no world is loaded into MySQL in this run"])
-    routing = entry("alerts", "queue_sim.replay", "routing_frame")
+    routing = entry("alerts", "queue_sim.stage", "routing_frame")
+    _kept(run, "tuned", "tuned policies", "alerts", "tune")
     frame = routing(run, ref)
     _require_mysql()
     written = write_alerts(frame)
@@ -675,24 +750,27 @@ def write_alerts(frame: pd.DataFrame, settings=None) -> int:
     return count
 
 
-# How evaluate turns the replay's outcome rows (one per seed, family, policy
-# and capacity level) into metrics: name -> (unit, numerator column,
-# denominator column or None, population). Ratios are pooled over seeds for
-# the value and computed per seed for the spread.
+# How evaluate turns the replay's outcome rows (queue_sim.outcomes: one row per world,
+# policy, capacity level, shift layout and replay variant) into metrics: name -> (unit,
+# numerator column, denominator column or None, population). Ratios are pooled over
+# seeds for the value and computed per seed for the spread.
 OUTCOME_METRICS: dict[str, tuple[str, str, str | None, str]] = {
     "net_contribution": ("cents", "net_cents", None, "platform net cash, test-window orders"),
     "loss_of_gmv": ("bps", "loss_cents", "gmv_cents",
                     "fraud and abuse loss per 10,000 of GMV, test-window orders"),
-    "legitimate_held_per_10k": ("bps", "legit_held", "legit_orders",
+    "legitimate_held_per_10k": ("bps", "legitimate_held", "legitimate_orders",
                                 "legitimate orders held per 10,000 legitimate orders"),
-    "legitimate_declined_per_10k": ("bps", "legit_declined", "legit_orders",
+    "legitimate_declined_per_10k": ("bps", "legitimate_declined", "legitimate_orders",
                                     "legitimate orders declined per 10,000 legitimate orders"),
-    "review_minutes_used_share": ("share", "review_minutes_used", "review_minutes_available",
+    "review_minutes_used_share": ("share", "review_minutes_used", "available_minutes",
                                   "review minutes used out of minutes available"),
     "decided_after_shipping": ("count", "decided_after_shipping", None,
                                "orders decided after they shipped"),
 }
-OUTCOME_KEYS = ("seed", "family", "capacity", "policy")
+# A replay cell: the staffing (capacity level on a shift layout) and the replay variant
+# (history the policy sees, reviewer, verification rates). Policies pair within a cell.
+CELL_COLUMNS = ("capacity_level", "layout", "history", "reviewer", "verification")
+MAIN_VARIANT = ("policy", "evidence", "verification")  # history, reviewer, verification
 
 
 def _plain(value: Any) -> int | float:
@@ -723,90 +801,166 @@ def _column(name: str, unit: str) -> str:
     return name if name.endswith(f"_{unit}") else f"{name}_{unit}"
 
 
-def expected_capacities(protocol: protocol_module.Protocol) -> tuple[str, ...]:
-    """The capacity levels every policy is replayed at: the protocol's levels and,
-    when the protocol has one, the redesigned shift layout (``redesigned_layout``)."""
-    capacity = protocol.raw.get("capacity", {})
-    levels = tuple(capacity.get("levels", {}))
-    return levels + (("redesigned_layout",) if "redesigned_layout" in capacity else ())
+def capacity_name(cell: tuple[str, ...], current_layout: str) -> str:
+    """The name a cell's metrics carry (the ``capacity`` segment of their keys): the
+    capacity level, ``redesigned_layout`` for another shift layout, and what differs
+    from the main replay (``frozen_history``, ``perfect_reviewer``,
+    ``weak_verification``)."""
+    level, layout, history, reviewer, verification = cell
+    if layout == current_layout:
+        parts = [level]
+    else:
+        parts = ["redesigned_layout"] if level == "base" else [level, "redesigned_layout"]
+    if history != MAIN_VARIANT[0]:
+        parts.append(f"{history}_history")
+    if reviewer != MAIN_VARIANT[1]:
+        parts.append(f"{reviewer}_reviewer")
+    if verification != MAIN_VARIANT[2]:
+        parts.append(f"{verification.removeprefix('verification_')}_verification")
+    return "_".join(parts)
 
 
-def _check_grid(frame: pd.DataFrame, seeds: tuple[int, ...], families: tuple[str, ...],
-                policies: tuple[str, ...], capacities: tuple[str, ...]) -> None:
-    """Every family, policy and capacity level, each on exactly the run's seeds."""
+def expected_cells(policy_cfg: Mapping[str, Any]) -> tuple[tuple[str, ...], ...]:
+    """The cells the replay stage runs every evaluated policy in (``queue_sim.stage``):
+    each capacity level on the current layout and the redesigned layout with the main
+    variant, and every variant at the base level of the current layout."""
+    stage = importlib.import_module("queue_sim.stage")
+    current = policy_cfg["roster"]["layout"]
+    cells = []
+    for staff in stage.staffing(policy_cfg):
+        main = staff.level in ("base", "configured") and staff.layout == current
+        for variant in (stage.VARIANTS if main else stage.VARIANTS[:1]):
+            cells.append((staff.level, staff.layout, *variant))
+    if stage.VARIANTS[0] != MAIN_VARIANT:
+        raise PipelineError(f"evaluate: the replay's main variant is {stage.VARIANTS[0]}, "
+                            f"not {MAIN_VARIANT}")
+    return tuple(cells)
+
+
+def _check_grid(evaluated: pd.DataFrame, skipped: pd.DataFrame, seeds: tuple[int, ...],
+                families: tuple[str, ...], policies: tuple[str, ...],
+                cells: tuple[tuple[str, ...], ...]) -> None:
+    """Every family, policy and cell on exactly the run's seeds, once each; a policy
+    with no feasible point on a seed has one not-evaluated row there instead."""
+    found = set(zip(evaluated["family"], *(evaluated[c] for c in CELL_COLUMNS),
+                    evaluated["policy"], evaluated["seed"].astype(int), strict=True))
+    unfit = set(zip(skipped["family"], skipped["policy"], skipped["seed"].astype(int),
+                    strict=True))
+    if bad := sorted(item for item in unfit if item[1] in REFERENCES[:1]):
+        raise PipelineError(f"evaluate: approve-all must always be evaluated, first {bad[0]}")
     expected = {
-        (family, capacity, policy, seed)
-        for family in families for capacity in capacities for policy in policies for seed in seeds
+        (family, *cell, policy, seed)
+        for family in families for cell in cells for policy in policies for seed in seeds
+        if (family, policy, seed) not in unfit
     }
-    found = set(zip(frame["family"], frame["capacity"].astype(str), frame["policy"],
-                    frame["seed"].astype(int), strict=True))
     if missing := sorted(expected - found):
         raise PipelineError(f"evaluate: {len(missing)} outcome rows missing, first {missing[0]}")
     if extra := sorted(found - expected):
+        raise PipelineError(f"evaluate: unexpected outcome rows, first {extra[0]}")
+    allowed = {(f, p, s) for f in families for p in policies for s in seeds}
+    if extra := sorted(unfit - allowed):
         raise PipelineError(f"evaluate: unexpected outcome rows, first {extra[0]}")
 
 
 def evaluate_outcomes(outcomes: list[dict[str, Any]], seeds: tuple[int, ...],
                       families: tuple[str, ...], policies: tuple[str, ...],
-                      capacities: tuple[str, ...],
+                      cells: tuple[tuple[str, ...], ...], current_layout: str,
                       window: str = "test") -> tuple[dict[str, Metric], list[dict[str, Any]]]:
     """Per-seed paired metrics from the replay's outcome rows.
 
-    For each family, capacity level and policy: each metric pooled over seeds
-    with its per-seed spread, and the per-seed paired difference against
-    approve-all and against the incumbent rules (both must be among
-    ``policies``). Differences of shares and rates are in basis points. The
-    rows must cover every family, policy and capacity level (``capacities``,
-    from the protocol) on exactly the run's seeds, once each.
+    For each family, cell (capacity level, layout, history, reviewer, verification;
+    named by :func:`capacity_name`) and policy: each metric pooled over seeds with its
+    per-seed spread, and the per-seed paired difference against approve-all and
+    against the incumbent rules (both must be among ``policies``), within the cell.
+    Differences of shares and rates are in basis points. The rows must cover every
+    family, policy and cell on exactly the run's seeds, once each. A policy with no
+    feasible operating point on a seed (a row with ``evaluated`` false) is not
+    evaluated there: its metrics, and the comparisons that need it, carry no value
+    and name the seeds.
     """
     missing_references = sorted(set(REFERENCES) - set(policies))
     if missing_references:
         raise PipelineError(f"evaluate: the policies lack the references {missing_references}")
+    if not cells:
+        raise PipelineError("evaluate: the replay names no capacity levels")
+    names = {cell: capacity_name(cell, current_layout) for cell in cells}
+    if len(set(names.values())) != len(names) or len(names) != len(cells):
+        raise PipelineError(f"evaluate: cells repeat or share a name: {sorted(names.values())}")
     frame = pd.DataFrame(outcomes)
-    needed = set(OUTCOME_KEYS) | {c for _, n, d, _ in OUTCOME_METRICS.values() for c in (n, d) if c}
-    if missing := sorted(needed - set(frame.columns)):
+    if "evaluated" not in frame.columns:
+        raise PipelineError("evaluate: the replay's outcome rows lack columns ['evaluated']")
+    if not frame["evaluated"].map(lambda value: isinstance(value, bool)).all():
+        raise PipelineError("evaluate: 'evaluated' must be true or false on every row")
+    evaluated = frame[frame["evaluated"]].copy()
+    skipped = frame[~frame["evaluated"]]
+    keys = ["seed", "family", "policy", *CELL_COLUMNS]
+    needed = set(keys) | {c for _, n, d, _ in OUTCOME_METRICS.values() for c in (n, d) if c}
+    if missing := sorted(needed - set(evaluated.columns)):
         raise PipelineError(f"evaluate: the replay's outcome rows lack columns {missing}")
-    if frame.duplicated(list(OUTCOME_KEYS)).any():
-        raise PipelineError("evaluate: repeated outcome rows for a seed, family, capacity, policy")
-    if not capacities:
-        raise PipelineError("evaluate: the protocol names no capacity levels")
-    _check_grid(frame, seeds, families, policies, capacities)
-    frame["capacity"] = frame["capacity"].astype(str)
+    if evaluated.duplicated(keys).any() or skipped.duplicated(["seed", "family", "policy"]).any():
+        raise PipelineError("evaluate: repeated outcome rows for a seed, family, cell, policy")
+    _check_grid(evaluated, skipped, seeds, families, policies, cells)
+    unfit: dict[tuple[str, str], list[int]] = {}
+    for row in skipped.itertuples(index=False):
+        unfit.setdefault((row.family, row.policy), []).append(int(row.seed))
     metrics: dict[str, Metric] = {}
     table_rows: list[dict[str, Any]] = []
-    for (family, capacity), group in frame.groupby(["family", "capacity"], sort=True):
-        values: dict[str, dict[str, dict[int, int | float]]] = {}
-        for policy in sorted(policies):
-            rows = group[group["policy"].eq(policy)]
-            values[policy] = {}
-            for name, (unit, numerator, denominator, population) in OUTCOME_METRICS.items():
-                per_seed = _per_seed(rows, numerator, denominator, unit)
-                values[policy][name] = per_seed
-                spread = SeedSpread(per_seed)
-                key = f"evaluate.{name}.{family}.{capacity}.{policy}"
-                if denominator is None:
-                    metrics[key] = Metric(value=spread.mean, unit=unit, population=population,
-                                          window=window, seeds=spread)
-                else:
-                    metrics[key] = Metric.from_ratio(
-                        _plain(rows[numerator].sum()), _plain(rows[denominator].sum()),
-                        population=population, window=window, unit=unit, seeds=spread,
-                    )
-        for policy in sorted(policies):
-            for reference in REFERENCES:
-                if reference == policy:
-                    continue
-                for name, (unit, _, _, population) in OUTCOME_METRICS.items():
-                    spread = paired_seed_differences(values[policy][name], values[reference][name])
-                    if unit in ("share", "rate"):
-                        spread = SeedSpread({s: 10_000 * v for s, v in spread.per_seed.items()})
-                    key = f"evaluate.{name}.vs_{reference}.{family}.{capacity}.{policy}"
-                    metrics[key] = Metric(
-                        value=spread.mean, unit=_difference_unit(unit), window=window,
-                        seeds=spread,
-                        population=f"{population}: {policy} minus {reference}, paired by seed",
-                    )
-        table_rows += _summary_rows(metrics, family, capacity, sorted(policies))
+    for family in sorted(families):
+        for cell in cells:
+            capacity = names[cell]
+            in_cell = evaluated["family"].eq(family)
+            for column, value in zip(CELL_COLUMNS, cell, strict=True):
+                in_cell &= evaluated[column].eq(value)
+            group = evaluated[in_cell]
+            values: dict[str, dict[str, dict[int, int | float]]] = {}
+            for policy in sorted(policies):
+                rows = group[group["policy"].eq(policy)]
+                absent = sorted(unfit.get((family, policy), []))
+                values[policy] = {}
+                for name, (unit, numerator, denominator, population) in OUTCOME_METRICS.items():
+                    key = f"evaluate.{name}.{family}.{capacity}.{policy}"
+                    per_seed = _per_seed(rows, numerator, denominator, unit)
+                    values[policy][name] = per_seed
+                    pooled = None if denominator is None else (
+                        _plain(rows[numerator].sum()), _plain(rows[denominator].sum()))
+                    if absent:
+                        metrics[key] = Metric.not_evaluated(
+                            unit=unit, population=population, window=window,
+                            reason=f"no feasible operating point on seeds {absent}",
+                            numerator=None if pooled is None else pooled[0],
+                            denominator=None if pooled is None else pooled[1])
+                    elif pooled is None:
+                        spread = SeedSpread(per_seed)
+                        metrics[key] = Metric(value=spread.mean, unit=unit,
+                                              population=population, window=window,
+                                              seeds=spread)
+                    else:
+                        metrics[key] = Metric.from_ratio(
+                            *pooled, population=population, window=window, unit=unit,
+                            seeds=SeedSpread(per_seed))
+            for policy in sorted(policies):
+                for reference in REFERENCES:
+                    if reference == policy:
+                        continue
+                    absent = sorted(set(unfit.get((family, policy), []))
+                                    | set(unfit.get((family, reference), [])))
+                    for name, (unit, _, _, population) in OUTCOME_METRICS.items():
+                        key = f"evaluate.{name}.vs_{reference}.{family}.{capacity}.{policy}"
+                        compared = f"{population}: {policy} minus {reference}, paired by seed"
+                        if absent:
+                            metrics[key] = Metric.not_evaluated(
+                                unit=_difference_unit(unit), population=compared,
+                                window=window,
+                                reason=f"no feasible operating point on seeds {absent}")
+                            continue
+                        spread = paired_seed_differences(values[policy][name],
+                                                         values[reference][name])
+                        if unit in ("share", "rate"):
+                            spread = SeedSpread({s: 10_000 * v
+                                                 for s, v in spread.per_seed.items()})
+                        metrics[key] = Metric(value=spread.mean, unit=_difference_unit(unit),
+                                              window=window, seeds=spread, population=compared)
+            table_rows += _summary_rows(metrics, family, capacity, cell, sorted(policies))
     return metrics, table_rows
 
 
@@ -815,36 +969,40 @@ def _difference_unit(unit: str) -> str:
 
 
 def _summary_rows(metrics: dict[str, Metric], family: str, capacity: str,
-                  policies: list[str]) -> list[dict[str, Any]]:
+                  cell: tuple[str, ...], policies: list[str]) -> list[dict[str, Any]]:
     rows = []
     for policy in policies:
-        row: dict[str, Any] = {"family": family, "capacity": capacity, "policy": policy}
-        cell = f"{family}.{capacity}.{policy}"
+        row: dict[str, Any] = {"family": family, "capacity": capacity,
+                               **dict(zip(CELL_COLUMNS, cell, strict=True)), "policy": policy}
+        key = f"{family}.{capacity}.{policy}"
         for name, (unit, *_) in OUTCOME_METRICS.items():
-            row[_column(name, unit)] = metrics[f"evaluate.{name}.{cell}"].value
+            row[_column(name, unit)] = metrics[f"evaluate.{name}.{key}"].value
             for reference in REFERENCES:
-                item = metrics.get(f"evaluate.{name}.vs_{reference}.{cell}")
+                item = metrics.get(f"evaluate.{name}.vs_{reference}.{key}")
                 row[_column(f"{name}_vs_{reference}", _difference_unit(unit))] = (
                     None if item is None else item.value
                 )
                 row[f"{name}_vs_{reference}_positive_seeds"] = (
-                    None if item is None else item.seeds.sign_count.positive
+                    None if item is None or item.seeds is None
+                    else item.seeds.sign_count.positive
                 )
         rows.append(row)
     return rows
 
 
 def stage_evaluate(run: Run) -> StageOutput:
-    """Pair the replay's outcomes by seed: each policy against approve-all and the incumbent."""
+    """Pair the replay's outcomes by seed: each policy against approve-all and the incumbent,
+    within each capacity level, shift layout and replay variant."""
     replay_file = run.results_dir / "replay.json"
     if not replay_file.exists():
         raise PipelineError("evaluate: run the replay stage first")
     outcomes = read_result(replay_file).tables.get("replay.outcomes")
     if outcomes is None:
         raise PipelineError("evaluate: the replay result has no replay.outcomes table")
+    policy_cfg = config_module.load("policy")
     metrics, rows = evaluate_outcomes(outcomes, run.seeds, run.families,
                                       tuple(run.protocol.raw["policies"]),
-                                      expected_capacities(run.protocol))
+                                      expected_cells(policy_cfg), policy_cfg["roster"]["layout"])
     return StageOutput(metrics=metrics, tables={"evaluate.policies": rows})
 
 
@@ -886,7 +1044,8 @@ STAGES = (
     Stage("alerts", stage_alerts, ("world", "policy", "models"), "routing decisions into MySQL",
           lambda run: _database_world(run) + _repo_inputs("db/policy_tables.sql")),
     Stage("evaluate", stage_evaluate, ("world", "features", "policy", "protocol"),
-          "paired comparisons across seeds", lambda run: ["results/replay.json"]),
+          "paired comparisons across seeds",
+          lambda run: ["results/replay.json", *_repo_inputs("config/policy.yaml")]),
     Stage("llm", stage_llm, ("benchmark", "policy"), "offline LLM benchmark replay"),
 )
 STAGE_NAMES = tuple(stage.name for stage in STAGES)
@@ -940,9 +1099,9 @@ def versions(run: Run, names: tuple[str, ...]) -> dict[str, str]:
         elif name == "benchmark":
             manifests = sorted(
                 path.relative_to(REPO).as_posix()
-                for path in (REPO / "llm" / "eval" / "benchmarks").glob("*/manifest.json")
+                for path in (REPO / "llm" / "eval" / "benchmarks").glob("*/MANIFEST.json")
             )
-            out[name] = files_version(tuple(manifests)) if manifests else "none"
+            out[name] = files_version(tuple(manifests), REPO) if manifests else "none"
         else:
             out[name] = files_version(VERSION_FILES[name])
     return out
@@ -1127,6 +1286,10 @@ def main(argv: list[str] | None = None) -> int:
     runner.add_argument("--scale", type=float, help="override the profile's world scale")
     runner.add_argument("--from", dest="start", help="first stage to run")
     runner.add_argument("--until", help="last stage to run")
+    runner.add_argument("--workers", type=int,
+                        help="replay worker processes (default: BNPL_REPLAY_WORKERS, else 1)")
+    runner.add_argument("--tuning-history", choices=TUNING_HISTORIES,
+                        help="override the protocol's tuning history (a trial run)")
     args = parser.parse_args(argv)
     if args.command == "stages":
         for stage in STAGES:
@@ -1135,7 +1298,8 @@ def main(argv: list[str] | None = None) -> int:
     profile = PROFILES[args.profile]
     try:
         run = make_run(profile, name=args.name, seeds=args.seeds, families=args.families,
-                       world=args.world, scale=args.scale)
+                       world=args.world, scale=args.scale, workers=args.workers,
+                       tuning_history=args.tuning_history)
         preflight(profile, run)
         execute(run, select(args.start, args.until))
     except (PipelineError, protocol_module.FreezeError, world_module.WorldError) as error:

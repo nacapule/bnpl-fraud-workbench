@@ -65,7 +65,7 @@ seeds:
   minimum_final: 8           # if the runtime budget fails, speed up the generator; never fewer
 
 world_size:
-  target_orders: 120000      # config/world.yaml volume; fraud share held near 1% of orders
+  target_orders: 160000      # config/world.yaml volume; fraud share held near 1% of orders
   support:                   # checked on the development seeds; raise volume, never the fraud share
     min_test_orders_per_checkout_pattern: 30
     min_episodes_per_checkout_pattern: 2

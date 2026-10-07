@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 import types
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import pandas as pd
@@ -478,6 +479,27 @@ def test_a_development_run_never_writes_the_committed_results(
     assert _committed_results() == committed
 
 
+def test_the_benchmark_version_follows_the_benchmark_manifests(tmp_path: Path,
+                                                               monkeypatch) -> None:
+    run = _dev_run(tmp_path)
+    monkeypatch.setattr(pipeline, "REPO", tmp_path)
+    assert pipeline.versions(run, ("benchmark",)) == {"benchmark": "none"}
+    benchmark = tmp_path / "llm" / "eval" / "benchmarks" / "2026-08-dev"
+    benchmark.mkdir(parents=True)
+    (benchmark / "MANIFEST.json").write_text('{"cases": 1}')
+    first = pipeline.versions(run, ("benchmark",))["benchmark"]
+    assert first != "none"
+    (benchmark / "MANIFEST.json").write_text('{"cases": 2}')
+    assert pipeline.versions(run, ("benchmark",))["benchmark"] != first
+
+
+def test_the_protocol_states_the_world_size_the_generator_uses() -> None:
+    from core import config
+
+    assert proto.load_protocol().raw["world_size"]["target_orders"] == \
+        config.load("world")["volume"]["target_orders"]
+
+
 def test_world_version_ignores_the_commit_but_not_the_content(tmp_path: Path) -> None:
     run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, seeds=[416],
                             families=["baseline"])
@@ -492,57 +514,143 @@ def test_world_version_ignores_the_commit_but_not_the_content(tmp_path: Path) ->
     assert pipeline.world_version(run) != first
 
 
-def test_the_replay_keeps_each_worlds_review_decisions(tmp_path: Path, monkeypatch) -> None:
-    module = types.ModuleType("queue_sim.replay")
-    rows = [outcome(0, "approve_all", 0)]
-    module.replay = lambda run: pipeline.StageOutput(tables={"replay.outcomes": rows})
-    module.review_decisions = lambda tables, context, scorers: pd.DataFrame({
-        "order_id": [1, 2], "decision_at": pd.to_datetime(["2025-01-01 10:00", "2025-01-02 09:30"]),
-        "disposition": ["hold", "clear"],
-    })
-    monkeypatch.setitem(sys.modules, "queue_sim.replay", module)
-    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
+@dataclass
+class OtherStageOutput:  # another module's stage output, with the same fields
+    metrics: dict = field(default_factory=dict)
+    tables: dict = field(default_factory=dict)
+    notes: list = field(default_factory=list)
+    inputs: dict = field(default_factory=dict)
+    outputs: list = field(default_factory=list)
+
+
+def _stage_module(monkeypatch, calls: list) -> types.ModuleType:
+    """A stand-in for queue_sim.stage with its signatures, recording the calls."""
+    module = types.ModuleType("queue_sim.stage")
+
+    def tune(run, **options):
+        calls.append(("tune", options))
+        run.memory["tuned"] = {0: {}}
+        return OtherStageOutput(tables={"tune.chosen": []})
+
+    def replay(run):
+        calls.append(("replay",))
+        run.memory["incumbent"] = {}
+        return OtherStageOutput(tables={"replay.outcomes": [outcome(0, "approve_all", 0)]})
+
+    def review_decisions(run, ref):
+        calls.append(("review_decisions", ref, "incumbent" in run.memory))
+        return pd.DataFrame({
+            "order_id": [1, 2],
+            "decision_at": pd.to_datetime(["2025-01-01 10:00", "2025-01-02 09:30"]),
+            "disposition": ["hold", "clear"],
+        })
+
+    module.tune, module.replay, module.review_decisions = tune, replay, review_decisions
+    monkeypatch.setitem(sys.modules, "queue_sim.stage", module)
+    return module
+
+
+def test_tune_and_replay_call_the_stage_module(tmp_path: Path, monkeypatch) -> None:
+    calls: list = []
+    _stage_module(monkeypatch, calls)
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD,
+                            workers=3)
+    assert run.workers == 3  # read by queue_sim.stage.workers(run)
     pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)
-    run.memory["context"] = {run.worlds[0]: pd.DataFrame()}  # stand-ins for the
-    run.memory["scorers"] = {0: {}}  # in-memory context and models
-    pipeline.execute(run, pipeline.select("replay", "replay"), log=lambda _: None)
-    kept = pipeline.review_decisions(run, run.worlds[0])
+    with pytest.raises(pipeline.PipelineError, match="fitted models are kept in memory"):
+        pipeline.execute(run, pipeline.select("tune", "tune"), log=lambda _: None)
+    with pytest.raises(pipeline.PipelineError, match="tuned policies are kept in memory"):
+        pipeline.execute(run, pipeline.select("replay", "replay"), log=lambda _: None)
+    run.memory["scorers"] = {0: {}}  # stand-in for the fit stage's models
+    pipeline.execute(run, pipeline.select("tune", "replay"), log=lambda _: None)
+    ref = run.worlds[0]
+    # review decisions are asked for after the replay, which keeps the incumbent's runs
+    assert calls == [("tune", {}), ("replay",), ("review_decisions", ref, True)]
+    kept = pipeline.review_decisions(run, ref)
     assert list(kept["disposition"]) == ["hold", "clear"]
     assert str(kept["decision_at"].dtype).startswith("datetime64")
     lineage = json.loads((run.directory / "lineage.json").read_text())
     assert "worlds/0-baseline/review_decisions.pkl" in lineage["stages"]["replay"]["outputs"]
+    assert read_result(run.results_dir / "tune.json").notes[-1] == \
+        "tuning history: the replay default"
+
+
+def test_the_tuning_history_comes_from_the_protocol_or_an_override(
+    tmp_path: Path, monkeypatch
+) -> None:
+    calls: list = []
+    _stage_module(monkeypatch, calls)
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD,
+                            tuning_history="frozen")
+    run.memory["scorers"] = {0: {}}
+    pipeline.stage_tune(run)
+    assert calls[-1] == ("tune", {"history": "frozen"})
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
+    run.protocol.raw.setdefault("tuning", {})["history"] = "policy"
+    run.memory["scorers"] = {0: {}}
+    assert "tuning history: policy" in pipeline.stage_tune(run).notes
+    assert calls[-1] == ("tune", {"history": "policy"})
+    run.protocol.raw["tuning"]["history"] = "TO_COMPLETE_AT_FREEZE"
+    with pytest.raises(pipeline.PipelineError, match="tuning.history"):
+        pipeline.stage_tune(run)
+    with pytest.raises(pipeline.PipelineError, match="tuning history"):
+        pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, tuning_history="cached")
+    with pytest.raises(pipeline.PipelineError, match="workers"):
+        pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, workers=0)
+    final = pipeline.make_run(pipeline.PROFILES["final"], runs=tmp_path, tuning_history="policy")
+    assert final.results_dir.is_relative_to(tmp_path)  # an override is a trial run
+    assert pipeline.make_run(pipeline.PROFILES["final"], runs=tmp_path,
+                             workers=4).results_dir == pipeline.RESULTS
+
+
+def test_another_modules_stage_output_is_converted_or_refused() -> None:
+    item = Metric(value=1, unit="count", population="things", window="test")
+    converted = pipeline.stage_output(OtherStageOutput(metrics={"x.n": item}, notes=["a"]), "x")
+    assert isinstance(converted, pipeline.StageOutput) and converted.metrics["x.n"] == item
+    with pytest.raises(pipeline.PipelineError, match="not core.results.Metric"):
+        pipeline.stage_output(OtherStageOutput(metrics={"x.n": 1}), "x")
+    with pytest.raises(pipeline.PipelineError, match="declare them"):
+        pipeline.stage_output(OtherStageOutput(inputs={"policy": Path("config/policy.yaml")}),
+                              "x")
+    with pytest.raises(pipeline.PipelineError, match="not a stage output"):
+        pipeline.stage_output({"tables": {}}, "x")
 
 
 # ---------------------------------------------------------------- evaluate
 POLICIES = ("approve_all", "incumbent_rules", "hybrid")
+BASE = ("base", "current", "policy", "evidence", "verification")
+FROZEN = ("base", "current", "frozen", "evidence", "verification")
 
 
-def outcome(seed: int, policy: str, net: int, *, family: str = "baseline",
-            capacity: str = "base", held: int = 10, legit: int = 10_000,
-            used: float = 300, available: float = 400) -> dict:
+def outcome(seed: int, policy: str, net: int, *, family: str = "baseline", cell=BASE,
+            held: int = 10, legit: int = 10_000, used: float = 300,
+            available: float = 400) -> dict:
+    """A replay outcome row with queue_sim.outcomes' key and outcome columns."""
     return {
-        "seed": seed, "family": family, "capacity": capacity, "policy": policy,
+        "seed": seed, "family": family, "policy": policy,
+        **dict(zip(pipeline.CELL_COLUMNS, cell, strict=True)),
+        "evaluated": True, "policy_version": f"{policy}-v1",
         "net_cents": net, "loss_cents": 5_000, "gmv_cents": 1_000_000,
-        "legit_held": held, "legit_declined": 0, "legit_orders": legit,
-        "review_minutes_used": used, "review_minutes_available": available,
-        "decided_after_shipping": 2,
+        "legitimate_held": held, "legitimate_declined": 0, "legitimate_orders": legit,
+        "review_minutes_used": used, "available_minutes": available,
+        "decided_after_shipping": 2, "wait_p90_minutes": 30,
     }
 
 
-def outcomes() -> list[dict]:
+def outcomes(cell=BASE) -> list[dict]:
     rows = []
     for seed, (approve, incumbent, hybrid) in {
         1: (0, 1_000, 1_500), 2: (0, 2_000, 1_900), 3: (0, 1_000, 1_400),
     }.items():
-        rows += [outcome(seed, "approve_all", approve, held=0),
-                 outcome(seed, "incumbent_rules", incumbent, held=20),
-                 outcome(seed, "hybrid", hybrid, held=12 + seed)]
+        rows += [outcome(seed, "approve_all", approve, held=0, cell=cell),
+                 outcome(seed, "incumbent_rules", incumbent, held=20, cell=cell),
+                 outcome(seed, "hybrid", hybrid, held=12 + seed, cell=cell)]
     return rows
 
 
 def evaluate(rows: list[dict], seeds=(1, 2, 3), families=("baseline",), policies=POLICIES,
-             capacities=("base",)):
-    return pipeline.evaluate_outcomes(rows, seeds, families, policies, capacities)
+             cells=(BASE,)):
+    return pipeline.evaluate_outcomes(rows, seeds, families, policies, cells, "current")
 
 
 def test_evaluate_pairs_policies_by_seed() -> None:
@@ -566,15 +674,88 @@ def test_evaluate_pairs_policies_by_seed() -> None:
     assert used.unit == "bps" and used.seeds.per_seed == {1: 0.0, 2: 0.0, 3: 0.0}
     assert "evaluate.net_contribution.vs_approve_all.baseline.base.approve_all" not in metrics
     row = next(r for r in table if r["policy"] == "hybrid")
+    assert (row["capacity"], row["capacity_level"], row["history"]) == ("base", "base", "policy")
     assert row["net_contribution_cents"] == pytest.approx(1_600)
     assert row["net_contribution_vs_incumbent_rules_cents"] == pytest.approx(800 / 3)
     assert row["review_minutes_used_share_vs_approve_all_bps"] == 0.0
     assert row["net_contribution_vs_incumbent_rules_positive_seeds"] == 2
 
 
+def test_policies_pair_within_their_replay_variant() -> None:
+    frozen = [r | {"net_cents": r["net_cents"] * 2} for r in outcomes(FROZEN)]
+    metrics, table = evaluate(outcomes() + frozen, cells=(BASE, FROZEN))
+    main = metrics["evaluate.net_contribution.vs_incumbent_rules.baseline.base.hybrid"]
+    other = metrics["evaluate.net_contribution.vs_incumbent_rules.baseline.base_frozen_history."
+                    "hybrid"]
+    assert other.seeds.per_seed == {seed: 2 * value for seed, value in main.seeds.per_seed.items()}
+    assert {row["capacity"] for row in table} == {"base", "base_frozen_history"}
+
+
+def test_cells_are_named_by_level_layout_and_variant() -> None:
+    name = pipeline.capacity_name
+    assert name(BASE, "current") == "base"
+    assert name(("high", "current", "policy", "evidence", "verification"), "current") == "high"
+    assert name(("base", "evening", "policy", "evidence", "verification"), "current") == \
+        "redesigned_layout"
+    assert name(("low", "evening", "policy", "evidence", "verification"), "current") == \
+        "low_redesigned_layout"
+    assert name(FROZEN, "current") == "base_frozen_history"
+    assert name(("base", "current", "policy", "perfect", "verification"), "current") == \
+        "base_perfect_reviewer"
+    assert name(("base", "current", "policy", "evidence", "verification_weak"), "current") == \
+        "base_weak_verification"
+
+
+def test_the_expected_cells_are_the_replays_staffing_and_variants() -> None:
+    from core import config
+
+    stage = pytest.importorskip("queue_sim.stage")
+    policy_cfg = config.load("policy")
+    cells = pipeline.expected_cells(policy_cfg)
+    staffing = stage.staffing(policy_cfg)
+    base = stage.base_staffing(policy_cfg)
+    assert cells[:len(stage.VARIANTS)] == tuple((base.level, base.layout, *variant)
+                                               for variant in stage.VARIANTS)
+    assert len(cells) == len(stage.VARIANTS) + len(staffing) - 1
+
+
+def test_a_policy_with_no_feasible_point_is_not_evaluated_on_that_seed() -> None:
+    rows = [r for r in outcomes() if not (r["policy"] == "hybrid" and r["seed"] == 2)]
+    rows.append({"seed": 2, "family": "baseline", "policy": "hybrid", "capacity_level": "base",
+                 "evaluated": False})
+    metrics, table = evaluate(rows)
+    net = metrics["evaluate.net_contribution.baseline.base.hybrid"]
+    assert net.value is None and "[2]" in net.note
+    held = metrics["evaluate.legitimate_held_per_10k.baseline.base.hybrid"]
+    assert held.value is None and (held.numerator, held.denominator) == (13 + 15, 20_000)
+    paired = metrics["evaluate.net_contribution.vs_incumbent_rules.baseline.base.hybrid"]
+    assert paired.value is None and "[2]" in paired.note
+    assert metrics["evaluate.net_contribution.vs_approve_all.baseline.base.incumbent_rules"] \
+        .value == pytest.approx(4_000 / 3)
+    row = next(r for r in table if r["policy"] == "hybrid")
+    assert row["net_contribution_cents"] is None
+    assert row["net_contribution_vs_incumbent_rules_positive_seeds"] is None
+    # the incumbent unfit on a seed withholds every comparison against it there
+    rows = [r for r in outcomes() if not (r["policy"] == "incumbent_rules" and r["seed"] == 1)]
+    rows.append({"seed": 1, "family": "baseline", "policy": "incumbent_rules",
+                 "capacity_level": "base", "evaluated": False})
+    metrics, _ = evaluate(rows)
+    assert metrics["evaluate.net_contribution.vs_incumbent_rules.baseline.base.hybrid"] \
+        .value is None
+    assert metrics["evaluate.net_contribution.vs_approve_all.baseline.base.hybrid"].value \
+        == pytest.approx(4_800 / 3)
+    with pytest.raises(pipeline.PipelineError, match="unexpected"):  # unfit, yet replayed
+        evaluate(outcomes() + [rows[-1]])
+    unfit_reference = [r for r in outcomes() if not (r["policy"] == "approve_all"
+                                                     and r["seed"] == 1)]
+    unfit_reference.append({"seed": 1, "family": "baseline", "policy": "approve_all",
+                            "capacity_level": "base", "evaluated": False})
+    with pytest.raises(pipeline.PipelineError, match="always be evaluated"):
+        evaluate(unfit_reference)
+
+
 def test_fractional_quantities_are_pooled_without_truncation() -> None:
-    rows = [r | {"review_minutes_used": 0.75, "review_minutes_available": 1.5}
-            for r in outcomes()]
+    rows = [r | {"review_minutes_used": 0.75, "available_minutes": 1.5} for r in outcomes()]
     metrics, _ = evaluate(rows)
     used = metrics["evaluate.review_minutes_used_share.baseline.base.hybrid"]
     assert (used.numerator, used.denominator, used.value) == (2.25, 4.5, 0.5)
@@ -588,8 +769,12 @@ def test_evaluate_refuses_incomplete_or_repeated_outcomes() -> None:
         evaluate(rows + rows[:1])
     with pytest.raises(pipeline.PipelineError, match="lack columns"):
         evaluate([{k: v for k, v in r.items() if k != "gmv_cents"} for r in rows])
-    with pytest.raises(pipeline.PipelineError, match="zero legit_orders"):
-        evaluate([r | {"legit_orders": 0} for r in rows])
+    with pytest.raises(pipeline.PipelineError, match="lack columns"):
+        evaluate([{k: v for k, v in r.items() if k != "evaluated"} for r in rows])
+    with pytest.raises(pipeline.PipelineError, match="true or false"):
+        evaluate([r | {"evaluated": 1} for r in rows])
+    with pytest.raises(pipeline.PipelineError, match="zero legitimate_orders"):
+        evaluate([r | {"legitimate_orders": 0} for r in rows])
     without_incumbent = [r for r in rows if r["policy"] != "incumbent_rules"]
     with pytest.raises(pipeline.PipelineError, match="missing"):
         evaluate(without_incumbent)
@@ -597,18 +782,17 @@ def test_evaluate_refuses_incomplete_or_repeated_outcomes() -> None:
         evaluate(without_incumbent, policies=("approve_all", "hybrid"))
     with pytest.raises(pipeline.PipelineError, match="missing"):  # a family left out
         evaluate(rows, families=("baseline", "fraud_mix_shift"))
-    low = [r | {"capacity": "low"} for r in rows if r["policy"] != "hybrid"]
-    with pytest.raises(pipeline.PipelineError, match="missing"):  # hybrid absent at low
-        evaluate(rows + low, capacities=("low", "base"))
-    with pytest.raises(pipeline.PipelineError, match="missing"):  # a whole level absent
-        evaluate(rows, capacities=("low", "base", "high"))
+    frozen = [r for r in outcomes(FROZEN) if r["policy"] != "hybrid"]
+    with pytest.raises(pipeline.PipelineError, match="missing"):  # hybrid absent in a variant
+        evaluate(rows + frozen, cells=(BASE, FROZEN))
+    with pytest.raises(pipeline.PipelineError, match="missing"):  # a whole variant absent
+        evaluate(rows, cells=(BASE, FROZEN))
+    with pytest.raises(pipeline.PipelineError, match="unexpected"):  # a variant not expected
+        evaluate(rows + outcomes(FROZEN))
     with pytest.raises(pipeline.PipelineError, match="unexpected"):
         evaluate(rows + [outcome(4, "hybrid", 0)])
-
-
-def test_capacity_levels_come_from_the_protocol() -> None:
-    protocol = proto.load_protocol()
-    assert pipeline.expected_capacities(protocol) == ("low", "base", "high", "redesigned_layout")
+    with pytest.raises(pipeline.PipelineError, match="share a name"):
+        evaluate(rows, cells=(BASE, BASE))
 
 
 def test_pooling_per_seed_metrics() -> None:
