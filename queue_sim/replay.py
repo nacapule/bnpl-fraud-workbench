@@ -335,8 +335,8 @@ class ReplayResult:
     alert_rows: pd.DataFrame  # context rows at checkout of orders routed to review or declined
     reviews: pd.DataFrame  # one row per order routed to review
     log: pd.DataFrame  # at, kind, order_id, backlog
-    available_minutes: float
-    coverage_minutes: float
+    available_minutes: float  # analysts' review minutes inside the window
+    coverage_minutes: float  # minutes inside the window with someone on shift
     roster: Roster
     reviewer: str
     history: str
@@ -424,16 +424,14 @@ def replay(
         columns=["order_id", "route", "review_score", "decline_score"]))
     route_frame["alert_id"] = policies.alert_id(route_frame["order_id"], policy.version) \
         if len(route_frame) else pd.Series(dtype=object)
-    last = max([t1] + [o.final_at or 0 for o in sim.orders.values()]
-               + [o.decided or 0 for o in sim.orders.values()])
     return ReplayResult(
         policy=policy.name, policy_version=policy.version, window=(start, end),
         fates=sim.fates(), blocks=sim.blocks_frame(), routes=route_frame,
         alert_rows=(pd.concat(alert_rows, ignore_index=True) if alert_rows
                     else world.context.iloc[0:0]),
         reviews=sim.reviews_frame(calendar), log=sim.log_frame(),
-        available_minutes=roster.available_minutes(t0, last),
-        coverage_minutes=roster.coverage_minutes(t0, last), roster=roster,
+        available_minutes=roster.available_minutes(t0, t1),
+        coverage_minutes=roster.coverage_minutes(t0, t1), roster=roster,
         reviewer=getattr(reviewer, "name", type(reviewer).__name__),
         history=type(history).__name__,
     )

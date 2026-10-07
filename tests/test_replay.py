@@ -138,7 +138,7 @@ def test_review_minutes_per_shift_are_never_exceeded_and_the_rest_waits(tables) 
     # and 25 arrive Monday to Wednesday evenings; 25-minute reviews
     roster = Roster((Shift("thu", (3,), 9 * 60, 8 * 60),), {"thu": 1}, {"thu": 60})
     settings = Settings(48.0, 25.0, 0.0, 20.0)
-    window = (T("2025-03-10 00:00"), T("2025-03-13 00:00"))
+    window = (T("2025-03-10 00:00"), T("2025-03-14 00:00"))
     result, world = run(tables, scores={23: 3.0, 24: 2.0, 25: 1.0}, roster=roster,
                         settings=settings, window=window)
     reviews = result.reviews.set_index("order_id").sort_values("started_at")
@@ -151,9 +151,9 @@ def test_review_minutes_per_shift_are_never_exceeded_and_the_rest_waits(tables) 
                        roster=Roster(roster.shifts, {"thu": 1}), settings=settings,
                        window=window)
     assert unlimited.reviews["decided_at"].max() == T("2025-03-13 10:15")
-    # minutes up to the last decision: one full Thursday and 15 minutes of the next
-    assert result.available_minutes == 60 + 15
-    assert result.coverage_minutes == 8 * 60 + 15
+    # capacity is measured inside the window: one Thursday's minutes, offered 75
+    assert result.available_minutes == 60 and result.coverage_minutes == 8 * 60
+    assert row_of(result, world)["review_minutes_offered"] == 75
 
 
 def test_backlog_is_counted_at_each_event_in_time_order(tables) -> None:
