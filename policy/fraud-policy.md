@@ -69,8 +69,8 @@ Only `decline` and `escalate` block accounts, only under §6.
 
 **4.3** `needs_check` is a memo recommendation, not an action: the evidence does not
 decide the order, and the memo names the §5.1 check that would. The analyst carries it
-out as a `hold` with that check. It is correct under §6.6(b) while a required check has
-not yet run, and wrong otherwise.
+out as a `hold` with that check. It is correct under §6.6(b) while no check has failed
+and a required check has not yet run, and wrong otherwise.
 
 | Action | Order | Customer | Analyst time |
 |---|---|---|---|
@@ -159,7 +159,9 @@ explanations or context:
 **6.6** A family is present when one of its conditions holds without a §6.4 exception.
 Evaluate at review and again when each check completes, with the evidence known then,
 and use the first applicable row; **Standard** is the review procedure's action. Row (a)
-overrides any check result; otherwise, once the required checks have run, §5.3 decides.
+overrides any check result. Otherwise a failed check decides at once (§5.3(b)); when
+every required check has passed, §5.3(a) applies; until then the hold continues until
+the checks complete or 48 hours pass (§5.3(c)).
 
 | | Evidence | Standard | Also permitted | Prohibited |
 |---|---|---|---|---|
@@ -214,8 +216,9 @@ cannot establish; the simulation counts them against hidden truth, for diagnosis
 
 ## 9. Confirmed outcomes
 
-These outcomes confirm fraud. Once known (§3.2), they label orders to measure loss by
-pattern and to train models. A decision is still judged on the evidence known when it was
+These outcomes confirm fraud. Each is known when the last fact it rests on is known
+(§3.2); the Known column names that fact. Once known, they label orders to measure loss
+by pattern and to train models. A decision is still judged on the evidence known when it was
 made (§3.1), never by its outcome.
 
 | | Outcome | Confirms | Known |
@@ -223,8 +226,8 @@ made (§3.1), never by its outcome.
 | (a) | an `unauthorized` dispute resolved `lost` | third-party fraud on that order | at resolution |
 | (b) | account holder reports orders they did not place | account takeover on those orders | at the report |
 | (c) | never-pay determination (§8.3) | first-party fraud on that plan | as in §8.3 |
-| (d) | two `item_not_received` disputes on the account resolved `won` on orders with a carrier-confirmed delivery | item-not-received abuse on those orders | at the second resolution |
-| (e) | a use of a first-purchase promotion, when two or more other accounts sharing a device or normalized email with its account used the same promotion within 90 days of it, and none of these accounts placed an order without a promotion within 90 days after its own use | promotion abuse on that use | 90 days after the latest of these uses |
+| (d) | two `item_not_received` disputes on the account resolved `won` on orders with a carrier-confirmed delivery | item-not-received abuse on those orders | at the later of the second resolution and the last delivery confirmation |
+| (e) | a use of a first-purchase promotion, when two or more other accounts sharing a device or normalized email with its account used the same promotion within 90 days of it, and none of these accounts placed an order without a promotion within 90 days after its own use | promotion abuse on that use | 90 days after the latest of these uses, or when the shared device or email becomes known, if later |
 | (f) | an `item_not_received` dispute resolved `lost` on an order its merchant reported shipped, with no carrier-confirmed delivery, where the merchant closed before the resolution | merchant bust-out on that order | at the resolution or the closure, whichever is later |
 
 ## 10. Memos
