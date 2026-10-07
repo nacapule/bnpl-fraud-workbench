@@ -55,12 +55,14 @@ voided at ``v``        rows that occurred by ``v`` (the checkout payment); the p
 (before shipment)      whole schedule stay (the columns stop counting the plan from the
                        void), every later event goes; the ledger refunds each payment
                        still standing at ``v``
-held at ``h`` before   what occurred by ``h`` stands; shipment, delivery, disputes and
-shipment, released     victim reports after ``h`` move by ``r - h``; installments not yet
-at ``r``               due at ``h`` (schedule rows, their payments and reversals after
-                       ``h``) and a write-off after ``h`` move by ``r - checkout`` (the
-                       schedule starts at the release); events moved past the
-                       observation end are dropped
+held at ``h`` before   what occurred by ``h`` stands; everything after ``h`` waited for
+shipment, released     the release: installments not yet due at ``h`` (schedule rows,
+at ``r``               their payments and reversals after ``h``) and a write-off after
+                       ``h`` move by ``r - checkout`` (the schedule starts at the
+                       release); shipment, delivery, disputes, victim reports and the
+                       payments and reversals of installments already due at ``h`` (the
+                       checkout payment's included) move by ``r - h``; events moved past
+                       the observation end are dropped
 held before shipment,  what occurred by ``h`` stands, nothing after it has happened yet,
 still pending          and installments not yet due at ``h`` are not scheduled (they do
                        not fall due while the order is paused); neither approved nor
@@ -370,13 +372,15 @@ def _realize_rows(
             out[name] = frame.loc[keep].reset_index(drop=True)
             continue
         after = frame["occurred_at"].to_numpy(dtype="datetime64[s]") > hold
+        moved = ~np.isnat(hold) & after  # what followed the hold waited for the release
+        pause = per_row(order, ship_shift, "timedelta64[s]")
         if name in _SHIP_TABLES:
-            moved = ~np.isnat(hold) & after
-            delta = per_row(order, ship_shift, "timedelta64[s]")
-        else:
-            not_due = (due > hold) if name != "plan_writeoffs" else np.ones(len(frame), bool)
-            moved = ~np.isnat(hold) & after & _installment_rows(tables, name) & not_due
+            delta = pause
+        elif name == "plan_writeoffs":
             delta = per_row(order, pay_shift, "timedelta64[s]")
+        else:  # installments not yet due at the hold start at the release; the rest pause
+            not_due = _installment_rows(tables, name) & (due > hold)
+            delta = np.where(not_due, per_row(order, pay_shift, "timedelta64[s]"), pause)
         for column in _TIME_COLUMNS:
             values = frame[column].to_numpy(dtype="datetime64[s]").copy()
             values[moved] = values[moved] + delta[moved]

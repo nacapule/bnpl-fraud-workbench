@@ -809,11 +809,64 @@ def test_a_void_keeps_the_plan_and_the_schedule_known_before_it(tables, terms):
                              [T("2025-02-05"), T("2025-02-18"), T("2025-02-25")])
 
 
+def _late_payments(tables, order, delay) -> dict:
+    """The world with one order's installment payments (and their cash) ``delay`` late."""
+    out = dict(tables)
+    plan = tables["plans"].set_index("order_id")["plan_id"][order]
+    payments = tables["payment_attempts"].copy()
+    late = (payments["plan_id"] == plan) & (payments["seq"] >= 1)
+    payments.loc[late, ["occurred_at", "known_at"]] += delay
+    out["payment_attempts"] = payments
+    cash = tables["cash_events"].copy()
+    paid = cash["ref_event_id"].isin(payments.loc[late, "event_id"]) & (
+        cash["kind"] == "customer_payment")
+    cash.loc[paid, ["occurred_at", "known_at"]] += delay
+    out["cash_events"] = cash
+    return out
+
+
+def test_a_release_pauses_what_followed_the_hold_of_installments_already_due(tables, terms):
+    """kim's order 9 ships after 40 days; installment 1 (due 02-03 19:00) is paid late on
+    02-05 10:00 and the checkout payment is returned by the bank on 02-05 12:00, both
+    while the order is held (02-04 19:00, released 02-06 19:00). Neither was known
+    during the hold, so both wait for the release: they move by the 48-hour pause."""
+    world_ = _late_payments(_late_shipment(tables, 9, 40), 9, pd.Timedelta(hours=39))
+    at = T("2025-02-05 12:00")
+    returned = pd.DataFrame({"event_id": [1001], "occurred_at": [at], "known_at": [at],
+                             "payment_event_id": [72], "plan_id": [9],
+                             "amount_cents": [1395], "reason": ["bank_return"]})
+    reversals = world_["payment_reversals"]
+    world_["payment_reversals"] = pd.concat(
+        [reversals, returned.astype(reversals.dtypes.to_dict())], ignore_index=True)
+    cash = world_["cash_events"]
+    row = pd.DataFrame({"event_id": [1002], "occurred_at": [at], "known_at": [at],
+                        "order_id": [9], "plan_id": [9], "merchant_id": [1],
+                        "kind": ["payment_reversal"], "amount_cents": [-1395],
+                        "ref_event_id": [1001], "cause": ["natural"]})
+    world_["cash_events"] = pd.concat([cash, row.astype(cash.dtypes.to_dict())],
+                                      ignore_index=True)
+    fates = _fates(world_, {9: _hold("2025-02-04 19:00", outcome="cleared",
+                                     release="2025-02-06 19:00")})
+    realized = actions.realize(world_, fates, terms)
+    paid = _rows(world_, "payment_attempts", realized["payment_attempts"], [9])
+    assert paid.set_index("event_id").loc[112, "occurred_at"] == T("2025-02-07 10:00")
+    back = _rows(world_, "payment_reversals", realized["payment_reversals"], [9])
+    assert _records(back, ["event_id", "occurred_at"]) == [(1001, T("2025-02-07 12:00"))]
+    ledger_ = realized["cash_events"].set_index("ref_event_id")
+    assert ledger_.loc[112, "occurred_at"] == T("2025-02-07 10:00")
+    assert ledger_.loc[1001, "occurred_at"] == T("2025-02-07 12:00")
+    _assert_prefix_invariant(world_, fates, terms,
+                             [T("2025-02-05 11:00"), T("2025-02-05 13:00"),
+                              T("2025-02-06 20:00"), T("2025-02-08")])
+
+
 @pytest.mark.parametrize("seed", range(6))
 def test_realizing_what_was_decided_by_a_moment_changes_nothing_known_before_it(
         tables, terms, seed):
     rng = np.random.default_rng(seed)
-    world_ = _late_shipment(tables, int(rng.choice([4, 9, 13, 20])), 40)
+    order = int(rng.choice([4, 9, 13, 20]))
+    world_ = _late_payments(_late_shipment(tables, order, 40), order,
+                            pd.Timedelta(hours=int(rng.integers(0, 96))))
     fates = _random_fates(world_, rng)
     start, end = T("2024-12-05"), T("2025-07-01")
     cuts = [T(start + (end - start) * x).floor("s") for x in sorted(rng.random(6))]
