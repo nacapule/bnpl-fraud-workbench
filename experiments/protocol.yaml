@@ -92,7 +92,44 @@ policies:
 tuning:
   where: validation window, through the replay, over attainable score cut-points
   report: best in the searched grid and the frontier; a flat result is published as flat
-  rule: TO_COMPLETE_AT_FREEZE
+  # The mode queue_sim.stage.tune runs (the pipeline passes it through) and the
+  # shortlist size; both equal config/policy.yaml tuning (a test checks).
+  history: shortlist
+  shortlist_best_k: 5
+  rule:
+    world: >-
+      each seed's baseline world cut at the policy freeze (only labels and cash
+      known before it), its validation window, the base allotment on the current
+      layout
+    grid: >-
+      config/policy.yaml tuning.review_rates x tuning.decline_rates, each rate the
+      lowest score the policy attains on validation orders whose share at or above
+      it does not exceed the rate; rate 0 switches the route off, so "no review"
+      and "no decline" are always points; a route the policy does not tune keeps
+      its threshold (the expected-loss policy declines at zero expected benefit)
+    screen: every grid point replayed with frozen approve-all history
+    shortlist: >-
+      the frozen winner, its neighbours one grid step away on each threshold, and
+      the best shortlist_best_k feasible frozen points
+    choice: >-
+      the shortlist replayed with policy-specific history; the feasible point with
+      the highest validation objective
+    objective: >-
+      net contribution minus the friction cost (the LTV proxy on each legitimate
+      order declined or cancelled)
+    feasible: >-
+      the review minutes the point offers in the replay fit the minutes available
+      over the window; no friction cap (config/policy.yaml
+      tuning.friction_guardrail is null; the caps are in the recommendation rule)
+    ties: fewer reviews, then fewer declines
+    boundary: a chosen point on the highest review or decline rate searched is flagged
+    infeasible: >-
+      no feasible point chooses nothing; the policy is reported not evaluated on
+      that seed, never replaced by a fallback
+    adopted: >-
+      after the development-seed check: on worlds 416, 1041 and 2718 the shortlist
+      chose the same threshold pair as full policy-history tuning in all 18 policy
+      and seed cells
 
 # Capacity is analyst time allotted to the fraud queue: one analyst on every
 # covered shift (coverage hours: the layout) with a fixed allotment of review
@@ -196,19 +233,108 @@ sensitivity:
     # allotment only
     families: {lag_half: 0.5, lag_double: 2.0}
 
+# The case files' alerts, chosen by a rule fixed before any final world exists
+# and before any outcome was looked at. Seed 416 is a development seed, so the
+# cases illustrate the replay; they are not final evidence, and the case files
+# say so. Checked by core/protocol.py (keys, slots, files) and against the
+# replay's main variant and configured staffing (check_case_replay).
+cases:
+  world: {seed: 416, family: baseline}
+  replay:
+    policy: incumbent_rules
+    thresholds: canonical seed's validation-tuned incumbent
+    capacity_level: base
+    layout: current
+    history: policy
+    reviewer: evidence
+    verification: verification   # queue_sim.stage.VARIANTS[0] (standard rates)
+    window: test
+  population: >-
+    queue_sim.stage.routing_frame from this replay: processor-approved checkouts with band
+    review or auto_decline; blocked accounts' orders excluded
+  selection:
+    order: >-
+      ascending (SHA-256 hex digest of UTF-8 "bnpl-cases-2026-10:" + decimal order_id,
+      order_id)
+    slot_order: [account_takeover, never_pay, hardship, traveller, card_testing, ring]
+    duplicate_rule: an order already selected for an earlier slot is skipped
+    mimic_rule: exact token membership in (mimic or "").split("+")
+    legitimate_rule: latent_orders.intent == legitimate and pattern_id is null
+    reviewed_rule: >-
+      present in review_decisions with non-null taken_up_at and decided_at; no condition
+      on disposition, final decision or verification results
+    tier_rule: the first non-empty tier, then its first candidate in the selection order
+  slots:
+    account_takeover: {predicate: "latent_orders.pattern_id == P-ATO", tiers: [reviewed_alert, checkout_alert]}
+    never_pay: {predicate: "latent_orders.pattern_id == P-NEVERPAY", tiers: [reviewed_alert, checkout_alert]}
+    hardship: {predicate: "legitimate_rule and mimic token hardship_default", tiers: [reviewed_alert, checkout_alert]}
+    traveller: {predicate: "legitimate_rule and mimic token travel", tiers: [reviewed_alert, checkout_alert]}
+    card_testing: {predicate: "latent_orders.pattern_id == P-STOLEN and processor_declines_device_24h >= 1 at checkout", tiers: [checkout_alert]}
+    ring: {predicate: "latent_orders.pattern_id == P-SYNTH", tiers: [checkout_alert]}
+  files:
+    account_takeover: {slots: [account_takeover], length: full}
+    never_pay_vs_hardship: {slots: [never_pay, hardship], primary_alert: never_pay, comparison: independently selected, each with its own facts, length: full}
+    traveller: {slots: [traveller], length: full}
+    card_testing: {slots: [card_testing], length: short}
+    ring: {slots: [ring], length: short}
+  selection_limits: >-
+    latent strata may define a slot (hardship_default encodes the generator's draw of a
+    natural default, stated in the case); labels, cash, later observable outcomes and
+    reviewer dispositions never rank or filter candidates; latent truth is reported only as
+    a separate diagnostic, never in the facts table or a prompt
+  facts: >-
+    reviewed slots use the saved review_decisions row of the first analyst decision
+    (evidence_at = decision_at, analyst_started_at = taken_up_at, action_at = decided_at,
+    recorded action = disposition); checkout slots use the replay's saved checkout context
+    row for the order (ReplayResult.alert_rows; evidence_at = action_at = checkout, recorded
+    action = band); later checks and final dispositions are reported separately
+  later_events: >-
+    from the incumbent replay's realized tables through the end of observation; the
+    world's approve-all outcomes, where they differ, are labelled as such
+  missing: >-
+    all five files are kept; a missing slot is reported with its eligible alert and
+    reviewed counts; never another seed, window, family or policy
+  publication: >-
+    each case records its order_id, alert_id, policy_version, selection hash, tier and
+    candidate counts; titles state what happened in the replay; tested changes and negative
+    results are published without replacing the case
+
 # The final driver refuses to generate a final-seed world unless this marker
 # exists, every listed file matches its recorded SHA-256, the marker and the
 # files are committed unchanged, and no TO_COMPLETE_AT_FREEZE entry remains
-# (core.protocol.require_freeze).
+# (core.protocol.require_freeze). The list is what decides the published
+# numbers: the protocol, the configuration, the policy document, and the code
+# that generates worlds, builds the context, fits, routes, reviews, replays,
+# accounts, evaluates, chooses and referees, with the gate itself. A directory
+# entry (ending in /) freezes every file under it that git does not ignore, so
+# a file added there later is refused too; what later stages add (case files,
+# benchmarks, templates, the methods text) lives outside these entries. The
+# methods text is committed with the freeze but not frozen, so the
+# documentation can be completed.
+#
+# A bug found after the freeze is fixed in a commit of its own that also runs
+# core.protocol.log_fix: it re-records the hashes of the files the fix changed
+# and appends to the marker's fixes the files, what was wrong and the fix's
+# before/after effect on the results. Nothing else re-freezes.
 freeze:
   marker: experiments/FREEZE.json
   files:
     - experiments/protocol.yaml
     - config/world.yaml
     - config/policy.yaml
-    - docs/methods.md
     - policy/fraud-policy.md
+    - simulator/
+    - core/world.py
+    - core/ledger.py
     - core/actions.py
     - core/evidence.py
+    - core/asof.py
     - core/recommendation.py
-    # plus the LLM referee module once it exists
+    - core/stats.py
+    - core/results.py
+    - core/protocol.py
+    - queue_sim/
+    - rules/
+    - model/
+    - llm/referee.py
+    - pipeline.py

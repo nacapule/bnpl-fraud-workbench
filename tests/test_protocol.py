@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import json
 import shutil
 import subprocess
 from pathlib import Path
@@ -130,14 +131,21 @@ def _frozen_copy(tmp_path: Path, raw: dict, *, complete: bool) -> Path:
     data = copy.deepcopy(raw)
     if complete:
         data = yaml.safe_load(yaml.safe_dump(data).replace(proto.PLACEHOLDER, "set"))
+    else:
+        data["reporting"]["recommendation_rule"] = proto.PLACEHOLDER
     (tmp_path / "experiments").mkdir()
     (tmp_path / "experiments" / "protocol.yaml").write_text(yaml.safe_dump(data))
     for name in data["freeze"]["files"]:
         if name == "experiments/protocol.yaml":
             continue
         target = tmp_path / name
-        target.parent.mkdir(parents=True, exist_ok=True)
         source = REPO / name
+        if name.endswith("/"):  # a directory entry: a small stand-in tree
+            (target / "sub").mkdir(parents=True, exist_ok=True)
+            (target / "module.py").write_text(f"# stand-in for {name}\n")
+            (target / "sub" / "deeper.py").write_text("# nested\n")
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
         if source.exists():
             shutil.copy(source, target)
         else:
@@ -195,6 +203,126 @@ def test_final_seed_refused_outside_a_repository(tmp_path: Path, raw: dict) -> N
     proto.write_freeze_marker(root)
     with pytest.raises(proto.FreezeError, match="freeze commit"):
         proto.check_seed(raw["seeds"]["final"][0], root)
+
+
+def test_a_directory_entry_freezes_every_file_under_it(tmp_path: Path, raw: dict) -> None:
+    root = _frozen_copy(tmp_path, raw, complete=True)
+    (root / "rules" / "__pycache__").mkdir()
+    (root / "rules" / "__pycache__" / "module.cpython-314.pyc").write_bytes(b"cache")
+    (root / ".gitignore").write_text("*.log\n")
+    proto.write_freeze_marker(root)
+    marker = json.loads((root / "experiments" / "FREEZE.json").read_text())
+    assert {"rules/module.py", "rules/sub/deeper.py"} <= set(marker["files"])
+    assert not any("__pycache__" in name for name in marker["files"])
+    _commit(root)
+    final = raw["seeds"]["final"][0]
+    proto.check_seed(final, root)
+    (root / "rules" / "ignored.log").write_text("ignored by git\n")  # not frozen
+    proto.check_seed(final, root)
+    (root / "rules" / "sub" / "added.py").write_text("x = 1\n")
+    with pytest.raises(proto.FreezeError, match="does not cover.*rules/sub/added.py"):
+        proto.check_seed(final, root)
+    _commit(root)  # committing the addition does not make it frozen
+    with pytest.raises(proto.FreezeError, match="does not cover"):
+        proto.check_seed(final, root)
+    (root / "rules" / "sub" / "added.py").unlink()
+    (root / "rules" / "sub" / "deeper.py").unlink()  # a frozen file removed
+    _commit(root)
+    with pytest.raises(proto.FreezeError, match="changed since the freeze.*deeper.py"):
+        proto.check_seed(final, root)
+    shutil.rmtree(root / "model")
+    with pytest.raises(proto.FreezeError, match="model/ does not exist"):
+        proto.check_seed(final, root)
+
+
+def test_a_fix_after_the_freeze_is_logged_and_re_frozen(tmp_path: Path, raw: dict) -> None:
+    root = _frozen_copy(tmp_path, raw, complete=True)
+    proto.write_freeze_marker(root)
+    _commit(root)
+    final = raw["seeds"]["final"][0]
+    with pytest.raises(proto.FreezeError, match="nothing to log"):
+        proto.log_fix("a bug", "none", root)
+    (root / "queue_sim" / "module.py").write_text("# fixed\n")
+    with pytest.raises(proto.FreezeError, match="changed since the freeze"):
+        proto.check_seed(final, root)
+    with pytest.raises(proto.FreezeError, match="before/after"):
+        proto.log_fix("a bug", " ", root)
+    assert proto.log_fix("the queue skipped P0", "net +$3 on seed 1, 0 elsewhere", root) == \
+        ["queue_sim/module.py"]
+    _commit(root)
+    proto.check_seed(final, root)
+    marker = json.loads((root / "experiments" / "FREEZE.json").read_text())
+    assert marker["fixes"] == [{"files": ["queue_sim/module.py"],
+                                "what": "the queue skipped P0",
+                                "effect": "net +$3 on seed 1, 0 elsewhere"}]
+
+
+def test_the_frozen_list_is_what_decides_results_and_nothing_later_stages_add(
+    raw: dict
+) -> None:
+    entries = raw["freeze"]["files"]
+    files = proto.frozen_files(REPO, entries)
+    for needed in ("experiments/protocol.yaml", "config/world.yaml", "config/policy.yaml",
+                   "policy/fraud-policy.md", "simulator/generate.py", "core/world.py",
+                   "core/ledger.py", "core/actions.py", "core/evidence.py", "core/asof.py",
+                   "core/recommendation.py", "core/stats.py", "core/results.py",
+                   "core/protocol.py", "queue_sim/replay.py", "rules/tuning.py",
+                   "model/train.py", "llm/referee.py", "pipeline.py"):
+        assert needed in files
+    later = ("docs/", "report/", "cases/", "llm/eval/", "results/", "reports/", "README")
+    assert not [name for name in files if name.startswith(later)]
+    assert not [entry for entry in entries if any(place.startswith(entry) for place in later)]
+
+
+def test_the_protocol_states_the_tuning_rule_the_code_runs(raw: dict) -> None:
+    from core import config
+
+    stage = pytest.importorskip("queue_sim.stage")
+    tuning = config.load("policy")["tuning"]
+    assert raw["tuning"]["shortlist_best_k"] == tuning["shortlist_best_k"]
+    assert raw["tuning"]["history"] in stage.TUNING_HISTORIES
+    assert raw["tuning"]["history"] == "shortlist"
+    assert set(tuning["friction_guardrail"].values()) == {None}  # no cap inside tuning
+    rule = raw["tuning"]["rule"]
+    assert {"world", "grid", "screen", "shortlist", "choice", "objective", "feasible", "ties",
+            "boundary", "infeasible"} <= set(rule)
+
+
+def test_the_case_rule_is_checked_against_the_replay(raw: dict) -> None:
+    from core import config
+
+    stage = pytest.importorskip("queue_sim.stage")
+    p = proto.parse_protocol(raw)
+    staffing = stage.staffing(config.load("policy"))
+    levels, layouts = {s.level for s in staffing}, {s.layout for s in staffing}
+    proto.check_case_replay(p, stage.VARIANTS, levels, layouts)
+    assert raw["cases"]["world"] == {"seed": p.canonical_seed, "family": "baseline"}
+    for key, value, message in (("verification", "verification_weak", "main variant"),
+                                ("capacity_level", "medium", "configured level"),
+                                ("layout", "night", "configured layout"),
+                                ("policy", "rules", "protocol policy")):
+        broken = copy.deepcopy(raw)
+        broken["cases"]["replay"][key] = value
+        with pytest.raises(proto.ProtocolError, match=message):
+            proto.check_case_replay(proto.parse_protocol(broken), stage.VARIANTS, levels,
+                                    layouts)
+
+
+@pytest.mark.parametrize(("change", "message"), [
+    (lambda c: c["selection"]["slot_order"].pop(), "slot_order must list every slot"),
+    (lambda c: c["slots"]["ring"].update(tiers=["any_alert"]), "tiers from"),
+    (lambda c: c["files"]["ring"].update(slots=["rings"]), "must name slots"),
+    (lambda c: c["files"].pop("ring"), "use every slot exactly once"),
+    (lambda c: c["files"]["traveller"].update(length="long"), "full or short"),
+    (lambda c: c.pop("facts"), "lacks"),
+    (lambda c: c["replay"].pop("window"), "exactly"),
+    (lambda c: c.update(extra=1), "unknown keys"),
+])
+def test_a_malformed_case_rule_is_rejected(raw: dict, change, message: str) -> None:
+    broken = copy.deepcopy(raw)
+    change(broken["cases"])
+    with pytest.raises(proto.ProtocolError, match=message):
+        proto.parse_protocol(broken)
 
 
 def test_committed_repository_is_not_frozen_yet() -> None:

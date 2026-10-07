@@ -167,6 +167,7 @@ class Run:
     source: Path | None = None
     workers: int | None = None  # replay worker processes (queue_sim.stage.workers)
     tuning_history: str | None = None  # None: the protocol's, else the tuning default
+    profile: str = ""  # the profile it was made from (the final one stamps its worlds)
     memory: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -299,6 +300,7 @@ def make_run(profile: Profile, *, name: str | None = None, seeds: list[int] | No
         source=Path(world) if world is not None else None,
         workers=workers,
         tuning_history=tuning_history,
+        profile=profile.name,
     )
 
 
@@ -455,6 +457,7 @@ def stage_world(run: Run) -> StageOutput:
                 raise PipelineError(f"world {ref.name}: the given world {run.source} is this "
                                     "run's own world directory; give a copy outside it")
     generate = None if run.source else entry("world", "simulator.generate", "generate_world")
+    commit = stamped_commit(run)
     run.memory.clear()
     rows = []
     for ref in worlds:
@@ -489,6 +492,9 @@ def stage_world(run: Run) -> StageOutput:
                 raise PipelineError(f"world {ref.name}: cannot rewrite it: {error}") from error
             if world_identity(run, ref) is None:
                 raise PipelineError(f"world {ref.name}: its files do not match its manifest")
+        if commit is not None:  # the code that generated it; not part of what the world is
+            world_module.write_manifest(run.manifest(ref) | {"code_commit": commit},
+                                        target / "manifest.json")
         tables = world_module.read_world(target, ["order_attempts", "labels", "accounts"])
         orders = tables["order_attempts"]
         rows.append({
@@ -505,6 +511,18 @@ def stage_world(run: Run) -> StageOutput:
         tables={"world.worlds": rows},
         outputs=[run.world_dir(ref) for ref in worlds],
     )
+
+
+def stamped_commit(run: Run) -> str | None:
+    """The commit a final run writes into each world it generates (``code_commit`` in the
+    manifest), from a clean committed tree; None for other runs and copied worlds."""
+    if run.profile != "final" or run.source is not None:
+        return None
+    identity = code_identity()
+    if identity["dirty"] is not False or not identity["commit"]:
+        raise PipelineError("world: a final run generates worlds only from a clean, "
+                            "committed tree")
+    return identity["commit"]
 
 
 def stage_validate(run: Run) -> StageOutput:
@@ -671,34 +689,43 @@ def stage_tune(run: Run) -> StageOutput:
 
 
 REVIEW_DECISIONS = "review_decisions.pkl"
+# What the replay keeps per world from the incumbent's main run (queue_sim.stage), for
+# the case files: its review decisions, the context rows its checkout routing read for
+# the orders it alerted on, and every test-window order's fate under it.
+KEPT_FRAMES = {"review_decisions": REVIEW_DECISIONS, "checkout_rows": "checkout_rows.pkl",
+               "incumbent_fates": "incumbent_fates.pkl"}
 
 
 def stage_replay(run: Run) -> StageOutput:
     """Replay every policy on every world at every capacity level.
 
-    Also keeps, per world, the incumbent's review decisions at base capacity
-    (with the context rows and completed checks behind them) in
-    ``worlds/<seed>-<family>/review_decisions.pkl`` for case selection.
+    Also keeps, per world, what the incumbent's main run (base capacity, current
+    layout, main variant) decided, for the case files (:data:`KEPT_FRAMES`, in
+    ``worlds/<seed>-<family>/``): its review decisions with the context rows and
+    completed checks behind them, the context rows its checkout routing read for the
+    orders it alerted on, and every test-window order's fate under it.
     """
     replay = entry("replay", "queue_sim.stage", "replay")
-    decisions = entry("replay", "queue_sim.stage", "review_decisions")
+    frames = {name: entry("replay", "queue_sim.stage", name) for name in KEPT_FRAMES}
     _kept(run, "tuned", "tuned policies", "replay", "tune")
     output = stage_output(replay(run), "replay")
     if "replay.outcomes" not in output.tables:
         raise PipelineError("replay: no replay.outcomes table")
     output.tables["replay.outcomes"] = full_rows(output.tables["replay.outcomes"])
     for ref in run.all_worlds:  # after the replay, whose incumbent runs they come from
-        path = run.world_dir(ref) / REVIEW_DECISIONS
-        path.unlink(missing_ok=True)  # none kept from an earlier run
+        for file_name in KEPT_FRAMES.values():
+            (run.world_dir(ref) / file_name).unlink(missing_ok=True)  # none from earlier
         if not incumbent_fit(run, ref):
             output.notes.append(f"no review decisions for {ref.name}: the incumbent has no "
                                 "feasible operating point on its seed")
             continue
-        frame = decisions(run, ref)
-        if not isinstance(frame, pd.DataFrame):
-            raise PipelineError(f"replay: review decisions of {ref.name} are not a data frame")
-        frame.to_pickle(path)
-        output.outputs.append(path)
+        for name, file_name in KEPT_FRAMES.items():
+            frame = frames[name](run, ref)
+            if not isinstance(frame, pd.DataFrame):
+                raise PipelineError(f"replay: {name} of {ref.name} is not a data frame")
+            path = run.world_dir(ref) / file_name
+            frame.to_pickle(path)
+            output.outputs.append(path)
     return output
 
 
@@ -715,13 +742,30 @@ def incumbent_fit(run: Run, ref: WorldRef) -> bool:
     return run.memory["tuned"].get(ref.seed, {}).get(REFERENCES[1]) is not None
 
 
+def kept_frame(run: Run, ref: WorldRef, name: str) -> pd.DataFrame:
+    """One of :data:`KEPT_FRAMES` for one world, as the replay stage kept it."""
+    path = run.world_dir(ref) / KEPT_FRAMES[name]
+    if not path.exists():
+        raise PipelineError(f"no {name.replace('_', ' ')} for {ref.name}: run the replay "
+                            "stage (its notes say when the incumbent had no feasible "
+                            "operating point)")
+    return pd.read_pickle(path)
+
+
 def review_decisions(run: Run, ref: WorldRef) -> pd.DataFrame:
     """The incumbent's review decisions on one world, as the replay stage kept them."""
-    path = run.world_dir(ref) / REVIEW_DECISIONS
-    if not path.exists():
-        raise PipelineError(f"no review decisions for {ref.name}: run the replay stage (its "
-                            "notes say when the incumbent had no feasible operating point)")
-    return pd.read_pickle(path)
+    return kept_frame(run, ref, "review_decisions")
+
+
+def checkout_rows(run: Run, ref: WorldRef) -> pd.DataFrame:
+    """The context rows the incumbent's checkout routing read for the orders it alerted
+    on, as the replay stage kept them."""
+    return kept_frame(run, ref, "checkout_rows")
+
+
+def incumbent_fates(run: Run, ref: WorldRef) -> pd.DataFrame:
+    """Every test-window order's fate under the incumbent, as the replay stage kept it."""
+    return kept_frame(run, ref, "incumbent_fates")
 
 
 def stage_alerts(run: Run) -> StageOutput:
@@ -1427,6 +1471,24 @@ def preflight(profile: Profile, run: Run) -> None:
         protocol_module.check_seed(ref.seed)
     tuning_history(run)
     recommendation_rule(run)
+    check_cases(run)
+
+
+def check_cases(run: Run) -> None:
+    """The protocol's case replay cell is one the replay runs (``queue_sim.stage``'s main
+    variant, a configured capacity level and layout); skipped until that module exists."""
+    try:
+        stage = importlib.import_module("queue_sim.stage")
+    except ModuleNotFoundError:
+        return
+    policy_cfg = config_module.load("policy")
+    staffing = stage.staffing(policy_cfg)
+    try:
+        protocol_module.check_case_replay(run.protocol, stage.VARIANTS,
+                                          {staff.level for staff in staffing},
+                                          {staff.layout for staff in staffing})
+    except protocol_module.ProtocolError as error:
+        raise PipelineError(f"protocol: {error}") from error
 
 
 def main(argv: list[str] | None = None) -> int:

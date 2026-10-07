@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import json
 import shutil
 import subprocess
@@ -344,6 +345,53 @@ def _fake_stages(monkeypatch, *, value: int = 7, overrides: dict | None = None,
     monkeypatch.setattr(pipeline, "STAGES", stages)
 
 
+def test_a_final_run_names_the_code_commit_in_each_world_it_generates(
+    tmp_path: Path, monkeypatch
+) -> None:
+    def generate(seed, family, target, scale):  # the mini world under the asked name
+        shutil.copytree(MINI_WORLD, target)
+        manifest = json.loads((target / "manifest.json").read_text())
+        world_module.write_manifest(manifest | {"seed": seed, "family": family},
+                                    target / "manifest.json")
+
+    real_entry = pipeline.entry
+    monkeypatch.setattr(pipeline, "entry", lambda stage, module, name: generate
+                        if module == "simulator.generate" else real_entry(stage, module, name))
+    monkeypatch.setattr(pipeline, "code_identity", lambda root=pipeline.REPO: {
+        "commit": "0123abcd" * 5, "dirty": False})
+    final = pipeline.make_run(pipeline.PROFILES["final"], runs=tmp_path, seeds=[0],
+                              families=["baseline"])
+    pipeline.stage_world(final)
+    dev = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path / "dev", seeds=[0],
+                            families=["baseline"])
+    pipeline.stage_world(dev)
+    for ref in final.all_worlds:  # the canonical world too
+        assert final.manifest(ref)["code_commit"] == "0123abcd" * 5
+    ref = pipeline.WorldRef(0, "baseline")
+    assert dev.manifest(ref)["code_commit"] is None
+    # the commit is not part of what the world is
+    assert pipeline.world_identity(final, ref) == pipeline.world_identity(dev, ref)
+    monkeypatch.setattr(pipeline, "code_identity", lambda root=pipeline.REPO: {
+        "commit": "0123abcd" * 5, "dirty": True})
+    with pytest.raises(pipeline.PipelineError, match="clean, committed tree"):
+        pipeline.stage_world(final)
+    copied = pipeline.make_run(pipeline.PROFILES["final"], runs=tmp_path / "copied",
+                               world=MINI_WORLD)
+    assert pipeline.stamped_commit(copied) is None  # a copied world names no commit of ours
+
+
+def test_preflight_refuses_a_case_rule_the_replay_does_not_run(tmp_path: Path) -> None:
+    pytest.importorskip("queue_sim.stage")
+    run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
+    pipeline.preflight(pipeline.PROFILES["dev"], run)
+    raw = copy.deepcopy(run.protocol.raw)
+    raw["cases"]["replay"]["verification"] = "verification_weak"
+    run.protocol = proto.parse_protocol(raw)
+    with pytest.raises(pipeline.PipelineError, match="protocol: cases.replay must be the "
+                                                     "replay's main variant"):
+        pipeline.preflight(pipeline.PROFILES["dev"], run)
+
+
 def test_a_complete_run_assembles_its_summary_and_reruns_byte_for_byte(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -568,8 +616,17 @@ def _stage_module(monkeypatch, calls: list, *, incumbent: object = "fitted") -> 
             "disposition": ["hold", "clear"],
         })
 
+    def checkout_rows(run, ref):
+        calls.append(("checkout_rows", ref))
+        return pd.DataFrame({"order_id": [1], "decision_at": pd.to_datetime(["2025-06-02"])})
+
+    def incumbent_fates(run, ref):
+        calls.append(("incumbent_fates", ref))
+        return pd.DataFrame({"order_id": [1, 2], "route": ["review", "approve"]})
+
     module.tune, module.replay, module.review_decisions = tune, replay, review_decisions
-    module.routing_frame = routing_frame
+    module.routing_frame, module.checkout_rows = routing_frame, checkout_rows
+    module.incumbent_fates = incumbent_fates
     monkeypatch.setitem(sys.modules, "queue_sim.stage", module)
     return module
 
@@ -606,12 +663,15 @@ def test_an_incumbent_with_no_feasible_point_leaves_no_decisions_or_alerts(
     monkeypatch.setattr(pipeline, "write_alerts", lambda frame: written.append(frame) or 0)
     run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, world=MINI_WORLD)
     pipeline.execute(run, pipeline.select(until="world"), log=lambda _: None)
-    stale = run.world_dir(run.worlds[0]) / pipeline.REVIEW_DECISIONS
-    stale.write_bytes(b"from an earlier run")
+    stale = [run.world_dir(run.worlds[0]) / name for name in pipeline.KEPT_FRAMES.values()]
+    for path in stale:
+        path.write_bytes(b"from an earlier run")
     run.memory["scorers"] = {0: {}}
     pipeline.execute(run, pipeline.select("tune", "alerts"), log=lambda _: None)
     assert [call[0] for call in calls] == ["tune", "replay"]
-    assert not stale.exists()
+    assert not any(path.exists() for path in stale)
+    with pytest.raises(pipeline.PipelineError, match="no checkout rows for 0-baseline"):
+        pipeline.checkout_rows(run, run.worlds[0])
     assert any("no review decisions for 0-baseline" in note
                for note in read_result(run.results_dir / "replay.json").notes)
     with pytest.raises(pipeline.PipelineError, match="no feasible operating point"):
@@ -656,15 +716,20 @@ def test_tune_and_replay_call_the_stage_module(tmp_path: Path, monkeypatch) -> N
     calls.clear()
     pipeline.execute(run, pipeline.select("tune", "replay"), log=lambda _: None)
     ref = run.worlds[0]
-    # review decisions are asked for after the replay, which keeps the incumbent's runs
-    assert calls == [("tune", {}), ("replay",), ("review_decisions", ref, True)]
+    # the incumbent's frames are asked for after the replay, which keeps its runs
+    assert calls == [("tune", {"history": "shortlist"}), ("replay",),
+                     ("review_decisions", ref, True), ("checkout_rows", ref),
+                     ("incumbent_fates", ref)]
     kept = pipeline.review_decisions(run, ref)
     assert list(kept["disposition"]) == ["hold", "clear"]
     assert str(kept["decision_at"].dtype).startswith("datetime64")
+    assert list(pipeline.checkout_rows(run, ref)["order_id"]) == [1]
+    assert list(pipeline.incumbent_fates(run, ref)["route"]) == ["review", "approve"]
     lineage = json.loads((run.directory / "lineage.json").read_text())
-    assert "worlds/0-baseline/review_decisions.pkl" in lineage["stages"]["replay"]["outputs"]
+    for name in ("review_decisions.pkl", "checkout_rows.pkl", "incumbent_fates.pkl"):
+        assert f"worlds/0-baseline/{name}" in lineage["stages"]["replay"]["outputs"]
     assert read_result(run.results_dir / "tune.json").notes[-1] == \
-        "tuning history: the tuning default"
+        "tuning history: shortlist"  # the protocol's
 
 
 def test_the_tuning_history_comes_from_the_protocol_or_an_override(
