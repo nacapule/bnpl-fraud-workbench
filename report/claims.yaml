@@ -1,0 +1,14 @@
+# Every directional sentence in the README and the operating review, with the
+# result key and the paired test behind it (report/claims.py). The documents
+# are written from templates in report/templates/; a claim fails when its text
+# leaves the rendered document or the results stop supporting it.
+#
+# - id: short-name
+#   document: README.md                     # rendered document path
+#   text: "an exact piece of the rendered sentence"
+#   test: sign                              # sign | interval | mcnemar
+#   direction: positive                     # positive | negative | no_difference
+#   key: evaluate.some.metric               # sign, interval
+#   keys: [only_first.key, only_second.key] # mcnemar
+#   alpha: 0.05                             # optional
+claims: []

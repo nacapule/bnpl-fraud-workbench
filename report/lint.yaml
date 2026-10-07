@@ -1,0 +1,34 @@
+# Configuration of report/lint.py.
+
+# Published documents: each needs a template under report/templates/.
+documents:
+  - README.md
+  - reports/operating-review.md
+  - reports/appendix-*.md
+  - cases/*.md
+
+# Hand-written documents not yet rewritten as templates. This list only shrinks.
+not_yet_templated:
+  - README.md
+  - cases/CASE-01-account-takeover.md
+  - cases/CASE-02-card-testing-stolen-card.md
+  - cases/CASE-03-synthetic-ring-bustout.md
+  - cases/CASE-04-neverpay-vs-hardship.md
+  - cases/CASE-05-traveler-cleared.md
+
+# Phrases with digits that are names, not results.
+allowed_phrases:
+  - pay-in-4
+
+# Documents whose comparative sentences must each be a listed claim.
+directional:
+  - README.md
+  - reports/operating-review.md
+
+directional_words:
+  [more, less, fewer, higher, lower, better, worse, beats, beat, outperforms,
+   outperformed, exceeds, exceeded, reduces, reduced, increases, increased,
+   improves, improved, cheaper, costlier, larger, smaller, most, least, best, worst]
+
+# Comparative sentences that state no result (exact sentence text).
+allowed_sentences: []
