@@ -5,10 +5,14 @@ window at the base capacity for every point of a grid of score cut-points the po
 can attain, and taking the best feasible point by the rule in ``config/policy.yaml``
 ``tuning``:
 
-* cut-points: the policy's score at each listed review rate and decline rate (the
-  share of validation orders at or above it, scored at checkout with the world-level
-  context); rate 0 switches the route off, so "no review" and "no decline" are always
-  in the grid;
+* cut-points: for each listed review rate and decline rate, the lowest score the
+  policy attains on the validation orders (scored at checkout with the world-level
+  context) whose share of orders at or above it does not exceed the rate. With tied
+  scores (the rule score takes few values) the share reached can be well below the
+  rate, and several rates can share one cut-point (one point then); never does a rate
+  send every tied order over the line. Rate 0 switches the route off, so "no review" and
+  "no decline" are always in the grid. The frontier gives the share each cut-point
+  reaches;
 * feasible: the review minutes the point offers in the replay (every order that
   reached the queue, with its review time) fit in the analyst minutes available over
   the window. Every point is replayed: checkout routing alone can offer far more than
@@ -52,14 +56,27 @@ class Grid:
 
 
 def cut_point(scores: np.ndarray, rate: float) -> float | None:
-    """The score at or above which ``rate`` of the orders lie (None for rate 0)."""
+    """The lowest attained score with at most ``rate`` of the orders at or above it
+    (None for rate 0; the highest score when even it is shared by more)."""
     if rate <= 0:
         return None
-    values = np.sort(np.asarray(scores, dtype=float)[~np.isnan(scores)])[::-1]
+    values = np.asarray(scores, dtype=float)
+    values = values[~np.isnan(values)]
     if not len(values):
         return None
-    k = min(max(math.ceil(rate * len(values)), 1), len(values))
-    return float(values[k - 1])
+    distinct, counts = np.unique(values, return_counts=True)  # ascending
+    share = np.cumsum(counts[::-1])[::-1] / len(values)  # at or above each value
+    within = np.flatnonzero(share <= rate + 1e-12)
+    return float(distinct[within[0]] if len(within) else distinct[-1])
+
+
+def share_at(scores: np.ndarray, threshold: float | None) -> float:
+    """The share of scored orders at or above ``threshold`` (0 when the route is off)."""
+    values = np.asarray(scores, dtype=float)
+    values = values[~np.isnan(values)]
+    if threshold is None or not len(values):
+        return 0.0
+    return float((values >= threshold).mean())
 
 
 @dataclass(frozen=True)
@@ -119,6 +136,10 @@ def tune(
             "review_rate": r_rate, "decline_rate": d_rate,
             "review_threshold": candidate.review_threshold,
             "decline_threshold": candidate.decline_threshold,
+            "review_share": share_at(scores.get("review", np.array([])),
+                                     candidate.review_threshold),
+            "decline_share": share_at(scores.get("decline", np.array([])),
+                                      candidate.decline_threshold),
             "policy_version": candidate.version,
             "objective_cents": int(row["net_cents"]) - int(row["friction_cost_cents"]),
             "feasible": int(row["review_minutes_offered"]) <= int(row["available_minutes"]),

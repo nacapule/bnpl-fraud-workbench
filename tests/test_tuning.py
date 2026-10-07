@@ -100,9 +100,22 @@ def test_cut_points_are_scores_the_policy_attains() -> None:
     scores = np.array([0.1, 0.4, 0.4, 0.8, 0.9, np.nan])
     assert cut_point(scores, 0.0) is None
     assert cut_point(scores, 0.2) == 0.9
-    assert cut_point(scores, 0.5) == 0.4
+    assert cut_point(scores, 0.5) == 0.8  # 0.4 would send 4 of 5
+    assert cut_point(scores, 0.8) == 0.4
     assert cut_point(scores, 1.0) == 0.1
+    assert cut_point(scores, 0.1) == 0.9  # even the top score is 1 in 5: it is the floor
     assert all(cut_point(scores, r) in set(scores[~np.isnan(scores)]) for r in (0.3, 0.7))
+
+
+def test_tied_scores_never_send_every_tied_order_over_the_line() -> None:
+    """A rule score is 0 for most orders: the old cut-point at a 5% rate was 0, which
+    routed every order to review (23,446 of 23,801 on a development world)."""
+    scores = np.array([0.0] * 96 + [30.0, 30.0, 60.0, 90.0])
+    old_style = np.sort(scores)[::-1][int(np.ceil(0.05 * len(scores))) - 1]
+    assert old_style == 0.0 and (scores >= old_style).mean() == 1.0
+    assert cut_point(scores, 0.05) == 30.0 and (scores >= 30.0).mean() == 0.04
+    assert cut_point(scores, 0.12) == cut_point(scores, 0.05)  # one point, not two
+    assert cut_point(scores, 0.02) == 60.0
 
 
 def _tuning(tables, roster, grid, *, stub=None, window=WHOLE, settings=SETTINGS):
