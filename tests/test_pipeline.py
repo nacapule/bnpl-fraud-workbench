@@ -78,15 +78,30 @@ def test_profiles_choose_seeds_and_where_results_go(tmp_path: Path) -> None:
         pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, families=["baseline", "x"])
 
 
-def test_the_final_run_is_refused_before_the_freeze(tmp_path: Path) -> None:
+@pytest.fixture
+def unfrozen(tmp_path: Path, monkeypatch) -> Path:
+    """The freeze gate reads a copy of the protocol with no freeze marker, so these tests
+    check the refusal whether or not the repository has been frozen (and never start a
+    final run in a frozen checkout)."""
+    root = tmp_path / "unfrozen"
+    (root / "experiments").mkdir(parents=True)
+    shutil.copy(REPO / "experiments" / "protocol.yaml", root / "experiments")
+    real = proto.require_freeze
+    monkeypatch.setattr(proto, "require_freeze",
+                        lambda root_=None, protocol_path=None: real(root))
+    return root
+
+
+def test_the_final_run_is_refused_before_the_freeze(tmp_path: Path, unfrozen: Path) -> None:
     run = pipeline.make_run(pipeline.PROFILES["final"], runs=tmp_path)
-    with pytest.raises(proto.FreezeError):
+    with pytest.raises(proto.FreezeError, match="no freeze marker"):
         pipeline.preflight(pipeline.PROFILES["final"], run)
     assert pipeline.main(["run", "--profile", "final", "--name", "refused-final-test"]) == 1
     assert not (pipeline.RUNS / "refused-final-test").exists()
 
 
-def test_no_profile_generates_a_final_seed_before_the_freeze(tmp_path: Path) -> None:
+def test_no_profile_generates_a_final_seed_before_the_freeze(tmp_path: Path,
+                                                             unfrozen: Path) -> None:
     final_seed = proto.load_protocol().final_seeds[0]
     run = pipeline.make_run(pipeline.PROFILES["dev"], runs=tmp_path, seeds=[final_seed, 416])
     with pytest.raises(proto.FreezeError):

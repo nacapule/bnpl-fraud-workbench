@@ -325,7 +325,11 @@ def test_a_malformed_case_rule_is_rejected(raw: dict, change, message: str) -> N
         proto.parse_protocol(broken)
 
 
-def test_committed_repository_is_not_frozen_yet() -> None:
+def test_the_committed_repository_is_frozen_once_its_marker_exists() -> None:
     final = proto.load_protocol().final_seeds[0]
-    with pytest.raises(proto.FreezeError):
+    assert proto.load_protocol().placeholders() == []
+    if not (REPO / "experiments" / "FREEZE.json").exists():
+        with pytest.raises(proto.FreezeError, match="no freeze marker"):
+            proto.check_seed(final)
+    else:  # the frozen files match the marker and are committed
         proto.check_seed(final)
