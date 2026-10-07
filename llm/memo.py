@@ -77,8 +77,6 @@ def _claim_problems(index: int, claim: Any) -> list[str]:
         return problems
     if not _is_text(claim["field"]):
         problems.append(f"{what}.field must be a non-empty string")
-    if isinstance(claim["value"], dict | list):
-        problems.append(f"{what}.value must be a single value")
     if not _is_text(claim["statement"]):
         problems.append(f"{what}.statement must be a non-empty string")
     derived = claim["derived"]

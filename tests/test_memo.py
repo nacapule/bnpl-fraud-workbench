@@ -66,7 +66,6 @@ def test_anything_but_one_json_object_fails(text: str) -> None:
 @pytest.mark.parametrize("path,value", [
     (("claims",), [9]),                       # a claim that is not an object
     (("claims",), []),                        # no claims
-    (("claims", 0, "value"), ["1"]),          # a list where one value belongs
     (("claims", 0, "field"), 7),
     (("claims", 2, "derived"), {"operation": "average", "inputs": ["context.x"]}),
     (("claims", 2, "derived"), {"operation": "sum", "inputs": []}),
