@@ -58,8 +58,8 @@ held at ``h`` before   shipment, delivery, disputes and victim reports move by `
 shipment, released     installments 1-3, their payments, reversals of them and the
 at ``r``               write-off move by ``r - checkout`` (the schedule starts at the
                        release); events moved past the observation end are dropped
-held, still pending    as voided at ``h`` for the tables (nothing after the hold has
-                       happened yet), but neither approved nor voided in the state
+held before shipment,  as voided at ``h`` for the tables (nothing after the hold has
+still pending          happened yet), but neither approved nor voided in the state
 =====================  ===================================================================
 """
 
@@ -122,6 +122,7 @@ FATE_COLUMNS: dict[str, str] = {
     "hold_before_shipment": "bool",
     "released_at": "datetime64[s]",  # a pre-shipment hold's release; NaT otherwise
     "hold_outcome": "object",  # HOLD_OUTCOMES, or None while pending / never held
+    "hold_ended_at": "datetime64[s]",  # when the outcome came; NaT while pending / never held
     "void_at": "datetime64[s]",  # voided before shipment; NaT otherwise
     "void_cause": "object",  # VOID_CAUSES or None
 }
@@ -168,11 +169,25 @@ def typed_fates(fates: pd.DataFrame) -> pd.DataFrame:
         problems.append("unknown void causes")
     if (out["void_at"].notna() != out["void_cause"].notna()).any():
         problems.append("void_at and void_cause must be set together")
+    held = out["hold_at"].notna()
+    ended = out["hold_ended_at"].notna()
+    if (~held & (out["hold_before_shipment"] | out["hold_outcome"].notna() | ended)).any():
+        problems.append("hold details without a hold")
+    if (ended != out["hold_outcome"].notna()).any():
+        problems.append("hold_outcome and hold_ended_at must be set together")
+    if (ended & (out["hold_ended_at"] < out["hold_at"])).any():
+        problems.append("a hold that ends before it starts")
     released = out["released_at"].notna()
-    if (released & ~(out["hold_before_shipment"] & (out["hold_outcome"] == "cleared"))).any():
-        problems.append("only a cleared pre-shipment hold has a release time")
-    if (released & (out["released_at"] < out["hold_at"])).any():
-        problems.append("a release before its hold")
+    cleared_before = held & out["hold_before_shipment"] & (out["hold_outcome"] == "cleared")
+    if (released != cleared_before).any():
+        problems.append("only a cleared pre-shipment hold has a release time, and it must")
+    if (released & (out["released_at"] != out["hold_ended_at"])).any():
+        problems.append("a release must be when the hold ended")
+    stopped = held & out["hold_before_shipment"] & out["hold_outcome"].isin(
+        ["cancelled", "declined"])
+    if (stopped != (held & out["hold_before_shipment"] & out["void_at"].notna())).any() or (
+            stopped & (out["void_at"] != out["hold_ended_at"])).any():
+        problems.append("a pre-shipment hold that is cancelled or declined is voided when it ends")
     if (out["hold_at"].notna() & (out["hold_at"] < out["checkout_at"])).any():
         problems.append("a hold before checkout")
     if (out["void_at"].notna() & (out["void_at"] < out["checkout_at"])).any():
@@ -188,19 +203,20 @@ def fates_as_of(fates: pd.DataFrame, at: pd.Timestamp) -> pd.DataFrame:
     """What had been decided strictly before ``at``: later orders absent, later outcomes pending.
 
     A hold placed before ``at`` whose outcome came at or after it is pending (no
-    release, outcome or void); a void at or after ``at`` has not happened yet.
+    release, outcome, end or void); a void at or after ``at`` has not happened yet.
     """
     at = pd.Timestamp(at)
     out = fates.loc[fates["checkout_at"] < at].copy()
     late_hold = out["hold_at"] >= at
-    out.loc[late_hold, ["hold_at", "released_at", "void_at"]] = pd.NaT
+    out.loc[late_hold, ["hold_at", "released_at", "hold_ended_at", "void_at"]] = pd.NaT
     out.loc[late_hold, ["hold_outcome", "void_cause"]] = None
     out.loc[late_hold, "hold_before_shipment"] = False
-    pending = out["hold_at"].notna() & (
-        (out["released_at"] >= at) | (out["void_at"] >= at)
-        | (out["hold_outcome"].isna()))
-    out.loc[pending, ["released_at", "void_at"]] = pd.NaT
-    out.loc[pending, ["hold_outcome", "void_cause"]] = None
+    pending = out["hold_at"].notna() & ~(out["hold_ended_at"] < at)
+    out.loc[pending, ["released_at", "hold_ended_at"]] = pd.NaT
+    out.loc[pending, "hold_outcome"] = None
+    paused = pending & out["hold_before_shipment"]
+    out.loc[paused, "void_at"] = pd.NaT
+    out.loc[paused, "void_cause"] = None
     late_void = out["void_at"] >= at
     out.loc[late_void, "void_at"] = pd.NaT
     out.loc[late_void, "void_cause"] = None
@@ -304,7 +320,7 @@ def _realize_rows(
             shift = ship_shift if name in _SHIP_TABLES else pay_shift
             delta = pd.Series(order).map(shift).to_numpy(dtype="timedelta64[s]")
             if name in _PAY_TABLES:
-                delta = np.where(_installment_rows(tables, name), delta, np.timedelta64("NaT"))
+                delta = np.where(_installment_rows(tables, name), delta, np.timedelta64("NaT", "s"))
             moved = ~np.isnat(delta)
             for column in _TIME_COLUMNS:
                 values = frame[column].to_numpy(dtype="datetime64[s]").copy()
@@ -314,7 +330,7 @@ def _realize_rows(
                 keep &= ~(moved & (frame["occurred_at"].to_numpy(dtype="datetime64[s]") > limit))
         elif len(released):  # the schedule: installments 1..n start at the release
             delta = pd.Series(order).map(pay_shift).to_numpy(dtype="timedelta64[s]")
-            delta = np.where(_installment_rows(tables, name), delta, np.timedelta64("NaT"))
+            delta = np.where(_installment_rows(tables, name), delta, np.timedelta64("NaT", "s"))
             moved = ~np.isnat(delta)
             values = frame["due_at"].to_numpy(dtype="datetime64[s]").copy()
             values[moved] = values[moved] + delta[moved]
@@ -328,12 +344,11 @@ def _cut_times(by_order: pd.DataFrame) -> pd.Series:
 
     A hold placed before shipment pauses the order at the hold, so a later void
     (cancellation or decline) keeps only what happened by the hold; a void without
-    such a hold keeps what happened by the void; a pending hold keeps what happened
-    by the hold.
+    such a hold keeps what happened by the void; a pending pre-shipment hold keeps
+    what happened by the hold. A hold after shipment pauses nothing.
     """
     pre_hold = by_order["hold_at"].notna() & by_order["hold_before_shipment"]
-    pending = by_order["hold_at"].notna() & by_order["hold_outcome"].isna() \
-        & by_order["void_at"].isna()
+    pending = pre_hold & by_order["hold_outcome"].isna()
     cut = by_order["void_at"].where(~pre_hold, by_order["hold_at"])
     cut = cut.where(by_order["void_at"].notna() | pending)
     return cut.dropna()
@@ -355,14 +370,16 @@ def policy_cash(
     orders declined at checkout have none; an order voided before shipment keeps the
     cash realized by the void and gets a refund of each payment still standing
     (:func:`core.ledger.cancel_before_fulfilment`, cause = the void's cause); a
-    released hold's cash is derived from its moved events; a hold still pending keeps
-    the cash realized by the hold and nothing after it. Natural events keep the
+    released hold's cash is derived from its moved events; a pre-shipment hold still
+    pending keeps the cash realized by the hold and nothing after it (a hold after
+    shipment changes nothing). Natural events keep the
     world's event ids (matched by kind and reference); a refund's id is the negative
     of the payment event it returns, so ids stay unique and the same in every policy.
     """
     fates = typed_fates(fates)
     world_cash = tables["cash_events"]
-    pending = fates["hold_at"].notna() & fates["hold_outcome"].isna() & fates["void_at"].isna()
+    pending = fates["hold_at"].notna() & fates["hold_outcome"].isna() \
+        & fates["hold_before_shipment"]
     declined = fates.loc[fates["route"].isin(DECLINED_AT_CHECKOUT), "order_id"]
     voided = fates.loc[fates["void_at"].notna()]
     held = fates.loc[pending]
