@@ -1,17 +1,24 @@
-# Memo drafter: backends, models and benchmark sizes. Responses are cached
-# under llm/eval/cache so the repository reproduces offline.
-#   cli:   a Claude Code-compatible CLI (binary from CLAUDE_CLI_BIN, default `claude`)
-#   codex: the Codex CLI
+# Memo drafter: prompt, arms, benchmark sizes and call caps. Live calls run through
+# the command-line tools in llm/client.py (CODEX_CLI_BIN, CLAUDE_CLI_BIN), isolated
+# from the caller's files and settings; responses are cached in each benchmark's
+# directory so scores replay offline with no calls.
 
-backend: cli                     # env LLM_BACKEND overrides
 tasks:
-  triage_memo:
-    model: claude-sonnet-5
-    eval_arms: [claude-sonnet-5, gpt-5.6-luna]
-    prompt_version: memo_v2
+  memo:
+    prompt_version: memo_fp2_v1     # llm/prompts/<version>.md, followed by the policy
+
+arms:                               # one name per model; effort is always explicit
+  sol: {backend: codex, model: gpt-6.1-sol, effort: high}
+  opus: {backend: claude, model: claude-opus-5-5, effort: high}
 
 benchmark:
-  n_cases: 200
-  hard_negatives_min: 60
-  consistency_cases: 50
-  consistency_runs: 3
+  development_cases: 40             # from development seeds; at most two prompt versions
+  final_cases: 200                  # from the test windows of at least min_final_seeds
+  min_final_seeds: 3
+  max_cases_per_cluster: 2          # per account and per episode
+  probe_cases: 40                   # invariance probes on final cases
+  probe_kinds: [shuffled, renamed]  # context facts reordered; fresh placeholder names
+
+caps:                               # hard limits per arm, retries included
+  sol: {calls: 400}
+  opus: {calls: 330, tokens: 10000000}
