@@ -14,9 +14,10 @@ context is shared through ``run.memory["context"]`` as the pipeline caches it.
   integer outcomes each (``queue_sim.outcomes``), and per-world tables (the reviewer's
   confusion matrix, prevented loss by pattern).
 * :func:`review_decisions`: the incumbent's review decisions at base capacity on one
-  world, with the context rows and checks behind them, for case and packet selection.
-* :func:`routing_frame`: the incumbent's routing at checkout on one world (the MySQL
-  ``alerts`` table).
+  world's test window, with the context rows and checks behind them, for case and
+  packet selection (kept from the replay stage's main run of the incumbent).
+* :func:`routing_frame`: the incumbent's routing at checkout on one world's test window
+  (the MySQL ``alerts`` table), from the same run.
 """
 
 from __future__ import annotations
@@ -35,7 +36,7 @@ import numpy as np
 import pandas as pd
 from joblib.externals import cloudpickle
 
-from core import actions, asof, config, evidence, ledger
+from core import asof, config, evidence, ledger
 from core.actions import CheckoutRoute
 from queue_sim import outcomes, policies
 from queue_sim.replay import FrozenHistory, PolicyHistory, ReplayResult, Settings, World
@@ -322,6 +323,9 @@ class Worker:
         out: dict[str, Any] = {"row": outcomes.outcome_row(
             result, self.bench.world, keys={**dict(task.keys), "policy_version": policy.version},
             ltv_cents=self.bench.ltv_cents(), classes=self.classes)}
+        if task.detail and task.policy == INCUMBENT:
+            out["incumbent"] = {"decisions": decision_rows(policy, result),
+                                "alerts": alerts(result, policy)}
         if task.detail:
             out["confusion"] = _records(outcomes.confusion(result, self.classes))
             out["confusion_latent"] = _records(outcomes.confusion(
@@ -405,8 +409,6 @@ def tune(run: Any, *, history: str = "policy") -> StageOutput:
         found = run.memory.setdefault("tuned", {}).setdefault(seed, {})
         with Replays(run, _baseline(run, seed), seed) as replays:
             bench = replays.bench
-            roster = staff.roster(policy_cfg)
-            available = roster.available_minutes(*(int(to_seconds(t)) for t in window))
             for name, policy in policies_for(run.memory["scorers"][seed], bench).items():
                 if not policy.tunable:
                     found[name] = policy
@@ -419,15 +421,13 @@ def tune(run: Any, *, history: str = "policy") -> StageOutput:
 
                 tuned = tuning.tune(
                     policy, bench.checkout_scores(policy, window), evaluate, grid,
-                    routed_minutes=lambda c, bench=bench: bench.routed_minutes(c, window),
-                    available_minutes=available)
+                    routed_minutes=lambda c, bench=bench: bench.routed_minutes(c, window))
                 found[name] = tuned.chosen
                 frontier_rows += [{"seed": seed, "policy": name, "history": history, **row}
                                   for row in _records(tuned.frontier)]
                 chosen_rows.append({
                     "seed": seed, "policy": name, "history": history,
                     "feasible_points": tuned.feasible_points, "points": len(tuned.frontier),
-                    "replayed_points": int(tuned.frontier["replayed"].sum()),
                     "chosen_version": None if tuned.chosen is None else tuned.chosen.version,
                     "review_threshold": None if tuned.chosen is None
                     else tuned.chosen.review_threshold,
@@ -475,6 +475,8 @@ def replay(run: Any) -> StageOutput:
             results = replays.run(tasks)
         for task, out in zip(tasks, results, strict=True):
             rows.append(out["row"])
+            if "incumbent" in out:
+                run.memory.setdefault("incumbent", {})[ref] = out["incumbent"]
             if task.detail:
                 keys = {"seed": ref.seed, "family": ref.family, "policy": task.policy}
                 confusion += [{**keys, **r} for r in out["confusion"]]
@@ -485,72 +487,67 @@ def replay(run: Any) -> StageOutput:
                                "replay.prevented_by_pattern": prevented})
 
 
-def _incumbent_result(run: Any, ref: Any) -> tuple[Bench, policies.Policy, ReplayResult]:
-    cache = run.memory.setdefault("incumbent_replays", {})
-    bench = _bench(run, ref)
-    policy = run.memory["tuned"][ref.seed][INCUMBENT]
-    if policy is None:
-        raise ValueError(f"the incumbent has no feasible operating point for seed {ref.seed}")
-    if ref not in cache:
-        policy_cfg = config.load("policy")
-        cache[ref] = bench.run(policy, (run.protocol.order_start, run.protocol.order_end),
-                               base_staffing(policy_cfg))
-    return bench, policy, cache[ref]
+def _incumbent(run: Any, ref: Any) -> dict[str, pd.DataFrame]:
+    """The incumbent's review decisions and alerts on one world's test window at base
+    capacity: kept by :func:`replay` from its main run, else replayed here."""
+    kept = run.memory.setdefault("incumbent", {})
+    if ref not in kept:
+        policy = run.memory["tuned"][ref.seed][INCUMBENT]
+        if policy is None:
+            raise ValueError(f"the incumbent has no feasible operating point for seed {ref.seed}")
+        bench = _bench(run, ref)
+        result = bench.run(policy, _window(run.protocol, "test"),
+                           base_staffing(config.load("policy")))
+        kept[ref] = {"decisions": decision_rows(policy, result),
+                     "alerts": alerts(result, policy)}
+    return kept[ref]
 
 
 def review_decisions(run: Any, ref: Any) -> pd.DataFrame:
-    """The incumbent's reviews at base capacity on one world (all order windows).
+    """The incumbent's reviews on one world's test window at base capacity.
 
-    One row per order routed to review and taken up by an analyst: ``decision_at`` is
-    when the analyst took it up; the context columns (core.asof KEY_COLUMNS +
-    COLUMN_NAMES) are rebuilt at that moment under the incumbent's own decisions so far
-    (core.asof.policy_rows); ``checks`` lists the verification checks completed by then
-    (none at the first look) and ``checks_later`` those completed afterwards, each
-    ``(check, outcome, completed_at)``; ``disposition`` and ``final`` are the
+    One row per order an analyst took up and decided: the context columns (core.asof
+    KEY_COLUMNS + COLUMN_NAMES) of the row the reviewer's first decision read, exactly
+    as the replay had it (``decision_at`` is when that evidence was assembled: the
+    checkout, or the start of the day the review was taken up or decided, rebuilt under
+    the incumbent's decisions before that day); ``taken_up_at`` and ``decided_at``;
+    ``checks``, the verification checks completed when the first decision was made
+    (none: checks start with a hold), and ``checks_later`` those completed afterwards,
+    each ``(check, outcome, completed_at)``; ``disposition`` and ``final``, the
     reviewer's first and last decisions.
     """
-    bench, policy, result = _incumbent_result(run, ref)
-    return decision_rows(bench, policy, result)
+    return _incumbent(run, ref)["decisions"]
 
 
-def decision_rows(bench: Bench, policy: policies.Policy, result: ReplayResult) -> pd.DataFrame:
-    reviews = result.reviews.dropna(subset=["started_at"]).sort_values(["started_at",
-                                                                         "order_id"])
+def decision_rows(policy: policies.Policy, result: ReplayResult) -> pd.DataFrame:
     columns = [*asof.KEY_COLUMNS, *asof.COLUMN_NAMES]
-    if reviews.empty:
-        return pd.DataFrame(columns=[*columns, "policy", "policy_version", "checks",
-                                     "checks_later", "disposition", "final"])
-    decisions = pd.DataFrame({"order_id": reviews["order_id"].to_numpy(np.int64),
-                              "decision_at": reviews["started_at"].to_numpy()})
-    world_rows = bench.frozen.rows(decisions, None, decisions["decision_at"].min())
-    realized = actions.realize(bench.world.tables, result.fates, bench.world.terms,
-                               observed_until=bench.world.observed_until)
-    realized["order_attempts"] = bench.world.tables["order_attempts"]
-    state = actions.policy_state(result.fates, result.blocks)
-    rows = asof.policy_rows(world_rows, realized, state, decisions,
-                            **({} if bench.neighbours is None
-                               else {"neighbours": bench.neighbours}))
-    rows = rows[columns].reset_index(drop=True)
-    rows["policy"] = policy.name
-    rows["policy_version"] = policy.version
-    rows["checks"] = [[] for _ in range(len(rows))]
-    rows["checks_later"] = list(reviews["check_results"])
-    rows["disposition"] = reviews["first_disposition"].to_numpy()
-    rows["final"] = reviews["final"].to_numpy()
-    return rows
+    rows = result.review_rows
+    reviews = result.reviews.set_index("order_id")
+    out = rows[columns].reset_index(drop=True)
+    out["taken_up_at"] = rows["started_at"].to_numpy()
+    out["decided_at"] = rows["decided_at"].to_numpy()
+    out["policy"] = policy.name
+    out["policy_version"] = policy.version
+    out["checks"] = [[] for _ in range(len(out))]
+    order = out["order_id"].to_numpy()
+    out["checks_later"] = list(reviews["check_results"].reindex(order)) if len(out) else []
+    out["disposition"] = reviews["first_disposition"].reindex(order).to_numpy()
+    out["final"] = reviews["final"].reindex(order).to_numpy()
+    return out
 
 
 def routing_frame(run: Any, ref: Any) -> pd.DataFrame:
-    """The incumbent's routing at checkout on one world: the MySQL ``alerts`` table.
+    """The incumbent's routing at checkout on one world's test window: the MySQL
+    ``alerts`` table.
 
-    One row per order the incumbent routed to review or auto-declined: ``alert_id``
+    One row per order the incumbent routed to review or auto-declined at checkout
+    (orders of blocked accounts were declined by the block, not alerted): ``alert_id``
     (order id plus policy version), ``order_id``, ``user_id``, ``ts`` (checkout),
     ``score``, ``band`` (``review`` or ``auto_decline``), ``fired_rules`` (FP-2 §6.2
     conditions that held at checkout, ``R06(a)``/``R06(b)`` named apart), ``policy``,
     ``policy_version``.
     """
-    _, policy, result = _incumbent_result(run, ref)
-    return alerts(result, policy)
+    return _incumbent(run, ref)["alerts"]
 
 
 def alerts(result: ReplayResult, policy: policies.Policy) -> pd.DataFrame:

@@ -9,11 +9,10 @@ can attain, and taking the best feasible point by the rule in ``config/policy.ya
   share of validation orders at or above it, scored at checkout with the world-level
   context); rate 0 switches the route off, so "no review" and "no decline" are always
   in the grid;
-* feasible: the review minutes the point offers (every routed order's review time)
-  fit in the analyst minutes available over the window; a point whose checkout routing
-  alone (world-level context, before any block) offers more than
-  :data:`SKIP_MARGIN` times the available minutes is reported infeasible without a
-  replay (``replayed`` false);
+* feasible: the review minutes the point offers in the replay (every order that
+  reached the queue, with its review time) fit in the analyst minutes available over
+  the window. Every point is replayed: checkout routing alone can offer far more than
+  the replay does, because a decline blocks the account's later orders;
 * best: the highest net contribution after the friction cost (the LTV proxy for each
   legitimate order declined or cancelled); ties go to fewer reviews, then fewer
   declines.
@@ -78,9 +77,7 @@ class Tuned:
 
 RULE = ("best in the searched grid: highest net contribution after the friction cost "
         "among points whose offered review minutes fit the minutes available; ties to "
-        "fewer reviews, then fewer declines; points whose checkout routing alone offers "
-        "more than 1.25 times the available minutes are infeasible without a replay")
-SKIP_MARGIN = 1.25
+        "fewer reviews, then fewer declines")
 _METRICS = ("net_cents", "net_vs_approve_all_cents", "friction_cost_cents",
             "prevented_loss_cents", "reviews", "review_minutes_offered", "legitimate_declined",
             "legitimate_held", "decided_after_shipping")
@@ -93,15 +90,14 @@ def tune(
     grid: Grid,
     *,
     routed_minutes: Callable[[Policy], float] | None = None,
-    available_minutes: float | None = None,
 ) -> Tuned:
     """Search ``grid`` for ``policy``.
 
     ``scores`` holds the validation orders' checkout scores for the review and the
     decline signal (keys ``review`` and ``decline``); ``evaluate`` replays a list of
     candidates and returns their outcome rows (queue_sim.outcomes.outcome_row) in the
-    same order. With ``routed_minutes`` (a candidate's review minutes from checkout
-    routing alone) and ``available_minutes``, points far over capacity are not replayed.
+    same order. ``routed_minutes`` (optional) gives a candidate's review minutes from
+    checkout routing alone, reported beside the replay's.
     """
     review_points = _points("review", policy, scores, grid.review_rates)
     decline_points = _points("decline", policy, scores, grid.decline_rates)
@@ -109,42 +105,29 @@ def tune(
     for (r_rate, r_cut) in review_points:
         for (d_rate, d_cut) in decline_points:
             points.append((r_rate, d_rate, policy.with_thresholds(r_cut, d_cut)))
-    routed: dict[str, float] = {}
     to_run: dict[str, Policy] = {}
     for _, _, candidate in points:
-        if candidate.version in routed or candidate.version in to_run:
-            continue
-        if routed_minutes is not None and available_minutes is not None:
-            routed[candidate.version] = float(routed_minutes(candidate))
-            if routed[candidate.version] > SKIP_MARGIN * available_minutes:
-                continue
-        to_run[candidate.version] = candidate
+        to_run.setdefault(candidate.version, candidate)
     rows = dict(zip(to_run, evaluate(list(to_run.values())), strict=True))
+    routed = ({version: float(routed_minutes(c)) for version, c in to_run.items()}
+              if routed_minutes is not None else {})
 
     records = []
     for r_rate, d_rate, candidate in points:
-        row = rows.get(candidate.version)
-        record: dict[str, Any] = {
+        row = rows[candidate.version]
+        records.append({
             "review_rate": r_rate, "decline_rate": d_rate,
             "review_threshold": candidate.review_threshold,
             "decline_threshold": candidate.decline_threshold,
-            "policy_version": candidate.version, "replayed": row is not None,
+            "policy_version": candidate.version,
+            "objective_cents": int(row["net_cents"]) - int(row["friction_cost_cents"]),
+            "feasible": int(row["review_minutes_offered"]) <= int(row["available_minutes"]),
+            "available_minutes": row["available_minutes"],
             "review_minutes_routed": routed.get(candidate.version),
-        }
-        if row is None:
-            record.update({"objective_cents": None, "feasible": False,
-                           "available_minutes": available_minutes, "declines": None,
-                           **{k: None for k in _METRICS}})
-        else:
-            record.update({
-                "objective_cents": int(row["net_cents"]) - int(row["friction_cost_cents"]),
-                "feasible": int(row["review_minutes_offered"]) <= int(row["available_minutes"]),
-                "available_minutes": row["available_minutes"],
-                "declines": int(row["fraud_declined_checkout"])
-                + int(row["legitimate_declined_checkout"]),
-                **{k: row[k] for k in _METRICS},
-            })
-        records.append(record)
+            "declines": int(row["fraud_declined_checkout"])
+            + int(row["legitimate_declined_checkout"]),
+            **{k: row[k] for k in _METRICS},
+        })
     frontier = pd.DataFrame(records)
     feasible = frontier.loc[frontier["feasible"]]
     if feasible.empty:
@@ -153,9 +136,11 @@ def tune(
                                 ascending=[False, True, True], kind="stable").iloc[0]
     chosen = policy.with_thresholds(_none(best["review_threshold"]),
                                     _none(best["decline_threshold"]))
-    boundary = {
-        "review": len(review_points) > 1 and best["review_rate"] == review_points[-1][0],
-        "decline": len(decline_points) > 1 and best["decline_rate"] == decline_points[-1][0],
+    boundary = {  # the chosen threshold is the one at the highest rate searched
+        "review": len(review_points) > 1
+        and _same(chosen.review_threshold, review_points[-1][1]),
+        "decline": len(decline_points) > 1
+        and _same(chosen.decline_threshold, decline_points[-1][1]),
     }
     return Tuned(policy.name, chosen, frontier, boundary, RULE)
 
@@ -170,6 +155,10 @@ def _points(which: str, policy: Policy, scores: Mapping[str, np.ndarray],
         fixed = policy.review_threshold if which == "review" else policy.decline_threshold
         return [(float("nan"), fixed)]
     return [(rate, cut_point(scores[which], rate)) for rate in rates]
+
+
+def _same(a: float | None, b: float | None) -> bool:
+    return (a is None and b is None) or (a is not None and b is not None and float(a) == float(b))
 
 
 def _none(value: Any) -> float | None:

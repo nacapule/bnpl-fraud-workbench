@@ -105,31 +105,32 @@ def test_cut_points_are_scores_the_policy_attains() -> None:
     assert all(cut_point(scores, r) in set(scores[~np.isnan(scores)]) for r in (0.3, 0.7))
 
 
-def _tuning(tables, roster, grid, *, routed=False):
-    stub = StubContext(tables, scores={o: float(o) for o in tables["order_attempts"]["order_id"]})
+def _tuning(tables, roster, grid, *, stub=None, window=WHOLE, settings=SETTINGS):
+    stub = stub or StubContext(tables, scores={o: float(o)
+                                               for o in tables["order_attempts"]["order_id"]})
     world = stub_world(tables, stub)
-    attempts = world.orders(*WHOLE)
-    scores = attempts["order_id"].astype(float).to_numpy()
+    scores = world.context.set_index("order_id")["test_score"].reindex(
+        world.orders(*window)["order_id"]).to_numpy(dtype=float)
     replayed = []
 
     def evaluate(candidates):
         rows = []
         for candidate in candidates:
             replayed.append(candidate.version)
-            result = replay(world, candidate, window=WHOLE, roster=roster, calendar=CALENDAR,
+            result = replay(world, candidate, window=window, roster=roster, calendar=CALENDAR,
                             reviewer=Reviewer(), verification=verification(),
-                            history=frozen(world, stub), settings=SETTINGS)
+                            history=frozen(world, stub), settings=settings)
             rows.append(outcomes.outcome_row(result, world, keys={}, ltv_cents=1500))
         return rows
 
-    extra = {}
-    if routed:  # ten minutes per order the checkout routing sends to review
-        extra = {"routed_minutes": lambda c: 10.0 * int(
-                     (c.route(world.context)["route"] == "review").sum()),
-                 "available_minutes": roster.available_minutes(
-                     int(WHOLE[0].timestamp()), int(WHOLE[1].timestamp()))}
+    def routed(candidate):  # review minutes from checkout routing alone
+        rows = world.context.set_index("order_id").reindex(
+            world.orders(*window)["order_id"]).reset_index()
+        return settings.service_mean_minutes * int(
+            (candidate.route(rows)["route"] == "review").sum())
+
     tuned = tune(scored_policy(None, None), {"review": scores, "decline": scores}, evaluate,
-                 grid, **extra)
+                 grid, routed_minutes=routed)
     assert len(replayed) == len(set(replayed))  # each candidate replayed once
     return tuned, replayed
 
@@ -154,23 +155,45 @@ def test_when_no_point_fits_the_capacity_nothing_is_chosen() -> None:
     tuned, replayed = _tuning(tables, nobody, Grid((0.25, 0.5), (0.1,)))
     assert tuned.chosen is None and tuned.feasible_points == 0
     assert not tuned.frontier["feasible"].any() and len(replayed) == 2
-    # with the checkout routing known, points far over capacity are not replayed
-    tuned, replayed = _tuning(tables, nobody, Grid((0.25, 0.5), (0.1,)), routed=True)
-    assert tuned.chosen is None and replayed == []
-    assert not tuned.frontier["replayed"].any() and tuned.frontier["objective_cents"].isna().all()
 
 
-def test_only_points_far_over_capacity_are_skipped() -> None:
+def test_a_point_whose_routing_exceeds_capacity_can_be_feasible_through_blocks() -> None:
+    """Orders 11 and 13 of one account would take 20 review minutes against 10; the
+    first review declines on settled evidence and blocks the account, so order 13 never
+    reaches the queue and the point fits. Judging feasibility by checkout routing alone
+    would have discarded it."""
     tables = mini_tables()
-    # one analyst, three minutes on Mondays: 84 minutes over the window; checkout routing
-    # offers 60 minutes at a 25% review rate and 140 at 50%
-    roster = Roster((Shift("mon", (0,), 9 * 60, 3),), {"mon": 1})
-    tuned, replayed = _tuning(tables, roster, Grid((0.0, 0.25, 0.5), (0.0,)), routed=True)
-    frontier = tuned.frontier.set_index("review_rate")
-    assert frontier["available_minutes"].iloc[0] == 84
-    assert frontier["review_minutes_routed"].tolist() == [0, 60, 140]
-    assert frontier["replayed"].tolist() == [True, True, False]  # 140 > 1.25 x 84
+    stub = StubContext(tables, scores={11: 5.0, 13: 5.0},
+                       overrides={11: {"unauthorized_disputes_lost_user": 1}})
+    saturday = Roster((Shift("sat", (5,), 12 * 60 + 30, 10),), {"sat": 1})  # 12:30-12:40
+    window = (T("2025-02-01"), T("2025-02-05"))
+    tuned, replayed = _tuning(tables, saturday, Grid((0.0, 0.5), (0.0,)), stub=stub,
+                              window=window)
+    point = tuned.frontier.set_index("review_rate").loc[0.5]
+    assert point["review_minutes_routed"] == 20 and point["available_minutes"] == 10
+    assert point["review_minutes_offered"] == 10 and point["feasible"]
     assert len(replayed) == 2
+
+
+def test_a_boundary_is_flagged_when_the_widest_rate_gives_the_chosen_threshold() -> None:
+    """Tied scores make several rates share one cut-point: the chosen threshold is also
+    the widest searched, so the optimum may lie beyond the grid."""
+    scores = np.array([9.0, 9.0, 9.0, 9.0, 1.0, 1.0, 1.0, 1.0])
+    base = {"net_cents": 0, "friction_cost_cents": 0, "review_minutes_offered": 0,
+            "available_minutes": 100, "fraud_declined_checkout": 0,
+            "legitimate_declined_checkout": 0, "net_vs_approve_all_cents": 0,
+            "prevented_loss_cents": 0, "reviews": 0, "legitimate_declined": 0,
+            "legitimate_held": 0, "decided_after_shipping": 0}
+
+    def evaluate(candidates):  # reviewing at 9 or more earns the most
+        return [{**base, "net_cents": 100 if c.review_threshold == 9.0 else 0,
+                 "reviews": 4 if c.review_threshold == 9.0 else 0} for c in candidates]
+
+    tuned = tune(scored_policy(None, None), {"review": scores, "decline": scores}, evaluate,
+                 Grid((0.0, 0.125, 0.5), (0.0,)))
+    frontier = tuned.frontier.set_index("review_rate")
+    assert frontier.loc[0.125, "review_threshold"] == frontier.loc[0.5, "review_threshold"]
+    assert tuned.chosen.review_threshold == 9.0 and tuned.on_boundary["review"]
 
 
 def test_the_tuned_policy_is_the_one_the_replay_evaluates() -> None:

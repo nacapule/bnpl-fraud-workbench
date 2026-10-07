@@ -424,6 +424,28 @@ def test_events_a_release_moves_past_the_observation_end_are_dropped(tables, ter
     assert _net(unbounded, 26) == _net(tables["cash_events"], 26) == -1_350
 
 
+def test_cash_a_release_moves_past_the_observation_end_is_dropped(tables, terms):
+    fates = _fates(tables, RELEASED)
+    # dan's recovery (20% of the write-off, 30 days after it) moves to 05-01 03:20 and
+    # eve's to 05-12 20:00: past an end at 05-01 00:00, though their write-offs are not
+    end = T("2025-05-01 00:00")
+    cash = _checked(tables, actions.policy_cash(tables, fates, terms, observed_until=end))
+    assert not cash["event_id"].isin([325, 329]).any()
+    mine = cash.loc[cash["order_id"].isin(list(RELEASED))]
+    assert (mine["known_at"] <= end).all()
+    assert _net(cash, 12) == -49_445 - 13_485
+    # eve's dispute opening moves to 03-03 00:00 but is known only 03-05 00:00: with an
+    # end at 03-04 12:00 it is not observed, and neither is its cash
+    end = T("2025-03-04 12:00")
+    realized = actions.realize(tables, fates, terms, observed_until=end)
+    assert 197 not in set(realized["dispute_openings"]["event_id"])
+    assert not realized["cash_events"]["event_id"].isin([198, 199]).any()
+    for name in ORDER_TABLES:  # every moved observation of the three orders is known by then
+        frame = _rows(tables, name, realized[name], RELEASED)
+        if "known_at" in frame:
+            assert (frame["known_at"] <= end).all(), name
+
+
 @pytest.mark.parametrize("order, hold, outcome, void, cause, down, plan, merchant, payment", [
     # lee's $155 order 19 (checkout 03-02 13:00, world shipment 03-03 01:00, inside the hold):
     # no response, cancelled at hold + 48 h; 25% of 15,500 = 3,875 refunded.

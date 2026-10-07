@@ -278,8 +278,9 @@ def realize(
     ``tables`` are the world's tables; ``fates`` say what the policy did, for the
     orders it saw (:func:`fates_as_of` for a moment inside the replay); orders without
     a fate keep their world rows. Events a released hold moves past
-    ``observed_until`` are dropped. Entity tables, account events and the attempts
-    themselves are unchanged; ``cash_events`` is the policy's ledger
+    ``observed_until`` (known after it) are dropped, and so is the cash they lead to.
+    Entity tables, account events and the attempts themselves are unchanged;
+    ``cash_events`` is the policy's ledger
     (:func:`policy_cash`, which ``memo`` serves).
     """
     typed = typed_fates(fates)
@@ -331,8 +332,8 @@ def _realize_rows(
                 values = frame[column].to_numpy(dtype="datetime64[s]").copy()
                 values[moved] = values[moved] + delta[moved]
                 frame[column] = values
-            if limit is not None:
-                keep &= ~(moved & (frame["occurred_at"].to_numpy(dtype="datetime64[s]") > limit))
+            if limit is not None:  # observed by the end: known by then (and so occurred)
+                keep &= ~(moved & (frame["known_at"].to_numpy(dtype="datetime64[s]") > limit))
         elif len(released):  # the schedule: installments 1..n start at the release
             delta = pd.Series(order).map(pay_shift).to_numpy(dtype="timedelta64[s]")
             delta = np.where(_installment_rows(tables, name), delta, np.timedelta64("NaT", "s"))
@@ -461,6 +462,8 @@ def _released_cash(
     orders = released.loc[released["order_id"].isin({k[1] for k in missing})]
     moved = _realize_rows(_order_subset(tables, orders["order_id"]), orders, observed_until)
     derived = ledger.derive_cash_events(moved, terms)
+    if observed_until is not None:  # cash a moved event leads to only once it is known
+        derived = derived.loc[derived["known_at"] <= pd.Timestamp(observed_until)]
     ids = tables["cash_events"].set_index(["kind", "ref_event_id"])["event_id"]
     derived["event_id"] = pd.array(
         ids.reindex(pd.MultiIndex.from_frame(derived[["kind", "ref_event_id"]])).to_numpy(),

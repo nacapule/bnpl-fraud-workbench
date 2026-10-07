@@ -184,12 +184,13 @@ class FrozenHistory:
 class PolicyHistory:
     """Outcome-derived columns rebuilt from the policy's own decisions (core.asof).
 
-    Each day's rows start as the approve-all rows at the same decision times. Rows of
-    accounts the policy has touched (declined, held, voided or blocked), or that ever
-    shared a device, an address or an email with one (``neighbours``,
-    ``core.asof.Neighbours``), then get their outcome-derived columns from
-    ``core.asof.policy_rows`` on the realized tables and state as decided before the
-    day. Other accounts' outcomes are exactly approve-all's, so their rows stay.
+    Each day's rows start as the approve-all rows at the same decision times. Orders
+    checked out before the policy started (before the replay window) keep their
+    approve-all fates. Rows of accounts the policy has touched (declined, held, voided
+    or blocked), or that ever shared a device, an address or an email with one
+    (``neighbours``, ``core.asof.Neighbours``), then get their outcome-derived columns
+    from ``core.asof.policy_rows`` on the realized tables and state as decided before
+    the day. Other accounts' outcomes are exactly approve-all's, so their rows stay.
     """
 
     world: World
@@ -221,6 +222,12 @@ class PolicyHistory:
                 np.unique(world_rows.loc[mask, "user_id"].to_numpy(np.int64)))
         fates, blocks = so_far.fates(users), so_far.blocks()
         view = _policy_view(self.world.tables, users, at)
+        # orders checked out before the policy started keep their approve-all fates
+        attempts = view["order_attempts"]
+        earlier = attempts.loc[(attempts["known_at"] < at)
+                               & ~attempts["order_id"].isin(fates["order_id"])]
+        if len(earlier):
+            fates = pd.concat([actions.approve_all_fates(earlier), fates], ignore_index=True)
         realized, state = actions.realize_with_state(view, fates, blocks, self.world.terms,
                                                      memo=self._memo)
         kwargs = {} if self.neighbours is None else {"neighbours": self.neighbours}
@@ -292,6 +299,7 @@ class _Order:
     priority: str | None = None
     queue_score: float = 0.0
     row: dict[str, Any] | None = None  # context row the reviewer reads now
+    first_row: dict[str, Any] | None = None  # the row the first decision was made on
     started: int | None = None
     decided: int | None = None
     analyst: int | None = None
@@ -331,9 +339,10 @@ class ReplayResult:
     window: tuple[pd.Timestamp, pd.Timestamp]
     fates: pd.DataFrame  # core.actions.FATE_COLUMNS, one row per order in the window
     blocks: pd.DataFrame  # user_id, at, cause, order_id
-    routes: pd.DataFrame  # order_id, route, review_score, decline_score, alert_id
+    routes: pd.DataFrame  # order_id, route (taken), scored_route, scores, alert_id
     alert_rows: pd.DataFrame  # context rows at checkout of orders routed to review or declined
     reviews: pd.DataFrame  # one row per order routed to review
+    review_rows: pd.DataFrame  # the context row each first review decision was made on
     log: pd.DataFrame  # at, kind, order_id, backlog
     available_minutes: float  # analysts' review minutes inside the window
     coverage_minutes: float  # minutes inside the window with someone on shift
@@ -422,6 +431,10 @@ def replay(
 
     route_frame = (pd.concat(routes, ignore_index=True) if routes else pd.DataFrame(
         columns=["order_id", "route", "review_score", "decline_score"]))
+    # the route each order took at checkout: an order of a blocked account is declined
+    # whatever its scores said (``scored_route``)
+    route_frame["scored_route"] = route_frame["route"]
+    route_frame["route"] = [sim.orders[int(o)].route for o in route_frame["order_id"]]
     route_frame["alert_id"] = policies.alert_id(route_frame["order_id"], policy.version) \
         if len(route_frame) else pd.Series(dtype=object)
     return ReplayResult(
@@ -429,7 +442,8 @@ def replay(
         fates=sim.fates(), blocks=sim.blocks_frame(), routes=route_frame,
         alert_rows=(pd.concat(alert_rows, ignore_index=True) if alert_rows
                     else world.context.iloc[0:0]),
-        reviews=sim.reviews_frame(calendar), log=sim.log_frame(),
+        reviews=sim.reviews_frame(calendar), review_rows=sim.review_rows(world.context),
+        log=sim.log_frame(),
         available_minutes=roster.available_minutes(t0, t1),
         coverage_minutes=roster.coverage_minutes(t0, t1), roster=roster,
         reviewer=getattr(reviewer, "name", type(reviewer).__name__),
@@ -522,23 +536,27 @@ class _Simulation:
 
     # -- the event loop
     def run(self, until: int) -> None:
+        """Handle events in time order; analysts take up work once every event of an
+        instant is in (simultaneous arrivals all enter the queue before dispatch)."""
         while self.events and self.events[0][0] < until:
-            at, kind, _, a, b = heapq.heappop(self.events)
-            if at >= self.horizon:
+            now = self.events[0][0]
+            if now >= self.horizon:
                 self.events.clear()
                 return
-            if kind == ARRIVAL:
-                self.arrive(self.orders[a], at)
-            elif kind == REVIEW_DONE:
-                self.busy[b] = False
-                self.review_done(self.orders[a], at)
-            elif kind == CHECK_DONE:
-                self.check_done(self.orders[a], Check(list(Check)[b]), at)
-            elif kind == HOLD_EXPIRE:
-                self.hold_expired(self.orders[a], at)
-            elif kind == WAKE:
-                self.wake_at[a] = None
-            self.dispatch(at)
+            while self.events and self.events[0][0] == now:
+                at, kind, _, a, b = heapq.heappop(self.events)
+                if kind == ARRIVAL:
+                    self.arrive(self.orders[a], at)
+                elif kind == REVIEW_DONE:
+                    self.busy[b] = False
+                    self.review_done(self.orders[a], at)
+                elif kind == CHECK_DONE:
+                    self.check_done(self.orders[a], Check(list(Check)[b]), at)
+                elif kind == HOLD_EXPIRE:
+                    self.hold_expired(self.orders[a], at)
+                elif kind == WAKE:
+                    self.wake_at[a] = None
+            self.dispatch(now)
 
     def arrive(self, o: _Order, at: int) -> None:
         block = self.blocked.get(o.user_id)
@@ -583,7 +601,7 @@ class _Simulation:
         o.decided = at
         o.shipped_at_decision = o.shipped(at)
         decision = self.reviewer.decide(o.order_id, o.row, ())
-        o.first = decision
+        o.first, o.first_row = decision, o.row
         self.note(at, "decide", o.order_id)
         self.apply(o, decision, at)
 
@@ -687,6 +705,17 @@ class _Simulation:
         frame["at"] = _stamps(frame["at"])
         return frame.astype({"user_id": "int64", "order_id": "int64"}).sort_values(
             ["at", "user_id"]).reset_index(drop=True)
+
+    def review_rows(self, context: pd.DataFrame) -> pd.DataFrame:
+        """The context row each first review decision read (its ``decision_at`` is when
+        that evidence was assembled: the checkout or the start of the review's day),
+        with when the analyst took the order up and decided."""
+        decided = sorted((o for o in self.orders.values() if o.first_row is not None),
+                         key=lambda o: (o.started, o.order_id))
+        frame = pd.DataFrame([o.first_row for o in decided], columns=list(context.columns))
+        frame["started_at"] = _stamps(pd.Series([o.started for o in decided], dtype=object))
+        frame["decided_at"] = _stamps(pd.Series([o.decided for o in decided], dtype=object))
+        return frame.reset_index(drop=True)
 
     def reviews_frame(self, calendar: ServiceCalendar) -> pd.DataFrame:
         reviewed = [o for o in self.orders.values() if o.route == CheckoutRoute.REVIEW.value]

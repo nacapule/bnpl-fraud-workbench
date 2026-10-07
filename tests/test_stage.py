@@ -113,8 +113,16 @@ def test_the_routing_frame_and_review_decisions_have_their_columns(staged) -> No
                                    zip(alerts["order_id"], alerts["policy_version"],
                                        strict=True)]).all()
     assert list(decisions.columns[:len(asof.KEY_COLUMNS)]) == list(asof.KEY_COLUMNS)
-    assert {"checks", "checks_later", "disposition", "final"} <= set(decisions.columns)
+    assert {"taken_up_at", "decided_at", "checks", "checks_later", "disposition",
+            "final"} <= set(decisions.columns)
     assert (decisions["policy"] == "incumbent_rules").all()
+    assert (decisions["decision_at"] <= decisions["taken_up_at"]).all()
+    assert (decisions["taken_up_at"] <= decisions["decided_at"]).all()
+    window = run.protocol.windows["test"]
+    for frame, column in ((alerts, "ts"), (decisions, "taken_up_at")):  # the test window
+        assert frame[column].between(window.start, window.end).all()
+    assert run.ref in run.memory["incumbent"]  # kept from the replay stage's own run
+    assert len(alerts)  # (the tuned stand-in incumbent declines; it reviews nothing here)
 
 
 def test_the_capacity_base_is_todays_queue_over_eighty_percent() -> None:

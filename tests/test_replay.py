@@ -191,6 +191,24 @@ def test_priority_beats_score_and_arrival(tables) -> None:
     assert order == [23, 24, 25] or order.index(25) < order.index(24)
 
 
+def test_orders_arriving_together_are_taken_up_by_priority(tables) -> None:
+    """Orders 23 and 24 check out at the same instant; 24 matches R05 (P0), 23 is P2.
+    The analyst is free: the P0 order is taken up first even though 23 arrived first in
+    the event list."""
+    together = dict(tables)
+    attempts = tables["order_attempts"].copy()
+    at = attempts.loc[attempts["order_id"] == 23, "known_at"].iloc[0]
+    attempts.loc[attempts["order_id"] == 24, ["occurred_at", "known_at"]] = at
+    together["order_attempts"] = attempts
+    window = (T("2025-03-10"), T("2025-03-11"))
+    result, _ = run(together, scores={23: 5.0, 24: 1.0},
+                    overrides={24: {"attempts_user_24h": 9}}, window=window)
+    reviews = result.reviews.set_index("order_id")
+    assert reviews.loc[[23, 24], "priority"].tolist() == ["P2", "P0"]
+    assert reviews.loc[24, "started_at"] == at
+    assert reviews.loc[23, "started_at"] == at + pd.Timedelta(minutes=10)
+
+
 def test_utilization_counts_every_analyst_and_coverage_counts_hours_once(tables) -> None:
     roster = Roster((Shift("day", tuple(range(7)), 9 * 60, 8 * 60),), {"day": 3})
     result, world = run(tables, scores={3: 5.0}, roster=roster)
@@ -287,6 +305,52 @@ def test_escalation_blocks_the_linked_accounts(tables) -> None:
     assert set(result.blocks["user_id"]) == {16, 17, 18}
     assert fate(result, 24)["route"] == fate(result, 25)["route"] == "blocked"
     assert row_of(result, world)["escalations"] == 1
+
+
+def test_the_routes_show_an_order_of_a_blocked_account_as_blocked(tables) -> None:
+    """Order 11 is declined on settled evidence and its account blocked: order 13 of the
+    same account scored for review, but it was declined at checkout."""
+    result, _ = run(tables, scores={11: 5.0, 13: 5.0},
+                    overrides={11: {"unauthorized_disputes_lost_user": 1}})
+    routes = result.routes.set_index("order_id")
+    assert fate(result, 13)["route"] == "blocked" == routes.loc[13, "route"]
+    assert routes.loc[13, "scored_route"] == "review"
+    assert routes.loc[11, "route"] == routes.loc[11, "scored_route"] == "review"
+    assert 13 not in set(result.reviews["order_id"].loc[result.reviews["started_at"].notna()])
+    from queue_sim.stage import alerts
+
+    flagged = alerts(result, scored_policy(1.0))
+    assert flagged["order_id"].tolist() == [11] and flagged["band"].tolist() == ["review"]
+
+
+class Recording(Reviewer):
+    def __init__(self) -> None:
+        self.read: dict[int, dict] = {}
+
+    def decide(self, order_id, row, checks):
+        self.read.setdefault(order_id, dict(row))  # the first decision's row
+        return super().decide(order_id, row, checks)
+
+
+def test_the_review_rows_are_the_rows_the_first_decisions_read(tables) -> None:
+    roster = Roster((Shift("am", tuple(range(7)), 9 * 60, 8 * 60),), {"am": 1})
+    stub = StubContext(tables, scores={3: 5.0, 6: 5.0, 23: 5.0, 24: 5.0},
+                       overrides={6: CARD})
+    world = stub_world(tables, stub)
+    reviewer = Recording()
+    result = replay(world, scored_policy(1.0), window=WHOLE, roster=roster,
+                    calendar=CALENDAR, reviewer=reviewer, verification=verification(),
+                    history=frozen(world, stub), settings=SETTINGS)
+    rows = result.review_rows.set_index("order_id")
+    assert set(rows.index) == set(reviewer.read) == {3, 6, 23, 24}
+    for order, read in reviewer.read.items():
+        kept = rows.loc[order]
+        assert all(kept[k] == v or (pd.isna(kept[k]) and pd.isna(v))
+                   for k, v in read.items() if k != "order_id")
+        assert kept["decision_at"] <= kept["started_at"] <= kept["decided_at"]
+    # orders 23 and 24 arrive in the evening and are taken up the next morning: the
+    # reviewer read the row assembled at the start of that day, not the checkout row
+    assert rows.loc[23, "decision_at"] == T("2025-03-11 00:00")
 
 
 def test_an_auto_decline_removes_the_order_and_blocks_nobody(tables) -> None:
@@ -398,6 +462,24 @@ def test_a_hold_moves_the_repayment_schedule_the_next_order_sees(tables) -> None
     assert due[1] == released + pd.Timedelta(days=14)  # was checkout + 14 days
     assert due[0] == T("2024-12-05 12:00")
     assert state.approved.set_index("order_id").loc[1, "approved_at"] == released
+
+
+def test_orders_before_the_window_keep_their_approvals_in_the_rebuilt_history(tables) -> None:
+    """The policy starts on 2025-02-01; when it has declined order 11, the state the
+    later rows are rebuilt from still counts every earlier order as approved."""
+    spy = Spy()
+    window = (T("2025-02-01"), T("2025-06-15"))
+    run(tables, scores={11: 9.0}, review=None, decline=8.0, history=_policy_history(spy),
+        window=window)
+    assert spy.calls
+    attempts = tables["order_attempts"]
+    earlier = attempts.loc[(attempts["known_at"] < window[0])
+                           & (attempts["processor_result"] == "approved"), "order_id"]
+    for _, state, _ in spy.calls:
+        approved = state.approved.set_index("order_id")["approved_at"]
+        assert set(earlier) <= set(approved.index) and 11 not in approved.index
+        checkout = attempts.set_index("order_id")["known_at"]
+        assert (approved.loc[list(earlier)] == checkout.loc[list(earlier)]).all()
 
 
 def test_untouched_policies_use_the_approve_all_rows(tables) -> None:
