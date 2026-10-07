@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import multiprocessing
 import os
+import pickle
 from collections.abc import Mapping, Sequence
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field, replace
@@ -31,6 +32,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from joblib.externals import cloudpickle
 
 from core import actions, asof, config, evidence, ledger
 from core.actions import CheckoutRoute
@@ -267,12 +269,12 @@ _WORKER: Worker | None = None
 
 
 def _start_worker(tables: Mapping[str, pd.DataFrame], context: pd.DataFrame,
-                  scorers: Mapping[str, Any], seed: int, observed_until: pd.Timestamp,
+                  scorers: bytes, seed: int, observed_until: pd.Timestamp,
                   policy_cfg: Mapping[str, Any]) -> None:
     global _WORKER
     bench = Bench.of(tables, context, seed=seed, observed_until=observed_until,
                      policy_cfg=policy_cfg)
-    _WORKER = Worker.of(bench, scorers)
+    _WORKER = Worker.of(bench, pickle.loads(scorers))
 
 
 def _run_task(task: Task) -> dict[str, Any]:
@@ -317,8 +319,9 @@ class Replays:
             self.pool = ProcessPoolExecutor(
                 max_workers=self.count, mp_context=multiprocessing.get_context("spawn"),
                 initializer=_start_worker,
-                initargs=(world.tables, world.context, self.scorers, world.seed,
-                          world.observed_until, self.bench.policy_cfg))
+                initargs=(world.tables, world.context,
+                          cloudpickle.dumps(self.scorers),  # fitted scorers may hold closures
+                          world.seed, world.observed_until, self.bench.policy_cfg))
         return list(self.pool.map(_run_task, tasks))
 
 
