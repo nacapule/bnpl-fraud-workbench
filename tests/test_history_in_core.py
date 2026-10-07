@@ -25,10 +25,14 @@ HISTORY = re.compile(
 )
 # Modules that still compute history, linkage, repayment state or exposure.
 LEGACY = {
-    "analysis/followups.py",
     "llm/packet.py",
-    "queue_sim/simulate.py",
-    "rules/tuning.py",
+}
+# Lines that match the pattern but compute no order history, each read and listed here.
+NOT_HISTORY = {
+    # the share of scores at or above each value (a score distribution's upper tail)
+    "rules/tuning.py": {"share = np.cumsum(counts[::-1])[::-1] / len(values)"},
+    # service seconds before each day of a weekly staffing calendar
+    "queue_sim/roster.py": {"prefix = np.concatenate([[0], np.cumsum(pattern)])"},
 }
 
 
@@ -43,11 +47,19 @@ def _modules() -> list[Path]:
     return paths
 
 
+def _matches(module: str, text: str) -> list[str]:
+    """Lines of ``text`` that match the pattern, other than those listed as no history
+    (compared without their comments)."""
+    allowed = NOT_HISTORY.get(module, set())
+    return [line for line in text.splitlines()
+            if HISTORY.search(line) and line.split("#")[0].strip() not in allowed]
+
+
 def _computing_history() -> set[str]:
     return {
-        str(path.relative_to(REPO))
+        module
         for path in _modules()
-        if HISTORY.search(path.read_text())
+        if _matches(module := str(path.relative_to(REPO)), path.read_text())
     }
 
 
