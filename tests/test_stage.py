@@ -447,3 +447,49 @@ def test_worker_processes_give_the_same_rows_as_one_process() -> None:
     assert replayed_one == replayed_two
     assert len(replayed_one["replay.outcomes"]) == 7 * (
         len(stage.VARIANTS) + len(stage.staffing()) - 1)
+
+
+@dataclass(frozen=True)
+class AnaScorer:
+    """Scores Ana's two orders (1 and 10) at 1, every other order at 0."""
+
+    name: str = "ana"
+    version: str = "a1"
+    columns: tuple[str, ...] = ("order_id",)
+
+    def score(self, rows: pd.DataFrame) -> np.ndarray:
+        return rows["order_id"].isin([1, 10]).to_numpy(dtype=float)
+
+    def probability(self, rows: pd.DataFrame) -> np.ndarray:
+        return self.score(rows)
+
+
+@needs_context
+def test_the_checkout_rows_are_the_rows_the_incumbents_routing_read() -> None:
+    """The incumbent declines Ana's first order at checkout, so at her second (order 10)
+    nothing of the first is due: the row its routing read, kept by checkout_rows, says
+    so, where the approve-all world row has three installments due. The fates are the
+    run's."""
+    from queue_sim import policies
+
+    tables = mini_tables()
+    run = FakeRun(tables, asof.build_context(tables), scorer=AnaScorer)
+    run.protocol.windows["test"] = SimpleNamespace(start=T("2024-12-01"), end=T("2025-02-01"))
+    incumbent = policies.single_scorer(stage.INCUMBENT, AnaScorer()).with_thresholds(None, 1.0)
+    run.memory["tuned"] = {416: {stage.INCUMBENT: incumbent}}
+    frame = stage.routing_frame(run, run.ref)
+    rows = stage.checkout_rows(run, run.ref)
+    assert frame["order_id"].tolist() == rows["order_id"].tolist() == [1, 10]
+    assert list(rows.columns) == [*asof.KEY_COLUMNS, *asof.COLUMN_NAMES]
+    read = rows.set_index("order_id")
+    world_row = run.memory["context"][run.ref].set_index("order_id").loc[10]  # approve-all
+    assert world_row["installments_due_user"] == 3 and world_row["approved_orders_user_ever"] == 1
+    assert read.loc[10, "installments_due_user"] == 0
+    assert read.loc[10, "approved_orders_user_ever"] == 0
+    world_rows = run.memory["context"][run.ref].set_index("order_id")
+    pd.testing.assert_frame_equal(  # nothing was decided before order 1
+        read.loc[[1], list(asof.COLUMN_NAMES)], world_rows.loc[[1], list(asof.COLUMN_NAMES)],
+        check_dtype=False)
+    fates = stage.incumbent_fates(run, run.ref).set_index("order_id")
+    assert list(fates.reset_index().columns) == list(actions.FATE_COLUMNS)
+    assert fates.loc[1, "route"] == fates.loc[10, "route"] == "auto_decline"

@@ -17,7 +17,8 @@ context is shared through ``run.memory["context"]`` as the pipeline caches it.
   world's test window, with the context rows and checks behind them, for case and
   packet selection (kept from the replay stage's main run of the incumbent).
 * :func:`routing_frame`: the incumbent's routing at checkout on one world's test window
-  (the MySQL ``alerts`` table), from the same run.
+  (the MySQL ``alerts`` table), from the same run; :func:`checkout_rows`, the context
+  rows that routing read; :func:`incumbent_fates`, the run's fates.
 """
 
 from __future__ import annotations
@@ -391,8 +392,7 @@ class Worker:
             ltv_cents=self.bench.ltv_cents(), classes=self.classes,
             legitimate_truth=self.legitimate_truth)}
         if task.detail and task.policy == INCUMBENT:
-            out["incumbent"] = {"decisions": decision_rows(policy, result),
-                                "alerts": alerts(result, policy)}
+            out["incumbent"] = incumbent_frames(policy, result)
         if task.detail:
             out["confusion"] = _records(outcomes.confusion(result, self.classes))
             out["confusion_latent"] = _records(outcomes.confusion(
@@ -608,9 +608,14 @@ def _incumbent(run: Any, ref: Any) -> dict[str, pd.DataFrame]:
         bench = _bench(run, ref)
         result = bench.run(policy, _window(run.protocol, "test"),
                            base_staffing(config.load("policy")))
-        kept[ref] = {"decisions": decision_rows(policy, result),
-                     "alerts": alerts(result, policy)}
+        kept[ref] = incumbent_frames(policy, result)
     return kept[ref]
+
+
+def incumbent_frames(policy: policies.Policy, result: ReplayResult) -> dict[str, pd.DataFrame]:
+    """What later stages keep from the incumbent's main run on a world."""
+    return {"decisions": decision_rows(policy, result), "alerts": alerts(result, policy),
+            "checkout_rows": _checkout_rows(result), "fates": result.fates}
 
 
 def review_decisions(run: Any, ref: Any) -> pd.DataFrame:
@@ -660,11 +665,38 @@ def routing_frame(run: Any, ref: Any) -> pd.DataFrame:
     return _incumbent(run, ref)["alerts"]
 
 
-def alerts(result: ReplayResult, policy: policies.Policy) -> pd.DataFrame:
+def checkout_rows(run: Any, ref: Any) -> pd.DataFrame:
+    """The context rows the incumbent's checkout routing read, for the orders of
+    :func:`routing_frame` and in its order: ``core.asof`` KEY_COLUMNS + COLUMN_NAMES,
+    as the replay had them at checkout (rebuilt under the incumbent's earlier decisions,
+    not the approve-all world)."""
+    return _incumbent(run, ref)["checkout_rows"]
+
+
+def incumbent_fates(run: Any, ref: Any) -> pd.DataFrame:
+    """The incumbent's fate for every order of one world's test window
+    (``core.actions.FATE_COLUMNS``), from the same run: with ``core.actions.realize`` it
+    gives what happened later under the incumbent, to the end of observation."""
+    return _incumbent(run, ref)["fates"]
+
+
+def _flagged(result: ReplayResult) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """The orders the routing alerted on (review or auto-decline taken at checkout) and
+    the context rows that routing read, in the same order."""
     routes = result.routes
     flagged = routes.loc[routes["route"].isin([CheckoutRoute.REVIEW.value,
                                               CheckoutRoute.AUTO_DECLINE.value])]
     rows = result.alert_rows.set_index("order_id").reindex(flagged["order_id"]).reset_index()
+    return flagged, rows
+
+
+def _checkout_rows(result: ReplayResult) -> pd.DataFrame:
+    _, rows = _flagged(result)
+    return rows[[*asof.KEY_COLUMNS, *asof.COLUMN_NAMES]].reset_index(drop=True)
+
+
+def alerts(result: ReplayResult, policy: policies.Policy) -> pd.DataFrame:
+    flagged, rows = _flagged(result)
     held = evidence.conditions(rows)
     rules = list(evidence.RULE_FAMILY)
     fired = [[rule for rule in rules if flags[rule]] for flags in held[rules].to_dict("records")]
