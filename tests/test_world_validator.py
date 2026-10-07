@@ -232,6 +232,19 @@ def fractional_cents_below_float_precision(t) -> None:
     cash.loc[0, "amount_cents"] = Decimal(whole) + Decimal("0.99999999999999")
 
 
+def infinite_cents_as_objects(t) -> None:
+    """An infinite value in an integer column stored as objects."""
+    cash = t["cash_events"]
+    cash["amount_cents"] = cash["amount_cents"].astype(object)
+    cash.loc[0, "amount_cents"] = float("inf")
+
+
+def infinite_decimal_id(t) -> None:
+    orders = t["order_attempts"]
+    orders["merchant_id"] = orders["merchant_id"].astype(object)
+    orders.loc[0, "merchant_id"] = Decimal("Infinity")
+
+
 def fractional_id_as_text(t) -> None:
     orders = t["order_attempts"]
     orders["merchant_id"] = orders["merchant_id"].astype(str)
@@ -281,6 +294,8 @@ OTHER_RULES = [
     ("schema", fractional_cents_as_objects),
     ("schema", fractional_cents_below_float_precision),
     ("schema", fractional_id_as_text),
+    ("schema", infinite_cents_as_objects),
+    ("schema", infinite_decimal_id),
     ("delivery_before_fulfilment", delivery_before_shipment),
     ("schedule_mismatch", schedule_does_not_sum),
     ("label_before_order", label_before_order),

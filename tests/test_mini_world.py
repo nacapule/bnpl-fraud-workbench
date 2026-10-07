@@ -180,6 +180,43 @@ def test_never_pay_ring_through_one_email_identity(tables) -> None:
     assert _bases(labels, _order(tables, "nr1.98@gmail.com", 32000)) == ["never_pay"]
 
 
+def _never_pay(tables: dict[str, pd.DataFrame]) -> pd.DataFrame:
+    builder = _builder()
+    orders = tables["order_attempts"]
+    rules = {k: v for k, v in builder.LABEL_RULES.items() if not k.startswith("promo")}
+    return world.never_pay_determinations(
+        tables, orders[orders["processor_result"] == "approved"], **rules)
+
+
+def test_never_pay_determinations_match_the_labels(tables) -> None:
+    labels = tables["labels"]
+    labelled = labels[labels["basis"] == "never_pay"].set_index("order_id")["label_known_at"]
+    found = _never_pay(tables).set_index("order_id")["label_known_at"]
+    assert sorted(found.index) == sorted(labelled.index)
+    assert (found[labelled.index] == labelled).all()
+
+
+def test_never_pay_determinations_include_plans_labelled_on_other_grounds(tables) -> None:
+    """A never-pay plan whose unauthorized dispute was lost earlier is labelled third-party
+    fraud (the first determination) and is still a never-pay determination."""
+    changed = dict(tables)
+    nr1 = _order(tables, "nr1.98@gmail.com", 32000)
+    placed = tables["order_attempts"].set_index("order_id").loc[nr1, "occurred_at"]
+    opening = tables["dispute_openings"].iloc[[0]].assign(
+        event_id=10**6, occurred_at=placed + pd.Timedelta(days=3),
+        known_at=placed + pd.Timedelta(days=4), dispute_id=10**6, order_id=nr1,
+        reason="unauthorized", amount_cents=100)
+    resolution = tables["dispute_resolutions"].iloc[[0]].assign(
+        event_id=10**6 + 1, occurred_at=placed + pd.Timedelta(days=20),
+        known_at=placed + pd.Timedelta(days=20), dispute_id=10**6, outcome="lost")
+    changed["dispute_openings"] = pd.concat([tables["dispute_openings"], opening],
+                                            ignore_index=True)
+    changed["dispute_resolutions"] = pd.concat([tables["dispute_resolutions"], resolution],
+                                               ignore_index=True)
+    assert _bases(_relabel(changed), nr1) == ["third_party_fraud"]
+    assert nr1 in set(_never_pay(changed)["order_id"])
+
+
 def _plan(tables, email: str, amount: int) -> int:
     plans = tables["plans"]
     return int(plans.loc[plans["order_id"] == _order(tables, email, amount), "plan_id"].iloc[0])

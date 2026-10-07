@@ -501,7 +501,7 @@ def coerce(name: str, frame: pd.DataFrame) -> pd.DataFrame:
                 if column.type in INTEGER_TYPES and _has_fraction(values):
                     raise ValueError("fractional values in an integer column")
                 values = values.astype(column.dtype)
-        except (ValueError, TypeError) as error:
+        except (ValueError, TypeError, OverflowError) as error:
             raise SchemaError(f"{name}.{column.name}: {error}") from error
         out[column.name] = values
     return out.reset_index(drop=True)
@@ -821,37 +821,10 @@ def adjudicate(
     found(reports.rename(columns={"known_at": "label_known_at"}), "account_takeover")
 
     # (c) never-pay: a zero-effort default with an intent marker
-    zero_effort = _zero_effort_defaults(tables, plans, default_grace_days)
-    marked = []
-    same_account = zero_effort.merge(
-        zero_effort[["plan_id", "user_id", "created_at", "default_at"]],
-        on="user_id", suffixes=("", "_other"),
-    )
-    same_account = same_account[
-        (same_account["plan_id"] != same_account["plan_id_other"])
-        & ((same_account["created_at"] - same_account["created_at_other"]).abs()
-           <= pd.Timedelta(days=linked_plan_days))
-    ]
-    marked.append(same_account.assign(
-        at=same_account[["default_at", "default_at_other"]].max(axis=1))[["order_id", "at"]])
-    others = zero_effort[["plan_id", "order_id", "user_id", "default_at"]].merge(
-        _shared_accounts(tables, orders), on="user_id"
-    ).merge(
-        zero_effort[["user_id", "default_at"]].rename(
-            columns={"user_id": "other_id", "default_at": "other_default_at"}),
-        on="other_id",
-    )
-    others = others[(others["other_default_at"] - others["default_at"]).abs()
-                    <= pd.Timedelta(days=shared_default_days)]
-    others["at"] = others[["other_default_at", "shared_at"]].max(axis=1)
-    per_other = others.groupby(["plan_id", "order_id", "default_at", "other_id"],
-                               as_index=False)["at"].min()
-    per_other = per_other.sort_values(["plan_id", "at", "other_id"], kind="stable")
-    per_other["nth"] = per_other.groupby("plan_id").cumcount() + 1
-    second = per_other[per_other["nth"] == 2]
-    marked.append(second.assign(at=second[["at", "default_at"]].max(axis=1))[["order_id", "at"]])
-    never_pay = pd.concat(marked, ignore_index=True).groupby("order_id", as_index=False)["at"].min()
-    found(never_pay.rename(columns={"at": "label_known_at"}), "never_pay")
+    found(never_pay_determinations(
+        tables, orders, default_grace_days=default_grace_days,
+        linked_plan_days=linked_plan_days, shared_default_days=shared_default_days,
+    ), "never_pay")
 
     # (d) INR claims resolved against the customer, second and later per account
     delivered = tables["deliveries"].groupby("order_id")["known_at"].min()
@@ -914,6 +887,7 @@ def adjudicate(
     pos_at = _map(negative["order_id"], first_positive)
     negative = negative[~(pos_at <= negative["label_known_at"])]
 
+    zero_effort = _zero_effort_defaults(tables, plans, default_grace_days)
     defaults = pd.concat([
         zero_effort[["order_id", "default_at"]].rename(columns={"default_at": "at"}),
         tables["plan_writeoffs"][["plan_id", "known_at"]].merge(
@@ -932,6 +906,65 @@ def adjudicate(
     labels = labels[labels["label_known_at"] <= observed_until]
     labels = labels.sort_values(["order_id", "label_known_at"], kind="stable")
     return coerce("labels", labels)
+
+
+def never_pay_determinations(
+    tables: Mapping[str, pd.DataFrame],
+    orders: pd.DataFrame,
+    *,
+    default_grace_days: int,
+    linked_plan_days: int,
+    shared_default_days: int,
+) -> pd.DataFrame:
+    """Every never-pay determination (fraud policy 8.3): columns order_id, label_known_at.
+
+    ``orders`` are the processor-approved orders to judge (columns order_id,
+    user_id and occurred_at at least). A plan is never-pay when it is a
+    zero-effort default with an intent marker: another plan of the account opened
+    within ``linked_plan_days`` is also a zero-effort default, or two or more
+    other accounts sharing a device, a shipping address or a normalized email
+    with the account (:func:`shared_accounts`) have zero-effort defaults within
+    ``shared_default_days`` of it. Known when the last qualifying fact is known.
+    Unlike :func:`adjudicate`, which keeps an order's first determination, this
+    returns every order with a never-pay determination.
+    """
+    plans = tables["plans"][["plan_id", "order_id", "created_at"]].merge(
+        orders[["order_id", "user_id"]], on="order_id", how="inner"
+    )
+    zero_effort = _zero_effort_defaults(tables, plans, default_grace_days)
+    marked = []
+    same_account = zero_effort.merge(
+        zero_effort[["plan_id", "user_id", "created_at", "default_at"]],
+        on="user_id", suffixes=("", "_other"),
+    )
+    same_account = same_account[
+        (same_account["plan_id"] != same_account["plan_id_other"])
+        & ((same_account["created_at"] - same_account["created_at_other"]).abs()
+           <= pd.Timedelta(days=linked_plan_days))
+    ]
+    marked.append(same_account.assign(
+        at=same_account[["default_at", "default_at_other"]].max(axis=1))[["order_id", "at"]])
+    others = zero_effort[["plan_id", "order_id", "user_id", "default_at"]].merge(
+        shared_accounts(tables, orders), on="user_id"
+    ).merge(
+        zero_effort[["user_id", "default_at"]].rename(
+            columns={"user_id": "other_id", "default_at": "other_default_at"}),
+        on="other_id",
+    )
+    others = others[(others["other_default_at"] - others["default_at"]).abs()
+                    <= pd.Timedelta(days=shared_default_days)]
+    others["at"] = others[["other_default_at", "shared_at"]].max(axis=1)
+    per_other = others.groupby(["plan_id", "order_id", "default_at", "other_id"],
+                               as_index=False)["at"].min()
+    per_other = per_other.sort_values(["plan_id", "at", "other_id"], kind="stable")
+    per_other["nth"] = per_other.groupby("plan_id").cumcount() + 1
+    second = per_other[per_other["nth"] == 2]
+    marked.append(second.assign(at=second[["at", "default_at"]].max(axis=1))[["order_id", "at"]])
+    never_pay = pd.concat(marked, ignore_index=True).groupby("order_id", as_index=False)["at"].min()
+    return pd.DataFrame({
+        "order_id": never_pay["order_id"].astype("int64").to_numpy(),
+        "label_known_at": never_pay["at"].astype("datetime64[s]").to_numpy(),
+    })
 
 
 def _zero_effort_defaults(
@@ -959,7 +992,7 @@ def _zero_effort_defaults(
     return state[~state["plan_id"].isin(some_paid)].reset_index(drop=True)
 
 
-def _shared_accounts(
+def shared_accounts(
     tables: Mapping[str, pd.DataFrame], orders: pd.DataFrame, *, shipping: bool = True
 ) -> pd.DataFrame:
     """Pairs of accounts that shared a device, a normalized email or (``shipping``) an
@@ -974,14 +1007,14 @@ def _shared_accounts(
 
     emails = email_history(tables["accounts"], tables["account_events"])
     emails = emails.rename(columns={"since": "start", "until": "end"}).assign(
-        item="e" + emails["email_root"])
+        item="e" + emails["email_root"].astype("str"))
     links = tables["device_links"]
     devices = links.rename(columns={"created_at": "start", "removed_at": "end"}).assign(
         item="d" + links["device_id"].astype(str))
     frames = [emails, devices]
     if shipping:
-        shipped = orders.merge(tables["order_attempts"][["order_id", "ship_address_id"]],
-                               on="order_id")
+        shipped = orders[["order_id", "user_id", "occurred_at"]].merge(
+            tables["order_attempts"][["order_id", "ship_address_id"]], on="order_id")
         shipped = shipped.groupby(["user_id", "ship_address_id"],
                                   as_index=False)["occurred_at"].min()
         frames.append(shipped.rename(columns={"occurred_at": "start"}).assign(
@@ -1017,7 +1050,7 @@ def _promo_abuse(
     loud = later[(later["plain_at"] > later["occurred_at"])
                  & (later["plain_at"] <= later["occurred_at"] + quiet)]
     uses = uses[~uses["order_id"].isin(loud["order_id"])]
-    pairs = uses.merge(_shared_accounts(tables, orders, shipping=False), on="user_id").merge(
+    pairs = uses.merge(shared_accounts(tables, orders, shipping=False), on="user_id").merge(
         uses.rename(columns={"order_id": "other_order", "user_id": "other_id",
                              "occurred_at": "other_at"}),
         on=["other_id", "promo_id"],
