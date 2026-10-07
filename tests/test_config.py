@@ -13,6 +13,11 @@ def test_split_files_load() -> None:
     assert "tasks" in config.load("llm")
 
 
+def test_the_split_files_are_the_only_configuration() -> None:
+    assert not (config.REPO / "config.yaml").exists()
+    assert not hasattr(config, "legacy")
+
+
 def test_load_returns_a_copy() -> None:
     first = config.load("policy")
     first["rules"]["bands"]["review"] = -1
@@ -25,13 +30,6 @@ def test_db_settings_take_environment_overrides() -> None:
     assert (moved.host, moved.port) == ("db.example", 3310)
     assert (moved.user, moved.database) == (base.user, base.database)
     assert moved.sqlalchemy_url().endswith("@db.example:3310/" + base.database)
-
-
-def test_legacy_config_uses_the_configured_endpoint(monkeypatch) -> None:
-    monkeypatch.setenv("BNPL_DB_PORT", "3399")
-    legacy = config.legacy()
-    assert legacy["db"]["port"] == 3399
-    assert legacy["seed"] == 416
 
 
 def test_unreachable_endpoint_is_reported_not_raised() -> None:

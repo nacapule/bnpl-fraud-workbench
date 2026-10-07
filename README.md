@@ -113,7 +113,7 @@ The token check classifies verbatim, derived-list, and unsupported fields; it do
 verify semantic truth. The evaluation harness and iteration log document how the LLM
 layer was measured ([`llm/eval/ITERATION.md`](llm/eval/ITERATION.md)); every prompt
 change carries its before/after metric table. Model routing is
-config-driven per task ([`config.yaml`](config.yaml) `llm.tasks`) with env/CLI
+config-driven per task ([`config/llm.yaml`](config/llm.yaml) `tasks`) with env/CLI
 overrides.
 
 **Uncertainty and stress** ([`analysis/uncertainty.py`](analysis/uncertainty.py),

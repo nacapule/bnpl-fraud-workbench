@@ -16,9 +16,6 @@ The database endpoint is read from ``config/world.yaml`` and each field can be
 overridden from the environment (``BNPL_DB_HOST``, ``BNPL_DB_PORT``,
 ``BNPL_DB_USER``, ``BNPL_DB_PASSWORD``, ``BNPL_DB_NAME``), so tests can point at
 any MySQL instance without editing a shared file.
-
-:func:`legacy` serves code that still reads the root ``config.yaml``; it and the
-root file go away once every reader uses the split files.
 """
 
 from __future__ import annotations
@@ -134,14 +131,3 @@ def mysql_reachable(settings: DbSettings | None = None, timeout: float = 3.0) ->
         return False
     finally:
         connection.close()
-
-
-def legacy(path: Path | None = None) -> dict[str, Any]:
-    """The root ``config.yaml`` for code not yet moved to the split files.
-
-    Its ``db`` section is the configured endpoint (:func:`db_settings`), so the
-    environment overrides reach these readers too.
-    """
-    data = _read_yaml(path or REPO / "config.yaml")
-    data["db"] = dict(db_settings().pymysql_kwargs())
-    return data
