@@ -647,6 +647,8 @@ class _Simulation:
                 "shipped_at_decision": o.shipped_at_decision,
                 "checks": ",".join(f"{c.check.value}:{c.outcome.value}"
                                    for c in o.checks.values()),
+                "check_results": [(c.check.value, c.outcome.value, pd.Timestamp(c.completed_at))
+                                  for c in o.checks.values()],
                 "checks_started": len(o.started_checks),
                 "hold_before_shipment": o.hold_at is not None and o.hold_before_shipment,
                 "final": o.final, "final_at": o.final_at, "senior_minutes": o.senior_minutes,
@@ -654,7 +656,8 @@ class _Simulation:
         frame = pd.DataFrame(rows, columns=[
             "order_id", "priority", "entered_at", "started_at", "decided_at", "analyst",
             "service_seconds", "first_disposition", "table_row", "families", "rules",
-            "shipped_at_decision", "checks", "checks_started", "hold_before_shipment",
+            "shipped_at_decision", "checks", "check_results", "checks_started",
+            "hold_before_shipment",
             "final", "final_at", "senior_minutes"])
         decided = frame["decided_at"].notna()
         service = np.full(len(frame), np.nan)

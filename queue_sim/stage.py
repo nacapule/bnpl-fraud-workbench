@@ -317,14 +317,10 @@ def decision_rows(bench: Bench, policy: policies.Policy, result: ReplayResult) -
                             **({} if bench.neighbours is None
                                else {"neighbours": bench.neighbours}))
     rows = rows[columns].reset_index(drop=True)
-    later = []
-    for item in reviews["checks"].fillna(""):
-        parts = [tuple(p.split(":")) for p in item.split(",") if p]
-        later.append(parts)
     rows["policy"] = policy.name
     rows["policy_version"] = policy.version
     rows["checks"] = [[] for _ in range(len(rows))]
-    rows["checks_later"] = later
+    rows["checks_later"] = list(reviews["check_results"])
     rows["disposition"] = reviews["first_disposition"].to_numpy()
     rows["final"] = reviews["final"].to_numpy()
     return rows

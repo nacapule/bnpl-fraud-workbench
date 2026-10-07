@@ -330,10 +330,6 @@ def _holds(predicate: Predicate, values: Mapping[str, Any]) -> bool:
     return False if result is pd.NA else bool(result)
 
 
-def _flags(result: Any, index: pd.Index) -> pd.Series:
-    return pd.Series(result, index=index).astype("boolean").fillna(False).astype(bool)
-
-
 def conditions(context: pd.DataFrame) -> pd.DataFrame:
     """Every clause's condition for each row of ``context``, as booleans.
 
@@ -346,23 +342,26 @@ def conditions(context: pd.DataFrame) -> pd.DataFrame:
     missing = [column for column in CLASSIFY_COLUMNS if column not in context.columns]
     if missing:
         raise KeyError(f"context lacks columns {missing}")
-    values = {column: context[column] for column in CLASSIFY_COLUMNS}
-    out = pd.DataFrame(index=context.index)
+    # plain float arrays: a missing value is NaN, and NaN compares false
+    values = {column: pd.to_numeric(context[column], errors="raise").to_numpy(
+        dtype=float, na_value=np.nan) for column in CLASSIFY_COLUMNS}
+    out: dict[str, np.ndarray] = {}
     for predicate in RULES + SETTLING:
-        out[predicate.clause] = _flags(predicate.test(values), context.index)
+        out[predicate.clause] = np.asarray(predicate.test(values), dtype=bool)
     for predicate in EXCEPTIONS:
         rule = HOUSEHOLD_EXCEPTIONS[predicate.clause]
-        out[predicate.clause] = out[rule] & _flags(predicate.test(values), context.index)
+        out[predicate.clause] = out[rule] & np.asarray(predicate.test(values), dtype=bool)
     excepted = {rule: out[clause] for clause, rule in HOUSEHOLD_EXCEPTIONS.items()}
-    for family in sorted(ADVERSE_FAMILIES):
-        present = pd.Series(False, index=context.index)
+    families = sorted(ADVERSE_FAMILIES)
+    for family in families:
+        present = np.zeros(len(context), dtype=bool)
         for rule, rule_family in RULE_FAMILY.items():
             if rule_family == family:
-                counted = out[rule] & ~excepted[rule] if rule in excepted else out[rule]
-                present |= counted
+                present |= out[rule] & ~excepted[rule] if rule in excepted else out[rule]
         out[family.value] = present
-    out["families"] = out[[f.value for f in sorted(ADVERSE_FAMILIES)]].sum(axis=1).astype(int)
-    return out
+    out["families"] = np.sum([out[f.value] for f in families], axis=0).astype(int) \
+        if len(context) else np.zeros(0, dtype=int)
+    return pd.DataFrame(out, index=context.index)
 
 
 def classify(context_row: Mapping[str, Any], checks: Sequence[CheckResult]) -> Evidence:
