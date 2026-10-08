@@ -185,14 +185,14 @@ The rule was applied again, unchanged, in each cell that differs from the primar
 | primary cell | a challenger is recommended | gradient boosting | gradient boosting | primary cell | P1 service, P2 service |
 | acquisition surge | the incumbent stays | n/a | hybrid | the primary cell's choice fails a guardrail | P1 service, P2 service |
 | fraud-mix shift | a challenger is recommended | gradient boosting | gradient boosting | holds | P1 service, P2 service |
-| shipping taking twice as long | a challenger is recommended | gradient boosting | gradient boosting | holds | P1 service, P2 service |
-| shipping in half the time | a challenger is recommended | gradient boosting | gradient boosting | holds | P1 service, P2 service |
+| shipping time doubled | a challenger is recommended | gradient boosting | gradient boosting | holds | P1 service, P2 service |
+| shipping time halved | a challenger is recommended | gradient boosting | gradient boosting | holds | P1 service, P2 service |
 | low allotment | a challenger is recommended | gradient boosting | gradient boosting | holds | P1 service, P2 service |
 | weak verification | a challenger is recommended | gradient boosting | gradient boosting | holds | P1 service, P2 service |
 | high allotment | a challenger is recommended | gradient boosting | gradient boosting | holds | none |
 | evening layout | a challenger is recommended | gradient boosting | gradient boosting | holds | P1 service, P2 service |
-| LTV proxy, low | a challenger is recommended | gradient boosting | gradient boosting | holds | P1 service, P2 service |
-| LTV proxy, high | a challenger is recommended | gradient boosting | gradient boosting | holds | P1 service, P2 service |
+| lifetime-value proxy, low | a challenger is recommended | gradient boosting | gradient boosting | holds | P1 service, P2 service |
+| lifetime-value proxy, high | a challenger is recommended | gradient boosting | gradient boosting | holds | P1 service, P2 service |
 
 The primary cell's outcome holds in 9 of the 10 other cells. *Leading challenger:* the eligible challenger with the highest mean gain; when none is eligible, the challenger with the highest mean gain among all policies.
 

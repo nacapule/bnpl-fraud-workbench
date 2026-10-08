@@ -54,7 +54,7 @@ ledger for every policy.
 | expected loss | +$20,334 | positive on 10/10 seeds | 39.8 | 28.5 | 1.8 | 52.5% |
 
 *Ledger net against the incumbent:* the policy's net cash for the window's orders
-minus the incumbent's in the same world, mean over seeds, before the friction cost
+minus the incumbent's in the same world, mean over seeds, before the lost-customer cost
 and the analyst allotment that the recommendation rule deducts (the
 [operating review](operating-review.md) gives the rule's figures). *Across seeds:*
 how many worlds the difference was positive or negative in. Rates pool every seed's

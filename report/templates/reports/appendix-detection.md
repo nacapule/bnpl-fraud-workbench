@@ -53,7 +53,7 @@ ledger for every policy.
 | expected loss | {{ evaluate.net_contribution.vs_incumbent_rules.baseline.base.expected_loss | usd:signed }} | {{ evaluate.net_contribution.vs_incumbent_rules.baseline.base.expected_loss | signs }} | {{ evaluate.loss_of_gmv.baseline.base.expected_loss | num:1 }} | {{ evaluate.legitimate_declined_per_10k.baseline.base.expected_loss | num:1 }} | {{ evaluate.legitimate_held_per_10k.baseline.base.expected_loss | num:1 }} | {{ evaluate.review_minutes_used_share.baseline.base.expected_loss }} |
 
 *Ledger net against the incumbent:* the policy's net cash for the window's orders
-minus the incumbent's in the same world, mean over seeds, before the friction cost
+minus the incumbent's in the same world, mean over seeds, before the lost-customer cost
 and the analyst allotment that the recommendation rule deducts (the
 [operating review](operating-review.md) gives the rule's figures). *Across seeds:*
 how many worlds the difference was positive or negative in. Rates pool every seed's

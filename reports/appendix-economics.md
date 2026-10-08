@@ -14,7 +14,7 @@ view (`core/ledger.py`).
 
 | Term | Value |
 | --- | --- |
-| Down payment | 25% of the price, collected at approval |
+| Down payment | 25% of the customer's principal (the price less any promotion discount), collected at approval |
 | Installments | 3 more, every 14 days, the first 14 days after approval |
 | Merchant fee | 5% of the price, netted from the merchant's settlement when it ships; the platform's income on a repaid order |
 | Promotions | funded by the platform, paid to the merchant as a separate event |
@@ -75,7 +75,7 @@ The same cash summed one adjudicated label at a time (the table in the
 [detection appendix](appendix-detection.md#what-each-policy-prevented-by-label))
 gives the same totals as the first table's ledger and approve-all columns.
 
-| Policy | Legitimate declined | Legitimate cancelled | Friction cost | Minutes allotted | Worlds with a review route | Worlds |
+| Policy | Legitimate declined | Legitimate cancelled | Lost-customer cost | Minutes allotted | Worlds with a review route | Worlds |
 |---|---:|---:|---:|---:|---:|---:|
 | approve-all | 0 | 0 | $0 | 43,230 | 0 | 10 |
 | incumbent rules | 797 | 80 | $13,155 | 43,230 | 9 | 10 |
@@ -85,7 +85,7 @@ gives the same totals as the first table's ledger and approve-all columns.
 | hybrid | 869 | 12 | $13,215 | 43,230 | 10 | 10 |
 | expected loss | 715 | 3 | $10,770 | 43,230 | 9 | 10 |
 
-In each world, the rule's net contribution is the ledger net minus the friction cost ($15 for each legitimate order declined or cancelled) minus the allotment's cost (the allotted minutes at $35 an hour, charged only in worlds where the policy has a review route). The rule compares it with the incumbent's in the same world, per 1,000 orders, and averages over worlds, so these totals reproduce its figures only up to that averaging.
+In each world, the rule's net contribution is the ledger net minus the lost-customer cost ($15 for each legitimate order declined or cancelled) minus the allotment cost (the allotted minutes at $35 an hour, charged only in worlds where the policy has a review route). The rule compares it with the incumbent's in the same world, per 1,000 orders, and averages over worlds, so these totals reproduce its figures only up to that averaging.
 
 ## The value of a lost customer
 
@@ -111,19 +111,19 @@ prices. The rule's outcome at each proxy is in the flip table of the
 
 | Cell | Policy | Mean gain | Seeds positive | Needed | Eligible | Misses | Recommended |
 |---|---|---:|---:|---:|---|---|---|
-| LTV proxy, low | approve-all | -$651 | 0 | 9 | yes | none | no |
-| LTV proxy, low | incumbent rules | n/a | n/a | n/a | n/a | P1 service, P2 service | no |
-| LTV proxy, low | depth-3 tree | -$175 | 2 | 9 | no | P2 service | no |
-| LTV proxy, low | logistic regression | +$1,054 | 10 | 9 | no | mean lost customers | no |
-| LTV proxy, low | gradient boosting | +$939 | 10 | 9 | yes | none | yes |
-| LTV proxy, low | hybrid | +$104 | 9 | 9 | yes | none | no |
-| LTV proxy, low | expected loss | +$808 | 10 | 9 | no | P1 service, P2 service | no |
-| LTV proxy, high | approve-all | -$513 | 0 | 9 | yes | none | no |
-| LTV proxy, high | incumbent rules | n/a | n/a | n/a | n/a | P1 service, P2 service | no |
-| LTV proxy, high | depth-3 tree | -$218 | 0 | 9 | no | P2 service | no |
-| LTV proxy, high | logistic regression | +$751 | 10 | 9 | no | mean lost customers | no |
-| LTV proxy, high | gradient boosting | +$740 | 10 | 9 | yes | none | yes |
-| LTV proxy, high | hybrid | +$103 | 9 | 9 | yes | none | no |
-| LTV proxy, high | expected loss | +$833 | 10 | 9 | no | P1 service, P2 service | no |
+| lifetime-value proxy, low | approve-all | -$651 | 0 | 9 | yes | none | no |
+| lifetime-value proxy, low | incumbent rules | n/a | n/a | n/a | n/a | P1 service, P2 service | no |
+| lifetime-value proxy, low | depth-3 tree | -$175 | 2 | 9 | no | P2 service | no |
+| lifetime-value proxy, low | logistic regression | +$1,054 | 10 | 9 | no | mean lost customers | no |
+| lifetime-value proxy, low | gradient boosting | +$939 | 10 | 9 | yes | none | yes |
+| lifetime-value proxy, low | hybrid | +$104 | 9 | 9 | yes | none | no |
+| lifetime-value proxy, low | expected loss | +$808 | 10 | 9 | no | P1 service, P2 service | no |
+| lifetime-value proxy, high | approve-all | -$513 | 0 | 9 | yes | none | no |
+| lifetime-value proxy, high | incumbent rules | n/a | n/a | n/a | n/a | P1 service, P2 service | no |
+| lifetime-value proxy, high | depth-3 tree | -$218 | 0 | 9 | no | P2 service | no |
+| lifetime-value proxy, high | logistic regression | +$751 | 10 | 9 | no | mean lost customers | no |
+| lifetime-value proxy, high | gradient boosting | +$740 | 10 | 9 | yes | none | yes |
+| lifetime-value proxy, high | hybrid | +$103 | 9 | 9 | yes | none | no |
+| lifetime-value proxy, high | expected loss | +$833 | 10 | 9 | no | P1 service, P2 service | no |
 
 </details>

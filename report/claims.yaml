@@ -129,8 +129,8 @@ wording:
     # world families
     acquisition_surge: "acquisition surge"
     fraud_mix_shift: "fraud-mix shift"
-    lag_half: "shipping in half the time"
-    lag_double: "shipping taking twice as long"
+    lag_half: "shipping time halved"
+    lag_double: "shipping time doubled"
     # operating cells and replay variants
     primary: "primary cell"
     low: "low allotment"
@@ -140,14 +140,14 @@ wording:
     base_weak_verification: "weak verification"
     base_frozen_history: "approve-all history"
     base_perfect_reviewer: "perfect reviewer"
-    ltv_5_usd: "LTV proxy, low"
-    ltv_45_usd: "LTV proxy, high"
+    ltv_5_usd: "lifetime-value proxy, low"
+    ltv_45_usd: "lifetime-value proxy, high"
     # what an operating cell varies
     family: "world family"
     allotment: "allotment"
     layout: "shift layout"
     verification: "verification rates"
-    ltv: "LTV proxy"
+    ltv: "lifetime-value proxy"
     # the recommendation rule's outcomes, reasons and criteria
     recommend: "a challenger is recommended"
     incumbent_stays: "the incumbent stays"

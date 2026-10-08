@@ -105,8 +105,8 @@ the [operating review](operating-review.md#review-capacity-and-staffing) and bel
 | baseline | 252,655 | 43,230 | 18,285 | 10 |
 | acquisition surge | 296,369 | 43,230 | 28,164 | 10 |
 | fraud-mix shift | 253,541 | 43,230 | 18,004 | 10 |
-| shipping in half the time | 252,655 | 43,230 | 18,285 | 10 |
-| shipping taking twice as long | 252,655 | 43,230 | 18,285 | 10 |
+| shipping time halved | 252,655 | 43,230 | 18,285 | 10 |
+| shipping time doubled | 252,655 | 43,230 | 18,285 | 10 |
 
 The allotment per shift is the same in every family, so the acquisition surge brings
 its extra orders to the same minutes. Orders and minutes are totals over the worlds.
@@ -196,14 +196,14 @@ The recommended policy, gradient boosting, in every cell:
 | primary cell | +$889 | 10 | 85.0 | 144.8 | 0.9 | 83.6% | 90.9% | yes | none |
 | acquisition surge | +$761 | 10 | 128.4 | 211.6 | 1.0 | 73.0% | 69.1% | no | mean lost customers, lost customers on a seed |
 | fraud-mix shift | +$1,311 | 10 | 89.3 | 152.0 | 1.0 | 85.0% | 92.9% | yes | none |
-| shipping taking twice as long | +$876 | 10 | 85.1 | 144.8 | 0.9 | 83.6% | 90.9% | yes | none |
-| shipping in half the time | +$901 | 10 | 85.0 | 144.8 | 0.9 | 83.6% | 90.9% | yes | none |
+| shipping time doubled | +$876 | 10 | 85.1 | 144.8 | 0.9 | 83.6% | 90.9% | yes | none |
+| shipping time halved | +$901 | 10 | 85.0 | 144.8 | 0.9 | 83.6% | 90.9% | yes | none |
 | low allotment | +$881 | 10 | 85.0 | 144.4 | 0.9 | 54.6% | 50.9% | yes | none |
 | weak verification | +$893 | 10 | 85.0 | 144.8 | 0.9 | 83.4% | 91.1% | yes | none |
 | high allotment | +$900 | 10 | 85.0 | 144.8 | 0.9 | 91.0% | 98.5% | yes | none |
 | evening layout | +$895 | 10 | 85.0 | 144.8 | 0.9 | 56.8% | 92.2% | yes | none |
-| LTV proxy, low | +$939 | 10 | 85.0 | 144.8 | 0.9 | 83.6% | 90.9% | yes | none |
-| LTV proxy, high | +$740 | 10 | 85.0 | 144.8 | 0.9 | 83.6% | 90.9% | yes | none |
+| lifetime-value proxy, low | +$939 | 10 | 85.0 | 144.8 | 0.9 | 83.6% | 90.9% | yes | none |
+| lifetime-value proxy, high | +$740 | 10 | 85.0 | 144.8 | 0.9 | 83.6% | 90.9% | yes | none |
 
 Today's rules in every cell:
 
@@ -212,14 +212,14 @@ Today's rules in every cell:
 | primary cell | 35.0 | 30.3 | 82.5% | 83.2% | P1 service, P2 service |
 | acquisition surge | 31.9 | 31.3 | 65.2% | 47.9% | P1 service, P2 service |
 | fraud-mix shift | 36.6 | 30.4 | 84.1% | 84.9% | P1 service, P2 service |
-| shipping taking twice as long | 35.8 | 30.3 | 82.5% | 83.2% | P1 service, P2 service |
-| shipping in half the time | 34.4 | 30.3 | 82.5% | 83.2% | P1 service, P2 service |
+| shipping time doubled | 35.8 | 30.3 | 82.5% | 83.2% | P1 service, P2 service |
+| shipping time halved | 34.4 | 30.3 | 82.5% | 83.2% | P1 service, P2 service |
 | low allotment | 33.4 | 30.0 | 47.2% | 35.2% | P1 service, P2 service |
 | weak verification | 35.0 | 30.3 | 82.5% | 83.2% | P1 service, P2 service |
 | high allotment | 35.2 | 30.3 | 91.1% | 96.4% | none |
 | evening layout | 35.5 | 30.3 | 56.5% | 84.0% | P1 service, P2 service |
-| LTV proxy, low | 35.0 | 30.3 | 82.5% | 83.2% | P1 service, P2 service |
-| LTV proxy, high | 35.0 | 30.3 | 82.5% | 83.2% | P1 service, P2 service |
+| lifetime-value proxy, low | 35.0 | 30.3 | 82.5% | 83.2% | P1 service, P2 service |
+| lifetime-value proxy, high | 35.0 | 30.3 | 82.5% | 83.2% | P1 service, P2 service |
 
 A criterion today's rules miss in a cell holds each challenger there to today's level instead, so a challenger can be eligible while missing the service target itself, as boosting does at the low allotment.
 
@@ -242,20 +242,20 @@ A criterion today's rules miss in a cell holds each challenger there to today's 
 | fraud-mix shift | gradient boosting | +$1,311 | 10 | 9 | 89.3 | 1.0 | 401 | 85.0% | 929 | 92.9% | yes | none |
 | fraud-mix shift | hybrid | +$103 | 10 | 9 | 37.2 | 3.5 | 1,080 | 83.2% | 1,727 | 84.9% | no | P1 service, P2 service |
 | fraud-mix shift | expected loss | +$1,153 | 10 | 9 | 32.5 | 2.0 | 2,314 | 77.1% | 1,016 | 72.5% | no | P1 service, P2 service |
-| shipping taking twice as long | approve-all | -$630 | 0 | 9 | 0.0 | 0.0 | 0 | n/a | 0 | n/a | yes | none |
-| shipping taking twice as long | incumbent rules | n/a | n/a | n/a | 35.8 | 30.3 | 1,444 | 82.5% | 1,120 | 83.2% | n/a | P1 service, P2 service |
-| shipping taking twice as long | depth-3 tree | -$197 | 2 | 9 | 46.0 | 0.6 | 30 | 90.0% | 336 | 80.4% | no | P2 service |
-| shipping taking twice as long | logistic regression | +$967 | 10 | 9 | 111.7 | 2.0 | 718 | 83.9% | 1,025 | 90.6% | no | mean lost customers |
-| shipping taking twice as long | gradient boosting | +$876 | 10 | 9 | 85.1 | 0.9 | 386 | 83.6% | 909 | 90.9% | yes | none |
-| shipping taking twice as long | hybrid | +$113 | 9 | 9 | 35.4 | 3.3 | 933 | 83.3% | 1,541 | 87.2% | yes | none |
-| shipping taking twice as long | expected loss | +$805 | 10 | 9 | 28.7 | 1.8 | 2,257 | 76.8% | 980 | 73.6% | no | P1 service, P2 service |
-| shipping in half the time | approve-all | -$603 | 0 | 9 | 0.0 | 0.0 | 0 | n/a | 0 | n/a | yes | none |
-| shipping in half the time | incumbent rules | n/a | n/a | n/a | 34.4 | 30.3 | 1,444 | 82.5% | 1,120 | 83.2% | n/a | P1 service, P2 service |
-| shipping in half the time | depth-3 tree | -$172 | 2 | 9 | 46.0 | 0.6 | 30 | 90.0% | 336 | 80.4% | no | P2 service |
-| shipping in half the time | logistic regression | +$992 | 10 | 9 | 111.3 | 2.0 | 718 | 83.9% | 1,025 | 90.6% | no | mean lost customers |
-| shipping in half the time | gradient boosting | +$901 | 10 | 9 | 85.0 | 0.9 | 386 | 83.6% | 909 | 90.9% | yes | none |
-| shipping in half the time | hybrid | +$83 | 10 | 9 | 35.0 | 3.3 | 932 | 83.3% | 1,541 | 87.2% | yes | none |
-| shipping in half the time | expected loss | +$824 | 10 | 9 | 28.6 | 1.8 | 2,257 | 76.8% | 979 | 73.6% | no | P1 service, P2 service |
+| shipping time doubled | approve-all | -$630 | 0 | 9 | 0.0 | 0.0 | 0 | n/a | 0 | n/a | yes | none |
+| shipping time doubled | incumbent rules | n/a | n/a | n/a | 35.8 | 30.3 | 1,444 | 82.5% | 1,120 | 83.2% | n/a | P1 service, P2 service |
+| shipping time doubled | depth-3 tree | -$197 | 2 | 9 | 46.0 | 0.6 | 30 | 90.0% | 336 | 80.4% | no | P2 service |
+| shipping time doubled | logistic regression | +$967 | 10 | 9 | 111.7 | 2.0 | 718 | 83.9% | 1,025 | 90.6% | no | mean lost customers |
+| shipping time doubled | gradient boosting | +$876 | 10 | 9 | 85.1 | 0.9 | 386 | 83.6% | 909 | 90.9% | yes | none |
+| shipping time doubled | hybrid | +$113 | 9 | 9 | 35.4 | 3.3 | 933 | 83.3% | 1,541 | 87.2% | yes | none |
+| shipping time doubled | expected loss | +$805 | 10 | 9 | 28.7 | 1.8 | 2,257 | 76.8% | 980 | 73.6% | no | P1 service, P2 service |
+| shipping time halved | approve-all | -$603 | 0 | 9 | 0.0 | 0.0 | 0 | n/a | 0 | n/a | yes | none |
+| shipping time halved | incumbent rules | n/a | n/a | n/a | 34.4 | 30.3 | 1,444 | 82.5% | 1,120 | 83.2% | n/a | P1 service, P2 service |
+| shipping time halved | depth-3 tree | -$172 | 2 | 9 | 46.0 | 0.6 | 30 | 90.0% | 336 | 80.4% | no | P2 service |
+| shipping time halved | logistic regression | +$992 | 10 | 9 | 111.3 | 2.0 | 718 | 83.9% | 1,025 | 90.6% | no | mean lost customers |
+| shipping time halved | gradient boosting | +$901 | 10 | 9 | 85.0 | 0.9 | 386 | 83.6% | 909 | 90.9% | yes | none |
+| shipping time halved | hybrid | +$83 | 10 | 9 | 35.0 | 3.3 | 932 | 83.3% | 1,541 | 87.2% | yes | none |
+| shipping time halved | expected loss | +$824 | 10 | 9 | 28.6 | 1.8 | 2,257 | 76.8% | 979 | 73.6% | no | P1 service, P2 service |
 
 </details>
 
