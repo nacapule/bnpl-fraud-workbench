@@ -327,8 +327,8 @@ label known by the cut that records no fraud (no finding, or credit loss).
 Unknown labels count as neither fraud nor legitimate. A point is feasible
 when the review minutes it offers (the review time of every order that reached
 the queue, plus each escalation's senior minutes) fit in the allotment over the
-window. Tuning has no
-separate cap on legitimate friction; the recommendation rule supplies it.
+window, both rounded to whole minutes. Tuning has no separate cap on
+legitimate friction; the recommendation rule supplies it.
 
 **Procedure.**
 
@@ -338,7 +338,8 @@ separate cap on legitimate friction; the recommendation rule supplies it.
    feasible points.
 3. Replay the shortlist with policy-specific history. Choose the feasible
    point with the highest objective; ties go to fewer reviews, then fewer
-   checkout declines.
+   checkout declines among labelled orders (for fraud orders, refusals of
+   blocked accounts count too).
 
 The chosen point is the shortlist's best feasible point in the searched grid.
 It is flagged if either threshold is the cut-point for the highest rate
@@ -436,10 +437,11 @@ the claim's level (0.05 unless it states another) in the stated direction; at
 0.05, ten seeds without zeros need at least 9 of 10. No test is published for
 a comparison with a policy the recommendation rule selected in that operating
 cell, as either side, since it was chosen among six challengers. The LLM
-benchmark uses
-within-world intervals instead (Wilson intervals, and cluster bootstrap
-intervals that resample linked cases together) and exact McNemar tests on
-paired cases ([LLM appendix](../reports/appendix-llm.md)).
+evaluations use within-world intervals instead (Wilson intervals, and cluster
+bootstrap intervals that resample linked cases together); the archived study
+the pipeline replays reports exact McNemar tests on paired cases, and the new
+benchmark an exact sign test over clusters of linked cases
+([LLM appendix](../reports/appendix-llm.md)).
 
 ### Recommendation rule
 
@@ -567,13 +569,13 @@ dependency lock.
 
 The final run refuses to generate a final-seed world without a complete
 protocol, a clean working tree, every listed file committed and matching its
-hash, no file added under a frozen directory, and the installed packages and
-Python version matching the lock. The marker is written once. A bug fixed
-after the freeze gets a commit of its own that runs `core.protocol.log_fix`:
-it records the changed files' new hashes and appends to the marker's `fixes`
-the files, what was wrong and the before/after effect on the results. This
-document and the report templates are not frozen; changes to them after the
-freeze commit are in their history.
+hash, no file added under a frozen directory (ignored files and caches aside),
+and the installed packages and Python version matching the lock. The marker is
+written once. A bug fixed after the freeze gets a commit of its own that runs
+`core.protocol.log_fix`: it records the changed files' new hashes and appends to
+the marker's `fixes` the files, what was wrong and the before/after effect on
+the results. This document and the report templates are not frozen; changes to
+them after the freeze commit are in their history.
 
 ## Ledger
 
