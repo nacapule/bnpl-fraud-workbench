@@ -689,6 +689,83 @@ substitutes latent pattern for label. Both appear as `replay.confusion` and
 
 ## Limits
 
-*To be written with the results: what a synthetic world can and cannot show,
-the replay's stated assumptions (fixed attempted traffic, no attacker
-adaptation, no churn), and the sensitivity of the conclusions.*
+### What a synthetic world can show
+
+The synthetic world supplies the same traffic to every policy and records
+truth for evaluation. Policies use the permitted evidence, and every dollar
+is traced through one ledger. The world represents the race between review
+and shipment, a fixed review allotment, labels arriving weeks later, and the
+cost of holding or declining legitimate customers. Comparisons show what
+happens under these parameters and which changes of assumption change the
+answer.
+
+They do not estimate real fraud rates, losses, detection performance,
+verification pass rates or customer and attacker behaviour. Patterns, signals
+and rates are generator choices (the fraud table above); detection performance
+measures how distinct the design makes each pattern. At about 8,000 orders a
+month, the world is small for a pay-in-4 platform, which is why capacity is an
+allotment of minutes rather than headcount. Costs (LTV proxy, analyst hour, hurdle) and friction caps are assumptions and
+risk appetite, not benchmarks. Results describe mechanisms under these
+assumptions, not a real portfolio.
+
+The ten final worlds share the generator and its parameters. Their spread
+measures variation between worlds, not whether the parameters are right.
+World size, capacity base and tuning procedure were set with the development
+worlds open; final worlds were generated after the freeze. Adjudicated labels
+miss fraud without a determinable trace: a never-pay customer's single default
+reads as credit loss, and an address-only promotion farm stays unlabelled.
+Friction counts treat these orders as legitimate; simulation-truth counts
+appear alongside. Case files illustrate a development-world replay, not final
+evidence.
+
+### Assumptions of the replay
+
+- **Fixed attempted traffic.** Policies see the same attempts; they neither
+  bring customers nor drive them away.
+- **No attacker adaptation.** Declined or blocked fraudsters do not retry with
+  new details, move accounts or change tactics. Later attempts arrive as
+  generated, so the value of a decline is an upper bound.
+- **No customer churn.** Legitimate customers keep placing generated orders
+  after holds, cancellations or declines; account blocks refuse them at
+  checkout. The flat LTV proxy prices lost future value.
+- **Training labels for every order.** Classifiers use approve-all labels,
+  including those for orders today's rules would decline.
+- **Linkage at decision time.** Escalation blocks accounts linked then; later
+  links cause no blocks.
+- **Action starts at the evaluated window.** Every policy uses approve-all
+  history before it.
+- **Evidence up to one replay day old** (The replay, Reviewer).
+- **A fixed reviewer procedure.** It always takes the standard disposition
+  and makes no other errors. All orders use the same review-time distribution,
+  independent of evidence. Check-triggered re-evaluation takes no analyst
+  time, and checks cost nothing.
+- **Check outcomes depend only on who ordered.** They are independent across
+  orders and of evidence and time; late answers are lost.
+- **Holds affect only their order.** A verified order ships later by the
+  pause, with no other change to the customer.
+- **Merchants act as generated.** A busting merchant keeps selling regardless
+  of policy; merchant-level actions are outside scope (FP-2 §1.2).
+- **One queue, fixed allotment.** Every family has the same allotment, with no
+  overtime; excess work waits.
+- **Ledger product terms and liability rules** (Ledger, above).
+
+### Which sensitivity tests which assumption
+
+| Assumption | Sensitivity | Pre-registered values | Where reported |
+| --- | --- | --- | --- |
+| Verification pass rates | weak verification | takeover `contact` 0.50 passed, 0.35 failed; takeover and third-party `id_check` 0.25 passed, 0.45 failed | flip table; [operations appendix](../reports/appendix-operations.md) |
+| The value of a lost customer | LTV proxy | $5 and $45 (base $15) | flip table; [economics appendix](../reports/appendix-economics.md) |
+| How fast goods ship | fulfilment lag | ×0.5 and ×2 from the test window | flip table; operations appendix |
+| The review allotment | allotment level | 17 and 50 minutes per shift (base 33) | flip table; operations appendix |
+| When analysts work | shift layout | evening layout at 33 minutes per shift | flip table; operations appendix |
+| Stable traffic and fraud mix | world family | acquisition surge; fraud-mix shift | flip table; appendices |
+| Policy-specific history | frozen approve-all history (diagnostic) | none | appendices |
+| How much better review could be | perfect reviewer (diagnostic) | none | appendices |
+
+The [operating review](../reports/operating-review.md) reports the flip table
+and its verdict ("holds in N of M cells"); appendices give the figures for
+each cell. Fixed traffic, attacker adaptation, churn and training-label
+availability have no sensitivity, and neither do the review-time distribution,
+the check answer delays, the 48-hour hold or the 20 senior minutes. Without
+attacker adaptation, the value of declining is an upper bound. Customer churn
+is not simulated; the flat LTV proxy is an assumed cost of lost future value.
