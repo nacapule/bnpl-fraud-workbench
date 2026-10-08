@@ -5,15 +5,227 @@
     "2026-10-dev": {
      "calls": 41,
      "charged_tokens": 342856
+    },
+    "2026-10-dev-checks": {
+     "calls": 26,
+     "charged_tokens": 216708
     }
    },
-   "calls": 41,
-   "charged_tokens": 342856,
-   "input_tokens": 287919,
+   "calls": 67,
+   "charged_tokens": 559564,
+   "input_tokens": 469036,
    "interrupted_calls": 0,
-   "output_tokens": 54937,
+   "output_tokens": 90528,
    "pending": {},
    "receipts": {
+    "2026-10-dev-checks:75091:0c63332d1243": {
+     "calls": 1,
+     "case": "b75ad24822f672e64563b9a850449d33",
+     "charged_tokens": 8816,
+     "input_tokens": 7228,
+     "output_tokens": 1588,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:155c651711a2": {
+     "calls": 1,
+     "case": "a6f42cc2b824a282d21a0254eda7f4bd",
+     "charged_tokens": 8722,
+     "input_tokens": 7201,
+     "output_tokens": 1521,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:29a82fc24e24": {
+     "calls": 1,
+     "case": "0d5038366add808908f53c8bb485f7ab",
+     "charged_tokens": 8683,
+     "input_tokens": 7227,
+     "output_tokens": 1456,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:2ab3af4f7e64": {
+     "calls": 1,
+     "case": "a2386d12d76073d90d5bceeab9129d19",
+     "charged_tokens": 8585,
+     "input_tokens": 7235,
+     "output_tokens": 1350,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:2f3896a2b085": {
+     "calls": 1,
+     "case": "4f608693d5635224fb7b5adc8bd3f452",
+     "charged_tokens": 8563,
+     "input_tokens": 7227,
+     "output_tokens": 1336,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:2fad9ab1ccf5": {
+     "calls": 1,
+     "case": "dd6530fb283ed9ef476172d3ea7e0fdd",
+     "charged_tokens": 8407,
+     "input_tokens": 7231,
+     "output_tokens": 1176,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:343e788e6a5a": {
+     "calls": 1,
+     "case": "6d947d93f4533fcca64359ee9a853a9b",
+     "charged_tokens": 8542,
+     "input_tokens": 7210,
+     "output_tokens": 1332,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:5048c3393910": {
+     "calls": 1,
+     "case": "c63a1cafcce400a7975eb84e28715f49",
+     "charged_tokens": 8947,
+     "input_tokens": 7215,
+     "output_tokens": 1732,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:62f9ae6cb487": {
+     "calls": 1,
+     "case": "42a47d07cdc49740bb980a2bc88ce6dc",
+     "charged_tokens": 8573,
+     "input_tokens": 7223,
+     "output_tokens": 1350,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:76e6a9f45ce6": {
+     "calls": 1,
+     "case": "16433f6b50d3c23a31114c6e6528287d",
+     "charged_tokens": 8676,
+     "input_tokens": 7220,
+     "output_tokens": 1456,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:791e6442a9dd": {
+     "calls": 1,
+     "case": "93ec3e9b2815213edd469a34e59b9e18",
+     "charged_tokens": 8956,
+     "input_tokens": 7229,
+     "output_tokens": 1727,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:8b5ae400ddfe": {
+     "calls": 1,
+     "case": "e807bec7b23ce2e7223c72c1daf60f40",
+     "charged_tokens": 8793,
+     "input_tokens": 7213,
+     "output_tokens": 1580,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:918ef724162b": {
+     "calls": 1,
+     "case": "f03a2de8faa617e595d369694c411151",
+     "charged_tokens": 8560,
+     "input_tokens": 7229,
+     "output_tokens": 1331,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:97ff4eaf02c0": {
+     "calls": 1,
+     "case": "e7fd08093cb8cecfba720f8903df94d1",
+     "charged_tokens": 8605,
+     "input_tokens": 7230,
+     "output_tokens": 1375,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:a3f0ffa3e014": {
+     "calls": 1,
+     "case": "710a1fb143b4f9e43a1de8205b13a58a",
+     "charged_tokens": 8665,
+     "input_tokens": 7226,
+     "output_tokens": 1439,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:a925b03f4bc4": {
+     "calls": 1,
+     "case": "3fe33cd97304c78307863ee22a80456d",
+     "charged_tokens": 8734,
+     "input_tokens": 7222,
+     "output_tokens": 1512,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:acb79bce8ca5": {
+     "calls": 1,
+     "case": "6acdd9eda4fb78df1fddbd89fa3cd694",
+     "charged_tokens": 8740,
+     "input_tokens": 7226,
+     "output_tokens": 1514,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:c419c0c62004": {
+     "calls": 1,
+     "case": "fbd5ffada85742de887f029ca0f4ca75",
+     "charged_tokens": 8560,
+     "input_tokens": 7233,
+     "output_tokens": 1327,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:c62878cac7d6": {
+     "calls": 1,
+     "case": "28fa7deade76cd8460f4e75aaa65f08d",
+     "charged_tokens": 8586,
+     "input_tokens": 7218,
+     "output_tokens": 1368,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:c6bdd805bba3": {
+     "calls": 1,
+     "case": "b2e1c60fd9855c24462b54dbd97fffe4",
+     "charged_tokens": 8456,
+     "input_tokens": 7229,
+     "output_tokens": 1227,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:d907487b089a": {
+     "calls": 1,
+     "case": "isolation-check:2026-10-dev-checks:canary-75091-ecb9f4",
+     "charged_tokens": 541,
+     "input_tokens": 512,
+     "output_tokens": 29,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:dc17c84d1e08": {
+     "calls": 1,
+     "case": "34bfd1f21195f178a0e59a4457811188",
+     "charged_tokens": 8604,
+     "input_tokens": 7224,
+     "output_tokens": 1380,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:e9c23afb5354": {
+     "calls": 1,
+     "case": "5882e7d10d9b0e48090d17aca2128c22",
+     "charged_tokens": 8476,
+     "input_tokens": 7233,
+     "output_tokens": 1243,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:f15bc8cb249f": {
+     "calls": 1,
+     "case": "59115a547c31f717add14d7c34a05938",
+     "charged_tokens": 8569,
+     "input_tokens": 7227,
+     "output_tokens": 1342,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:f58ff92239cc": {
+     "calls": 1,
+     "case": "68d65bc6310f0fc6c60e87fce4844107",
+     "charged_tokens": 8679,
+     "input_tokens": 7225,
+     "output_tokens": 1454,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-checks:75091:fbb7e7d5fe11": {
+     "calls": 1,
+     "case": "7f34ec70e56b44572b508e55daeaa885",
+     "charged_tokens": 8670,
+     "input_tokens": 7224,
+     "output_tokens": 1446,
+     "unknown_usage_calls": 0
+    },
     "2026-10-dev:22690:039c5679c440": {
      "calls": 1,
      "case": "d346b77a6aea6992df79cb9abdbeab44",
