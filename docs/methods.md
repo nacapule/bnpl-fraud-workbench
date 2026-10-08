@@ -187,29 +187,366 @@ negative. Latent truth is reported only as a separate diagnostic.
 
 ## Evaluation protocol
 
-The windows, freeze dates, families, seeds, policies and metrics are
-pre-registered in `experiments/protocol.yaml` and checked by
-`core/protocol.py`.
+The windows, freeze dates, families, seeds, policies, tuning rule, capacity
+levels, recommendation rule and sensitivities are pre-registered in
+`experiments/protocol.yaml` and checked by `core/protocol.py`.
 
 | Window | Dates (end exclusive) | Use |
 | --- | --- | --- |
 | Warm-up | 2024-01-01 to 2024-04-01 | History only |
-| Fit | 2024-04-01 to 2024-08-01 | Classifiers |
+| Fit | 2024-04-01 to 2024-08-01 | Classifiers; the capacity base |
 | Gap | 2024-08-01 to 2024-10-01 | Fit labels mature |
 | Calibration | 2024-10-01 to 2024-11-01 | Calibrator; never used to fit classifiers |
 | Gap | 2024-11-01 to 2025-01-01 | Calibration labels mature |
-| Validation | 2025-01-01 to 2025-04-01 | Bands, thresholds, policy choice |
+| Validation | 2025-01-01 to 2025-04-01 | Each policy's thresholds |
 | Embargo | 2025-04-01 to 2025-06-01 | Validation labels mature |
 | Test | 2025-06-01 to 2025-09-01 | Frozen policies evaluated |
 | Follow-up | 2025-09-01 to 2025-12-30 | No new orders; outcomes mature |
 
 The classifier freezes on 2024-10-01, the calibrator on 2025-01-01 and the
-policy on 2025-06-01; each uses only labels known before its freeze. The ten
-final seeds were drawn before any final world existed, and no final-seed world
-can be generated before the freeze commit.
+policy on 2025-06-01. Each uses only labels known before its freeze. The ten
+final seeds were drawn before any final world existed; final-seed worlds
+cannot be generated before the freeze commit.
 
-*To be completed at the freeze: tuning rule, capacity levels, recommendation
-rule, friction guardrail, sensitivity values.*
+### Policies
+
+Seven policies are compared (`queue_sim/policies.py`). Each routes an order
+once at checkout, using that order's as-of context row and thresholds fixed
+before replay: decline if its decline score reaches the decline threshold;
+otherwise review if its review score reaches the review threshold; otherwise
+approve. Routing does not rank orders within a day or compare them with other
+orders.
+
+| Policy | Review score | Decline score |
+| --- | --- | --- |
+| `approve_all` (reference) | none | none |
+| `incumbent_rules` | rule score: the sum of the weights of the FP-2 §6.2 rules that hold (`rules/definitions.py`) | the same |
+| `tree_depth3` | depth-3 decision tree on four features named before fitting: account age, the device's age on the account, accounts on the device in 30 days, amount against the category median | the same |
+| `logistic` | logistic regression on the context's model features | the same |
+| `boosting` | histogram gradient boosting on the same features | the same |
+| `hybrid` | boosting score | rule score |
+| `expected_loss` | calibrated probability (boosting) times the order's cash at risk if approved | the expected loss avoided minus the expected cost of declining a legitimate order (merchant fee plus the $15 LTV proxy); declines at zero or above |
+
+Each seed's classifiers are fitted on its baseline world's fit-window orders
+with balanced class weights. Only labels known before the classifier freeze
+are used; unknown labels are omitted, never counted as negatives. One isotonic
+calibrator per score, including the rule score, is fitted on the calibration
+month using labels known before the calibrator freeze. Only the expected-loss
+policy uses calibrated probabilities for decisions.
+
+### The replay
+
+The replay (`queue_sim/replay.py`) processes the window's processor-approved
+checkouts in time order. Each policy starts acting at the window's start;
+earlier orders retain their approve-all history. Reviewed orders enter one
+queue, ordered by FP-2 §7.1 priority, then by review score, highest first.
+The simulated reviewer decides at review completion and whenever a
+verification check answers. Actions follow FP-2 §4 and `core/actions.py`:
+
+- An order proceeds while waiting for review. The merchant ships at the
+  world's time unless a hold or decline comes first.
+- A checkout decline prevents all of the order's events and cash, without
+  blocking the account.
+- A pre-shipment hold pauses shipment and merchant settlement for up to 48
+  hours. When the checks clear the order, it is released: shipment and
+  everything after it move by the pause, and installments not yet due start
+  from the release. An order the checks have not decided within 48 hours is
+  cancelled and its checkout payment refunded, without blocking the account.
+  After shipment a hold pauses nothing, and one that runs out changes nothing.
+- A pre-shipment decline voids the order, refunds the checkout payment and
+  prevents later events. After shipment the loss stands. Both block the
+  account, whose later orders are declined at checkout.
+- An escalation is a decline that also blocks accounts linked at the decision
+  and adds 20 minutes of senior review to the queue. Under FP-2 §2.5, linked accounts are
+  other accounts with an order attempt or account event on the device, or an
+  order attempt to the shipping address, in the preceding 30 days.
+
+The policy's cash comes from the same ledger as the world's (below). An order
+the policy left alone keeps the world's cash events; a declined or cancelled
+order keeps the cash that had moved and gets compensating refunds; a released
+order's cash moves with its events. Outcomes are counted for the window's
+orders with the labels and cash known before 2025-12-30, the end of
+observation. Reviews still waiting then remain undecided.
+
+**History under the policy.** Decisions never see repayments or disputes from
+orders the same policy prevented. Attempt-derived columns (velocity, linkage,
+tenure, credential changes) are shared across policies because declined
+attempts remain logged. Outcome-derived columns cover approvals, installments
+due and paid, disputes, promotion redemptions and blocks. At each replay day's
+start, they are rebuilt from the policy's realized events
+(`core.asof.policy_rows`) for every account it has declined, held, voided or
+blocked, and every account that has shared a device, address or email with one.
+Other accounts retain approve-all rows. These columns can be up to one replay
+day old, never from the future. The frozen-history diagnostic keeps all
+outcome-derived columns at approve-all values to measure the effect of
+policy-specific history.
+
+Review times, check outcomes and answer delays are keyed to the world's seed,
+a named stream and the order id (`queue_sim/draws.py`). Policies reviewing the
+same order therefore receive the same draws.
+
+### Threshold tuning
+
+Each seed's thresholds are tuned once on its baseline world and held fixed
+across families, staffing levels and replay variants (`tuning.rule` in the
+protocol; `rules/tuning.py`). Tuning replays the validation window at the base
+allotment on the current shift layout, using the world as known at the policy
+freeze.
+Replay stops at the end of 2025-05-31; only labels and cash known before
+2025-06-01 count.
+
+**Grid.** Thresholds are scores attained on validation orders at checkout. For
+each review rate (0, 0.5, 1, 2, 3, 5, 8 and 12%) and decline rate (0, 0.1,
+0.25, 0.5, 1 and 2%), the cut-point is the lowest attained score whose share
+of orders at or above it does not exceed the rate. If the share at the highest
+score still exceeds the rate, that score is the cut-point. Ties, common for
+rule scores, can leave the reached share well below its rate or give several
+rates the same cut-point. Rate 0 disables the route, so "no review" and "no
+decline" are always in the grid. The expected-loss policy tunes only its review
+threshold; its decline rule stays fixed.
+
+**Objective and feasibility.** The objective is ledger net contribution minus
+friction cost: the $15 LTV proxy for each legitimate order declined at checkout,
+refused because its account was blocked, declined or escalated after review,
+or cancelled after an unanswered hold. "Legitimate" here means an adjudicated
+label known by the cut that records no fraud (no finding, or credit loss).
+Unknown labels count as neither fraud nor legitimate. A point is feasible
+when the review minutes it offers (the review time of every order that reached
+the queue, plus each escalation's senior minutes) fit in the allotment over the
+window. Tuning has no
+separate cap on legitimate friction; the recommendation rule supplies it.
+
+**Procedure.**
+
+1. Replay every grid point with frozen approve-all history.
+2. Shortlist the screen's winner, points within one step of it on each
+   threshold (including diagonal neighbours), and the screen's five best
+   feasible points.
+3. Replay the shortlist with policy-specific history. Choose the feasible
+   point with the highest objective; ties go to fewer reviews, then fewer
+   checkout declines.
+
+The chosen point is the shortlist's best feasible point in the searched grid.
+It is flagged if either threshold is the cut-point for the highest rate
+searched, since a wider grid might do better. Every replayed point is kept
+with its history, and the frontier is published even when flat. A policy with
+no feasible point would be reported as not evaluated on that seed, without a
+fallback; "no review, no decline" offers no minutes, so a feasible point
+always exists. The shortlist stands in for replaying the whole grid with
+policy-specific history. The protocol adopted it because, on the three
+development worlds, it chose the same threshold pair as that full replay for
+every tuned policy on every world (18 of 18).
+
+### Capacity
+
+Capacity is analyst time allotted to the fraud queue, with two parameters
+(`config/policy.yaml` `capacity` and `roster`): coverage hours, set by the
+shift layout, decide whether a review can finish before shipment; review
+minutes per shift limit the work. Each shift has one analyst who takes the next
+queued order whenever on shift with allotment left. Reviews and escalations'
+senior work use the same allotment; senior work goes first, in escalation
+order. Work that exhausts the allotment or reaches shift end resumes on that
+analyst's next shift.
+
+| Layout | Early shift | Late shift |
+| --- | --- | --- |
+| Current | Monday to Friday from 08:00 | Wednesday to Sunday from 11:00 |
+| Evening | Monday to Friday from 12:00 | Wednesday to Sunday from 15:00 |
+
+Each shift has 6.5 productive hours. The evening layout moves the same shifts
+later to cover the evening arrival peak.
+
+The base allotment was set from today's queue before any policy comparison. Today's
+rules at today's bands (review at a rule score of 30, decline at 90) were
+replayed over the fit windows of development worlds 416, 1041 and 2718 with
+policy-specific history and staffing far above demand. They offered 4,481,
+4,452 and 4,846 review minutes including senior work (mean 4,593.1).
+Staffing so that this queue uses 80% of the allotment gives
+4,593.1 / 0.8 / 174 fit-window shift instances = 33.0, or 33 minutes per shift.
+A productive shift is almost 12 times that, so capacity levels change the
+allotment rather than whole analysts.
+
+| Level | Review minutes per shift | Times the base |
+| --- | --- | --- |
+| Low | 17 | 0.515 |
+| Base | 33 | 1 |
+| High | 50 | 1.515 |
+
+Low and high are the fewest whole minutes per shift that give at least half
+and 1.5 times the base's minutes. Low binds on every development world: 17 minutes on 174 shifts give
+2,958 fit-window minutes, below each world's offered 4,452 to 4,846. Families
+share the allotment, so acquisition surge brings more orders to the same
+capacity. The evening layout has 33 minutes on each of the same shift
+instances, giving the same total. Base-tuned thresholds stay fixed at low,
+high and evening. Realized review minutes per 1,000 orders are reported by
+family.
+
+**Priority and service targets.** Priority is fixed at queue entry
+(FP-2 §7.1): P0 when R05 or R07 holds, or the merchant's stated median time
+to shipment is under 2 hours (excluded by the generator's 2-hour floor); P1
+when the amount is at least $500 or R02, R08 or R10 holds; P2 otherwise.
+All entries occur at checkout, so P3 (already shipped or cancelled at entry)
+does not occur. Targets are 1, 4 and 8 service hours for P0 to P2 (24 for
+P3), from entry to the analyst's first decision (a hold counts as one). The service calendar is fixed at 08:00 to 20:00
+every day, regardless of roster. An order undecided at observation end misses
+its target.
+
+### Seeds, pooling and intervals
+
+Each final seed supplies one world per family. Shared pre-test events allow
+one fit and tuning per seed. Seed 416 is also fitted and tuned for the case
+files and SQL library, but is outside the evaluated worlds. Policies use the
+same worlds and draws, so comparisons are paired by seed.
+
+For each family, replay cell and policy, rates pool total numerators over
+total denominators (for example legitimate orders held per 10,000 legitimate
+orders); money is the mean over seeds. Per-seed values are retained as the
+spread. Paired differences against approve-all and the incumbent are reported
+with their mean, minimum, maximum and sign count ("positive on 9 of 10 seeds").
+Rate differences are recorded in basis points and printed as percentage
+points. A policy without a feasible point has no value on that seed, which
+the result names.
+
+Replay outcomes have no within-world confidence intervals. Seed variation
+shows differences between simulated worlds sharing one generator and its
+parameters, not parameter uncertainty. Directional sentences in the README
+and operating review are generated from their supporting results. Rendering
+requires an exact two-sided sign test over seeds, excluding zeros, at or below
+the claim's level (0.05 unless it states another) in the stated direction; at
+0.05, ten seeds without zeros need at least 9 of 10. No test is published for
+the recommended policy, selected among six challengers. The LLM benchmark uses
+within-world intervals instead (Wilson intervals, and cluster bootstrap
+intervals that resample linked cases together) and exact McNemar tests on
+paired cases ([LLM appendix](../reports/appendix-llm.md)).
+
+### Recommendation rule
+
+The rule (`reporting.recommendation_rule`; `core/recommendation.py`) was set
+before any final world existed. It uses each policy's final-seed outcome rows
+in an operating cell: a family plus a replay cell. The primary cell is the
+baseline family at the base allotment on the current layout, with
+policy-specific history, the evidence-based reviewer and the standard
+verification rates.
+
+The measures, per seed, are:
+
+- **Rule net contribution:** ledger net for the window's orders, less friction
+  cost (the LTV proxy for each lost legitimate customer) and the analyst
+  allotment at $35 per allotted hour, including unused minutes. A policy with
+  no review route at its chosen point releases the allotment and is charged
+  nothing, so approve-all can show whether screening pays at all.
+- **Lost legitimate customers:** legitimate orders declined at checkout,
+  refused because the account was blocked, declined or escalated after review,
+  or cancelled after an unanswered hold, per 10,000 legitimate orders.
+- **Legitimate orders held:** legitimate orders asked to verify, per 10,000
+  legitimate orders.
+
+"Legitimate" uses the adjudicated label at observation end (no finding, or
+credit loss). Each order counts once per measure. Simulation-truth counts
+(no fraud pattern, or a customer of a fraudulent merchant) appear alongside
+as a diagnostic.
+
+**Eligibility.** In the cell, a challenger must meet these limits:
+
+- lost legitimate customers: at most 100 per 10,000 on the mean over seeds
+  and 200 on every seed;
+- legitimate orders held: at most 300 per 10,000 on the mean and 600 on every
+  seed;
+- service: at every priority, the mean over seeds of the share decided within
+  target must be at least 90%. Priorities with fewer than 50 entries pooled
+  over seeds are reported without assessment; approve-all has no queue.
+
+The friction caps form the guardrail: risk-appetite assumptions, not
+benchmarks. If the incumbent fails a criterion in a cell, that criterion
+becomes "no worse than the incumbent" for challengers there. If it fails a
+criterion in the primary cell, the operating review opens by stating that
+today's rules miss the target.
+
+**Hurdle.** A challenger's rule net contribution minus the incumbent's, per
+1,000 orders and paired by seed, must average at least $100 and be strictly
+positive (zero is not) on at least 9 of 10 seeds (8 of 9, 8 of 8, every seed
+with fewer). The $100 allows for the cost of changing a policy. "Orders" are
+the orders a policy decides: processor-approved checkouts in the test window.
+Processor-declined attempts are left out; the generator declines 1.2% of
+legitimate attempts, plus card-testing attempts, a little over 1% of all
+attempts. The sign bar is a consistency rule across simulated worlds, not a
+significance test.
+
+**Choice.** Among eligible challengers that clear the hurdle, the one with the
+highest mean improvement is recommended. Exact ties go to fewer lost
+legitimate customers, then fewer review minutes used, then the simpler policy,
+in the order approve-all, incumbent rules, tree, logistic, boosting, hybrid,
+expected loss. Otherwise the incumbent stays, and the best challenger's mean,
+range and sign count are printed. Approve-all is a challenger too.
+
+**Flip table.** The whole rule (eligibility, hurdle, choice) is applied again
+in each cell that differs from the primary cell in one respect:
+
+- acquisition surge, fraud-mix shift, fulfilment lag ×0.5 and ×2, each at base
+  allotment on the current layout;
+- low and high allotments;
+- evening layout at base allotment;
+- weak verification;
+- LTV proxies of $5 and $45.
+
+For the recommendation rule and flip table, sensitivities are never combined.
+For each cell the flip table states whether the primary outcome holds and,
+if not, why: a different policy cleared the bar, the primary winner fails an
+eligibility criterion there, or no challenger cleared the bar. The verdict reads "holds in N
+of M cells".
+
+### Sensitivities and diagnostics
+
+No sensitivity re-tunes. Thresholds, models and queue rules remain those
+chosen for each seed in the primary cell. The broader replay tables include
+combinations of traffic or fraud-mix changes with staffing and replay variants.
+
+| Sensitivity | Values | How it is run |
+| --- | --- | --- |
+| Allotment | 17 and 50 minutes per shift | replays at those levels |
+| Shift layout | evening layout, 33 minutes per shift | replay on that layout |
+| Verification | `reviewer.verification_weak` (Reviewer, below) | replay variant at the base allotment |
+| LTV proxy | $5 and $45 | friction cost recomputed from the same base replays, for all seven policies; the expected-loss policy keeps $15 inside its decline rule |
+| Fulfilment lag | ×0.5 and ×2 (`lag_half`, `lag_double`) | world families generated for the final seeds: from the test window, each order's drawn time to shipment is multiplied before the 15-minute floor; replayed at the base allotment, current layout, standard variant only |
+| Traffic and fraud mix | `acquisition_surge`, `fraud_mix_shift` | world families from the test window, replayed in every cell |
+
+Frozen approve-all history and the perfect reviewer (below) are diagnostics
+replayed at base allotment on the current layout. They appear beside the tables
+and never enter the recommendation rule or flip table.
+
+### Case selection
+
+The five case files illustrate the replay on development world 416 (baseline
+family). The
+protocol's `cases` rule was fixed before any final world existed. Candidates
+are the incumbent's test-window alerts in the primary-cell replay, ordered by
+a SHA-256 hash of order id. Each subject (takeover, never-pay, hardship,
+traveller, card testing, ring) is a slot defined by latent pattern or benign
+trait. Never-pay and hardship share a file. Each slot takes its first
+candidate, preferring analyst-reviewed orders for the three full cases.
+Labels, cash, later outcomes and reviewer decisions never rank or filter
+candidates. Empty slots are reported, never filled from another seed, window,
+family or policy.
+
+### The freeze
+
+The freeze commit adds `experiments/FREEZE.json` with the SHA-256 of every file
+that determines the numbers (`freeze.files` in the protocol): the protocol,
+`config/world.yaml`, `config/policy.yaml`, the fraud policy, the code for
+world generation, context building, fitting, routing, review, replay,
+accounting, evaluation and choice, the LLM referee, the archived LLM study the
+pipeline replays, the freeze check, every module these import, and the
+dependency lock.
+
+The final run refuses to generate a final-seed world without a complete
+protocol, a clean working tree, every listed file committed and matching its
+hash, no file added under a frozen directory, and the installed packages and
+Python version matching the lock. The marker is written once. A bug fixed
+after the freeze gets a commit of its own that runs `core.protocol.log_fix`:
+it records the changed files' new hashes and appends to the marker's `fixes`
+the files, what was wrong and the before/after effect on the results. This
+document and the report templates are not frozen; changes to them after the
+freeze commit are in their history.
 
 ## Ledger
 
