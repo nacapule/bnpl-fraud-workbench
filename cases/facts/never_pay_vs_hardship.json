@@ -1,0 +1,1209 @@
+{
+  "alerts": {
+    "hardship": {
+      "decision": {
+        "action_at": "2025-07-22 08:10:56",
+        "analyst_started_at": "2025-07-22 08:00:00",
+        "band": "review",
+        "checkout_at": "2025-07-21 18:37:49",
+        "evidence_at": "2025-07-22 00:00:00",
+        "kind": "review",
+        "recorded_action": "hold",
+        "same_day_orders": []
+      },
+      "evidence": {
+        "row": {
+          "account_age_days": 0.0285,
+          "account_blocked": 0,
+          "accounts_on_address_30d": 1,
+          "accounts_on_address_ever": 1,
+          "accounts_on_device_30d": 1,
+          "amount_attempted_user_24h": 9108,
+          "amount_attempted_user_7d": 9108,
+          "amount_cents": 9108,
+          "amount_over_category_median": 0.6455,
+          "amount_over_category_p95": 0.2137,
+          "approved_orders_user_24h": 0,
+          "approved_orders_user_ever": 0,
+          "attempts_device_24h": 1,
+          "attempts_user_1h": 1,
+          "attempts_user_24h": 1,
+          "attempts_user_7d": 1,
+          "avs_mismatch": 0,
+          "bin_ip_country_mismatch": 1,
+          "cancelled_at_decision": 0,
+          "card_first_use_age_hours": 0.0,
+          "card_link_age_hours": 0.6767,
+          "cvv_mismatch": 1,
+          "decision_at": "2025-07-22 00:00:00",
+          "device_link_age_hours": 0.6836,
+          "distinct_devices_user_30d": 1,
+          "distinct_ship_addresses_user_ever": 1,
+          "email_domain_class": 1,
+          "email_root_other_accounts": 0,
+          "geo_kmh_from_previous_attempt": 0.0,
+          "home_address_age_days": 0.0285,
+          "hours_since_credential_change": 10000.0,
+          "hours_since_email_change": 10000.0,
+          "hours_since_password_change": 10000.0,
+          "hours_since_password_reset": 10000.0,
+          "hours_since_phone_change": 10000.0,
+          "inr_claims_rejected_user": 0,
+          "inr_disputes_opened_user": 0,
+          "installments_due_user": 0,
+          "installments_failed_user": 0,
+          "installments_paid_share_user": 0.0,
+          "installments_paid_user": 0,
+          "ip_country_not_home": 0,
+          "is_first_attempt_user": 1,
+          "linked_account_blocked_30d": 0,
+          "merchant_age_days": 1221.0342,
+          "merchant_fulfilment_median_hours": 18.8,
+          "merchant_id": 66,
+          "never_pay_determined_user": 0,
+          "night_order": 0,
+          "open_balance_user_cents": 0,
+          "order_exposure_cents": 6604,
+          "order_id": 141664,
+          "processor_declines_card_24h": 0,
+          "processor_declines_device_24h": 0,
+          "promo_redemptions_user": 0,
+          "promo_uses_linked_accounts": 1,
+          "ship_address_first_use_age_hours": 0.0,
+          "ship_address_link_age_hours": 0.6836,
+          "ship_to_home": 1,
+          "shipped_at_decision": 0,
+          "unauthorized_disputes_lost_user": 0,
+          "unauthorized_disputes_on_card": 0,
+          "user_id": 46843,
+          "victim_reports_user": 0
+        },
+        "rule_score": 35.0,
+        "rules_held": [
+          "R03"
+        ]
+      },
+      "latent": {
+        "account": {
+          "actor": "legitimate",
+          "episode_id": null,
+          "profile": "fragile+hardship+new_customer"
+        },
+        "episode": null,
+        "order": {
+          "episode_id": null,
+          "intent": "legitimate",
+          "mimic": "hardship_default+new_customer_first_order",
+          "pattern_id": null
+        }
+      },
+      "later": {
+        "account": {
+          "later_orders": 0,
+          "later_routes": {}
+        },
+        "approve_all": {
+          "cash": [
+            {
+              "amount_cents": 2049,
+              "cause": "natural",
+              "event_id": 1889243,
+              "kind": "customer_payment",
+              "known_at": "2025-07-21 18:37:49",
+              "occurred_at": "2025-07-21 18:37:49"
+            },
+            {
+              "amount_cents": -7742,
+              "cause": "natural",
+              "event_id": 1891089,
+              "kind": "merchant_settlement",
+              "known_at": "2025-07-22 09:13:14",
+              "occurred_at": "2025-07-22 09:13:14"
+            },
+            {
+              "amount_cents": -911,
+              "cause": "natural",
+              "event_id": 1891090,
+              "kind": "promotion_funding",
+              "known_at": "2025-07-22 09:13:14",
+              "occurred_at": "2025-07-22 09:13:14"
+            },
+            {
+              "amount_cents": 2050,
+              "cause": "natural",
+              "event_id": 1943028,
+              "kind": "customer_payment",
+              "known_at": "2025-08-04 18:37:49",
+              "occurred_at": "2025-08-04 18:37:49"
+            },
+            {
+              "amount_cents": 2049,
+              "cause": "natural",
+              "event_id": 1997268,
+              "kind": "customer_payment",
+              "known_at": "2025-08-18 18:37:49",
+              "occurred_at": "2025-08-18 18:37:49"
+            },
+            {
+              "amount_cents": 410,
+              "cause": "natural",
+              "event_id": 2101703,
+              "kind": "recovery",
+              "known_at": "2025-10-15 18:37:49",
+              "occurred_at": "2025-10-15 18:37:49"
+            }
+          ],
+          "cash_by_kind": {
+            "customer_payment": 6148,
+            "merchant_settlement": -7742,
+            "promotion_funding": -911,
+            "recovery": 410
+          },
+          "differs": true,
+          "events": [
+            {
+              "amount_cents": 9108,
+              "detail": "processor approved",
+              "event": "checkout",
+              "known_at": "2025-07-21 18:37:49",
+              "occurred_at": "2025-07-21 18:37:49"
+            },
+            {
+              "amount_cents": 2049,
+              "detail": "down payment, attempt 1: success",
+              "event": "payment",
+              "known_at": "2025-07-21 18:37:49",
+              "occurred_at": "2025-07-21 18:37:49"
+            },
+            {
+              "amount_cents": null,
+              "detail": null,
+              "event": "shipped",
+              "known_at": "2025-07-22 09:13:14",
+              "occurred_at": "2025-07-22 09:13:14"
+            },
+            {
+              "amount_cents": null,
+              "detail": null,
+              "event": "delivered",
+              "known_at": "2025-07-23 15:52:31",
+              "occurred_at": "2025-07-23 15:52:31"
+            },
+            {
+              "amount_cents": 2050,
+              "detail": "installment 1, attempt 1: success",
+              "event": "payment",
+              "known_at": "2025-08-04 18:37:49",
+              "occurred_at": "2025-08-04 18:37:49"
+            },
+            {
+              "amount_cents": 2049,
+              "detail": "installment 2, attempt 1: success",
+              "event": "payment",
+              "known_at": "2025-08-18 18:37:49",
+              "occurred_at": "2025-08-18 18:37:49"
+            },
+            {
+              "amount_cents": 2049,
+              "detail": "installment 3, attempt 1: failed",
+              "event": "payment",
+              "known_at": "2025-09-01 18:37:49",
+              "occurred_at": "2025-09-01 18:37:49"
+            },
+            {
+              "amount_cents": 2049,
+              "detail": "installment 3, attempt 2: failed",
+              "event": "payment",
+              "known_at": "2025-09-04 18:37:49",
+              "occurred_at": "2025-09-04 18:37:49"
+            },
+            {
+              "amount_cents": 2049,
+              "detail": null,
+              "event": "written off",
+              "known_at": "2025-09-15 18:37:49",
+              "occurred_at": "2025-09-15 18:37:49"
+            }
+          ],
+          "net_cents": -2095
+        },
+        "fate": {
+          "checkout_at": "2025-07-21 18:37:49",
+          "hold_at": "2025-07-22 08:10:56",
+          "hold_before_shipment": true,
+          "hold_ended_at": "2025-07-22 08:41:41",
+          "hold_outcome": "cleared",
+          "released_at": "2025-07-22 08:41:41",
+          "route": "review",
+          "void_at": null,
+          "void_cause": null
+        },
+        "incumbent": {
+          "cash": [
+            {
+              "amount_cents": 2049,
+              "cause": "natural",
+              "event_id": 1889243,
+              "kind": "customer_payment",
+              "known_at": "2025-07-21 18:37:49",
+              "occurred_at": "2025-07-21 18:37:49"
+            },
+            {
+              "amount_cents": -7742,
+              "cause": "natural",
+              "event_id": 1891089,
+              "kind": "merchant_settlement",
+              "known_at": "2025-07-22 09:43:59",
+              "occurred_at": "2025-07-22 09:43:59"
+            },
+            {
+              "amount_cents": -911,
+              "cause": "natural",
+              "event_id": 1891090,
+              "kind": "promotion_funding",
+              "known_at": "2025-07-22 09:43:59",
+              "occurred_at": "2025-07-22 09:43:59"
+            },
+            {
+              "amount_cents": 2050,
+              "cause": "natural",
+              "event_id": 1943028,
+              "kind": "customer_payment",
+              "known_at": "2025-08-05 08:41:41",
+              "occurred_at": "2025-08-05 08:41:41"
+            },
+            {
+              "amount_cents": 2049,
+              "cause": "natural",
+              "event_id": 1997268,
+              "kind": "customer_payment",
+              "known_at": "2025-08-19 08:41:41",
+              "occurred_at": "2025-08-19 08:41:41"
+            },
+            {
+              "amount_cents": 410,
+              "cause": "natural",
+              "event_id": 2101703,
+              "kind": "recovery",
+              "known_at": "2025-10-16 08:41:41",
+              "occurred_at": "2025-10-16 08:41:41"
+            }
+          ],
+          "cash_by_kind": {
+            "customer_payment": 6148,
+            "merchant_settlement": -7742,
+            "promotion_funding": -911,
+            "recovery": 410
+          },
+          "events": [
+            {
+              "amount_cents": 9108,
+              "detail": "processor approved",
+              "event": "checkout",
+              "known_at": "2025-07-21 18:37:49",
+              "occurred_at": "2025-07-21 18:37:49"
+            },
+            {
+              "amount_cents": 2049,
+              "detail": "down payment, attempt 1: success",
+              "event": "payment",
+              "known_at": "2025-07-21 18:37:49",
+              "occurred_at": "2025-07-21 18:37:49"
+            },
+            {
+              "amount_cents": null,
+              "detail": null,
+              "event": "shipped",
+              "known_at": "2025-07-22 09:43:59",
+              "occurred_at": "2025-07-22 09:43:59"
+            },
+            {
+              "amount_cents": null,
+              "detail": null,
+              "event": "delivered",
+              "known_at": "2025-07-23 16:23:16",
+              "occurred_at": "2025-07-23 16:23:16"
+            },
+            {
+              "amount_cents": 2050,
+              "detail": "installment 1, attempt 1: success",
+              "event": "payment",
+              "known_at": "2025-08-05 08:41:41",
+              "occurred_at": "2025-08-05 08:41:41"
+            },
+            {
+              "amount_cents": 2049,
+              "detail": "installment 2, attempt 1: success",
+              "event": "payment",
+              "known_at": "2025-08-19 08:41:41",
+              "occurred_at": "2025-08-19 08:41:41"
+            },
+            {
+              "amount_cents": 2049,
+              "detail": "installment 3, attempt 1: failed",
+              "event": "payment",
+              "known_at": "2025-09-02 08:41:41",
+              "occurred_at": "2025-09-02 08:41:41"
+            },
+            {
+              "amount_cents": 2049,
+              "detail": "installment 3, attempt 2: failed",
+              "event": "payment",
+              "known_at": "2025-09-05 08:41:41",
+              "occurred_at": "2025-09-05 08:41:41"
+            },
+            {
+              "amount_cents": 2049,
+              "detail": null,
+              "event": "written off",
+              "known_at": "2025-09-16 08:41:41",
+              "occurred_at": "2025-09-16 08:41:41"
+            }
+          ],
+          "net_cents": -2095
+        },
+        "label": {
+          "basis": "credit_loss",
+          "label": 0,
+          "label_known_at": "2025-09-19 18:37:49"
+        },
+        "prevented_cents": 0,
+        "review": {
+          "checks": [
+            {
+              "check": "id_check",
+              "completed_at": "2025-07-22 08:41:41",
+              "outcome": "passed"
+            }
+          ],
+          "decided_at": "2025-07-22 08:10:56",
+          "final": "clear",
+          "first_disposition": "hold",
+          "taken_up_at": "2025-07-22 08:00:00"
+        }
+      },
+      "policy_view": {
+        "acceptable": [
+          "hold",
+          "needs_check"
+        ],
+        "benign": [
+          "§6.5(b)",
+          "§6.5(c)"
+        ],
+        "clauses": {
+          "clear": "§6.6(b)",
+          "decline": "§6.6(b)",
+          "escalate": "§6.6(b)",
+          "hold": "§6.6(b)",
+          "needs_check": "§6.6(b)"
+        },
+        "constraints": [
+          "standard hold (FP-2 §6.6(b))",
+          "permitted needs_check (FP-2 §6.6(b))",
+          "prohibited clear (FP-2 §6.6(b))",
+          "prohibited decline (FP-2 §6.6(b))",
+          "prohibited escalate (FP-2 §6.6(b))",
+          "required_check id_check (FP-2 §5.2)",
+          "no_nonpayment_grounds citations (FP-2 §8.1)"
+        ],
+        "decisive": false,
+        "families": [
+          "Card"
+        ],
+        "household_exceptions": [],
+        "no_installment_due": true,
+        "permitted": [
+          "needs_check"
+        ],
+        "prohibited": [
+          "clear",
+          "decline",
+          "escalate"
+        ],
+        "required_checks": [
+          "id_check"
+        ],
+        "row": "§6.6(b)",
+        "rules": [
+          "R03"
+        ],
+        "settlements": [],
+        "standard": [
+          "hold"
+        ]
+      },
+      "publication": {
+        "alert_id": "141664:72d0ad93f997",
+        "candidates": {
+          "available": 2,
+          "eligible": 2,
+          "reviewed": 1,
+          "tiers": {
+            "checkout_alert": 2,
+            "reviewed_alert": 1
+          }
+        },
+        "order_id": 141664,
+        "policy_version": "72d0ad93f997",
+        "selection_hash": "9784f963425057540a9f99c0b3d6f0def5f23fca861caba333f3b2c13d57bbac",
+        "tier": "reviewed_alert"
+      },
+      "reviewer": {
+        "benign": [
+          "§6.5(b)",
+          "§6.5(c)"
+        ],
+        "checks_required": [
+          "id_check"
+        ],
+        "clause": "§6.6(b)",
+        "decision_table_row": "§6.6(b)",
+        "families_present": [
+          "Card"
+        ],
+        "household_exceptions": [],
+        "settlements": [],
+        "standard_disposition": "hold"
+      },
+      "routing": {
+        "rule_score": 35.0,
+        "rules_held": [
+          "R03"
+        ]
+      },
+      "selected": true,
+      "slot": "hardship"
+    },
+    "never_pay": {
+      "decision": {
+        "action_at": "2025-07-17 08:07:07",
+        "analyst_started_at": "2025-07-17 08:04:09",
+        "band": "review",
+        "checkout_at": "2025-07-17 07:48:08",
+        "evidence_at": "2025-07-17 07:48:08",
+        "kind": "review",
+        "recorded_action": "hold",
+        "same_day_orders": []
+      },
+      "evidence": {
+        "row": {
+          "account_age_days": 2.4662,
+          "account_blocked": 0,
+          "accounts_on_address_30d": 3,
+          "accounts_on_address_ever": 3,
+          "accounts_on_device_30d": 1,
+          "amount_attempted_user_24h": 31490,
+          "amount_attempted_user_7d": 48982,
+          "amount_cents": 31490,
+          "amount_over_category_median": 1.687,
+          "amount_over_category_p95": 0.5507,
+          "approved_orders_user_24h": 0,
+          "approved_orders_user_ever": 1,
+          "attempts_device_24h": 1,
+          "attempts_user_1h": 1,
+          "attempts_user_24h": 1,
+          "attempts_user_7d": 2,
+          "avs_mismatch": 0,
+          "bin_ip_country_mismatch": 0,
+          "cancelled_at_decision": 0,
+          "card_first_use_age_hours": 59.1033,
+          "card_link_age_hours": 59.1847,
+          "cvv_mismatch": 0,
+          "decision_at": "2025-07-17 07:48:08",
+          "device_link_age_hours": 59.1897,
+          "distinct_devices_user_30d": 1,
+          "distinct_ship_addresses_user_ever": 1,
+          "email_domain_class": 0,
+          "email_root_other_accounts": 0,
+          "geo_kmh_from_previous_attempt": 0.0,
+          "home_address_age_days": 2.4662,
+          "hours_since_credential_change": 10000.0,
+          "hours_since_email_change": 10000.0,
+          "hours_since_password_change": 10000.0,
+          "hours_since_password_reset": 10000.0,
+          "hours_since_phone_change": 10000.0,
+          "inr_claims_rejected_user": 0,
+          "inr_disputes_opened_user": 0,
+          "installments_due_user": 0,
+          "installments_failed_user": 0,
+          "installments_paid_share_user": 0.0,
+          "installments_paid_user": 0,
+          "ip_country_not_home": 0,
+          "is_first_attempt_user": 0,
+          "linked_account_blocked_30d": 0,
+          "merchant_age_days": 1562.9158,
+          "merchant_fulfilment_median_hours": 6.0,
+          "merchant_id": 37,
+          "never_pay_determined_user": 0,
+          "night_order": 0,
+          "open_balance_user_cents": 11808,
+          "order_exposure_cents": 22043,
+          "order_id": 140378,
+          "processor_declines_card_24h": 0,
+          "processor_declines_device_24h": 0,
+          "promo_redemptions_user": 1,
+          "promo_uses_linked_accounts": 0,
+          "ship_address_first_use_age_hours": 59.1033,
+          "ship_address_link_age_hours": 59.1897,
+          "ship_to_home": 1,
+          "shipped_at_decision": 0,
+          "unauthorized_disputes_lost_user": 0,
+          "unauthorized_disputes_on_card": 0,
+          "user_id": 46553,
+          "victim_reports_user": 0
+        },
+        "rule_score": 35.0,
+        "rules_held": [
+          "R08"
+        ]
+      },
+      "latent": {
+        "account": {
+          "actor": "fraudster",
+          "episode_id": 539,
+          "profile": "group+never_pay"
+        },
+        "episode": {
+          "accounts": 3,
+          "ended_at": "2025-07-17 07:48:08",
+          "episode_id": 539,
+          "orders": 5,
+          "pattern_id": "P-NEVERPAY",
+          "started_at": "2025-07-03 03:26:36"
+        },
+        "order": {
+          "episode_id": 539,
+          "intent": "fraud",
+          "mimic": null,
+          "pattern_id": "P-NEVERPAY"
+        }
+      },
+      "later": {
+        "account": {
+          "later_orders": 0,
+          "later_routes": {}
+        },
+        "approve_all": {
+          "cash": [
+            {
+              "amount_cents": 7872,
+              "cause": "natural",
+              "event_id": 1871762,
+              "kind": "customer_payment",
+              "known_at": "2025-07-17 07:48:08",
+              "occurred_at": "2025-07-17 07:48:08"
+            },
+            {
+              "amount_cents": -29915,
+              "cause": "natural",
+              "event_id": 1873552,
+              "kind": "merchant_settlement",
+              "known_at": "2025-07-17 17:30:33",
+              "occurred_at": "2025-07-17 17:30:33"
+            },
+            {
+              "amount_cents": 4724,
+              "cause": "natural",
+              "event_id": 2100235,
+              "kind": "recovery",
+              "known_at": "2025-10-11 07:48:08",
+              "occurred_at": "2025-10-11 07:48:08"
+            }
+          ],
+          "cash_by_kind": {
+            "customer_payment": 7872,
+            "merchant_settlement": -29915,
+            "recovery": 4724
+          },
+          "differs": true,
+          "events": [
+            {
+              "amount_cents": 31490,
+              "detail": "processor approved",
+              "event": "checkout",
+              "known_at": "2025-07-17 07:48:08",
+              "occurred_at": "2025-07-17 07:48:08"
+            },
+            {
+              "amount_cents": 7872,
+              "detail": "down payment, attempt 1: success",
+              "event": "payment",
+              "known_at": "2025-07-17 07:48:08",
+              "occurred_at": "2025-07-17 07:48:08"
+            },
+            {
+              "amount_cents": null,
+              "detail": null,
+              "event": "shipped",
+              "known_at": "2025-07-17 17:30:33",
+              "occurred_at": "2025-07-17 17:30:33"
+            },
+            {
+              "amount_cents": null,
+              "detail": null,
+              "event": "delivered",
+              "known_at": "2025-07-21 03:58:08",
+              "occurred_at": "2025-07-21 03:58:08"
+            },
+            {
+              "amount_cents": 7873,
+              "detail": "installment 1, attempt 1: failed",
+              "event": "payment",
+              "known_at": "2025-07-31 07:48:08",
+              "occurred_at": "2025-07-31 07:48:08"
+            },
+            {
+              "amount_cents": 7873,
+              "detail": "installment 1, attempt 2: failed",
+              "event": "payment",
+              "known_at": "2025-08-03 07:48:08",
+              "occurred_at": "2025-08-03 07:48:08"
+            },
+            {
+              "amount_cents": 7873,
+              "detail": "installment 2, attempt 1: failed",
+              "event": "payment",
+              "known_at": "2025-08-14 07:48:08",
+              "occurred_at": "2025-08-14 07:48:08"
+            },
+            {
+              "amount_cents": 7873,
+              "detail": "installment 2, attempt 2: failed",
+              "event": "payment",
+              "known_at": "2025-08-17 07:48:08",
+              "occurred_at": "2025-08-17 07:48:08"
+            },
+            {
+              "amount_cents": 7872,
+              "detail": "installment 3, attempt 1: failed",
+              "event": "payment",
+              "known_at": "2025-08-28 07:48:08",
+              "occurred_at": "2025-08-28 07:48:08"
+            },
+            {
+              "amount_cents": 7872,
+              "detail": "installment 3, attempt 2: failed",
+              "event": "payment",
+              "known_at": "2025-08-31 07:48:08",
+              "occurred_at": "2025-08-31 07:48:08"
+            },
+            {
+              "amount_cents": 23618,
+              "detail": null,
+              "event": "written off",
+              "known_at": "2025-09-11 07:48:08",
+              "occurred_at": "2025-09-11 07:48:08"
+            }
+          ],
+          "net_cents": -17319
+        },
+        "fate": {
+          "checkout_at": "2025-07-17 07:48:08",
+          "hold_at": "2025-07-17 08:07:07",
+          "hold_before_shipment": true,
+          "hold_ended_at": "2025-07-17 14:25:59",
+          "hold_outcome": "cleared",
+          "released_at": "2025-07-17 14:25:59",
+          "route": "review",
+          "void_at": null,
+          "void_cause": null
+        },
+        "incumbent": {
+          "cash": [
+            {
+              "amount_cents": 7872,
+              "cause": "natural",
+              "event_id": 1871762,
+              "kind": "customer_payment",
+              "known_at": "2025-07-17 07:48:08",
+              "occurred_at": "2025-07-17 07:48:08"
+            },
+            {
+              "amount_cents": -29915,
+              "cause": "natural",
+              "event_id": 1873552,
+              "kind": "merchant_settlement",
+              "known_at": "2025-07-17 23:49:25",
+              "occurred_at": "2025-07-17 23:49:25"
+            },
+            {
+              "amount_cents": 4724,
+              "cause": "natural",
+              "event_id": 2100235,
+              "kind": "recovery",
+              "known_at": "2025-10-11 14:25:59",
+              "occurred_at": "2025-10-11 14:25:59"
+            }
+          ],
+          "cash_by_kind": {
+            "customer_payment": 7872,
+            "merchant_settlement": -29915,
+            "recovery": 4724
+          },
+          "events": [
+            {
+              "amount_cents": 31490,
+              "detail": "processor approved",
+              "event": "checkout",
+              "known_at": "2025-07-17 07:48:08",
+              "occurred_at": "2025-07-17 07:48:08"
+            },
+            {
+              "amount_cents": 7872,
+              "detail": "down payment, attempt 1: success",
+              "event": "payment",
+              "known_at": "2025-07-17 07:48:08",
+              "occurred_at": "2025-07-17 07:48:08"
+            },
+            {
+              "amount_cents": null,
+              "detail": null,
+              "event": "shipped",
+              "known_at": "2025-07-17 23:49:25",
+              "occurred_at": "2025-07-17 23:49:25"
+            },
+            {
+              "amount_cents": null,
+              "detail": null,
+              "event": "delivered",
+              "known_at": "2025-07-21 10:17:00",
+              "occurred_at": "2025-07-21 10:17:00"
+            },
+            {
+              "amount_cents": 7873,
+              "detail": "installment 1, attempt 1: failed",
+              "event": "payment",
+              "known_at": "2025-07-31 14:25:59",
+              "occurred_at": "2025-07-31 14:25:59"
+            },
+            {
+              "amount_cents": 7873,
+              "detail": "installment 1, attempt 2: failed",
+              "event": "payment",
+              "known_at": "2025-08-03 14:25:59",
+              "occurred_at": "2025-08-03 14:25:59"
+            },
+            {
+              "amount_cents": 7873,
+              "detail": "installment 2, attempt 1: failed",
+              "event": "payment",
+              "known_at": "2025-08-14 14:25:59",
+              "occurred_at": "2025-08-14 14:25:59"
+            },
+            {
+              "amount_cents": 7873,
+              "detail": "installment 2, attempt 2: failed",
+              "event": "payment",
+              "known_at": "2025-08-17 14:25:59",
+              "occurred_at": "2025-08-17 14:25:59"
+            },
+            {
+              "amount_cents": 7872,
+              "detail": "installment 3, attempt 1: failed",
+              "event": "payment",
+              "known_at": "2025-08-28 14:25:59",
+              "occurred_at": "2025-08-28 14:25:59"
+            },
+            {
+              "amount_cents": 7872,
+              "detail": "installment 3, attempt 2: failed",
+              "event": "payment",
+              "known_at": "2025-08-31 14:25:59",
+              "occurred_at": "2025-08-31 14:25:59"
+            },
+            {
+              "amount_cents": 23618,
+              "detail": null,
+              "event": "written off",
+              "known_at": "2025-09-11 14:25:59",
+              "occurred_at": "2025-09-11 14:25:59"
+            }
+          ],
+          "net_cents": -17319
+        },
+        "label": {
+          "basis": "never_pay",
+          "label": 1,
+          "label_known_at": "2025-08-30 07:48:08"
+        },
+        "prevented_cents": 0,
+        "review": {
+          "checks": [
+            {
+              "check": "id_check",
+              "completed_at": "2025-07-17 14:25:59",
+              "outcome": "passed"
+            }
+          ],
+          "decided_at": "2025-07-17 08:07:07",
+          "final": "clear",
+          "first_disposition": "hold",
+          "taken_up_at": "2025-07-17 08:04:09"
+        }
+      },
+      "policy_view": {
+        "acceptable": [
+          "hold",
+          "needs_check"
+        ],
+        "benign": [
+          "§6.5(b)"
+        ],
+        "clauses": {
+          "clear": "§6.6(b)",
+          "decline": "§6.6(b)",
+          "escalate": "§6.6(b)",
+          "hold": "§6.6(b)",
+          "needs_check": "§6.6(b)"
+        },
+        "constraints": [
+          "standard hold (FP-2 §6.6(b))",
+          "permitted needs_check (FP-2 §6.6(b))",
+          "prohibited clear (FP-2 §6.6(b))",
+          "prohibited decline (FP-2 §6.6(b))",
+          "prohibited escalate (FP-2 §6.6(b))",
+          "required_check id_check (FP-2 §5.2)",
+          "no_nonpayment_grounds citations (FP-2 §8.1)"
+        ],
+        "decisive": false,
+        "families": [
+          "Linkage"
+        ],
+        "household_exceptions": [],
+        "no_installment_due": true,
+        "permitted": [
+          "needs_check"
+        ],
+        "prohibited": [
+          "clear",
+          "decline",
+          "escalate"
+        ],
+        "required_checks": [
+          "id_check"
+        ],
+        "row": "§6.6(b)",
+        "rules": [
+          "R08"
+        ],
+        "settlements": [],
+        "standard": [
+          "hold"
+        ]
+      },
+      "publication": {
+        "alert_id": "140378:72d0ad93f997",
+        "candidates": {
+          "available": 10,
+          "eligible": 10,
+          "reviewed": 2,
+          "tiers": {
+            "checkout_alert": 10,
+            "reviewed_alert": 2
+          }
+        },
+        "order_id": 140378,
+        "policy_version": "72d0ad93f997",
+        "selection_hash": "85e92fa1ab9dd29a7f0dacfaaa839641fc7ccee047158da9513357133a6925f0",
+        "tier": "reviewed_alert"
+      },
+      "reviewer": {
+        "benign": [
+          "§6.5(b)"
+        ],
+        "checks_required": [
+          "id_check"
+        ],
+        "clause": "§6.6(b)",
+        "decision_table_row": "§6.6(b)",
+        "families_present": [
+          "Linkage"
+        ],
+        "household_exceptions": [],
+        "settlements": [],
+        "standard_disposition": "hold"
+      },
+      "routing": {
+        "rule_score": 35.0,
+        "rules_held": [
+          "R08"
+        ]
+      },
+      "selected": true,
+      "slot": "never_pay"
+    }
+  },
+  "file": "never_pay_vs_hardship",
+  "length": "full",
+  "primary_alert": "never_pay",
+  "slots": [
+    "never_pay",
+    "hardship"
+  ],
+  "source": {
+    "development_seed": true,
+    "illustration": "seed 416 is a development seed: the case illustrates how the operating policy behaves on one world; it is not evidence for the policy comparison",
+    "replay": {
+      "capacity_level": "base",
+      "decline_threshold": 40.0,
+      "history": "policy",
+      "layout": "current",
+      "observed_until": "2025-12-29 23:59:59",
+      "policy": "incumbent_rules",
+      "policy_version": "72d0ad93f997",
+      "review_threshold": 35.0,
+      "reviewer": "evidence",
+      "thresholds": "canonical seed's validation-tuned incumbent",
+      "verification": "verification",
+      "window": "test",
+      "window_end": "2025-09-01 00:00:00",
+      "window_start": "2025-06-01 00:00:00"
+    },
+    "world": {
+      "code_commit": "417a9b14891d51687ca24537dc3d7c9ee91da71a",
+      "family": "baseline",
+      "generator_version": "2.0.0",
+      "manifest_identity": "208122eba8effdd94fb5b19bcac8d9916c5c13a7d71119c972ab24c368b7bc29",
+      "seed": 416
+    }
+  },
+  "tested_change": {
+    "change": "Decline at checkout an order from an account with an open plan on which no installment has yet fallen due (installments_due_user = 0 and open_balance_user_cents > 0).",
+    "declared_for_order": 140378,
+    "illustration": "one replay of one development world, run once with the parameters declared before it ran: an illustration of the mechanism, not evidence for the change",
+    "mechanism": "Caps stacked exposure at the first plan, before repayment can be judged; declines legitimate new customers who order twice within about two weeks. It cannot touch a first order, so it cannot separate a first-order hardship default from never-pay.",
+    "motivation": "At decision time the 2.5-day-old never-pay account placed a second, larger order while its first plan was open and no installment had fallen due; FP-2 §8.1: repayment cannot be judged before one is due. The hardship order was a first order with no open balance.",
+    "name": "no_second_plan_before_first_installment",
+    "noted_after_run": null,
+    "parameters": {
+      "action": "auto_decline",
+      "columns": [
+        "installments_due_user",
+        "open_balance_user_cents"
+      ],
+      "installments_due_user": 0,
+      "open_balance_user_cents_above": 0
+    },
+    "result": {
+      "account_orders": [
+        {
+          "changed": false,
+          "checkout_at": "2025-07-14 20:41:56",
+          "incumbent": {
+            "final": "clear",
+            "first_disposition": "hold",
+            "hold_at": "2025-07-15 08:02:30",
+            "hold_outcome": "cleared",
+            "net_cents": -10320,
+            "route": "review",
+            "rule_score": 35.0,
+            "void_at": null,
+            "void_cause": null
+          },
+          "order_id": 139793,
+          "variant": {
+            "final": "clear",
+            "first_disposition": "hold",
+            "hold_at": "2025-07-15 08:02:30",
+            "hold_outcome": "cleared",
+            "net_cents": -10320,
+            "route": "review",
+            "rule_score": 35.0,
+            "void_at": null,
+            "void_cause": null
+          }
+        }
+      ],
+      "case_order": {
+        "changed": true,
+        "checkout_at": "2025-07-17 07:48:08",
+        "incumbent": {
+          "final": "clear",
+          "first_disposition": "hold",
+          "hold_at": "2025-07-17 08:07:07",
+          "hold_outcome": "cleared",
+          "net_cents": -17319,
+          "route": "review",
+          "rule_score": 35.0,
+          "void_at": null,
+          "void_cause": null
+        },
+        "order_id": 140378,
+        "variant": {
+          "final": null,
+          "first_disposition": null,
+          "hold_at": null,
+          "hold_outcome": null,
+          "net_cents": 0,
+          "route": "auto_decline",
+          "rule_score": 1035.0,
+          "void_at": null,
+          "void_cause": null
+        }
+      },
+      "latent_episode": {
+        "incumbent": {
+          "net_cents": -163842,
+          "routes": {
+            "approve": 3,
+            "review": 2
+          },
+          "voided": 0
+        },
+        "orders_in_window": 5,
+        "variant": {
+          "net_cents": -129214,
+          "routes": {
+            "approve": 2,
+            "auto_decline": 2,
+            "review": 1
+          },
+          "voided": 0
+        }
+      },
+      "policy_version": "5d3391005f50",
+      "selected_order": 140378,
+      "world": {
+        "difference": {
+          "adjudicated": {
+            "fraud_declined_after_shipping": 0,
+            "fraud_declined_checkout": 36,
+            "fraud_orders": 0,
+            "fraud_stopped_before_shipping": -3,
+            "legitimate_blocked_checkout": 0,
+            "legitimate_cancelled": 0,
+            "legitimate_declined": 469,
+            "legitimate_declined_checkout": 469,
+            "legitimate_declined_review": 0,
+            "legitimate_held": 0,
+            "legitimate_orders": 0,
+            "unknown_orders": 0
+          },
+          "cash": {
+            "friction_cost_cents": 703500,
+            "loss_cents": -1097234,
+            "net_cents": 914487,
+            "prevented_loss_cents": 1097234,
+            "rule_net_cents": 210987.0
+          },
+          "latent": {
+            "legitimate_truth_blocked_checkout": 0,
+            "legitimate_truth_cancelled": 0,
+            "legitimate_truth_declined": 462,
+            "legitimate_truth_declined_checkout": 462,
+            "legitimate_truth_declined_review": 0,
+            "legitimate_truth_held": 0,
+            "legitimate_truth_orders": 0
+          },
+          "review": {
+            "accounts_blocked": -2,
+            "available_minutes": 0,
+            "decided_after_shipping": 0,
+            "escalations": -1,
+            "holds": -4,
+            "holds_before_shipping": -4,
+            "review_minutes_offered": -42,
+            "review_minutes_used": -42,
+            "reviews": -4,
+            "reviews_decided": -4
+          },
+          "rule_net_vs_incumbent_per_1000_orders_cents": 8352.9435
+        },
+        "incumbent": {
+          "adjudicated": {
+            "fraud_declined_after_shipping": 0,
+            "fraud_declined_checkout": 60,
+            "fraud_orders": 194,
+            "fraud_stopped_before_shipping": 9,
+            "legitimate_blocked_checkout": 8,
+            "legitimate_cancelled": 8,
+            "legitimate_declined": 104,
+            "legitimate_declined_checkout": 93,
+            "legitimate_declined_review": 3,
+            "legitimate_held": 68,
+            "legitimate_orders": 25065,
+            "unknown_orders": 0
+          },
+          "cash": {
+            "friction_cost_cents": 168000,
+            "loss_cents": 3949080,
+            "net_cents": 7872399,
+            "prevented_loss_cents": 2088470,
+            "rule_net_cents": 7452224.0
+          },
+          "latent": {
+            "legitimate_truth_blocked_checkout": 8,
+            "legitimate_truth_cancelled": 6,
+            "legitimate_truth_declined": 99,
+            "legitimate_truth_declined_checkout": 88,
+            "legitimate_truth_declined_review": 3,
+            "legitimate_truth_held": 61,
+            "legitimate_truth_orders": 25016
+          },
+          "orders": 25259,
+          "policy_version": "72d0ad93f997",
+          "review": {
+            "accounts_blocked": 17,
+            "available_minutes": 4323,
+            "decided_after_shipping": 18,
+            "escalations": 6,
+            "holds": 81,
+            "holds_before_shipping": 70,
+            "review_minutes_offered": 879,
+            "review_minutes_used": 879,
+            "reviews": 107,
+            "reviews_decided": 107
+          }
+        },
+        "variant": {
+          "adjudicated": {
+            "fraud_declined_after_shipping": 0,
+            "fraud_declined_checkout": 96,
+            "fraud_orders": 194,
+            "fraud_stopped_before_shipping": 6,
+            "legitimate_blocked_checkout": 8,
+            "legitimate_cancelled": 8,
+            "legitimate_declined": 573,
+            "legitimate_declined_checkout": 562,
+            "legitimate_declined_review": 3,
+            "legitimate_held": 68,
+            "legitimate_orders": 25065,
+            "unknown_orders": 0
+          },
+          "cash": {
+            "friction_cost_cents": 871500,
+            "loss_cents": 2851846,
+            "net_cents": 8786886,
+            "prevented_loss_cents": 3185704,
+            "rule_net_cents": 7663211.0
+          },
+          "latent": {
+            "legitimate_truth_blocked_checkout": 8,
+            "legitimate_truth_cancelled": 6,
+            "legitimate_truth_declined": 561,
+            "legitimate_truth_declined_checkout": 550,
+            "legitimate_truth_declined_review": 3,
+            "legitimate_truth_held": 61,
+            "legitimate_truth_orders": 25016
+          },
+          "orders": 25259,
+          "policy_version": "5d3391005f50",
+          "review": {
+            "accounts_blocked": 15,
+            "available_minutes": 4323,
+            "decided_after_shipping": 18,
+            "escalations": 5,
+            "holds": 77,
+            "holds_before_shipping": 66,
+            "review_minutes_offered": 837,
+            "review_minutes_used": 837,
+            "reviews": 103,
+            "reviews_decided": 103
+          }
+        }
+      }
+    },
+    "superseded": []
+  }
+}

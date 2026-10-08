@@ -1,0 +1,647 @@
+{
+  "alerts": {
+    "card_testing": {
+      "decision": {
+        "action_at": "2025-06-28 09:58:43",
+        "analyst_started_at": null,
+        "band": "auto_decline",
+        "checkout_at": "2025-06-28 09:58:43",
+        "evidence_at": "2025-06-28 09:58:43",
+        "kind": "checkout",
+        "recorded_action": "auto_decline",
+        "same_day_orders": [
+          {
+            "checkout_at": "2025-06-28 09:33:39",
+            "order_id": 135228,
+            "route": "auto_decline"
+          }
+        ]
+      },
+      "evidence": {
+        "row": {
+          "account_age_days": 0.0242,
+          "account_blocked": 0,
+          "accounts_on_address_30d": 1,
+          "accounts_on_address_ever": 1,
+          "accounts_on_device_30d": 1,
+          "amount_attempted_user_24h": 94772,
+          "amount_attempted_user_7d": 94772,
+          "amount_cents": 28217,
+          "amount_over_category_median": 1.5152,
+          "amount_over_category_p95": 0.4933,
+          "approved_orders_user_24h": 1,
+          "approved_orders_user_ever": 1,
+          "attempts_device_24h": 5,
+          "attempts_user_1h": 5,
+          "attempts_user_24h": 5,
+          "attempts_user_7d": 5,
+          "avs_mismatch": 0,
+          "bin_ip_country_mismatch": 1,
+          "cancelled_at_decision": 0,
+          "card_first_use_age_hours": 0.4178,
+          "card_link_age_hours": 0.4428,
+          "cvv_mismatch": 0,
+          "decision_at": "2025-06-28 09:58:43",
+          "device_link_age_hours": 0.5819,
+          "distinct_devices_user_30d": 1,
+          "distinct_ship_addresses_user_ever": 1,
+          "email_domain_class": 0,
+          "email_root_other_accounts": 0,
+          "geo_kmh_from_previous_attempt": 0.0,
+          "home_address_age_days": 0.0242,
+          "hours_since_credential_change": 10000.0,
+          "hours_since_email_change": 10000.0,
+          "hours_since_password_change": 10000.0,
+          "hours_since_password_reset": 10000.0,
+          "hours_since_phone_change": 10000.0,
+          "inr_claims_rejected_user": 0,
+          "inr_disputes_opened_user": 0,
+          "installments_due_user": 0,
+          "installments_failed_user": 0,
+          "installments_paid_share_user": 0.0,
+          "installments_paid_user": 0,
+          "ip_country_not_home": 0,
+          "is_first_attempt_user": 0,
+          "linked_account_blocked_30d": 0,
+          "merchant_age_days": 959.7773,
+          "merchant_fulfilment_median_hours": 7.7,
+          "merchant_id": 88,
+          "never_pay_determined_user": 0,
+          "night_order": 0,
+          "open_balance_user_cents": 44865,
+          "order_exposure_cents": 19752,
+          "order_id": 135235,
+          "processor_declines_card_24h": 0,
+          "processor_declines_device_24h": 3,
+          "promo_redemptions_user": 0,
+          "promo_uses_linked_accounts": 0,
+          "ship_address_first_use_age_hours": 0.54,
+          "ship_address_link_age_hours": 0.5819,
+          "ship_to_home": 1,
+          "shipped_at_decision": 0,
+          "unauthorized_disputes_lost_user": 0,
+          "unauthorized_disputes_on_card": 0,
+          "user_id": 45844,
+          "victim_reports_user": 0
+        },
+        "rule_score": 70.0,
+        "rules_held": [
+          "R07",
+          "R05"
+        ]
+      },
+      "latent": {
+        "account": {
+          "actor": "fraudster",
+          "episode_id": 537,
+          "profile": "stolen_card"
+        },
+        "episode": {
+          "accounts": 1,
+          "ended_at": "2025-06-28 09:58:43",
+          "episode_id": 537,
+          "orders": 5,
+          "pattern_id": "P-STOLEN",
+          "started_at": "2025-06-28 09:23:48"
+        },
+        "order": {
+          "episode_id": 537,
+          "intent": "fraud",
+          "mimic": null,
+          "pattern_id": "P-STOLEN"
+        }
+      },
+      "later": {
+        "account": {
+          "later_orders": 0,
+          "later_routes": {}
+        },
+        "approve_all": {
+          "cash": [
+            {
+              "amount_cents": 7054,
+              "cause": "natural",
+              "event_id": 1800017,
+              "kind": "customer_payment",
+              "known_at": "2025-06-28 09:58:43",
+              "occurred_at": "2025-06-28 09:58:43"
+            },
+            {
+              "amount_cents": -26806,
+              "cause": "natural",
+              "event_id": 1801804,
+              "kind": "merchant_settlement",
+              "known_at": "2025-06-28 18:25:12",
+              "occurred_at": "2025-06-28 18:25:12"
+            },
+            {
+              "amount_cents": 7055,
+              "cause": "natural",
+              "event_id": 1853050,
+              "kind": "customer_payment",
+              "known_at": "2025-07-12 09:58:43",
+              "occurred_at": "2025-07-12 09:58:43"
+            },
+            {
+              "amount_cents": -14109,
+              "cause": "natural",
+              "event_id": 1872202,
+              "kind": "dispute_debit",
+              "known_at": "2025-07-17 10:43:55",
+              "occurred_at": "2025-07-17 10:43:55"
+            },
+            {
+              "amount_cents": -1500,
+              "cause": "natural",
+              "event_id": 1872203,
+              "kind": "dispute_fee",
+              "known_at": "2025-07-17 10:43:55",
+              "occurred_at": "2025-07-17 10:43:55"
+            },
+            {
+              "amount_cents": 2822,
+              "cause": "natural",
+              "event_id": 2084455,
+              "kind": "recovery",
+              "known_at": "2025-09-22 09:58:43",
+              "occurred_at": "2025-09-22 09:58:43"
+            }
+          ],
+          "cash_by_kind": {
+            "customer_payment": 14109,
+            "dispute_debit": -14109,
+            "dispute_fee": -1500,
+            "merchant_settlement": -26806,
+            "recovery": 2822
+          },
+          "differs": true,
+          "events": [
+            {
+              "amount_cents": 28217,
+              "detail": "processor approved",
+              "event": "checkout",
+              "known_at": "2025-06-28 09:58:43",
+              "occurred_at": "2025-06-28 09:58:43"
+            },
+            {
+              "amount_cents": 7054,
+              "detail": "down payment, attempt 1: success",
+              "event": "payment",
+              "known_at": "2025-06-28 09:58:43",
+              "occurred_at": "2025-06-28 09:58:43"
+            },
+            {
+              "amount_cents": null,
+              "detail": null,
+              "event": "shipped",
+              "known_at": "2025-06-28 18:25:12",
+              "occurred_at": "2025-06-28 18:25:12"
+            },
+            {
+              "amount_cents": null,
+              "detail": null,
+              "event": "delivered",
+              "known_at": "2025-07-01 08:10:30",
+              "occurred_at": "2025-07-01 08:10:30"
+            },
+            {
+              "amount_cents": 7055,
+              "detail": "installment 1, attempt 1: success",
+              "event": "payment",
+              "known_at": "2025-07-12 09:58:43",
+              "occurred_at": "2025-07-12 09:58:43"
+            },
+            {
+              "amount_cents": 14109,
+              "detail": "unauthorized",
+              "event": "dispute opened",
+              "known_at": "2025-07-17 10:43:55",
+              "occurred_at": "2025-07-13 20:51:39"
+            },
+            {
+              "amount_cents": 7054,
+              "detail": "installment 2, attempt 1: failed",
+              "event": "payment",
+              "known_at": "2025-07-26 09:58:43",
+              "occurred_at": "2025-07-26 09:58:43"
+            },
+            {
+              "amount_cents": 7054,
+              "detail": "installment 2, attempt 2: failed",
+              "event": "payment",
+              "known_at": "2025-07-29 09:58:43",
+              "occurred_at": "2025-07-29 09:58:43"
+            },
+            {
+              "amount_cents": 7054,
+              "detail": "installment 3, attempt 1: failed",
+              "event": "payment",
+              "known_at": "2025-08-09 09:58:43",
+              "occurred_at": "2025-08-09 09:58:43"
+            },
+            {
+              "amount_cents": 7054,
+              "detail": "installment 3, attempt 2: failed",
+              "event": "payment",
+              "known_at": "2025-08-12 09:58:43",
+              "occurred_at": "2025-08-12 09:58:43"
+            },
+            {
+              "amount_cents": 14108,
+              "detail": null,
+              "event": "written off",
+              "known_at": "2025-08-23 09:58:43",
+              "occurred_at": "2025-08-23 09:58:43"
+            },
+            {
+              "amount_cents": null,
+              "detail": "lost",
+              "event": "dispute resolved",
+              "known_at": "2025-09-11 21:06:04",
+              "occurred_at": "2025-09-11 14:47:42"
+            }
+          ],
+          "net_cents": -25484
+        },
+        "fate": {
+          "checkout_at": "2025-06-28 09:58:43",
+          "hold_at": null,
+          "hold_before_shipment": false,
+          "hold_ended_at": null,
+          "hold_outcome": null,
+          "released_at": null,
+          "route": "auto_decline",
+          "void_at": null,
+          "void_cause": null
+        },
+        "incumbent": {
+          "cash": [],
+          "cash_by_kind": {},
+          "events": [
+            {
+              "amount_cents": 28217,
+              "detail": "processor approved",
+              "event": "checkout",
+              "known_at": "2025-06-28 09:58:43",
+              "occurred_at": "2025-06-28 09:58:43"
+            }
+          ],
+          "net_cents": 0
+        },
+        "label": {
+          "basis": "third_party_fraud",
+          "label": 1,
+          "label_known_at": "2025-09-11 21:06:04"
+        },
+        "prevented_cents": 25484,
+        "review": null
+      },
+      "policy_view": {
+        "acceptable": [
+          "decline",
+          "hold",
+          "needs_check"
+        ],
+        "benign": [
+          "§6.5(b)"
+        ],
+        "clauses": {
+          "clear": "§6.6(b)",
+          "decline": "§6.6(b)",
+          "escalate": "§6.6(b)",
+          "hold": "§6.6(b)",
+          "needs_check": "§6.6(b)"
+        },
+        "constraints": [
+          "standard hold (FP-2 §6.6(b))",
+          "permitted decline (FP-2 §6.6(b))",
+          "permitted needs_check (FP-2 §6.6(b))",
+          "prohibited clear (FP-2 §6.6(b))",
+          "prohibited escalate (FP-2 §6.6(b))",
+          "required_check id_check (FP-2 §5.2)",
+          "no_nonpayment_grounds citations (FP-2 §8.1)"
+        ],
+        "decisive": false,
+        "families": [
+          "Card",
+          "Velocity"
+        ],
+        "household_exceptions": [],
+        "no_installment_due": true,
+        "permitted": [
+          "decline",
+          "needs_check"
+        ],
+        "prohibited": [
+          "clear",
+          "escalate"
+        ],
+        "required_checks": [
+          "id_check"
+        ],
+        "row": "§6.6(b)",
+        "rules": [
+          "R07",
+          "R05"
+        ],
+        "settlements": [],
+        "standard": [
+          "hold"
+        ]
+      },
+      "publication": {
+        "alert_id": "135235:72d0ad93f997",
+        "candidates": {
+          "available": 6,
+          "eligible": 6,
+          "reviewed": 0,
+          "tiers": {
+            "checkout_alert": 6
+          }
+        },
+        "order_id": 135235,
+        "policy_version": "72d0ad93f997",
+        "selection_hash": "037c207040c2b2fe780860d393db2896e69139253f24590f776b4cb5d976f1f7",
+        "tier": "checkout_alert"
+      },
+      "routing": {
+        "rule_score": 70.0,
+        "rules_held": [
+          "R07",
+          "R05"
+        ]
+      },
+      "selected": true,
+      "slot": "card_testing"
+    }
+  },
+  "file": "card_testing",
+  "length": "short",
+  "primary_alert": "card_testing",
+  "slots": [
+    "card_testing"
+  ],
+  "source": {
+    "development_seed": true,
+    "illustration": "seed 416 is a development seed: the case illustrates how the operating policy behaves on one world; it is not evidence for the policy comparison",
+    "replay": {
+      "capacity_level": "base",
+      "decline_threshold": 40.0,
+      "history": "policy",
+      "layout": "current",
+      "observed_until": "2025-12-29 23:59:59",
+      "policy": "incumbent_rules",
+      "policy_version": "72d0ad93f997",
+      "review_threshold": 35.0,
+      "reviewer": "evidence",
+      "thresholds": "canonical seed's validation-tuned incumbent",
+      "verification": "verification",
+      "window": "test",
+      "window_end": "2025-09-01 00:00:00",
+      "window_start": "2025-06-01 00:00:00"
+    },
+    "world": {
+      "code_commit": "417a9b14891d51687ca24537dc3d7c9ee91da71a",
+      "family": "baseline",
+      "generator_version": "2.0.0",
+      "manifest_identity": "208122eba8effdd94fb5b19bcac8d9916c5c13a7d71119c972ab24c368b7bc29",
+      "seed": 416
+    }
+  },
+  "tested_change": {
+    "change": "R07 also holds, at its weight of 40 (auto-decline), when the account is under 7 days old and the device had at least 1 processor decline in the 24 h before the order (otherwise 3).",
+    "declared_for_order": 135235,
+    "illustration": "one replay of one development world, run once with the parameters declared before it ran: an illustration of the mechanism, not evidence for the change",
+    "mechanism": "Stops a card-testing session at the first attempt after a decline; declines new legitimate customers whose card was declined once. The case's own order was already declined and does not change.",
+    "motivation": "At decision time the account was 35 minutes old with 5 attempts in the hour, 3 processor declines on the device, and an order already approved within the 24 h; R07 held only at the third device decline.",
+    "name": "r07_one_device_decline_new_account",
+    "noted_after_run": "The row's approved_orders_user_24h = 1 and $448.65 open balance, which the motivation cites, were approve-all values: the incumbent had auto-declined the account's 09:33 order (R07 already held, at 3 device declines) 25 minutes earlier on the same replay day, and the row's outcome-derived columns reflect the policy's decisions up to the start of the day (the decision's same_day_orders). No order of this session was approved.",
+    "parameters": {
+      "account_age_days_below": 7,
+      "columns": [
+        "processor_declines_device_24h",
+        "account_age_days"
+      ],
+      "processor_declines_device_24h_min": 1,
+      "rule": "R07",
+      "weight": 40
+    },
+    "result": {
+      "account_orders": [
+        {
+          "changed": false,
+          "checkout_at": "2025-06-28 09:33:39",
+          "incumbent": {
+            "final": null,
+            "first_disposition": null,
+            "hold_at": null,
+            "hold_outcome": null,
+            "net_cents": 0,
+            "route": "auto_decline",
+            "rule_score": 70.0,
+            "void_at": null,
+            "void_cause": null
+          },
+          "order_id": 135228,
+          "variant": {
+            "final": null,
+            "first_disposition": null,
+            "hold_at": null,
+            "hold_outcome": null,
+            "net_cents": 0,
+            "route": "auto_decline",
+            "rule_score": 70.0,
+            "void_at": null,
+            "void_cause": null
+          }
+        }
+      ],
+      "case_order": {
+        "changed": false,
+        "checkout_at": "2025-06-28 09:58:43",
+        "incumbent": {
+          "final": null,
+          "first_disposition": null,
+          "hold_at": null,
+          "hold_outcome": null,
+          "net_cents": 0,
+          "route": "auto_decline",
+          "rule_score": 70.0,
+          "void_at": null,
+          "void_cause": null
+        },
+        "order_id": 135235,
+        "variant": {
+          "final": null,
+          "first_disposition": null,
+          "hold_at": null,
+          "hold_outcome": null,
+          "net_cents": 0,
+          "route": "auto_decline",
+          "rule_score": 70.0,
+          "void_at": null,
+          "void_cause": null
+        }
+      },
+      "latent_episode": {
+        "incumbent": {
+          "net_cents": 0,
+          "routes": {
+            "auto_decline": 2
+          },
+          "voided": 0
+        },
+        "orders_in_window": 2,
+        "variant": {
+          "net_cents": 0,
+          "routes": {
+            "auto_decline": 2
+          },
+          "voided": 0
+        }
+      },
+      "policy_version": "4366946bd7da",
+      "selected_order": 135235,
+      "world": {
+        "difference": {
+          "adjudicated": {
+            "fraud_declined_after_shipping": 0,
+            "fraud_declined_checkout": 0,
+            "fraud_orders": 0,
+            "fraud_stopped_before_shipping": 0,
+            "legitimate_blocked_checkout": 0,
+            "legitimate_cancelled": 0,
+            "legitimate_declined": 21,
+            "legitimate_declined_checkout": 21,
+            "legitimate_declined_review": 0,
+            "legitimate_held": 0,
+            "legitimate_orders": 0,
+            "unknown_orders": 0
+          },
+          "cash": {
+            "friction_cost_cents": 31500,
+            "loss_cents": 0,
+            "net_cents": -27836,
+            "prevented_loss_cents": 0,
+            "rule_net_cents": -59336.0
+          },
+          "latent": {
+            "legitimate_truth_blocked_checkout": 0,
+            "legitimate_truth_cancelled": 0,
+            "legitimate_truth_declined": 21,
+            "legitimate_truth_declined_checkout": 21,
+            "legitimate_truth_declined_review": 0,
+            "legitimate_truth_held": 0,
+            "legitimate_truth_orders": 0
+          },
+          "review": {
+            "accounts_blocked": 0,
+            "available_minutes": 0,
+            "decided_after_shipping": 0,
+            "escalations": 0,
+            "holds": 0,
+            "holds_before_shipping": 0,
+            "review_minutes_offered": 0,
+            "review_minutes_used": 0,
+            "reviews": 0,
+            "reviews_decided": 0
+          },
+          "rule_net_vs_incumbent_per_1000_orders_cents": -2349.1033
+        },
+        "incumbent": {
+          "adjudicated": {
+            "fraud_declined_after_shipping": 0,
+            "fraud_declined_checkout": 60,
+            "fraud_orders": 194,
+            "fraud_stopped_before_shipping": 9,
+            "legitimate_blocked_checkout": 8,
+            "legitimate_cancelled": 8,
+            "legitimate_declined": 104,
+            "legitimate_declined_checkout": 93,
+            "legitimate_declined_review": 3,
+            "legitimate_held": 68,
+            "legitimate_orders": 25065,
+            "unknown_orders": 0
+          },
+          "cash": {
+            "friction_cost_cents": 168000,
+            "loss_cents": 3949080,
+            "net_cents": 7872399,
+            "prevented_loss_cents": 2088470,
+            "rule_net_cents": 7452224.0
+          },
+          "latent": {
+            "legitimate_truth_blocked_checkout": 8,
+            "legitimate_truth_cancelled": 6,
+            "legitimate_truth_declined": 99,
+            "legitimate_truth_declined_checkout": 88,
+            "legitimate_truth_declined_review": 3,
+            "legitimate_truth_held": 61,
+            "legitimate_truth_orders": 25016
+          },
+          "orders": 25259,
+          "policy_version": "72d0ad93f997",
+          "review": {
+            "accounts_blocked": 17,
+            "available_minutes": 4323,
+            "decided_after_shipping": 18,
+            "escalations": 6,
+            "holds": 81,
+            "holds_before_shipping": 70,
+            "review_minutes_offered": 879,
+            "review_minutes_used": 879,
+            "reviews": 107,
+            "reviews_decided": 107
+          }
+        },
+        "variant": {
+          "adjudicated": {
+            "fraud_declined_after_shipping": 0,
+            "fraud_declined_checkout": 60,
+            "fraud_orders": 194,
+            "fraud_stopped_before_shipping": 9,
+            "legitimate_blocked_checkout": 8,
+            "legitimate_cancelled": 8,
+            "legitimate_declined": 125,
+            "legitimate_declined_checkout": 114,
+            "legitimate_declined_review": 3,
+            "legitimate_held": 68,
+            "legitimate_orders": 25065,
+            "unknown_orders": 0
+          },
+          "cash": {
+            "friction_cost_cents": 199500,
+            "loss_cents": 3949080,
+            "net_cents": 7844563,
+            "prevented_loss_cents": 2088470,
+            "rule_net_cents": 7392888.0
+          },
+          "latent": {
+            "legitimate_truth_blocked_checkout": 8,
+            "legitimate_truth_cancelled": 6,
+            "legitimate_truth_declined": 120,
+            "legitimate_truth_declined_checkout": 109,
+            "legitimate_truth_declined_review": 3,
+            "legitimate_truth_held": 61,
+            "legitimate_truth_orders": 25016
+          },
+          "orders": 25259,
+          "policy_version": "4366946bd7da",
+          "review": {
+            "accounts_blocked": 17,
+            "available_minutes": 4323,
+            "decided_after_shipping": 18,
+            "escalations": 6,
+            "holds": 81,
+            "holds_before_shipping": 70,
+            "review_minutes_offered": 879,
+            "review_minutes_used": 879,
+            "reviews": 107,
+            "reviews_decided": 107
+          }
+        }
+      }
+    },
+    "superseded": []
+  }
+}
