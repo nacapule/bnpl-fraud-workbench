@@ -29,11 +29,12 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+import yaml
 
 from core import asof, config
 from core.evidence import CheckResult
 from core.protocol import load_protocol
-from core.world import read_world, verify_manifest
+from core.world import coerce, read_world, verify_manifest
 from model.train import RuleScorer
 from queue_sim import policies, stage
 from queue_sim.replay import PolicyHistory, Settings
@@ -65,49 +66,76 @@ class _Recorder(Reviewer):
         return decision
 
 
-def run_paths(world_dir: Path) -> tuple[Path, Path]:
-    """The tuning results and the fitted-models folder of the run a world belongs to
-    (``<run>/worlds/<seed>-<family>``): ``<run>/results/tune.json``, or for a run that
-    published its results the one in the folder its lineage names (as the case files
-    read them)."""
-    run_dir = Path(world_dir).resolve().parent.parent
-    tune = run_dir / "results" / "tune.json"
-    lineage = run_dir / "lineage.json"
-    if not tune.exists() and lineage.exists():
-        named = json.loads(lineage.read_text()).get("results_dir")
-        if named:
-            tune = Path(named) / "tune.json"
-    return tune, run_dir / "fit"
+def _sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
 
 
 def _sha256(path: Path) -> str:
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    return _sha256_bytes(Path(path).read_bytes())
 
 
-def check_inputs(world_dir: Path, tables: Mapping[str, pd.DataFrame], tune_path: Path) -> None:
-    """The replay's inputs are the run's: the tables match the world's manifest, and the
-    world's identity, ``config/policy.yaml`` and the tuning results are those the run's
-    replay stage recorded in ``<run>/lineage.json``. Raises :class:`ReplayMismatch`."""
+def replay_inputs(run_dir: Path) -> dict[str, str]:
+    """The inputs the run's replay stage recorded in ``<run>/lineage.json`` (name ->
+    SHA-256); empty without a lineage."""
+    lineage = Path(run_dir) / "lineage.json"
+    if not lineage.exists():
+        return {}
+    return dict(json.loads(lineage.read_text()).get("stages", {}).get("replay", {})
+                .get("inputs", {}))
+
+
+def run_paths(world_dir: Path) -> tuple[Path, Path]:
+    """The tuning results and the fitted-models folder of the run a world belongs to
+    (``<run>/worlds/<seed>-<family>``). The tuning results are ``<run>/results/tune.json``
+    or, for a run that published its results, the one in the folder its lineage names:
+    the one whose hash the replay stage recorded, else the first that exists (which
+    :func:`check_inputs` then refuses), else the lineage's."""
+    run_dir = Path(world_dir).resolve().parent.parent
+    places = [run_dir / "results" / "tune.json"]
+    lineage = run_dir / "lineage.json"
+    if lineage.exists():
+        named = json.loads(lineage.read_text()).get("results_dir")
+        if named:
+            places.append(Path(named) / "tune.json")
+    existing = [path for path in places if path.exists()]
+    recorded = replay_inputs(run_dir).get("results/tune.json")
+    matching = [path for path in existing if _sha256(path) == recorded]
+    return (matching or existing or places[::-1])[0], run_dir / "fit"
+
+
+def check_inputs(world_dir: Path, tables: Mapping[str, pd.DataFrame], tune_path: Path
+                 ) -> tuple[dict[str, pd.DataFrame], dict[str, Any]]:
+    """The replay's inputs are the run's. Returns the tables, each coerced to its schema
+    once (``core.world.coerce``: what is verified is what is replayed), and the policy
+    configuration parsed from the verified bytes. The tables must match the world's
+    manifest; the world's identity, ``config/policy.yaml`` and the tuning results must
+    be those the run's replay stage recorded in ``<run>/lineage.json``; and the policy
+    configuration the frozen modules read (``core.config.load``) must be the file's.
+    Raises :class:`ReplayMismatch`."""
     from pipeline import manifest_identity
 
     world_dir = Path(world_dir)
     manifest = json.loads((world_dir / "manifest.json").read_text())
+    coerced = {name: coerce(name, frame) for name, frame in tables.items()}
     try:
-        verify_manifest(tables, manifest)
+        verify_manifest(coerced, manifest)
     except ValueError as error:
         raise ReplayMismatch(f"{world_dir.name}: {error}") from error
-    lineage = world_dir.resolve().parent.parent / "lineage.json"
-    if not lineage.exists():
-        raise ReplayMismatch(f"no lineage beside {world_dir.name}: the run's replay inputs "
-                             "are unknown")
-    recorded = (json.loads(lineage.read_text()).get("stages", {}).get("replay", {})
-                .get("inputs", {}))
+    recorded = replay_inputs(world_dir.resolve().parent.parent)
+    if not recorded:
+        raise ReplayMismatch(f"no lineage of the replay beside {world_dir.name}: the run's "
+                             "replay inputs are unknown")
+    policy_bytes = POLICY_CONFIG.read_bytes()
     current = {f"world:{world_dir.name}": manifest_identity(manifest),
-               "config/policy.yaml": _sha256(POLICY_CONFIG),
+               "config/policy.yaml": _sha256_bytes(policy_bytes),
                "results/tune.json": _sha256(tune_path)}
     differ = sorted(name for name, digest in current.items() if recorded.get(name) != digest)
     if differ:
         raise ReplayMismatch(f"not the inputs the run's replay recorded: {differ}")
+    policy_cfg = yaml.safe_load(policy_bytes)
+    if policy_cfg != config.load("policy"):
+        raise ReplayMismatch("the policy configuration in use is not the file's")
+    return coerced, policy_cfg
 
 
 def incumbent_policy(tune_path: Path, fit_dir: Path, seed: int) -> policies.Policy:
@@ -149,10 +177,9 @@ def completion_decisions(world_dir: Path, kept: pd.DataFrame, *, seed: int,
     world_dir = Path(world_dir)
     default_tune, default_fit = run_paths(world_dir)
     tune_path = tune_path or default_tune
-    tables = read_world(world_dir) if tables is None else tables
-    check_inputs(world_dir, tables, tune_path)
+    tables, policy_cfg = check_inputs(world_dir, read_world(world_dir) if tables is None
+                                      else tables, tune_path)
     protocol = load_protocol()
-    policy_cfg = config.load("policy")
     policy = incumbent_policy(tune_path, fit_dir or default_fit, seed)
     versions = set(kept["policy_version"])
     if versions and versions != {policy.version}:

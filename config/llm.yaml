@@ -19,7 +19,7 @@ benchmark:
   final_axes: {review: 120, check_completed: 80}  # the final cases by decision point
   min_cases_per_check_outcome: 20   # final cases after each check outcome in the pool
   min_final_seeds: 3
-  case_memos: 5                     # at most: the case files' alerts, canonical world
+  case_memos: 6                     # at most: the case files' alerts (six slots)
   max_cases_per_cluster: 2          # per account and per episode
   probe_cases: 40                   # invariance probes on final cases
   probe_kinds: [shuffled, renamed]  # context facts reordered; fresh placeholder names

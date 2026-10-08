@@ -106,12 +106,19 @@ def test_a_replay_that_does_not_reproduce_the_kept_decisions_is_refused(run) -> 
         check_points.completion_decisions(world_dir, altered, seed=SEED)
 
 
-def test_the_replay_reads_only_the_runs_own_inputs(run, tmp_path) -> None:
+def test_the_replay_reads_only_the_runs_own_inputs(run, tmp_path, monkeypatch) -> None:
     world_dir, kept = run
     tables = read_world(world_dir)
     changed = {**tables, "account_events": tables["account_events"].iloc[1:]}
     with pytest.raises(check_points.ReplayMismatch, match="does not match its manifest"):
         check_points.completion_decisions(world_dir, kept, seed=SEED, tables=changed)
+    with monkeypatch.context() as patch:  # the configuration the modules read is the file's
+        loaded = check_points.config.load("policy")
+        patch.setattr(check_points.config, "load",
+                      lambda name: {**loaded, "hold_max_hours": 1} if name == "policy"
+                      else loaded)
+        with pytest.raises(check_points.ReplayMismatch, match="not the file's"):
+            check_points.completion_decisions(world_dir, kept, seed=SEED, tables=tables)
     lineage = world_dir.parent.parent / "lineage.json"
     original = lineage.read_text()
     recorded = json.loads(original)
@@ -149,3 +156,10 @@ def test_the_run_paths_follow_the_lineage(tmp_path) -> None:
     (tmp_path / "run" / "results").mkdir()
     (tmp_path / "run" / "results" / "tune.json").write_text("{}")  # the run's own first
     assert check_points.run_paths(world_dir)[0] == tmp_path / "run" / "results" / "tune.json"
+    # unless the replay recorded the published one: a stale local file is passed over
+    (tmp_path / "elsewhere").mkdir()
+    (tmp_path / "elsewhere" / "tune.json").write_text('{"published": true}')
+    (tmp_path / "run" / "lineage.json").write_text(json.dumps(
+        {"results_dir": str(tmp_path / "elsewhere"), "stages": {"replay": {"inputs": {
+            "results/tune.json": check_points._sha256(tmp_path / "elsewhere" / "tune.json")}}}}))
+    assert check_points.run_paths(world_dir)[0] == tmp_path / "elsewhere" / "tune.json"
