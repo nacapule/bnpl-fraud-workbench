@@ -119,7 +119,7 @@ Each policy's tunable thresholds were chosen per seed on the validation window t
 the replay, from cut-points its scores attain at preset review and decline rates
 ([methods](../docs/methods.md#threshold-tuning)). The expected-loss policy tunes its
 review threshold only; its decline rule is fixed (an order is declined when its expected
-loss exceeds the expected cost of declining a good customer). The chosen points,
+loss meets or exceeds the expected cost of declining a good customer). The chosen points,
 whether either sits at the edge of the searched grid, and every replayed point are in
 `results/tune.json` (`tune.chosen` and `tune.frontier`).
 
