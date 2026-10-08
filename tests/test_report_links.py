@@ -93,7 +93,7 @@ def test_a_link_to_nothing_fails_with_its_line(tmp_path: Path, text: str,
     ("```\n[a](in.md)\n``` text\n[b](in2.md)\n```\n[c](out.md)", ["out.md"]),
 ])
 def test_every_link_like_destination_is_collected(text: str, found: list[str]) -> None:
-    assert [target for _, target in links.targets(text)] == found
+    assert [target for _, target, _ in links.targets(text)] == found
 
 
 @pytest.mark.parametrize("text, found", [
@@ -103,7 +103,41 @@ def test_every_link_like_destination_is_collected(text: str, found: list[str]) -
     ('<img title="href=\'x.md\'" src="y.svg">', ["x.md", "y.svg"]),
 ])
 def test_what_might_be_a_link_is_checked_as_one(text: str, found: list[str]) -> None:
-    assert [target for _, target in links.targets(text)] == found
+    assert [target for _, target, _ in links.targets(text)] == found
+
+
+@pytest.mark.parametrize("text, found", [
+    # a destination read only in part is checked whole, up to the next space
+    ("[x](README.md(no(such)))", ["README.md(no(such)))"]),
+    # a reference definition anywhere: in a quote, after an escaped or wrapped label
+    ("[r]\n\n> [r]: quoted.md", ["quoted.md"]),
+    ("[a\\]b]: escaped.md and [wrapped\nlabel]: wrapped.md", ["escaped.md", "wrapped.md"]),
+    # an attribute over two lines
+    ('<a href=\n"split.md">x</a>', ["split.md"]),
+    # a fence inside an HTML block is no fence; a list item's fence ends with the item
+    ('<div>\n~~~\n<a href="in-html.md">x</a>\n</div>', ["in-html.md"]),
+    ("- item\n  ~~~\n  code\n\n[x](after-list.md)", ["after-list.md"]),
+])
+def test_no_reading_of_a_block_hides_a_link(text: str, found: list[str]) -> None:
+    assert [target for _, target, _ in links.targets(text)] == found
+
+
+def test_attributes_take_entities_but_not_markdown_escapes(tmp_path: Path) -> None:
+    root = _repo(tmp_path, {**BASE, "README.md": '<a href="docs/methods\\.md">m</a> '
+                            '<a href="docs&#47;methods.md">m</a>\n'})
+    assert links.broken(root) == ["README.md:1: link 'docs/methods\\\\.md': no such file"]
+
+
+@pytest.mark.parametrize("text, missing", [
+    ("<div>\n# Fake\n</div>", "fake"),
+    ("<!--\n# Commented\n-->", "commented"),
+    ('`<a id="ghost"></a>` and <!-- <a id="hidden"></a> -->', "ghost"),
+    ('<!-- <a id="hidden"></a> -->', "hidden"),
+    ('Text\n\n    <a id="indented"></a>', "indented"),
+    ("- item\n  ```\n  code\n\n```\n# Not heading\n```", "not-heading"),
+])
+def test_no_anchor_is_read_where_github_makes_none(text: str, missing: str) -> None:
+    assert missing not in links.anchors(text)
 
 
 def test_a_known_non_link_is_exempted_by_its_document_and_line(tmp_path: Path,
@@ -154,6 +188,8 @@ def test_github_anchors_drop_punctuation_and_keep_hyphens() -> None:
     assert links.slug("[`code`](README.md)") == "code"
     assert links.slug("[foo](a(b)c.md) bar") == "foo-bar"
     assert links.slug("Syntax: `[label](README.md)`") == "syntax-labelreadmemd"
+    assert links.slug("a ` foo ` b") == "a-foo-b"
+    assert links.slug("``a`b``") == "ab"
 
 
 def test_anchors_follow_githubs_rendered_text_and_repeat_numbers() -> None:
