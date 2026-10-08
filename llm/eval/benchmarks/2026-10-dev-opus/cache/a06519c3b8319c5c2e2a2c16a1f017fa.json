@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 22847,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-dev-opus",
+  "case": "1041-baseline-138191-20250710T104913",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "7aa2fb96a78e7695a91b9dd5e7b44e3a97c36ed7b1802768b2750119a909b963",
+   "llm/memo.py": "5ce3d380cb85eec55d7121283d6f8101dda2d587201a42314dd29175d0b3d264",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "294206fb948acf33ed9a3695296f5e8a6967c3d4a91fd3b016faed706c44308d",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "4683d17a1fc24e26b409931a93f228f41a1718f2afd05ecb704193fd334fcbba",
+  "prompt_version": "memo_fp2_v1"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10584,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 2347,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"decision.checks[0].check\", \"value\": \"contact\", \"statement\": \"A contact check has been completed on this order.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].outcome\", \"value\": \"failed\", \"statement\": \"The contact check failed: the account holder disowned the order.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].completed_at\", \"value\": \"2025-07-10 10:49:13\", \"statement\": \"The contact check completed at 2025-07-10 10:49:13, which is also the decision time.\", \"derived\": null},\n    {\"field\": \"context.hours_since_password_change\", \"value\": \"0.09222222222222222\", \"statement\": \"The account's password was changed about 0.09 hours before the order, within R01's 48-hour window.\", \"derived\": null},\n    {\"field\": \"context.account_age_days\", \"value\": \"897.2599421296296\", \"statement\": \"The account was about 897 days old at the order, meeting R01's 90-day minimum.\", \"derived\": null},\n    {\"field\": \"context.device_link_age_hours\", \"value\": \"0.1363888888888889\", \"statement\": \"Device D1 was first used on this account about 0.14 hours before the order, within R01's 72-hour window.\", \"derived\": null},\n    {\"field\": \"context.hours_since_email_change\", \"value\": \"10000.0\", \"statement\": \"The account's email has never been changed, so contact used the holder's original details.\", \"derived\": null},\n    {\"field\": \"context.hours_since_phone_change\", \"value\": \"10000.0\", \"statement\": \"The account's phone has never been changed.\", \"derived\": null},\n    {\"field\": \"order.ip_country\", \"value\": \"BR\", \"statement\": \"The order came from a Brazilian IP.\", \"derived\": null},\n    {\"field\": \"order.card_bin_country\", \"value\": \"US\", \"statement\": \"Card C1 was issued in the US.\", \"derived\": null},\n    {\"field\": \"order.avs_result\", \"value\": \"Y\", \"statement\": \"AVS passed, so R03 does not hold despite the country mismatch.\", \"derived\": null},\n    {\"field\": \"order.cvv_result\", \"value\": \"M\", \"statement\": \"CVV matched.\", \"derived\": null},\n    {\"field\": \"context.ship_address_first_use_age_hours\", \"value\": \"0.0\", \"statement\": \"This is the first use of shipping address A1 on the account.\", \"derived\": null},\n    {\"field\": \"context.ship_to_home\", \"value\": \"0\", \"statement\": \"The order ships away from the account's home address.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"1\", \"statement\": \"Only this account was active on D1 in the past 30 days, so R02 does not hold.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"1\", \"statement\": \"Only this account ordered to A1 in the past 30 days, so R08 does not hold.\", \"derived\": null},\n    {\"field\": \"context.email_root_other_accounts\", \"value\": \"0\", \"statement\": \"No other account shares the normalized email, so R06(b) does not hold.\", \"derived\": null},\n    {\"field\": \"context.promo_uses_linked_accounts\", \"value\": \"0\", \"statement\": \"No linked accounts used the promotion, so R10 does not hold.\", \"derived\": null},\n    {\"field\": \"context.amount_cents\", \"value\": \"43193\", \"statement\": \"The order amount is 43193 cents.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"0\", \"statement\": \"The order had not shipped at the decision.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"account_takeover\", \"likelihood\": \"high\", \"reasoning\": \"A password change and a brand-new device minutes before the order, a foreign IP and a new ship-to address form a takeover trail. The holder, reached on unchanged contact details, disowned the order.\"},\n    {\"explanation\": \"new_device\", \"likelihood\": \"low\", \"reasoning\": \"A holder with a new phone who reset access could explain R01. However, the holder failed the contact check, which this explanation cannot account for.\"},\n    {\"explanation\": \"traveller\", \"likelihood\": \"low\", \"reasoning\": \"A long-standing US account holder abroad in Brazil could explain the IP and the away-from-home address. A genuine traveller would have confirmed the order on contact.\"}\n  ],\n  \"disposition\": \"decline\",\n  \"citations\": [\"FP-2 \u00a75.3(b)\", \"FP-2 \u00a76.6(b)\", \"FP-2 \u00a75.2\", \"FP-2 \u00a76.2\", \"R01\"],\n  \"next_check\": \"none\",\n  \"memo\": \"R01 (Account access) holds on three facts. The password was changed about 0.09 h before the order on an 897-day-old account. Device D1 was first used on the account about 0.14 h before the order. No Card, Velocity or Linkage rule holds: AVS was Y, CVV was M, and D1 and A1 each show 1 account. No \u00a76.3 outcome settles the order. Under \u00a76.6(b) and \u00a75.2, contact was required. It failed at 2025-07-10 10:49:13, reaching the holder on email and phone details that were never changed. Per \u00a75.3(b), this decides the order: the standard is decline, and escalate is prohibited because Linkage is absent. The order has not shipped, so declining voids and refunds the 43193-cent order. Benign explanations (new phone, travel to BR) do not survive the disowned order. No further check is needed.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 12931,
+  "input_tokens": 10584,
+  "output_tokens": 2347,
+  "unknown_usage_calls": 0
+ }
+}

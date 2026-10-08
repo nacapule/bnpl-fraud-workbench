@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 19225,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-dev-opus",
+  "case": "2718-baseline-132817-20250617T083727",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "7aa2fb96a78e7695a91b9dd5e7b44e3a97c36ed7b1802768b2750119a909b963",
+   "llm/memo.py": "5ce3d380cb85eec55d7121283d6f8101dda2d587201a42314dd29175d0b3d264",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "00523d5bf1c789d116d41ec1976f0300a1b2c93887b29360cd81f3d080162006",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "4683d17a1fc24e26b409931a93f228f41a1718f2afd05ecb704193fd334fcbba",
+  "prompt_version": "memo_fp2_v1"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10560,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 1993,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"decision.checks[0].check\", \"value\": \"id_check\", \"statement\": \"The completed verification check on this order is an id_check.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].outcome\", \"value\": \"failed\", \"statement\": \"The id_check failed.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].completed_at\", \"value\": \"2025-06-17 08:37:27\", \"statement\": \"The id_check completed at 2025-06-17 08:37:27, which is also the decision time.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"3\", \"statement\": \"Three accounts, this one included, had activity on device D1 in the 30 days before the decision, so R02 holds.\", \"derived\": null},\n    {\"field\": \"context.device_link_age_hours\", \"value\": \"960.615\", \"statement\": \"Device D1 was first used on this account 960.615 hours before the order, under the 90 days (2,160 hours) the \u00a76.4(a) household exception requires.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"1\", \"statement\": \"Only this account ordered to address A1 in the past 30 days, so R08 does not hold.\", \"derived\": null},\n    {\"field\": \"context.account_age_days\", \"value\": \"40.025625\", \"statement\": \"The account was 40.025625 days old at the order, so R04 does not hold despite this being a first attempt.\", \"derived\": null},\n    {\"field\": \"context.is_first_attempt_user\", \"value\": \"1\", \"statement\": \"This is the account's first order attempt.\", \"derived\": null},\n    {\"field\": \"context.installments_due_user\", \"value\": \"0\", \"statement\": \"No installments were due on the account before the decision, so non-payment cannot be cited (\u00a78.1).\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"0\", \"statement\": \"The order had not shipped at the decision.\", \"derived\": null},\n    {\"field\": \"context.bin_ip_country_mismatch\", \"value\": \"0\", \"statement\": \"Card issuing and IP countries match, so R03 does not hold.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"synthetic_identity\", \"likelihood\": \"high\", \"reasoning\": \"A 40-day-old account on a device shared by three accounts failed identity verification on its first order, which fits a fabricated identity in a device-linked ring.\"},\n    {\"explanation\": \"stolen_card\", \"likelihood\": \"medium\", \"reasoning\": \"The id_check also covers issuer authentication, so a failure is consistent with the orderer not holding card C1, although AVS and CVV passed and the countries match.\"},\n    {\"explanation\": \"household\", \"likelihood\": \"low\", \"reasoning\": \"A shared family device could explain three accounts on D1, but the device link is too recent for the \u00a76.4(a) exception. A household also does not explain a failed id_check.\"},\n    {\"explanation\": \"new_customer\", \"likelihood\": \"low\", \"reasoning\": \"This is a first order on a young account. A genuine new customer would normally pass issuer authentication and identity verification.\"}\n  ],\n  \"disposition\": \"escalate\",\n  \"citations\": [\"FP-2 \u00a75.3(b)\", \"FP-2 \u00a76.6(b)\", \"FP-2 \u00a76.4(a)\", \"FP-2 \u00a75.2\", \"R02\"],\n  \"next_check\": \"none\",\n  \"memo\": \"R02 (Linkage) holds: three accounts were active on device D1 in the past 30 days. The \u00a76.4(a) household exception does not apply because D1 was first used on this account only 960.615 hours before the order, under 90 days. No other adverse rule holds. No earlier outcome settles the order (\u00a76.3), and no installments were due, so repayment is not a factor (\u00a78.1). The required id_check failed at 2025-06-17 08:37:27, which decides the order under \u00a75.3(b). With Linkage present, the standard action is escalate, which blocks the linked accounts on D1. Decline is also permitted if the analyst prefers not to extend the block. The order had not shipped, so it is voided and refunded. A household sharing the device is the most plausible benign reading, but it does not explain the failed verification. No further check is needed.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 12553,
+  "input_tokens": 10560,
+  "output_tokens": 1993,
+  "unknown_usage_calls": 0
+ }
+}

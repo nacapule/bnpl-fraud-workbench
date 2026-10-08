@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 25380,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-dev-opus",
+  "case": "416-baseline-140378-20250717T074808",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "7aa2fb96a78e7695a91b9dd5e7b44e3a97c36ed7b1802768b2750119a909b963",
+   "llm/memo.py": "5ce3d380cb85eec55d7121283d6f8101dda2d587201a42314dd29175d0b3d264",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "03e923de521315d69e7c17b62b690464b84e56127cb8ca7b969243d47a44893a",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "4683d17a1fc24e26b409931a93f228f41a1718f2afd05ecb704193fd334fcbba",
+  "prompt_version": "memo_fp2_v1"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10533,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 2666,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"3\", \"statement\": \"Three accounts, this one included, ordered to shipping address A1 in the 30 days before the decision.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_ever\", \"value\": \"3\", \"statement\": \"Three accounts have ever ordered to address A1.\", \"derived\": null},\n    {\"field\": \"context.ship_to_home\", \"value\": \"1\", \"statement\": \"The order ships to the account's home address.\", \"derived\": null},\n    {\"field\": \"context.home_address_age_days\", \"value\": \"2.466238425925926\", \"statement\": \"The home address was registered on this account about 2.5 days before the order.\", \"derived\": null},\n    {\"field\": \"context.account_age_days\", \"value\": \"2.466238425925926\", \"statement\": \"The account was about 2.5 days old at the order.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"1\", \"statement\": \"Only this account was active on device D1 in the past 30 days.\", \"derived\": null},\n    {\"field\": \"context.email_root_other_accounts\", \"value\": \"0\", \"statement\": \"No other account shares the normalized email.\", \"derived\": null},\n    {\"field\": \"context.bin_ip_country_mismatch\", \"value\": \"0\", \"statement\": \"The card issuing country matches the IP country.\", \"derived\": null},\n    {\"field\": \"order.avs_result\", \"value\": \"Y\", \"statement\": \"AVS passed.\", \"derived\": null},\n    {\"field\": \"order.cvv_result\", \"value\": \"M\", \"statement\": \"CVV matched.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_card_24h\", \"value\": \"0\", \"statement\": \"The card had no processor declines in the prior 24 hours.\", \"derived\": null},\n    {\"field\": \"context.attempts_user_24h\", \"value\": \"1\", \"statement\": \"This is the account's only order attempt in the 24 hours up to and including this one.\", \"derived\": null},\n    {\"field\": \"context.hours_since_password_change\", \"value\": \"10000.0\", \"statement\": \"The password has never been changed.\", \"derived\": null},\n    {\"field\": \"context.is_first_attempt_user\", \"value\": \"0\", \"statement\": \"This is not the account's first order attempt.\", \"derived\": null},\n    {\"field\": \"context.approved_orders_user_ever\", \"value\": \"1\", \"statement\": \"The account has one earlier approved order.\", \"derived\": null},\n    {\"field\": \"context.amount_cents\", \"value\": \"31490\", \"statement\": \"The order amount is 31490 cents.\", \"derived\": null},\n    {\"field\": \"context.open_balance_user_cents\", \"value\": \"11808\", \"statement\": \"The account has 11808 cents of unpaid principal on live plans.\", \"derived\": null},\n    {\"field\": \"context.installments_due_user\", \"value\": \"0\", \"statement\": \"No installment on the account was due before the decision.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"0\", \"statement\": \"The order had not shipped at the decision.\", \"derived\": null},\n    {\"field\": \"decision.checks\", \"value\": \"[]\", \"statement\": \"No verification check has run yet.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"household\", \"likelihood\": \"medium\", \"reasoning\": \"Three accounts ordering to one home address fits family members or flatmates. The device is not shared, and the card and IP are consistent.\"},\n    {\"explanation\": \"mover\", \"likelihood\": \"medium\", \"reasoning\": \"The account and home address are both about 2.5 days old. That fits a new resident at an address where earlier occupants also ordered.\"},\n    {\"explanation\": \"synthetic_identity\", \"likelihood\": \"medium\", \"reasoning\": \"A brand-new account joining two others at one drop address, with a second plan inside 3 days, fits a multi-identity ring where goods land at one place.\"},\n    {\"explanation\": \"never_pay\", \"likelihood\": \"low\", \"reasoning\": \"Stacked exposure on a new account is possible first-party intent. No installment has fallen due, so \u00a78.1 bars citing it.\"}\n  ],\n  \"disposition\": \"needs_check\",\n  \"citations\": [\"FP-2 \u00a76.6(b)\", \"R08\", \"FP-2 \u00a76.4(b)\", \"FP-2 \u00a75.2\", \"FP-2 \u00a74.3\", \"FP-2 \u00a78.1\"],\n  \"next_check\": \"id_check\",\n  \"memo\": \"R08 holds: 3 accounts ordered to address A1 in 30 days. The \u00a76.4(b) household exception does not apply. A1 is the home address, but it was registered only 2.466238425925926 days ago, too recently to qualify. Linkage is therefore the only adverse family, and row \u00a76.6(b) applies.\\n\\nNo other rule holds:\\n- Only 1 account used the device.\\n- The email is not shared.\\n- The card, IP and home country agree, and AVS and CVV passed.\\n- The card had no declines, and there was 1 attempt.\\n- The password was never changed.\\n\\nNo installment is due yet, so repayment cannot be cited (\u00a78.1).\\n\\nThe plausible benign readings are a household or a recent mover. A ring using a drop address is the fraud alternative.\\n\\nRecommend needs_check: hold with id_check, as \u00a75.2 requires for Linkage. Decline and escalate are not permitted with one family and no check run. The order has not shipped.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 13199,
+  "input_tokens": 10533,
+  "output_tokens": 2666,
+  "unknown_usage_calls": 0
+ }
+}

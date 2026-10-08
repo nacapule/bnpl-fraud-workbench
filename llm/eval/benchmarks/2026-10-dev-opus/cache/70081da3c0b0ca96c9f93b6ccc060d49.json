@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 22173,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-dev-opus",
+  "case": "1041-baseline-137967-20250709T152944",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "7aa2fb96a78e7695a91b9dd5e7b44e3a97c36ed7b1802768b2750119a909b963",
+   "llm/memo.py": "5ce3d380cb85eec55d7121283d6f8101dda2d587201a42314dd29175d0b3d264",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "5c0542f68ea7da47770945802990dc0d2c1ba44424faa8a8b55fae9f901a009d",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "4683d17a1fc24e26b409931a93f228f41a1718f2afd05ecb704193fd334fcbba",
+  "prompt_version": "memo_fp2_v1"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10590,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 2382,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"decision.checks[0].check\", \"value\": \"contact\", \"statement\": \"The completed check on this order is a contact check.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].outcome\", \"value\": \"passed\", \"statement\": \"The account holder confirmed through the contact check that they placed the order.\", \"derived\": null},\n    {\"field\": \"context.hours_since_password_reset\", \"value\": \"34.20027777777778\", \"statement\": \"The account's password was reset about 34.2 hours before the order, within R01's 48-hour window.\", \"derived\": null},\n    {\"field\": \"context.account_age_days\", \"value\": \"232.15202546296297\", \"statement\": \"The account was about 232 days old at the order, meeting R01's 90-day minimum.\", \"derived\": null},\n    {\"field\": \"context.device_link_age_hours\", \"value\": \"57.6475\", \"statement\": \"Device D1 was first used on this account about 57.6 hours before the order, within R01's 72-hour window.\", \"derived\": null},\n    {\"field\": \"context.hours_since_email_change\", \"value\": \"10000.0\", \"statement\": \"The account's email has never been changed.\", \"derived\": null},\n    {\"field\": \"context.hours_since_phone_change\", \"value\": \"10000.0\", \"statement\": \"The account's phone has never been changed.\", \"derived\": null},\n    {\"field\": \"context.geo_kmh_from_previous_attempt\", \"value\": \"0.0\", \"statement\": \"No implied travel speed from the previous attempt, so R11 does not hold.\", \"derived\": null},\n    {\"field\": \"context.bin_ip_country_mismatch\", \"value\": \"0\", \"statement\": \"The card's issuing country matches the IP country, so R03 does not hold.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_card_24h\", \"value\": \"0\", \"statement\": \"No processor declines on the card in the prior 24 hours.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_device_24h\", \"value\": \"0\", \"statement\": \"No processor declines on the device in the prior 24 hours, so R07 does not hold.\", \"derived\": null},\n    {\"field\": \"context.attempts_user_24h\", \"value\": \"1\", \"statement\": \"The account made one order attempt in the 24 hours up to this one.\", \"derived\": null},\n    {\"field\": \"context.attempts_device_24h\", \"value\": \"1\", \"statement\": \"The device had one order attempt in the 24 hours up to this one, so R05 does not hold.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"1\", \"statement\": \"Only this account was active on the device in the past 30 days, so R02 does not hold.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"1\", \"statement\": \"Only this account ordered to the shipping address in the past 30 days, so R08 does not hold.\", \"derived\": null},\n    {\"field\": \"context.email_root_other_accounts\", \"value\": \"0\", \"statement\": \"No other account shares the normalized email, so R06(b) does not hold.\", \"derived\": null},\n    {\"field\": \"order.promotion_used\", \"value\": \"false\", \"statement\": \"No promotion was used, so R10 does not hold.\", \"derived\": null},\n    {\"field\": \"context.unauthorized_disputes_lost_user\", \"value\": \"0\", \"statement\": \"No unauthorized disputes have been lost on the account.\", \"derived\": null},\n    {\"field\": \"context.never_pay_determined_user\", \"value\": \"0\", \"statement\": \"No never-pay determination exists on the account.\", \"derived\": null},\n    {\"field\": \"context.inr_disputes_opened_user\", \"value\": \"0\", \"statement\": \"The account has opened no item-not-received disputes.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"0\", \"statement\": \"The order had not shipped at the decision.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"new_device\", \"likelihood\": \"high\", \"reasoning\": \"A password reset followed by first use of a new device fits a customer setting up a new phone (FP-2 \u00a76.5(b)), and the account holder confirmed the order by contact.\"},\n    {\"explanation\": \"legitimate_customer\", \"likelihood\": \"high\", \"reasoning\": \"Card, IP and home country match, AVS and CVV passed, no linkage, and the contact check passed.\"},\n    {\"explanation\": \"account_takeover\", \"likelihood\": \"low\", \"reasoning\": \"R01's reset-plus-new-device trail fits takeover, but email and phone were never changed and the holder confirmed the order through the contact check.\"}\n  ],\n  \"disposition\": \"clear\",\n  \"citations\": [\"FP-2 \u00a76.6(b)\", \"FP-2 \u00a75.3(a)\", \"FP-2 \u00a75.2\", \"R01\", \"FP-2 \u00a76.5(b)\"],\n  \"next_check\": \"none\",\n  \"memo\": \"R01 holds: the password was reset about 34.2 hours before the order on a 232-day-old account, and device D1 was first used on it about 57.6 hours before the order. This places the order in Account access, which requires the contact check (FP-2 \u00a75.2). The contact check has now passed. No other rule holds. Card and IP countries match. There were no processor declines and one attempt each on the account and device. Only one account is on the device and the address, no other account shares the email, and no promotion was used. No earlier outcome settles the order (\u00a76.3). The email and phone were never changed, so the contact reached the original holder. The likely explanation is a new phone after a reset (\u00a76.5(b)). With every required check passed, \u00a75.3(a) makes clear standard and prohibits hold, decline and escalate. The order has not shipped. Recommend clear; no further check.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 12972,
+  "input_tokens": 10590,
+  "output_tokens": 2382,
+  "unknown_usage_calls": 0
+ }
+}

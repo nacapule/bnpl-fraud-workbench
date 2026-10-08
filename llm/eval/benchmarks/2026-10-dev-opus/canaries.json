@@ -1,0 +1,11 @@
+[
+ {
+  "arm": "opus",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "input_tokens": 825,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "outcome": "passed",
+  "output_tokens": 29,
+  "verdict": "no"
+ }
+]

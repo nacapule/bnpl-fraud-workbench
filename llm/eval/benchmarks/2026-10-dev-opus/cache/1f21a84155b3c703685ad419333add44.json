@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 33461,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-dev-opus",
+  "case": "416-baseline-128767-20250604T171025",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "7aa2fb96a78e7695a91b9dd5e7b44e3a97c36ed7b1802768b2750119a909b963",
+   "llm/memo.py": "5ce3d380cb85eec55d7121283d6f8101dda2d587201a42314dd29175d0b3d264",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "49f9f1968b9e5083d308c35f0ae56b9aaf985ae8b5500c3dea5167d25310dc6c",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "4683d17a1fc24e26b409931a93f228f41a1718f2afd05ecb704193fd334fcbba",
+  "prompt_version": "memo_fp2_v1"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10589,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 2098,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"decision.checks[0].check\", \"value\": \"id_check\", \"statement\": \"The completed verification check was an id_check.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].outcome\", \"value\": \"failed\", \"statement\": \"The id_check failed, so card authentication or identity verification did not succeed.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].completed_at\", \"value\": \"2025-06-04 17:10:25\", \"statement\": \"The id_check completed at 2025-06-04 17:10:25, which is the decision time.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"3\", \"statement\": \"Three accounts, this one included, ordered to shipping address A1 in the past 30 days, so R08 holds.\", \"derived\": null},\n    {\"field\": \"context.ship_to_home\", \"value\": \"1\", \"statement\": \"The order ships to the account's home address.\", \"derived\": null},\n    {\"field\": \"context.home_address_age_days\", \"value\": \"28.221481481481483\", \"statement\": \"The home address was registered about 28 days ago, under the 90 days the \u00a76.4(b) household exception requires.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"1\", \"statement\": \"Only this account was active on device D1 in the past 30 days, so R02 does not hold.\", \"derived\": null},\n    {\"field\": \"context.email_root_other_accounts\", \"value\": \"0\", \"statement\": \"No other account shares the normalized email, so R06(b) does not hold.\", \"derived\": null},\n    {\"field\": \"context.bin_ip_country_mismatch\", \"value\": \"0\", \"statement\": \"The card's issuing country matches the IP country, so R03 does not hold.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_card_24h\", \"value\": \"0\", \"statement\": \"The card had no processor declines in the prior 24 hours, so R07 does not hold.\", \"derived\": null},\n    {\"field\": \"context.attempts_user_24h\", \"value\": \"2\", \"statement\": \"The account made 2 order attempts in 24 hours, below the R05 threshold.\", \"derived\": null},\n    {\"field\": \"context.hours_since_password_change\", \"value\": \"10000.0\", \"statement\": \"The password has never been changed, and R01 does not hold.\", \"derived\": null},\n    {\"field\": \"context.installments_due_user\", \"value\": \"0\", \"statement\": \"No installments were due before the decision, so non-payment cannot be cited.\", \"derived\": null},\n    {\"field\": \"context.amount_cents\", \"value\": \"46477\", \"statement\": \"The order amount is 46477 cents.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"0\", \"statement\": \"The order had not shipped at the decision.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"synthetic_identity\", \"likelihood\": \"high\", \"reasoning\": \"The identity check failed on a 28-day-old account whose home address is shared with two other ordering accounts, which fits a fabricated identity in a ring.\"},\n    {\"explanation\": \"stolen_card\", \"likelihood\": \"medium\", \"reasoning\": \"A failed issuer authentication suggests the orderer may not hold the card, although AVS and CVV matched and there were no declines.\"},\n    {\"explanation\": \"household\", \"likelihood\": \"low\", \"reasoning\": \"Several residents at one address could explain R08, but a legitimate holder would normally pass the id_check.\"},\n    {\"explanation\": \"mover\", \"likelihood\": \"low\", \"reasoning\": \"A recent move could explain a new home address shared with earlier occupants, but it does not explain the failed verification.\"}\n  ],\n  \"disposition\": \"escalate\",\n  \"citations\": [\"FP-2 \u00a75.3(b)\", \"FP-2 \u00a76.6\", \"FP-2 \u00a76.2\", \"R08\", \"FP-2 \u00a76.4(b)\", \"FP-2 \u00a78.1\"],\n  \"next_check\": \"none\",\n  \"memo\": \"Escalate O1. The id_check failed at 2025-06-04 17:10:25. Under FP-2 \u00a75.3(b), a failed check decides the order at once. Linkage is present through R08, because 3 accounts ordered to A1 in 30 days. The \u00a76.4(b) household exception does not apply: A1 is the home address but was registered only 28.221481481481483 days ago, under 90 days. Escalate is therefore the standard action, and decline is also permitted. No other rule holds: there is 1 account on D1, no BIN/IP mismatch, 0 card declines, 2 attempts in 24 h and no credential changes. With 0 installments due, non-payment cannot be cited (\u00a78.1). The order has not shipped, so escalation voids the 46477-cent order before any loss. A household or recent mover is possible but does not explain the failed verification. No further check is needed.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 12687,
+  "input_tokens": 10589,
+  "output_tokens": 2098,
+  "unknown_usage_calls": 0
+ }
+}
