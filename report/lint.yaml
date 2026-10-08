@@ -8,8 +8,7 @@ documents:
   - "cases/*.md"
 
 # Hand-written documents not yet rewritten as templates. This list only shrinks.
-not_yet_templated:
-  - "README.md"
+not_yet_templated: []
 
 # Phrases with digits that are names, not results.
 allowed_phrases:
