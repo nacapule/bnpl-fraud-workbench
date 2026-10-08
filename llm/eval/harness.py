@@ -8,9 +8,11 @@ A benchmark lives in ``llm/eval/benchmarks/<id>/`` and is fixed before any call:
     SHA-256 of the system prompt, SHA-256 of every file that scores a memo, the arms
     (backend, model, effort), the cases (case id built from seed, family, order and
     decision time, so an alert keeps its identity whatever the policy bands; packet
-    SHA-256; stratum; cluster; sampling weight; the latent diagnostic) and the
-    invariance probes. :func:`check_shape` holds it to the configured sizes, seeds and
-    cluster caps before any call or score.
+    SHA-256; decision-point axis, ``review`` or ``check_completed``; stratum; cluster;
+    sampling weight; the latent diagnostic), each axis's cases, eligible decisions and
+    share of them (``axes``, the natural-mix weights) and the invariance probes.
+    :func:`check_shape` holds it to the configured sizes per axis, seeds and cluster
+    caps before any call or score.
 ``packets/<case>.json``, ``referee.json``
     the packets and the referee's view of each, written by :mod:`llm.eval.select_cases`.
 ``pins.json``
@@ -61,12 +63,18 @@ in with a personal subscription only, and a call over its bound still parks the 
 Scoring replays the cache only, after checking that the policy, prompt, packets, the
 referee's views and the scoring code still have their recorded hashes (a scoring change
 must be named with ``--amend-scoring``, and is recorded in the results). Every case and
-probe of every arm must have a record (the coverage gate); malformed output is a
-counted failure; nothing is retried for format. Usage::
+probe of every scored arm must have a record (the coverage gate); ``--arm`` scores one
+arm alone, and paired comparisons are made only when every arm is scored. Malformed
+output is a counted failure; nothing is retried for format. The headline is the
+complete-memo pass rate (:func:`score_record`) beside its components and the
+acceptable rate, each also as the natural-mix rate over the decision-point axes
+(:func:`natural_rate`); intervals are cluster-aware, with exact bounds that stay
+informative when nothing fails (:func:`statistics`). Usage::
 
   python -m llm.eval.harness --benchmark 2026-10-dev --arm sol --live \\
       --log-dir <dir> --private-terms <file> --max-calls 40
-  python -m llm.eval.harness --benchmark 2026-10-dev           # score from the cache
+  python -m llm.eval.harness --benchmark 2026-10-dev           # score every arm
+  python -m llm.eval.harness --benchmark 2026-10-dev --arm sol # one arm alone
 """
 
 from __future__ import annotations
@@ -171,10 +179,50 @@ def _write_log(path: Path, text: str) -> None:
 # ------------------------------------------------------------------ fixed inputs
 
 
+def final_axes(sizes: Mapping[str, Any] | None = None) -> dict[str, int]:
+    """The final cohort's cases on each decision-point axis (all review decisions when
+    the configuration does not split them); they add up to ``final_cases``."""
+    sizes = SIZES if sizes is None else sizes
+    axes = {str(axis): int(n) for axis, n in (sizes.get("final_axes") or {
+        "review": sizes["final_cases"]}).items()}
+    if sum(axes.values()) != int(sizes["final_cases"]):
+        raise ShapeError(f"final_axes {axes} do not add up to {sizes['final_cases']} cases")
+    return axes
+
+
+def development_shapes(sizes: Mapping[str, Any] | None = None) -> list[dict[str, int]]:
+    """The cases a development benchmark may take on each axis: review decisions, or
+    decisions at check completions, or the configured subset of both."""
+    sizes = SIZES if sizes is None else sizes
+    shapes = [{"review": int(sizes["development_cases"])}]
+    if sizes.get("development_check_cases"):
+        shapes.append({"check_completed": int(sizes["development_check_cases"])})
+    if sizes.get("development_combined"):
+        shapes.append({str(axis): int(n) for axis, n in sizes["development_combined"].items()})
+    return shapes
+
+
+def case_axis(case: Mapping[str, Any]) -> str:
+    """A case's decision-point axis (review decisions before the axes existed)."""
+    return str(case.get("axis", "review"))
+
+
+def axis_shares(definition: Mapping[str, Any]) -> dict[str, float]:
+    """Each axis's weight in the natural-mix rate: its share of the eligible decisions
+    (each axis's share of the cases when the definition does not record them)."""
+    cases = definition.get("cases") or []
+    recorded = definition.get("axes")
+    if recorded:
+        return {axis: float(item["share"]) for axis, item in recorded.items()}
+    counts = Counter(case_axis(case) for case in cases)
+    return {axis: count / len(cases) for axis, count in counts.items()}
+
+
 def check_shape(definition: Mapping[str, Any], sizes: Mapping[str, Any] | None = None,
                 protocol: Any = None) -> None:
-    """The benchmark has its phase's configured size, seeds, family and probes, and no
-    account, episode or cluster holds more than the configured number of cases."""
+    """The benchmark has its phase's configured size on each decision-point axis,
+    seeds, family and probes, and no account, episode or cluster holds more than the
+    configured number of cases."""
     from core.protocol import load_protocol
 
     sizes = SIZES if sizes is None else sizes
@@ -185,21 +233,28 @@ def check_shape(definition: Mapping[str, Any], sizes: Mapping[str, Any] | None =
     ids = [case["case_id"] for case in cases]
     if len(set(ids)) != len(ids):
         raise ShapeError("a case id occurs twice")
-    wanted = int(sizes["development_cases" if phase == "development" else "final_cases"])
-    if len(ids) != wanted:
-        raise ShapeError(f"a {phase} benchmark has {wanted} cases, this one {len(ids)}")
+    axes = dict(Counter(case_axis(case) for case in cases))
+    allowed = development_shapes(sizes) if phase == "development" else [final_axes(sizes)]
+    if axes not in allowed:
+        raise ShapeError(f"a {phase} benchmark has {' or '.join(map(str, allowed))} cases "
+                         f"by decision point, this one {axes}")
+    recorded = definition.get("axes")
+    if recorded is not None:
+        if set(recorded) != set(axes) or any(int(recorded[axis]["cases"]) != axes[axis]
+                                             for axis in axes):
+            raise ShapeError(f"the recorded axes {recorded} do not fit the cases {axes}")
+        shares = [float(item["share"]) for item in recorded.values()]
+        if any(not 0 < share <= 1 for share in shares) or abs(sum(shares) - 1) > 1e-9:
+            raise ShapeError(f"the axes' shares {shares} must be positive and add up to 1")
     seeds = {int(case["seed"]) for case in cases}
+    if {case["family"] for case in cases} != {"baseline"}:
+        raise ShapeError(f"{phase} cases come from baseline worlds only")
     if phase == "development":
         if not seeds <= set(protocol.development_seeds):
             raise ShapeError(f"development cases from non-development seeds {sorted(seeds)}")
-        if {case["family"] for case in cases} != {"baseline"}:
-            raise ShapeError("development cases come from baseline worlds only")
-    else:
-        if not seeds <= set(protocol.final_seeds) or len(seeds) < int(sizes["min_final_seeds"]):
-            raise ShapeError(f"final cases need at least {sizes['min_final_seeds']} final "
-                             f"seeds, got {sorted(seeds)}")
-        if not {case["family"] for case in cases} <= set(protocol.family_starts):
-            raise ShapeError("a final case comes from an unknown family")
+    elif not seeds <= set(protocol.final_seeds) or len(seeds) < int(sizes["min_final_seeds"]):
+        raise ShapeError(f"final cases need at least {sizes['min_final_seeds']} final "
+                         f"seeds, got {sorted(seeds)}")
     cap = int(sizes["max_cases_per_cluster"])
     for key in ("account", "episode", "cluster"):
         counts = Counter(case[key] for case in cases if case.get(key) is not None)
@@ -851,19 +906,95 @@ def cached_records(directory: Path, definition: Mapping[str, Any], arm: Arm
     return records
 
 
+# The fraud explanation of the memo vocabulary (llm.memo) that names each latent pattern
+# (core.world.PATTERNS); a legitimate order is named by any benign explanation.
+PATTERN_EXPLANATION = {
+    "P-ATO": "account_takeover", "P-STOLEN": "stolen_card", "P-SYNTH": "synthetic_identity",
+    "P-NEVERPAY": "never_pay", "P-INR-ABUSE": "inr_abuse", "P-PROMO": "promo_abuse",
+    "P-MERCH": "merchant_bustout",
+}
+LIKELIHOOD_RANK = {"low": 0, "medium": 1, "high": 2}
+# Rows of the policy a case is decided under, in the order results list them; a row
+# without cases is reported as not evaluated.
+REFEREE_ROWS = ("§6.6(c)", "§6.6(b), one family", "§6.6(b), two or more families",
+                "§6.6(a)", "§5.3(a)", "§5.3(b), without Linkage", "§5.3(b), with Linkage",
+                "§5.3(c)")
+NOT_EVALUATED = {"§5.3(c)": "a hold without an answer expires; no analyst decision follows"}
+COMPONENTS = ("format_valid", "acceptable", "next_check_ok", "citations_valid",
+              "no_claim_error")
+
+
+def canonical_action(disposition: str | None, next_check: str | None,
+                     view: referee.RefereeView, packet: Mapping[str, Any]) -> str | None:
+    """The action a memo's disposition takes: ``needs_check`` is the memo's form of the
+    hold (fraud policy §4.3) when it names a required check that has not run yet;
+    otherwise every disposition is its own action."""
+    if disposition != "needs_check":
+        return disposition
+    done = {str(item["check"]) for item in packet["decision"]["checks"]}
+    if next_check in view.required_checks and next_check not in done:
+        return "hold"
+    return disposition
+
+
+def top_hypothesis(hypotheses: Sequence[Mapping[str, Any]]) -> tuple[str | None, bool]:
+    """The single most likely hypothesis's explanation, or None with True when several
+    share the highest likelihood."""
+    best = max(LIKELIHOOD_RANK[h["likelihood"]] for h in hypotheses)
+    top = [h["explanation"] for h in hypotheses if LIKELIHOOD_RANK[h["likelihood"]] == best]
+    return (top[0], False) if len(top) == 1 else (None, True)
+
+
+def referee_row(view: Mapping[str, Any]) -> str:
+    """The policy row a case is decided under (:data:`REFEREE_ROWS`), from the referee's
+    view: the clause of its standard disposition, with row (b) split by the number of
+    adverse families and §5.3(b) by Linkage (escalate is standard only with it)."""
+    clauses = {view["clauses"][disposition] for disposition in view["standard"]}
+    if len(clauses) != 1:
+        raise FrozenError(f"a view with standard dispositions under {sorted(clauses)}")
+    clause = clauses.pop()
+    if clause == "§6.6(b)":
+        return "§6.6(b), one family" if len(view["families"]) == 1 \
+            else "§6.6(b), two or more families"
+    if clause == "§5.3(b)":
+        return "§5.3(b), with Linkage" if "escalate" in view["standard"] \
+            else "§5.3(b), without Linkage"
+    return clause
+
+
 def score_record(record: Mapping[str, Any], packet: Mapping[str, Any],
                  view: referee.RefereeView) -> dict[str, Any]:
     """One case's outcome: a transport, protocol or format failure, or the referee's and
-    the verifier's scores. ``packet`` is the packet the model was shown."""
+    the verifier's scores. ``packet`` is the packet the model was shown. Also the
+    memo's canonical action (:func:`canonical_action`) and whether it takes the
+    standard action, its single most likely hypothesis, and the complete-memo pass: a
+    valid format, an acceptable disposition, the correct next check, valid citations
+    (no unknown or non-holding id, the disposition's clause cited, no non-payment
+    grounds without an installment due) and no verified claim error."""
+    failed = {"acceptable": False, "disposition": None, "action": None, "next_check": None,
+              "standard_action": False, "format_valid": False, "complete_pass": False,
+              "components": dict.fromkeys(COMPONENTS, False),
+              "top_hypothesis": None, "top_hypothesis_tied": False}
     if record["outcome"] != "response":
-        return {"outcome": record["outcome"], "acceptable": False, "disposition": None}
+        return {"outcome": record["outcome"], **failed}
     parsed, problems = memo.parse(record["text"])
     if parsed is None:
-        return {"outcome": "format_failure", "acceptable": False, "disposition": None,
-                "problems": problems[:10]}
+        return {"outcome": "format_failure", **failed, "problems": problems[:10]}
     scored = referee.score(parsed, view)
-    return {"outcome": "scored", **scored.as_dict(),
-            "verification": verifier.verify_memo(parsed, packet)}
+    verification = verifier.verify_memo(parsed, packet)
+    action = canonical_action(scored.disposition, parsed["next_check"], view, packet)
+    components = {
+        "format_valid": True, "acceptable": scored.acceptable,
+        "next_check_ok": scored.next_check_ok,
+        "citations_valid": scored.citation_ok and not scored.nonpayment_violation,
+        "no_claim_error": not verification["has_claim_error"],
+    }
+    top, tied = top_hypothesis(parsed["hypotheses"])
+    return {"outcome": "scored", **scored.as_dict(), "verification": verification,
+            "next_check": parsed["next_check"], "action": action,
+            "standard_action": action in view.standard, "format_valid": True,
+            "components": components, "complete_pass": all(components.values()),
+            "top_hypothesis": top, "top_hypothesis_tied": tied}
 
 
 def _rate(numerator: int, denominator: int) -> dict[str, Any]:
@@ -871,36 +1002,100 @@ def _rate(numerator: int, denominator: int) -> dict[str, Any]:
             "value": round(numerator / denominator, 4) if denominator else None}
 
 
-def summarize_arm(definition: Mapping[str, Any], rows: Mapping[tuple[str, str], dict[str, Any]]
-                  ) -> dict[str, Any]:
-    """Rates over the primary cases (failures count as not acceptable), per stratum, the
-    rate reweighted to the eligible review decisions (the two-phase Hájek estimate with
-    the selection's weights), cluster counts and invariance agreement."""
+def natural_rate(definition: Mapping[str, Any], values: Sequence[float],
+                 index: Sequence[int] | None = None) -> float | None:
+    """The natural-mix rate of ``values`` (one per case, in the definition's order):
+    within each decision-point axis the two-phase Hájek rate with the selection's
+    weights, and the axes weighted by their shares of the eligible decisions
+    (:func:`axis_shares`). ``index`` lists the cases to use (a bootstrap resample, with
+    repeats); an axis absent from it leaves the others' shares renormalised."""
+    cases = definition["cases"]
+    shares = axis_shares(definition)
+    positions = range(len(cases)) if index is None else index
+    sums: dict[str, list[float]] = defaultdict(lambda: [0.0, 0.0])
+    for position in positions:
+        case = cases[position]
+        weight = float(case["weight"])
+        sums[case_axis(case)][0] += weight * float(values[position])
+        sums[case_axis(case)][1] += weight
+    present = {axis: total for axis, total in sums.items() if total[1] > 0}
+    if not present:
+        return None
+    mass = sum(shares.get(axis, 0.0) for axis in present)
+    if mass <= 0:
+        return None
+    return sum(shares.get(axis, 0.0) * total[0] / total[1]
+               for axis, total in present.items()) / mass
+
+
+def summarize_arm(definition: Mapping[str, Any], rows: Mapping[tuple[str, str], dict[str, Any]],
+                  views: Mapping[str, Mapping[str, Any]] | None = None) -> dict[str, Any]:
+    """Rates over the primary cases (failures count as failing every measure): the
+    complete-memo pass rate (the headline) beside its components and the acceptable
+    rate; each also as the natural-mix rate (:func:`natural_rate`); the standard action
+    (``needs_check`` counted as the hold only as :func:`canonical_action` allows) beside
+    the raw standard disposition; per stratum, per decision-point axis and, with
+    ``views``, per policy row (:data:`REFEREE_ROWS`); cluster counts; and invariance
+    under each probe (raw disposition, canonical action, next check, complete-memo
+    pass, and all three functional measures together)."""
     cases = definition["cases"]
     primary = [rows[(case["case_id"], "primary")] for case in cases]
     n = len(cases)
     outcomes = Counter(row["outcome"] for row in primary)
     scored = [row for row in primary if row["outcome"] == "scored"]
     acceptable = [bool(row["acceptable"]) for row in primary]
+    passed = [bool(row.get("complete_pass")) for row in primary]
     weights = [float(case["weight"]) for case in cases]
-    strata: dict[str, list[bool]] = defaultdict(list)
-    for case, ok in zip(cases, acceptable, strict=True):
-        strata[case["stratum"]].append(ok)
+    strata: dict[str, list[int]] = defaultdict(list)
+    axes: dict[str, list[int]] = defaultdict(list)
+    policy_rows: dict[str, list[int]] = defaultdict(list)
+    for position, case in enumerate(cases):
+        strata[case["stratum"]].append(position)
+        axes[case_axis(case)].append(position)
+        if views is not None:
+            policy_rows[referee_row(views[case["case_id"]])].append(position)
+
+    def group(positions: Sequence[int]) -> dict[str, Any]:
+        return {"acceptable": _rate(sum(acceptable[i] for i in positions), len(positions)),
+                "complete_pass": _rate(sum(passed[i] for i in positions), len(positions))}
+
     invariance = {}
     for probe, case_ids in sorted(definition.get("probes", {}).items()):
-        same = sum(rows[(case_id, probe)].get("disposition") is not None
-                   and rows[(case_id, probe)]["disposition"]
-                   == rows[(case_id, "primary")]["disposition"] for case_id in case_ids)
-        invariance[probe] = _rate(same, len(case_ids))
+        pairs = [(rows[(case_id, "primary")], rows[(case_id, probe)]) for case_id in case_ids]
+
+        def agree(key: str, pairs: list[tuple[dict[str, Any], dict[str, Any]]] = pairs) -> int:
+            return sum(first.get(key) is not None and first.get(key) == second.get(key)
+                       for first, second in pairs)
+
+        functional = sum(
+            first.get("action") is not None and first.get("next_check") is not None
+            and all(first.get(key) == second.get(key)
+                    for key in ("action", "next_check", "complete_pass"))
+            for first, second in pairs)
+        invariance[probe] = {
+            "disposition": _rate(agree("disposition"), len(pairs)),
+            "action": _rate(agree("action"), len(pairs)),
+            "next_check": _rate(agree("next_check"), len(pairs)),
+            "complete_pass": _rate(sum(first.get("complete_pass") == second.get("complete_pass")
+                                       for first, second in pairs), len(pairs)),
+            "functional": _rate(functional, len(pairs)),
+        }
     claims = sum(row["verification"]["n_claims"] for row in scored)
     claim_errors = sum(row["verification"]["n_claim_errors"] for row in scored)
-    return {
+    summary = {
         "n_cases": n,
         "outcomes": dict(sorted(outcomes.items())),
+        "complete_pass": _rate(sum(passed), n),
+        "complete_pass_natural": _round(natural_rate(definition, passed)),
+        "components": {name: _rate(sum(bool(row["components"][name]) for row in primary
+                                       if "components" in row), n)
+                       for name in COMPONENTS},
         "acceptable": _rate(sum(acceptable), n),
+        "acceptable_natural": _round(natural_rate(definition, acceptable)),
         "acceptable_reweighted": (round(sum(w * ok for w, ok in zip(weights, acceptable,
                                                                     strict=True))
                                         / sum(weights), 4) if sum(weights) else None),
+        "standard_action": _rate(sum(bool(row.get("standard_action")) for row in primary), n),
         "standard": _rate(sum(bool(row.get("standard")) for row in primary), n),
         "prohibited": _rate(sum(bool(row.get("prohibited")) for row in primary), n),
         "needs_check": _rate(sum(bool(row.get("needs_check")) for row in primary), n),
@@ -913,11 +1108,22 @@ def summarize_arm(definition: Mapping[str, Any], rows: Mapping[tuple[str, str], 
             sum(row["verification"]["has_claim_error"] for row in scored), len(scored)),
         "memos_with_unmatched_token": _rate(
             sum(row["verification"]["has_unmatched_token"] for row in scored), len(scored)),
-        "per_stratum": {stratum: _rate(sum(oks), len(oks))
-                        for stratum, oks in sorted(strata.items())},
+        "per_stratum": {stratum: _rate(sum(acceptable[i] for i in positions), len(positions))
+                        for stratum, positions in sorted(strata.items())},
+        "per_axis": {axis: group(positions) for axis, positions in sorted(axes.items())},
         "clusters": len({case["cluster"] for case in cases}),
         "invariance": invariance,
     }
+    if views is not None:
+        summary["per_referee_row"] = {
+            row: (group(policy_rows[row]) if policy_rows.get(row) else
+                  {"n": 0, "not_evaluated": NOT_EVALUATED.get(row, "no case in the cohort")})
+            for row in REFEREE_ROWS}
+    return summary
+
+
+def _round(value: float | None) -> float | None:
+    return None if value is None else round(value, 4)
 
 
 def disagreement_table(definition: Mapping[str, Any], views: Mapping[str, Mapping[str, Any]],
@@ -934,86 +1140,161 @@ def disagreement_table(definition: Mapping[str, Any], views: Mapping[str, Mappin
 def latent_diagnostic(definition: Mapping[str, Any],
                       rows: Mapping[tuple[str, str], dict[str, Any]]) -> dict[str, Any]:
     """Against simulation truth, reported apart from the policy score: how often the
-    memo suggested an adverse disposition for legitimate orders and cleared fraud."""
+    memo suggested an adverse disposition for legitimate orders and cleared fraud, and
+    how often its single most likely hypothesis names the latent pattern (any benign
+    explanation for a legitimate order; a tie at the top names nothing)."""
     adverse = ("hold", "decline", "escalate", "needs_check")
     by_class: dict[str, list[str | None]] = defaultdict(list)
+    named: dict[str, list[bool]] = defaultdict(list)
+    ties = 0
     for case in definition["cases"]:
-        by_class[case["latent"]["class"]].append(
-            rows[(case["case_id"], "primary")].get("disposition"))
+        row = rows[(case["case_id"], "primary")]
+        latent = case["latent"]
+        by_class[latent["class"]].append(row.get("disposition"))
+        top = row.get("top_hypothesis")
+        ties += bool(row.get("top_hypothesis_tied"))
+        if latent["class"] == "legitimate":
+            named["legitimate"].append(top in memo.BENIGN_EXPLANATIONS)
+        else:
+            named["fraud"].append(top is not None
+                                  and top == PATTERN_EXPLANATION.get(latent["pattern"]))
     legitimate, fraud = by_class.get("legitimate", []), by_class.get("fraud", [])
+    every = named["legitimate"] + named["fraud"]
     return {
         "legitimate_adverse": _rate(sum(d in adverse for d in legitimate), len(legitimate)),
         "fraud_cleared": _rate(sum(d == "clear" for d in fraud), len(fraud)),
+        "top_hypothesis_names_latent": _rate(sum(every), len(every)),
+        "top_hypothesis_names_latent_by_class": {
+            name: _rate(sum(values), len(values)) for name, values in sorted(named.items())},
+        "top_hypothesis_tied": ties,
     }
 
 
-def statistics(definition: Mapping[str, Any], arms: Mapping[str, Mapping[str, Any]]
-               ) -> dict[str, Any]:
-    """Per arm: Wilson and cluster-bootstrap intervals for the acceptable rate, and a
-    cluster-bootstrap interval for the reweighted rate. Per pair of arms, on the same
-    cases: the case counts, a cluster-bootstrap interval for the difference in rates
-    (the same clusters resampled for both arms) and a sign test over clusters (each
-    cluster's net count of cases only one arm got right), so linked cases are not
-    counted as independent evidence."""
+TIE_NOTE = ("the arms did equally well on these cases; a tie is not evidence that they are "
+            "equivalent")
+
+
+def cluster_bound(values: Sequence[float], clusters: Sequence[str],
+                  level: float = 0.95) -> dict[str, Any]:
+    """Exact Clopper–Pearson bounds with clusters as the units, which stay informative
+    when nothing fails: of ``k`` clusters, ``f`` hold a failing case. Gives the
+    one-sided upper bound on the share of clusters with a failure (``1 - (1 - level) **
+    (1 / k)`` when ``f`` is 0, about ``3 / k``) and the two-sided interval for the share
+    without one."""
+    from scipy.stats import beta
+
+    k = len(set(clusters))
+    f = len({cluster for cluster, value in zip(clusters, values, strict=True) if not value})
+    alpha = 1 - level
+    upper = 1.0 if f == k else float(beta.ppf(level, f + 1, k - f))
+    s = k - f
+    low = 0.0 if s == 0 else float(beta.ppf(alpha / 2, s, k - s + 1))
+    high = 1.0 if s == k else float(beta.ppf(1 - alpha / 2, s + 1, k - s))
+    return {"clusters": k, "clusters_with_failure": f,
+            "failure_share_upper_one_sided": round(upper, 4),
+            "pass_share_interval": [round(low, 4), round(high, 4)], "level": level}
+
+
+def statistics(definition: Mapping[str, Any], arms: Mapping[str, Mapping[str, Any]], *,
+               paired: bool = True) -> dict[str, Any]:
+    """Per arm, for the complete-memo pass (the primary endpoint) and the acceptable
+    disposition: a cluster-bootstrap interval for the natural-mix rate and for the raw
+    rate, Wilson for the raw rate, and exact bounds with clusters as units
+    (:func:`cluster_bound`). When every case passes (or none does) a bootstrap interval
+    collapses to a point, so it is reported as null and the exact bound stands alone.
+    With ``paired``, per pair of arms on the same cases: the case counts, a
+    cluster-bootstrap interval for the difference in rates (the same clusters
+    resampled for both arms; null when every case agrees) and a sign test over clusters
+    (each cluster's net count of cases only one arm passed), so linked cases are not
+    counted as independent evidence. A tie is reported as a tie, not equivalence."""
     import numpy as np
 
     from core.stats import cluster_bootstrap, paired_outcomes, sign_test, wilson_interval
 
     ids = [case["case_id"] for case in definition["cases"]]
     clusters = [case["cluster"] for case in definition["cases"]]
-    weights = np.array([float(case["weight"]) for case in definition["cases"]])
-    ok = {name: {case_id: bool(arm["cases"][f"{case_id}/primary"]["acceptable"])
-                 for case_id in ids} for name, arm in arms.items()}
+    measures = ("complete_pass", "acceptable")
+    marks = {measure: {name: {case_id: bool(arm["cases"][f"{case_id}/primary"][measure])
+                              for case_id in ids} for name, arm in arms.items()}
+             for measure in measures}
     out: dict[str, Any] = {"arms": {}, "paired": {}, "clusters": len(set(clusters))}
 
-    def interval(statistic: Callable[[np.ndarray], float]) -> list[float]:
+    def interval(values: np.ndarray, statistic: Callable[[np.ndarray], float]
+                 ) -> list[float] | None:
+        if values.min() == values.max():
+            return None  # every resample gives the same value
         bounds = cluster_bootstrap(clusters, statistic, resamples=2000, seed=0)
         return [round(bounds.low, 4), round(bounds.high, 4)]
 
-    for name, outcomes in ok.items():
-        values = np.array([outcomes[case_id] for case_id in ids], dtype=float)
-        wilson = wilson_interval(int(values.sum()), len(values))
-        out["arms"][name] = {
-            "wilson": [round(wilson.low, 4), round(wilson.high, 4)],
-            "cluster_bootstrap": interval(lambda idx, v=values: float(v[idx].mean())),
-            "reweighted_cluster_bootstrap": interval(
-                lambda idx, v=values: float((weights[idx] * v[idx]).sum()
-                                            / weights[idx].sum())),
-        }
-    names = sorted(ok)
+    for name in arms:
+        out["arms"][name] = {}
+        for measure in measures:
+            values = np.array([marks[measure][name][case_id] for case_id in ids], dtype=float)
+            wilson = wilson_interval(int(values.sum()), len(values))
+            out["arms"][name][measure] = {
+                "rate": round(float(values.mean()), 4),
+                "natural": _round(natural_rate(definition, values)),
+                "natural_cluster_bootstrap": interval(
+                    values, lambda idx, v=values: float(natural_rate(definition, v, idx))),
+                "cluster_bootstrap": interval(values,
+                                              lambda idx, v=values: float(v[idx].mean())),
+                "wilson": [round(wilson.low, 4), round(wilson.high, 4)],
+                "exact_clusters": cluster_bound(values.tolist(), clusters),
+                **({"degenerate": "every case passed" if values.min() == 1 else
+                    "no case passed"} if values.min() == values.max() else {}),
+            }
+    if not paired:
+        out["paired_note"] = "paired comparisons are made when every arm is scored"
+        return out
+    names = sorted(arms)
     for index, first in enumerate(names):
         for second in names[index + 1:]:
-            paired = paired_outcomes(ok[first], ok[second])
-            difference = np.array([ok[first][i] - ok[second][i] for i in ids], dtype=float)
-            net: dict[str, float] = defaultdict(float)
-            for cluster, value in zip(clusters, difference, strict=True):
-                net[cluster] += value
-            test = sign_test(net.values())
-            out["paired"][f"{first} vs {second}"] = {
-                "both": paired.both, "only_first": paired.only_first,
-                "only_second": paired.only_second, "neither": paired.neither,
-                "difference": round(float(difference.mean()), 4),
-                "difference_cluster_bootstrap": interval(
-                    lambda idx, d=difference: float(d[idx].mean())),
-                "clusters_favouring_first": test.positive,
-                "clusters_favouring_second": test.negative,
-                "clusters_tied": test.zero,
-                "cluster_sign_test_p": round(test.p_value, 6),
-            }
+            comparison = {}
+            for measure in measures:
+                ok = marks[measure]
+                counts = paired_outcomes(ok[first], ok[second])
+                difference = np.array([ok[first][i] - ok[second][i] for i in ids], dtype=float)
+                net: dict[str, float] = defaultdict(float)
+                for cluster, value in zip(clusters, difference, strict=True):
+                    net[cluster] += value
+                test = sign_test(net.values())
+                tie = not difference.any()
+                comparison[measure] = {
+                    "both": counts.both, "only_first": counts.only_first,
+                    "only_second": counts.only_second, "neither": counts.neither,
+                    "difference": round(float(difference.mean()), 4),
+                    "difference_cluster_bootstrap": interval(
+                        difference, lambda idx, d=difference: float(d[idx].mean())),
+                    "clusters_favouring_first": test.positive,
+                    "clusters_favouring_second": test.negative,
+                    "clusters_tied": test.zero,
+                    "cluster_sign_test_p": round(test.p_value, 6),
+                    **({"tie": TIE_NOTE} if tie else {}),
+                }
+            out["paired"][f"{first} vs {second}"] = comparison
     return out
 
 
-def evaluate(directory: Path, *, amend: str | None = None) -> dict[str, Any]:
-    """Score every arm from the cache: shape and hashes first, then the coverage gate."""
+def evaluate(directory: Path, *, amend: str | None = None,
+             arms: Sequence[str] | None = None) -> dict[str, Any]:
+    """Score the arms (every arm, or those named) from the cache: shape and hashes
+    first, then each arm's coverage gate. Paired comparisons are made only when every
+    arm of the benchmark is scored."""
     definition = load_benchmark(directory)
     check_shape(definition)
     amendment = check_frozen(directory, definition, amend=amend)
     views = json.loads((directory / "referee.json").read_text())
+    names = list(definition["arms"]) if arms is None else list(arms)
+    if unknown := set(names) - set(definition["arms"]):
+        raise ShapeError(f"the benchmark has no arm {sorted(unknown)}")
     results: dict[str, Any] = {"benchmark": definition["id"], "arms": {},
-                               "pins": read_pins(directory)}
+                               "pins": read_pins(directory),
+                               "axes": {axis: round(share, 4) for axis, share
+                                        in sorted(axis_shares(definition).items())}}
     if amendment:
         results["scoring_amendment"] = amendment
-    for arm in definition["arms"].values():
+    for name in names:
+        arm = definition["arms"][name]
         records = cached_records(directory, definition, arm)
         rows = {}
         for (case_id, probe), record in records.items():
@@ -1029,19 +1310,20 @@ def evaluate(directory: Path, *, amend: str | None = None) -> dict[str, Any]:
                              "unknown_usage_calls")}
         results["arms"][arm.name] = {
             "arm": arm.__dict__, "spend": spend,
-            "summary": summarize_arm(definition, rows),
+            "summary": summarize_arm(definition, rows, views),
             "disagreement": disagreement_table(definition, views, rows),
             "latent_diagnostic": latent_diagnostic(definition, rows),
             "cases": {f"{case_id}/{probe}": row for (case_id, probe), row in sorted(rows.items())},
         }
-    results["statistics"] = statistics(definition, results["arms"])
+    results["statistics"] = statistics(definition, results["arms"],
+                                       paired=set(names) == set(definition["arms"]))
     return results
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--benchmark", required=True)
-    parser.add_argument("--arm")
+    parser.add_argument("--arm", help="the arm to run live, or the one arm to score")
     parser.add_argument("--live", action="store_true")
     parser.add_argument("--log-dir", type=Path)
     parser.add_argument("--private-terms", type=Path,
@@ -1062,17 +1344,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(json.dumps(used))
         return 0
     try:
-        results = evaluate(directory, amend=args.amend_scoring)
+        results = evaluate(directory, amend=args.amend_scoring,
+                           arms=None if args.arm is None else [args.arm])
     except CoverageError as error:
         print(f"coverage gate: {error}", file=sys.stderr)
         return 1
     except (FrozenError, ShapeError) as error:
         print(f"refused: {error}", file=sys.stderr)
         return 1
-    _write_json(directory / "results.json", results)
+    _write_json(directory / ("results.json" if args.arm is None
+                             else f"results-{args.arm}.json"), results)
     for name, arm in results["arms"].items():
         print(name, json.dumps({k: v for k, v in arm["summary"].items()
-                                if k in ("n_cases", "outcomes", "acceptable")}))
+                                if k in ("n_cases", "outcomes", "complete_pass",
+                                         "acceptable")}))
     return 0
 
 

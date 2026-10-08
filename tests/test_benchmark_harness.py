@@ -174,8 +174,14 @@ def test_end_to_end_scores_and_failures(bench: Path, tmp_path: Path) -> None:
     results = harness.evaluate(bench)
     a, b = results["arms"]["a"]["summary"], results["arms"]["b"]["summary"]
     assert a["acceptable"] == {"numerator": 3, "denominator": 3, "value": 1.0}
-    assert a["invariance"] == {"renamed": {"numerator": 1, "denominator": 1, "value": 1.0},
-                               "shuffled": {"numerator": 1, "denominator": 1, "value": 1.0}}
+    every = {"numerator": 1, "denominator": 1, "value": 1.0}
+    assert a["invariance"] == {probe: dict.fromkeys(("disposition", "action", "next_check",
+                                                     "complete_pass", "functional"), every)
+                               for probe in ("renamed", "shuffled")}
+    assert a["complete_pass"] == {"numerator": 3, "denominator": 3, "value": 1.0}
+    assert a["complete_pass_natural"] == a["acceptable_natural"] == 1.0
+    assert b["complete_pass"]["numerator"] == 0
+    assert b["components"]["format_valid"]["numerator"] == 0
     assert a["claim_errors"]["numerator"] == 0
     assert b["outcomes"] == {"format_failure": 1, "protocol_failure": 2}
     assert b["acceptable"]["numerator"] == 0
@@ -183,9 +189,10 @@ def test_end_to_end_scores_and_failures(bench: Path, tmp_path: Path) -> None:
     assert results["arms"]["a"]["spend"] == {"calls": 5, "input_tokens": 500,
                                              "output_tokens": 250, "charged_tokens": 750,
                                              "unknown_usage_calls": 0}
-    paired = results["statistics"]["paired"]["a vs b"]
-    assert (paired["only_first"], paired["only_second"]) == (3, 0)
-    assert paired["clusters_favouring_first"] == 3 and paired["cluster_sign_test_p"] == 0.25
+    for measure in ("complete_pass", "acceptable"):
+        paired = results["statistics"]["paired"]["a vs b"][measure]
+        assert (paired["only_first"], paired["only_second"]) == (3, 0)
+        assert paired["clusters_favouring_first"] == 3 and paired["cluster_sign_test_p"] == 0.25
     assert results["pins"]["a"]["cli_version"] == "cli 1"
 
 
@@ -840,6 +847,9 @@ def test_a_final_benchmark_needs_final_seeds_and_every_probe(bench: Path) -> Non
         harness.check_shape(without)
     with pytest.raises(harness.ShapeError):
         harness.check_shape(definition, {**SIZES, "min_final_seeds": 3})
+    with pytest.raises(harness.ShapeError, match="baseline worlds only"):
+        harness.check_shape({**definition, "cases": [{**case, "family": "lag_half"}
+                                                     for case in definition["cases"]]})
     definition["cases"][0]["seed"] = 1041
     with pytest.raises(harness.ShapeError):
         harness.check_shape(definition)
@@ -849,10 +859,11 @@ def test_paired_inference_counts_clusters_not_linked_cases() -> None:
     def arms_for(pairs):
         cases = [{"case_id": f"c{i}", "cluster": cluster, "weight": 1.0}
                  for i, (cluster, _a, _b) in enumerate(pairs)]
-        arms = {name: {"cases": {f"c{i}/primary": {"acceptable": row[1 + index]}
+        arms = {name: {"cases": {f"c{i}/primary": {"acceptable": row[1 + index],
+                                                   "complete_pass": row[1 + index]}
                                  for i, row in enumerate(pairs)}}
                 for index, name in enumerate(("a", "b"))}
-        return harness.statistics({"cases": cases}, arms)["paired"]["a vs b"]
+        return harness.statistics({"cases": cases}, arms)["paired"]["a vs b"]["acceptable"]
 
     linked = arms_for([(f"g{i // 2}", True, False) for i in range(6)])
     independent = arms_for([(f"g{i}", True, False) for i in range(3)])
@@ -866,3 +877,185 @@ def test_case_ids_identify_an_order_and_decision_whatever_the_bands() -> None:
     assert first == case_id(416, "baseline", 77, pd.Timestamp("2025-06-02 10:00:00"))
     assert first != case_id(416, "baseline", 77, "2025-06-02 10:00:01")
     assert first != case_id(416, "fraud_mix_shift", 77, "2025-06-02 10:00:00")
+
+
+# ------------------------------------------------- headline, components and diagnostics
+
+
+def checked_packet(outcome: str | None = None) -> dict:
+    """The R03 case's packet at its review, or after its id_check answered."""
+    from core.actions import Check, CheckOutcome
+    from core.evidence import CheckResult
+
+    at = pd.Timestamp("2025-07-03 16:05:00")
+    context = {**CASE["context_row"], **R03, "decision_at": at}
+    checks = () if outcome is None else (
+        CheckResult(Check("id_check"), CheckOutcome(outcome), at.to_pydatetime()),)
+    return build_packet(context, CASE["order"], merchant_category="electronics",
+                        card_bin_country="US", home_country="US", checks=checks)
+
+
+def test_needs_check_is_the_hold_only_with_a_required_check_not_yet_run() -> None:
+    from llm import referee
+
+    review = checked_packet()
+    view = referee.view(review)
+    assert harness.canonical_action("needs_check", "id_check", view, review) == "hold"
+    assert harness.canonical_action("needs_check", "none", view, review) == "needs_check"
+    assert harness.canonical_action("needs_check", "contact", view, review) == "needs_check"
+    assert harness.canonical_action("clear", "none", view, review) == "clear"
+    after = checked_packet("passed")  # §5.3(a): the check has run, every hold prohibited
+    assert harness.canonical_action("needs_check", "id_check", referee.view(after),
+                                    after) == "needs_check"
+
+
+def test_the_single_most_likely_hypothesis() -> None:
+    def h(explanation: str, likelihood: str) -> dict:
+        return {"explanation": explanation, "likelihood": likelihood, "reasoning": "r"}
+
+    assert harness.top_hypothesis([h("stolen_card", "high"), h("traveller", "low")]) == (
+        "stolen_card", False)
+    assert harness.top_hypothesis([h("stolen_card", "medium"), h("traveller", "medium")]) == (
+        None, True)
+    from core.world import PATTERNS
+
+    assert set(harness.PATTERN_EXPLANATION) == set(PATTERNS)
+    assert set(harness.PATTERN_EXPLANATION.values()) <= set(memo.FRAUD_EXPLANATIONS)
+
+
+@pytest.mark.parametrize(("standard", "clauses", "families", "row"), [
+    (["clear"], {"clear": "§6.6(c)"}, [], "§6.6(c)"),
+    (["hold"], {"hold": "§6.6(b)"}, ["Card"], "§6.6(b), one family"),
+    (["hold"], {"hold": "§6.6(b)"}, ["Card", "Linkage"], "§6.6(b), two or more families"),
+    (["decline"], {"decline": "§6.6(a)"}, ["Card"], "§6.6(a)"),
+    (["clear"], {"clear": "§5.3(a)"}, ["Card"], "§5.3(a)"),
+    (["decline"], {"decline": "§5.3(b)"}, ["Card"], "§5.3(b), without Linkage"),
+    (["escalate"], {"escalate": "§5.3(b)"}, ["Linkage"], "§5.3(b), with Linkage"),
+])
+def test_cases_are_reported_by_policy_row(standard, clauses, families, row) -> None:
+    assert harness.referee_row({"standard": standard, "clauses": clauses,
+                                "families": families}) == row
+
+
+def test_the_natural_mix_weights_each_axis_by_its_share() -> None:
+    definition = {"cases": [{"axis": "review", "weight": 1.0}, {"axis": "review", "weight": 3.0},
+                            {"axis": "check_completed", "weight": 2.0}],
+                  "axes": {"review": {"cases": 2, "eligible": 75, "share": 0.75},
+                           "check_completed": {"cases": 1, "eligible": 25, "share": 0.25}}}
+    # review: (1*1 + 3*0) / 4 = 0.25; checks: 1.0; mix 0.75 * 0.25 + 0.25 * 1.0
+    assert harness.natural_rate(definition, [1, 0, 1]) == pytest.approx(0.4375)
+    assert harness.natural_rate(definition, [1, 0, 1], [0, 0, 2]) == pytest.approx(1.0)
+    # a resample without the check axis: the review axis alone, (1 + 1 + 0) / (1 + 1 + 3)
+    assert harness.natural_rate(definition, [1, 0, 1], [0, 0, 1]) == pytest.approx(0.4)
+    plain = {"cases": [{"case_id": "x", "weight": 2.0}, {"case_id": "y", "weight": 2.0}]}
+    assert harness.natural_rate(plain, [1, 0]) == pytest.approx(0.5)  # review decisions only
+
+
+def test_exact_bounds_count_clusters_and_stay_informative_without_failures() -> None:
+    clusters = [f"g{i // 2}" for i in range(200)]  # 100 clusters of two
+    bound = harness.cluster_bound([1] * 200, clusters)
+    assert bound["clusters"] == 100 and bound["clusters_with_failure"] == 0
+    assert bound["failure_share_upper_one_sided"] == round(1 - 0.05 ** (1 / 100), 4)
+    assert bound["pass_share_interval"][1] == 1.0
+    two_in_one = harness.cluster_bound([0, 0] + [1] * 198, clusters)
+    assert two_in_one["clusters_with_failure"] == 1  # two linked failures count once
+    assert two_in_one["failure_share_upper_one_sided"] > bound["failure_share_upper_one_sided"]
+
+
+def test_when_every_case_passes_no_bootstrap_interval_is_reported_and_a_tie_is_named() -> None:
+    cases = [{"case_id": f"c{i}", "cluster": f"g{i}", "weight": 1.0} for i in range(4)]
+    arms = {name: {"cases": {f"c{i}/primary": {"acceptable": True, "complete_pass": True}
+                             for i in range(4)}} for name in ("a", "b")}
+    stats = harness.statistics({"cases": cases}, arms)
+    first = stats["arms"]["a"]["complete_pass"]
+    assert first["cluster_bootstrap"] is None and first["natural_cluster_bootstrap"] is None
+    assert first["degenerate"] == "every case passed"
+    assert first["exact_clusters"]["failure_share_upper_one_sided"] == round(
+        1 - 0.05 ** (1 / 4), 4)
+    paired = stats["paired"]["a vs b"]["complete_pass"]
+    assert paired["difference"] == 0 and paired["difference_cluster_bootstrap"] is None
+    assert "not evidence that they are equivalent" in paired["tie"]
+    alone = harness.statistics({"cases": cases}, {"a": arms["a"]}, paired=False)
+    assert alone["paired"] == {} and "every arm" in alone["paired_note"]
+
+
+def test_one_arm_is_scored_alone_under_its_own_coverage_gate(bench: Path, tmp_path: Path) -> None:
+    run(bench, "a", tmp_path)
+    with pytest.raises(harness.CoverageError):
+        harness.evaluate(bench)  # arm b has no records
+    alone = harness.evaluate(bench, arms=["a"])
+    assert set(alone["arms"]) == {"a"} and alone["statistics"]["paired"] == {}
+    with pytest.raises(harness.CoverageError):
+        harness.evaluate(bench, arms=["b"])
+    with pytest.raises(harness.ShapeError):
+        harness.evaluate(bench, arms=["c"])
+
+
+def test_the_headline_and_its_components_per_case(bench: Path, tmp_path: Path) -> None:
+    run(bench, "a", tmp_path)
+    results = harness.evaluate(bench, arms=["a"])
+    summary = results["arms"]["a"]["summary"]
+    assert summary["components"] == {name: {"numerator": 3, "denominator": 3, "value": 1.0}
+                                     for name in harness.COMPONENTS}
+    assert summary["standard_action"]["numerator"] == 3
+    rows = summary["per_referee_row"]
+    assert list(rows) == list(harness.REFEREE_ROWS)
+    assert rows["§6.6(c)"]["complete_pass"]["denominator"] == 1
+    assert rows["§6.6(b), one family"]["acceptable"]["denominator"] == 1
+    assert rows["§6.6(a)"]["acceptable"]["denominator"] == 1
+    assert rows["§5.3(c)"]["n"] == 0 and "expires" in rows["§5.3(c)"]["not_evaluated"]
+    assert rows["§5.3(a)"] == {"n": 0, "not_evaluated": "no case in the cohort"}
+    latent = results["arms"]["a"]["latent_diagnostic"]
+    assert latent["top_hypothesis_tied"] == 3  # the stand-in's two hypotheses are both low
+    assert latent["top_hypothesis_names_latent"] == {"numerator": 0, "denominator": 3,
+                                                    "value": 0.0}
+
+
+def test_a_claim_error_fails_the_memo_but_not_its_disposition() -> None:
+    from llm import referee
+
+    packet = checked_packet()
+    view = referee.view(packet)
+    text = json.dumps({
+        "claims": [{"field": "context.bin_ip_country_mismatch", "value": "0",
+                    "statement": "Card and IP countries.", "derived": None}],
+        "hypotheses": [{"explanation": "stolen_card", "likelihood": "high", "reasoning": "r"},
+                       {"explanation": "traveller", "likelihood": "low", "reasoning": "r"}],
+        "disposition": "needs_check", "citations": ["FP-2 §6.6(b)", "R03"],
+        "next_check": "id_check", "memo": "Short memo."})
+    row = harness.score_record({"outcome": "response", "text": text}, packet, view)
+    assert row["acceptable"] and row["action"] == "hold" and row["standard_action"]
+    assert row["components"]["no_claim_error"] is False and row["complete_pass"] is False
+    assert row["top_hypothesis"] == "stolen_card" and not row["top_hypothesis_tied"]
+
+
+def test_the_shape_holds_each_axis_to_its_configured_count() -> None:
+    def definition(phase: str, axes: dict[str, int], recorded: dict | None = None) -> dict:
+        cases = [{"case_id": f"{axis}-{i}", "axis": axis, "seed": 1041, "family": "baseline",
+                  "account": f"1:{axis}{i}", "episode": None, "cluster": f"g{axis}{i}",
+                  "weight": 1.0, "packet_sha256": "x"}
+                 for axis, n in axes.items() for i in range(n)]
+        out = {"phase": phase, "cases": cases, "arms": {"a": {}}, "probes": {}}
+        if recorded is not None:
+            out["axes"] = recorded
+        return out
+
+    sizes = {**SIZES, "development_check_cases": 2,
+             "development_combined": {"review": 1, "check_completed": 1}}
+    for axes in ({"review": 3}, {"check_completed": 2}, {"review": 1, "check_completed": 1}):
+        harness.check_shape(definition("development", axes), sizes)
+    with pytest.raises(harness.ShapeError, match="by decision point"):
+        harness.check_shape(definition("development", {"check_completed": 3}), sizes)
+    shares = {"review": {"cases": 1, "eligible": 3, "share": 0.75},
+              "check_completed": {"cases": 1, "eligible": 1, "share": 0.25}}
+    harness.check_shape(definition("development", {"review": 1, "check_completed": 1},
+                                   shares), sizes)
+    with pytest.raises(harness.ShapeError, match="add up to 1"):
+        harness.check_shape(definition("development", {"review": 1, "check_completed": 1},
+                                       {**shares, "review": {**shares["review"],
+                                                             "share": 0.5}}), sizes)
+    assert harness.final_axes({**SIZES, "final_cases": 5,
+                               "final_axes": {"review": 3, "check_completed": 2}}) == {
+        "review": 3, "check_completed": 2}
+    with pytest.raises(harness.ShapeError, match="add up"):
+        harness.final_axes({**SIZES, "final_axes": {"review": 1}})
