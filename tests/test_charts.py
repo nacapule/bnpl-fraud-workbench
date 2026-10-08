@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 import itertools
 import json
+from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +15,15 @@ import pytest
 import yaml
 from matplotlib.axes import Axes
 
-from core.results import Metric, SeedSpread, StageResult, assemble_summary, canonical_json
+from core import recommendation as rec
+from core.results import (
+    Metric,
+    SeedSpread,
+    StageResult,
+    assemble_summary,
+    canonical_json,
+    read_summary,
+)
 from report import charts
 from report.charts import CHARTS, FIGURES, REPO, SUMMARY, main, out_of_sync, render_all
 
@@ -48,6 +57,7 @@ PROTOCOL = {
 
 
 def _summary() -> dict[str, Any]:
+    """A summary with the keys and tables the charts read, in the evaluate stage's shape."""
     counter = itertools.count(1)
 
     def number() -> float:
@@ -113,6 +123,7 @@ def summary() -> dict[str, Any]:
     return _summary()
 
 
+# ---------------------------------------------------------------- reading the JSON back
 def _references(node: Any, field: str | None = None) -> list[tuple[str | None, dict]]:
     """Every value record in a chart's JSON, with the field holding it: a summary key
     (with a seed for per-seed values), a result-table cell or a protocol setting."""
@@ -147,19 +158,27 @@ def _looked_up(reference: dict[str, Any], summary: dict[str, Any], protocol: dic
     return rows[0][reference["column"]]
 
 
-def _drawn(monkeypatch) -> list[float]:
-    """Spy on every number drawn through ``Axes.plot`` (markers, lines and dots)."""
-    numbers: list[float] = []
+def _plotted(monkeypatch) -> list[tuple[float, float]]:
+    """Spy on ``Axes.plot``: every (x, y) pair drawn, markers, lines and dots alike."""
+    pairs: list[tuple[float, float]] = []
     original = Axes.plot
 
     def plot(self, *args, **kwargs):
-        for arg in args:
-            if isinstance(arg, (list, tuple)):
-                numbers.extend(float(value) for value in arg)
+        if len(args) >= 2 and isinstance(args[0], (list, tuple)) \
+                and isinstance(args[1], (list, tuple)):
+            pairs.extend(zip(map(float, args[0]), map(float, args[1]), strict=True))
         return original(self, *args, **kwargs)
 
     monkeypatch.setattr(Axes, "plot", plot)
-    return numbers
+    return pairs
+
+
+def _row_of(pairs: list[tuple[float, float]], xs: list[float]) -> float:
+    """The single y at which every x in ``xs`` was drawn."""
+    rows = {y for x, y in pairs if x == xs[0]}
+    rows = {y for y in rows if all((x, y) in pairs for x in xs)}
+    assert len(rows) == 1, (xs, rows)
+    return rows.pop()
 
 
 # ---------------------------------------------------------------- reproducibility
@@ -203,20 +222,16 @@ def test_every_plotted_value_is_the_summary_key_it_names(tmp_path: Path, summary
             assert reference["value"] == _looked_up(reference, summary, PROTOCOL), reference
 
 
-def test_the_figures_draw_the_values_their_json_records(tmp_path: Path, summary: dict,
-                                                        monkeypatch) -> None:
-    """Every summary value the JSON records reaches a drawing call, except the held
-    counts, which the frontier writes into its labels (checked below)."""
-    drawn = _drawn(monkeypatch)
-    for name, (collect, draw) in CHARTS.items():
-        drawn.clear()
-        data = collect(summary, PROTOCOL)
-        draw(data)
-        values = [r["value"] for field, r in _references(data)
-                  if "key" in r and r["value"] is not None and field != "held"]
-        assert len(values) >= 6, name
-        for value in values:
-            assert float(value) in drawn, (name, value)
+def test_the_frontier_draws_each_policy_at_its_lost_and_loss(summary: dict, monkeypatch) -> None:
+    pairs = _plotted(monkeypatch)
+    data = charts.collect_frontier(summary, PROTOCOL)
+    charts.draw_frontier(data)
+    shown = [p for p in data["policies"] if p["evaluated"]]
+    assert len(shown) == len(POLICIES)
+    for p in shown:
+        assert (p["lost"]["value"], p["loss"]["value"]) in pairs, p["policy"]
+    assert all(pair in pairs for pair in {(p["lost"]["value"], p["loss"]["value"])
+                                          for p in shown})
 
 
 def test_held_customers_are_written_into_the_frontier_labels(summary: dict,
@@ -236,26 +251,126 @@ def test_held_customers_are_written_into_the_frontier_labels(summary: dict,
         assert any(t.startswith(policy["label"]) and f"{held:,.0f} held" in t for t in texts)
 
 
+def test_the_staffing_chart_draws_each_point_in_its_cell_column(summary: dict,
+                                                                 monkeypatch) -> None:
+    pairs = _plotted(monkeypatch)
+    data = charts.collect_staffing(summary, PROTOCOL)
+    charts.draw_staffing(data)
+    columns = {cell["name"]: index for index, cell in enumerate(data["cells"])}
+    drawn = 0
+    for item in data["policies"]:
+        for point in item["points"]:
+            if point.get("value") is not None:
+                assert (columns[point["cell"]], point["value"]) in pairs, (item["policy"], point)
+                drawn += 1
+    assert drawn >= 20
+
+
+def test_the_seed_spread_draws_each_policy_on_one_row(summary: dict, monkeypatch) -> None:
+    pairs = _plotted(monkeypatch)
+    data = charts.collect_seed_spread(summary, PROTOCOL)
+    charts.draw_seed_spread(data)
+    rows = {}
+    for item in data["policies"]:
+        values = [s["value"] for s in item["seeds"]] + [item["mean"]["value"]]
+        rows[item["policy"]] = _row_of(pairs, values)
+    assert len(set(rows.values())) == len(CHALLENGERS)
+    by_mean = sorted(data["policies"], key=lambda p: p["mean"]["value"], reverse=True)
+    assert [rows[p["policy"]] for p in by_mean] == sorted(rows.values(), reverse=True)
+
+
+def test_the_operating_cells_chart_draws_each_cell_on_one_row(summary: dict,
+                                                               monkeypatch) -> None:
+    pairs = _plotted(monkeypatch)
+    data = charts.collect_operating_cells(summary, PROTOCOL)
+    charts.draw_operating_cells(data)
+    rows = {}
+    for cell in data["cells"]:
+        values = [p["value"] for p in cell["policies"] if p.get("value") is not None]
+        rows[cell["name"]] = _row_of(pairs, values)
+    assert len(set(rows.values())) == len(CELLS)
+    assert rows["primary"] == max(rows.values())  # the first row is the primary cell
+
+
 def test_a_policy_the_rule_did_not_evaluate_is_left_out_and_recorded(summary: dict,
                                                                      monkeypatch) -> None:
-    drawn = _drawn(monkeypatch)
+    pairs = _plotted(monkeypatch)
     data = charts.collect_staffing(summary, PROTOCOL)
     hybrid = next(p for p in data["policies"] if p["policy"] == "hybrid")
     low = next(p for p in hybrid["points"] if p["cell"] == "low")
     assert low["evaluated"] is False and low["seeds_count"]["value"] == 0
     assert "key" not in low and "value" not in low
     charts.draw_staffing(data)
-    low_column = data["cells"].index(next(c for c in data["cells"] if c["name"] == "low"))
-    assert float(low_column) in drawn  # the other policies are still drawn there
+    low_column = [cell["name"] for cell in data["cells"]].index("low")
+    assert any(x == low_column for x, _ in pairs)  # the other policies are still drawn there
     surge = charts.collect_operating_cells(summary, PROTOCOL)
     cell = next(c for c in surge["cells"] if c["name"] == "acquisition_surge")
     logistic = next(p for p in cell["policies"] if p["policy"] == "logistic")
     assert logistic["value"] is None and "feasible operating point" in logistic["note"]
-    drawn.clear()
     charts.draw_operating_cells(surge)
-    evaluated = [p["value"] for c in surge["cells"] for p in c["policies"]
-                 if p["evaluated"] and p["value"] is not None]
-    assert evaluated and all(value in drawn for value in evaluated)
+
+
+def _outcome_row(seed: int, policy: str, net: int, *, where: dict, declined: int = 0) -> dict:
+    """One outcome row as the replay writes it, at a $15 LTV proxy."""
+    return {"seed": seed, "family": "baseline", "policy": policy, **where, "orders": 10_000,
+            "net_cents": net, "friction_cost_cents": 1_500 * declined,
+            "legitimate_orders": 9_000, "legitimate_held": 0, "legitimate_declined": declined,
+            "legitimate_cancelled": 0, "available_minutes": 600, "review_band": 1,
+            "review_minutes_used": 300, **{f"reviews_p{i}": 60 for i in range(4)},
+            **{f"sla_met_p{i}": 60 for i in range(4)}}
+
+
+def test_a_cell_the_rule_could_not_assess_is_left_out_and_recorded(tmp_path: Path) -> None:
+    """The rule publishes no improvement key in a cell where the incumbent has no feasible
+    point; the charts read the flip table's outcome instead of failing on the key."""
+    rule = rec.Rule(
+        lost=rec.Cap(Fraction(100), Fraction(200)), held=rec.Cap(Fraction(300), Fraction(600)),
+        service_share=Fraction(9, 10), service_min_entries=50, hurdle_cents=Fraction(10_000),
+        positive_seeds={10: 9, 9: 8, 8: 8}, simpler=POLICIES,
+        analyst_cents_per_hour=Fraction(3_500), ltv_cents=1_500,
+        ltv_sensitivity_cents=(500, 4_500))
+    where = {"capacity_level": "base", "layout": "current", "history": "policy",
+             "reviewer": "evidence", "verification": "verification"}
+    cells = [rec.OperatingCell("primary", "primary", "baseline", "base", where),
+             rec.OperatingCell("low", "allotment", "baseline", "low",
+                               where | {"capacity_level": "low"}),
+             rec.OperatingCell("high", "allotment", "baseline", "high",
+                               where | {"capacity_level": "high"}),
+             rec.OperatingCell("redesigned_layout", "layout", "baseline", "redesigned_layout",
+                               where | {"layout": "evening"})]
+    rows = []
+    for cell in cells:
+        for seed in SEEDS:
+            if cell.name != "low":  # at the low allotment the incumbent has no feasible point
+                rows.append(_outcome_row(seed, "incumbent_rules", 1_000_000, where=cell.where))
+            rows.append(_outcome_row(seed, "tree_depth3", 1_300_000, where=cell.where))
+            rows.append(_outcome_row(seed, "hybrid", 1_100_000, where=cell.where, declined=9))
+    results = rec.apply_rule(rows, cells, rule, POLICIES)
+    assert [r.outcome for r in results] == [rec.RECOMMEND, rec.NOT_ASSESSED, rec.RECOMMEND,
+                                            rec.RECOMMEND]
+    metrics, tables = rec.outputs(results, rule)
+    for policy in ("incumbent_rules", "tree_depth3", "hybrid"):
+        metrics[f"evaluate.loss_of_gmv.baseline.base.{policy}"] = Metric(
+            value=50.0, unit="bps", population="loss", window="test")
+    summary = assemble_summary([StageResult(stage="evaluate", versions={"world": "w1"},
+                                            inputs={}, metrics=metrics, tables=tables)])
+    assert not any(".low." in key for key in metrics if "rule_net" in key)
+    render_all(summary, PROTOCOL, tmp_path)
+    staffing = json.loads((tmp_path / "staffing.json").read_text())
+    low = next(cell for cell in staffing["cells"] if cell["name"] == "low")
+    assert low["outcome"]["value"] == rec.NOT_ASSESSED and "incumbent" in low["note"]["value"]
+    for item in staffing["policies"]:
+        point = next(p for p in item["points"] if p["cell"] == "low")
+        assert "key" not in point and "value" not in point
+    operating = json.loads((tmp_path / "operating_cells.json").read_text())
+    assert [c["outcome"]["assessed"] for c in operating["cells"]] == [True, False, True, True]
+    frontier = json.loads((tmp_path / "frontier.json").read_text())
+    assert [p["policy"] for p in frontier["policies"] if p["evaluated"]] == [
+        "incumbent_rules", "tree_depth3", "hybrid"]
+    for name in CHARTS:
+        data = json.loads((tmp_path / f"{name}.json").read_text())
+        for _, reference in _references(data):
+            assert reference["value"] == _looked_up(reference, summary, PROTOCOL), reference
 
 
 def test_a_missing_result_key_fails_naming_it(tmp_path: Path, summary: dict, capsys) -> None:
@@ -267,6 +382,25 @@ def test_a_missing_result_key_fails_naming_it(tmp_path: Path, summary: dict, cap
     path.write_text(canonical_json(summary))
     assert main(["--summary", str(path), "--out", str(tmp_path / "out")]) == 1
     assert key in capsys.readouterr().err
+
+
+def test_crowded_labels_never_reach_the_subtitle(summary: dict) -> None:
+    """Seven policies on one point: labels are pushed apart within the plot and the
+    small gap above it, never into the subtitle, and never below the plot."""
+    crowded = copy.deepcopy(summary)
+    for policy in POLICIES:
+        for measure in ("rule_lost_legitimate_per_10k", "loss_of_gmv"):
+            crowded["metrics"][f"evaluate.{measure}.baseline.base.{policy}"]["value"] = 40.0
+    figure = charts.draw_frontier(charts.collect_frontier(crowded, PROTOCOL))
+    figure.canvas.draw()
+    axes = figure.axes[0]
+    subtitle = min(text.get_window_extent().y0 for text in figure.texts)
+    bottom = axes.get_window_extent().y0
+    labels = [text for text in axes.texts if text.get_text() not in ("", " ")]
+    assert len(labels) >= len(POLICIES)
+    for text in labels:
+        extent = text.get_window_extent()
+        assert extent.y1 <= subtitle and extent.y0 >= bottom - 1, text.get_text()
 
 
 # ---------------------------------------------------------------- the command
@@ -301,14 +435,12 @@ def test_check_reports_a_figure_that_differs_from_the_results(tmp_path: Path, su
 
 
 def test_committed_figures_match_the_committed_results(tmp_path: Path) -> None:
-    if not SUMMARY.exists() or not any(FIGURES.glob("*.svg")):
-        pytest.skip("no final results or figures committed yet")
-    from core.results import read_summary
-
+    if not SUMMARY.exists():
+        pytest.skip("no final results committed yet")
     protocol = yaml.safe_load((REPO / "experiments" / "protocol.yaml").read_text())
-    assert out_of_sync(read_summary(SUMMARY), protocol, FIGURES, tmp_path) == []
+    summary = read_summary(SUMMARY)
+    assert out_of_sync(summary, protocol, FIGURES, tmp_path) == []
     for name in CHARTS:
         data = json.loads((FIGURES / f"{name}.json").read_text())
-        summary = read_summary(SUMMARY)
         for _, reference in _references(data):
             assert reference["value"] == _looked_up(reference, summary, protocol), reference

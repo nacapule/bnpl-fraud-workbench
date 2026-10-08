@@ -12,8 +12,9 @@ run renders into ``--out`` elsewhere. ``--check`` writes nothing and fails when 
 committed figure differs from a fresh render.
 
 A metric the summary lacks fails the run, naming the key. A policy the rule did not
-evaluate in a cell (no feasible operating point on any seed) is left out of the
-figure and recorded in the JSON with the reason.
+evaluate in a cell (no feasible operating point on any seed), and a cell the rule could
+not assess (no incumbent point), are left out of the figure and recorded in the JSON
+with the reason.
 
 The charts, all in money the recommendation rule uses (rule net contribution:
 ledger net after the friction cost, less the analyst allotment):
@@ -52,7 +53,7 @@ from matplotlib import pyplot as plt  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.ticker import FuncFormatter  # noqa: E402
 
-from core.recommendation import INCUMBENT, ltv_name  # noqa: E402
+from core.recommendation import INCUMBENT, NOT_ASSESSED, ltv_name  # noqa: E402
 from core.results import canonical_json, metric, read_summary, table  # noqa: E402
 from report.figures import save_svg  # noqa: E402
 
@@ -196,6 +197,14 @@ def _standing(summary: Mapping[str, Any], cell: str, policy: str) -> dict[str, A
     }
 
 
+def _outcome(summary: Mapping[str, Any], cell: str) -> dict[str, Any]:
+    """The rule's outcome in a cell: ``not_assessed`` (no incumbent point on any seed)
+    publishes no improvement keys, so the charts read none there."""
+    outcome = _cell_of(summary, FLIPS, {"cell": cell}, "outcome")
+    outcome["assessed"] = outcome["value"] != NOT_ASSESSED
+    return outcome
+
+
 def _improvement_key(primary: Mapping[str, Any], family: str, capacity: str,
                      ltv_cents: int, policy: str) -> str:
     name = IMPROVEMENT if ltv_cents == primary["ltv_cents"] else \
@@ -238,6 +247,8 @@ def collect_staffing(summary: Mapping[str, Any], protocol: Mapping[str, Any]
         cells.append({"name": rows[0]["cell"], "capacity": level,
                       "label": f"{level} allotment",
                       "minutes_per_shift": _setting(protocol, f"capacity.levels.{level}"),
+                      "outcome": _outcome(summary, rows[0]["cell"]),
+                      "note": _cell_of(summary, FLIPS, {"cell": rows[0]["cell"]}, "note"),
                       "incumbent_misses": _cell_of(summary, FLIPS, {"cell": rows[0]["cell"]},
                                                    "incumbent_misses")})
     [layout] = _rows(summary, FLIPS, {"family": primary["family"], "varies": "layout",
@@ -246,6 +257,8 @@ def collect_staffing(summary: Mapping[str, Any], protocol: Mapping[str, Any]
         raise KeyError(f"result table {FLIPS!r} has no shift-layout cell")
     cells.append({"name": layout["cell"], "capacity": layout["capacity"],
                   "label": "evening layout", "minutes_per_shift": None,
+                  "outcome": _outcome(summary, layout["cell"]),
+                  "note": _cell_of(summary, FLIPS, {"cell": layout["cell"]}, "note"),
                   "incumbent_misses": _cell_of(summary, FLIPS, {"cell": layout["cell"]},
                                                "incumbent_misses")})
     policies = []
@@ -256,7 +269,7 @@ def collect_staffing(summary: Mapping[str, Any], protocol: Mapping[str, Any]
         for cell in cells:
             point: dict[str, Any] = {"cell": cell["name"],
                                      **_standing(summary, cell["name"], policy)}
-            if point["evaluated"]:
+            if point["evaluated"] and cell["outcome"]["assessed"]:
                 point.update(_value(summary, _improvement_key(
                     primary, primary["family"], cell["capacity"], primary["ltv_cents"], policy)))
             points.append(point)
@@ -268,13 +281,15 @@ def collect_staffing(summary: Mapping[str, Any], protocol: Mapping[str, Any]
 def collect_seed_spread(summary: Mapping[str, Any], protocol: Mapping[str, Any]
                         ) -> dict[str, Any]:
     cell = _primary(summary)
+    cell["outcome"] = _outcome(summary, cell["name"])
+    cell["note"] = _cell_of(summary, FLIPS, {"cell": cell["name"]}, "note")
     policies = []
     for policy in _policies(protocol):
         if policy == INCUMBENT:
             continue
         item: dict[str, Any] = {"policy": policy, "label": _label(policy),
                                 **_standing(summary, cell["name"], policy)}
-        if item["evaluated"]:
+        if item["evaluated"] and cell["outcome"]["assessed"]:
             key = _improvement_key(cell, cell["family"], cell["capacity"], cell["ltv_cents"],
                                    policy)
             item["mean"] = _value(summary, key)
@@ -300,7 +315,7 @@ def collect_operating_cells(summary: Mapping[str, Any], protocol: Mapping[str, A
             "name": row["cell"], "label": CELL_LABELS.get(row["cell"], row["cell"]),
             "family": row["family"], "capacity": row["capacity"],
             "ltv_cents": row["ltv_cents"], "varies": row["varies"],
-            "outcome": _cell_of(summary, FLIPS, where, "outcome"),
+            "outcome": _outcome(summary, row["cell"]),
             "recommended": _cell_of(summary, FLIPS, where, "recommended"),
             "best_challenger": _cell_of(summary, FLIPS, where, "best_challenger"),
             "holds": _cell_of(summary, FLIPS, where, "holds"),
@@ -313,7 +328,7 @@ def collect_operating_cells(summary: Mapping[str, Any], protocol: Mapping[str, A
         for policy in challengers:
             point: dict[str, Any] = {"policy": policy, "label": _label(policy),
                                      **_standing(summary, row["cell"], policy)}
-            if point["evaluated"]:
+            if point["evaluated"] and cell["outcome"]["assessed"]:
                 point.update(_value(summary, _improvement_key(
                     primary, row["family"], row["capacity"], row["ltv_cents"], policy)))
             cell["policies"].append(point)
@@ -396,8 +411,12 @@ def _place_labels(axes, items: list[tuple[float, float, str]], *,
     A second line of text (after a newline) is written smaller and muted."""
     figure = axes.figure
     scale = 72 / figure.dpi  # display pixels -> points
-    x_min = axes.get_position().x0 * figure.get_figwidth() * 72
+    position = axes.get_position()
+    x_min = position.x0 * figure.get_figwidth() * 72
     x_max = figure.get_figwidth() * 72 - 3
+    # labels may sit a little above the axes (the subtitle is further up), not below
+    y_min, y_max = (position.y0 * figure.get_figheight() * 72 - 2,
+                    position.y1 * figure.get_figheight() * 72 + 14)
     boxes = []
     for x, y in obstacles:
         px, py = axes.transData.transform((x, y)) * scale
@@ -422,9 +441,16 @@ def _place_labels(axes, items: list[tuple[float, float, str]], *,
             if free(starts[candidate], starts[candidate] + width, py - half, py + half):
                 side = candidate
                 break
-        else:
-            while not free(starts[side], starts[side] + width, ly - half, ly + half):
-                ly += gap / 2
+        else:  # pushed up or down inside the axes; when nothing is free, left where it is
+            steps = (gap / 2 * (k // 2 + 1) * (1 if k % 2 == 0 else -1)
+                     for k in range(2 * int((y_max - y_min) / gap) + 2))
+            for step in steps:
+                candidate = py + step
+                if not y_min + half <= candidate <= y_max - half:
+                    continue
+                if free(starts[side], starts[side] + width, candidate - half, candidate + half):
+                    ly = candidate
+                    break
         boxes.append((starts[side], starts[side] + width, ly - half, ly + half))
         displaced = abs(ly - py) > 2
         offsets = [ly - py] if len(lines) == 1 else [ly - py + half / 2, ly - py - half / 2]
@@ -473,7 +499,10 @@ def draw_frontier(data: Mapping[str, Any]):
     xs = [p["lost"]["value"] for p in shown]
     x_max = max([cap * 1.12, *(x * 1.15 for x in xs)])
     axes.set_xlim(-x_max * 0.02, x_max)
-    axes.set_ylim(0, max(p["loss"]["value"] for p in shown) * 1.12)
+    axes.set_ylim(0, max([1.0, *(p["loss"]["value"] * 1.12 for p in shown)]))
+    if not shown:
+        axes.text(0.5, 0.5, "no policy evaluated in the primary cell", ha="center",
+                  va="center", transform=axes.transAxes, fontsize=FONT, color=INK2)
     axes.axvline(cap, color=AXIS, linewidth=1.0, zorder=1)
     axes.text(cap, axes.get_ylim()[1], f"rule's cap: {cap:g} lost per 10,000 (mean) ",
               ha="right", va="top", fontsize=FONT - 1, color=INK2)
@@ -503,7 +532,7 @@ def draw_staffing(data: Mapping[str, Any]):
         "orders decided, with thresholds tuned at the base allotment and held fixed. The "
         "evening layout runs the base minutes at different hours. Hollow: fails an "
         "eligibility criterion in that cell; ringed: the rule's recommendation there.",
-        left=0.10, right=0.86, bottom=0.19)
+        left=0.10, right=0.86, bottom=0.2)
     cells = data["cells"]
     positions = list(range(len(cells)))
     line_end = max(i for i, cell in enumerate(cells) if cell["minutes_per_shift"] is not None)
@@ -541,14 +570,25 @@ def draw_staffing(data: Mapping[str, Any]):
     axes.yaxis.set_major_formatter(FuncFormatter(_dollars))
     axes.set_ylabel("Net contribution vs today's rules, $ per 1,000 orders")
     _style(axes)
-    for i, cell in enumerate(cells):
+    width_pt = (figure.subplotpars.right - figure.subplotpars.left) * figure.get_figwidth() * 72
+    columns = max(1, int(width_pt / len(cells) / (0.56 * (FONT - 2))) - 1)
+    captions = []
+    for cell in cells:
         misses = cell["incumbent_misses"]["value"]
-        if misses:
-            axes.annotate("incumbent\n" + _misses(misses), xy=(i, 0),
-                          xycoords=("data", "axes fraction"), xytext=(0, -32),
-                          textcoords="offset points", ha="center", va="top",
+        note = cell["note"]["value"] if not cell["outcome"]["assessed"] else None
+        text = f"incumbent {_misses(misses)}" if misses else note or ""
+        captions.append(textwrap.wrap(text, width=columns) if text else [])
+    lines = max((len(caption) for caption in captions), default=0)
+    caption_pt = lines * (FONT - 2) * 1.3
+    figure.subplots_adjust(bottom=(32 + caption_pt + 44) / (figure.get_figheight() * 72))
+    for i, caption in enumerate(captions):
+        if caption:
+            axes.annotate("\n".join(caption), xy=(i, 0), xycoords=("data", "axes fraction"),
+                          xytext=(0, -32), textcoords="offset points", ha="center", va="top",
                           fontsize=FONT - 2, color=MUTED, linespacing=1.3)
-    _legend(axes, [item["policy"] for item in data["policies"]], lines=True, y=-0.27)
+    axes_pt = (figure.subplotpars.top - figure.subplotpars.bottom) * figure.get_figheight() * 72
+    _legend(axes, [item["policy"] for item in data["policies"]], lines=True,
+            y=-(32 + caption_pt + 10) / axes_pt)
     return figure
 
 
@@ -560,10 +600,13 @@ def draw_seed_spread(data: Mapping[str, Any]):
         "the incumbent's on the same world, per 1,000 orders decided; the bar is the mean "
         "over seeds, the count at the right how many seeds come out above the incumbent.",
         left=0.16, right=0.80, bottom=0.14)
-    shown = [p for p in data["policies"] if p["evaluated"] and p["mean"]["value"] is not None]
+    shown = [p for p in data["policies"] if p.get("mean", {}).get("value") is not None]
     shown.sort(key=lambda p: p["mean"]["value"], reverse=True)
     hurdle = data["hurdle_usd"]["value"] * 100
     rows = list(range(len(shown)))[::-1]
+    if not shown:
+        axes.text(0.5, 0.5, "no challenger assessed in the primary cell", ha="center",
+                  va="center", transform=axes.transAxes, fontsize=FONT, color=INK2)
     for y, p in zip(rows, shown, strict=True):
         colour = REFERENCE if p["policy"] == "approve_all" else ACCENT
         axes.plot([s["value"] for s in p["seeds"]], [y] * len(p["seeds"]), marker="o",
@@ -577,7 +620,7 @@ def draw_seed_spread(data: Mapping[str, Any]):
                       textcoords="offset points", ha="left", va="center", fontsize=FONT - 1,
                       color=INK2)
     axes.set_yticks(rows, [p["label"] for p in shown])
-    axes.set_ylim(-0.7, len(shown) - 0.3)
+    axes.set_ylim(-0.7, max(len(shown), 1) - 0.3)
     axes.xaxis.set_major_formatter(FuncFormatter(_dollars))
     low, high = axes.get_xlim()
     axes.set_xlim(min(low, -hurdle), max(high, hurdle * 2))
@@ -609,8 +652,8 @@ def draw_operating_cells(data: Mapping[str, Any]):
                 _marker(axes, p["value"], y, p["policy"], p["eligible"]["value"], size=7.5)
         recommended = cell["recommended"]["value"]
         best = cell["best_challenger"]["value"]
-        if cell["outcome"]["value"] == "not_assessed":
-            lines = ["not assessed", cell["note"]["value"] or ""]
+        if not cell["outcome"]["assessed"]:
+            lines = ["not assessed", "(no incumbent point)"]
         elif recommended is None:
             eligible = {p["policy"]: p["eligible"]["value"] for p in cell["policies"]}
             which = "best eligible" if eligible.get(best) else "best, none eligible"
