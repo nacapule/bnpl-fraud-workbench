@@ -502,6 +502,34 @@ def test_a_development_subset_draws_from_both_sets(tmp_path, mini_phases, monkey
         select_cases.combine("t-dev-other", ["t-dev", "t-dev-checks"], arms=["nobody"])
 
 
+def test_the_case_memos_are_a_benchmark_of_the_case_worlds_alerts(tmp_path, mini_phases) -> None:
+    world_dir = mini_world_with_reviews(tmp_path / "run" / "worlds" / "416-baseline", 416)
+    decisions = pd.read_csv(world_dir / "review_decisions.csv").head(3)
+    columns = dict.fromkeys(select_cases.check_points.ROW_COLUMNS, 0)  # what the run saved
+    inputs = pd.DataFrame([{**columns, **QUIET, "order_id": row.order_id,
+                            "user_id": row.user_id, "merchant_id": row.merchant_id,
+                            "decision_at": pd.Timestamp(row.decision_at),
+                            "file": f"CASE-0{index + 1}", "slot": f"slot{index}"}
+                           for index, row in enumerate(decisions.itertuples())])
+    definition = select_cases.case_memos("t-cases", tmp_path / "run", inputs=inputs)
+    assert definition["phase"] == "cases" and set(definition["arms"]) == {"sol"}
+    assert [case["stratum"] for case in definition["cases"]] == sorted(
+        f"CASE-0{index + 1}:slot{index}" for index in range(3))
+    assert all(case["seed"] == 416 and case["weight"] == 1.0 for case in definition["cases"])
+    packet = json.loads((tmp_path / "benchmarks" / "t-cases" / "packets" /
+                         f"{definition['cases'][0]['case_id']}.json").read_text())
+    assert packet["decision"]["point"] == "review" and not packet["decision"]["checks"]
+    shape = {**definition, "cases": [{**case, "seed": 1041}
+                                     for case in definition["cases"]]}
+    with pytest.raises(harness.ShapeError, match="case world"):
+        harness.check_shape(shape)
+    with pytest.raises(harness.ShapeError, match="without probes"):
+        harness.check_shape({**definition,
+                             "probes": {"shuffled": [definition["cases"][0]["case_id"]]}})
+    with pytest.raises(harness.ShapeError, match="number 1 to"):
+        harness.check_shape(definition, {**harness.SIZES, "case_memos": 2})
+
+
 def test_an_outcome_that_phase_one_drops_still_counts_for_the_minimum() -> None:
     # three passed and one failed decision share one account: phase one keeps two
     rows = [{"case_id": f"c{i}", "account_key": "3:1", "episode_key": None,

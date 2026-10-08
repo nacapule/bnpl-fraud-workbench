@@ -4,7 +4,8 @@ and scores.
 A benchmark lives in ``llm/eval/benchmarks/<id>/`` and is fixed before any call:
 
 ``benchmark.json``
-    id, phase (``development`` or ``final``), policy id and SHA-256, prompt version and
+    id, phase (``development``, ``final``, or ``cases`` for the memos of the case files'
+    alerts), policy id and SHA-256, prompt version and
     SHA-256 of the system prompt, SHA-256 of every file that scores a memo, the arms
     (backend, model, effort), the cases (case id built from seed, family, order and
     decision time, so an alert keeps its identity whatever the policy bands; packet
@@ -104,7 +105,8 @@ REPO = EVAL.parent.parent
 BENCHMARKS = EVAL / "benchmarks"
 LEDGER = BENCHMARKS / "ledger.json"
 PROBES = ("primary", "shuffled", "renamed")
-PHASES = ("development", "final")
+# development and final benchmarks, and the memos for the case files' alerts
+PHASES = ("development", "final", "cases")
 PROBE_SEED = 7919  # shuffles the context facts / draws fresh placeholder names per case
 SIZES = load("llm")["benchmark"]
 CAPS = load("llm")["caps"]
@@ -234,6 +236,9 @@ def check_shape(definition: Mapping[str, Any], sizes: Mapping[str, Any] | None =
     ids = [case["case_id"] for case in cases]
     if len(set(ids)) != len(ids):
         raise ShapeError("a case id occurs twice")
+    if phase == "cases":
+        _check_case_memos(definition, sizes, protocol)
+        return
     axes = dict(Counter(case_axis(case) for case in cases))
     allowed = development_shapes(sizes) if phase == "development" else [final_axes(sizes)]
     if axes not in allowed:
@@ -279,6 +284,24 @@ def check_shape(definition: Mapping[str, Any], sizes: Mapping[str, Any] | None =
         if phase == "final" and len(probe_ids) != int(sizes["probe_cases"]):
             raise ShapeError(f"probe {kind} has {len(probe_ids)} cases, not "
                              f"{sizes['probe_cases']}")
+    if not definition.get("arms"):
+        raise ShapeError("a benchmark needs at least one arm")
+
+
+def _check_case_memos(definition: Mapping[str, Any], sizes: Mapping[str, Any],
+                      protocol: Any) -> None:
+    """The case files' memos: one to ``case_memos`` review decisions of the canonical
+    world, one arm or more, no probes."""
+    cases = definition["cases"]
+    world = protocol.raw["cases"]["world"]
+    if not 1 <= len(cases) <= int(sizes.get("case_memos", 0)):
+        raise ShapeError(f"case memos number 1 to {sizes.get('case_memos', 0)}, "
+                         f"not {len(cases)}")
+    if {(int(case["seed"]), case["family"]) for case in cases} != {
+            (int(world["seed"]), str(world["family"]))}:
+        raise ShapeError(f"case memos come from the case world {world}")
+    if any(case_axis(case) != "review" for case in cases) or definition.get("probes"):
+        raise ShapeError("case memos are review decisions, without probes")
     if not definition.get("arms"):
         raise ShapeError("a benchmark needs at least one arm")
 

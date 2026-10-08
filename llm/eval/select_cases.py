@@ -716,6 +716,35 @@ def combine(benchmark_id: str, sources: Sequence[str], *, arms: Sequence[str]
                               "rule": SUBSET_RULE})
 
 
+def case_memos(benchmark_id: str, run_dir: Path, *, arms: Sequence[str] = ("sol",),
+               inputs: pd.DataFrame | None = None) -> dict[str, Any]:
+    """The memos for the case files' alerts as a benchmark of phase ``cases``: one packet
+    per selected alert of the protocol's case world, from the row the replay decided on
+    (``cases.facts.memo_inputs``, given as ``inputs`` or read from the run), with no
+    completed check. A case's stratum is its case file and slot; it carries weight one."""
+    if inputs is None:
+        from cases.facts import memo_inputs
+
+        inputs = memo_inputs(Path(run_dir))
+    world = load_protocol().raw["cases"]["world"]
+    seed, family = int(world["seed"]), str(world["family"])
+    tables = read_world(Path(run_dir) / "worlds" / f"{seed}-{family}")
+    rows = inputs[list(check_points.ROW_COLUMNS)].reset_index(drop=True)
+    built = build_packets(tables, rows)
+    frame = candidates(seed, family, rows, tables)
+    frame["stratum"] = [f"{name}:{slot}" for name, slot
+                        in zip(inputs["file"], inputs["slot"], strict=True)]
+    frame["cluster"] = linked_groups(frame)
+    frame["weight"] = 1.0
+    packets = {case: built[(int(order), pd.Timestamp(at))] for case, order, at
+               in zip(frame["case_id"], rows["order_id"], rows["decision_at"], strict=True)}
+    configured = load("llm")["arms"]
+    if unknown := set(arms) - set(configured):
+        raise ValueError(f"unknown arms {sorted(unknown)}")
+    return _write(benchmark_id, phase="cases", cases=frame, packets=packets,
+                  arms={name: configured[name] for name in arms})
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Select and write a memo benchmark.")
     parser.add_argument("--id", required=True)
@@ -728,13 +757,18 @@ def main(argv: Sequence[str] | None = None) -> int:
                         help="a development benchmark's id (final phase; repeat for each)")
     parser.add_argument("--combine", action="append", metavar="ID",
                         help="draw a development subset from these benchmarks instead")
-    parser.add_argument("--arm", action="append", help="the subset's arms (with --combine)")
+    parser.add_argument("--case-memos", type=Path, metavar="RUN",
+                        help="the memos for the case files' alerts from this pipeline run")
+    parser.add_argument("--arm", action="append",
+                        help="the arms of a subset (--combine) or of the case memos")
     parser.add_argument("--rng-seed", type=int, default=20261006)
     args = parser.parse_args(argv)
     if args.combine:
         if not args.arm:
             parser.error("--combine needs --arm")
         definition = combine(args.id, args.combine, arms=args.arm)
+    elif args.case_memos:
+        definition = case_memos(args.id, args.case_memos, arms=args.arm or ("sol",))
     else:
         if not (args.phase and args.world):
             parser.error("--phase and --world are required")
