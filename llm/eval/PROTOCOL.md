@@ -321,3 +321,15 @@ The development sets each hold one arm's records (`sol` for `2026-10-dev` and
 All three were fixed before the last scoring change (the time differences), so scoring
 them names the change with `--amend-scoring`, which the results record. The final
 cohort is fixed with the scoring code as it stands at this protocol's commit.
+
+## Corrections after pre-registration
+
+- **Selection, before any final call.** One final world's tuned incumbent has no review
+  band, so it reviewed no order and completed no check, and its empty decision frames
+  carried no time type; combining them with the other worlds' decisions left
+  incompatible time types, so building the review packets failed. Decision
+  times now take one type for every world before selection, and a test builds a final
+  cohort that includes such a world. The correction selects no different case: the
+  development sets rebuild byte-identical; the final cohort was first built with it,
+  before any call, and rebuilds byte-identical from a clean copy. That world contributes
+  no case.
