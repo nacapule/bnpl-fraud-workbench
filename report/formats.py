@@ -199,6 +199,32 @@ def fraction(resolved: Value, args: list[str]) -> str:
     return f"{count(top, [])}/{count(bottom, [])}"
 
 
+def of(resolved: Value, args: list[str]) -> str:
+    """Numerator of denominator in words: ``198 of 200``."""
+    metric = _metric(resolved, "of")
+    if args:
+        raise FormatError("the of format takes no arguments")
+    if metric.numerator is None:
+        raise FormatError("the of format needs a metric with a numerator and denominator")
+    return f"{count(Value(plain=metric.numerator), [])} of " \
+           f"{count(Value(plain=metric.denominator), [])}"
+
+
+def bounds(resolved: Value, args: list[str]) -> str:
+    """An interval given as a pair of shares, ``97.5% to 100.0%``, or of differences of
+    shares, ``-0.5 pp to +4.6 pp`` (``bounds:2`` for two decimals)."""
+    pair = resolved.plain
+    if resolved.metric is not None or not isinstance(pair, tuple) or len(pair) != 2:
+        raise FormatError("the bounds format needs an interval: a pair of numbers")
+    if resolved.effective_unit != "share":
+        raise FormatError("the bounds format prints an interval of shares or of their "
+                          "differences")
+    show = pp if resolved.is_difference else pct
+    low, high = (show(Value(plain=bound, unit="share", difference=resolved.difference),
+                      args) for bound in pair)
+    return f"{low} to {high}"
+
+
 def numerator(resolved: Value, args: list[str]) -> str:
     metric = _metric(resolved, "numerator")
     if metric.numerator is None:
@@ -358,6 +384,8 @@ FORMATS: dict[str, Format] = {
     "count": count,
     "num": num,
     "n": fraction,
+    "of": of,
+    "bounds": bounds,
     "numerator": numerator,
     "denominator": denominator,
     "ci": interval,
@@ -372,7 +400,7 @@ FORMATS: dict[str, Format] = {
 
 # Formats that describe a metric rather than print its value, so they also
 # work on a metric that was not evaluated.
-DESCRIPTIVE = frozenset({"define", "n", "numerator", "denominator"})
+DESCRIPTIVE = frozenset({"define", "n", "of", "numerator", "denominator"})
 
 
 def apply(name: str, resolved: Value, args: list[str]) -> str:

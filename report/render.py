@@ -39,6 +39,11 @@ A template is Markdown whose numbers come only from placeholders:
     on a line of its own: a table from a list of records in a case facts file
     (a record without such a value, such as a shipment's amount, holds null and
     prints "n/a", as in result tables);
+``{{ bench:<id>:<JSON pointer> | format }}``
+    a value from a memo benchmark's results, ``llm/eval/benchmarks/<id>/results.json``,
+    by an RFC 6901 pointer (``~1`` for "/" in a key, ``~0`` for "~"); a list item is
+    selected by its fields, ``[file=ring,slot=ring]``, never by position (see
+    :func:`bench_value` for how each kind of value prints);
 ``{{ facts:<file>:<dotted.path> ["Header" "Header"] | name "Label" format, ... }}``
     on a line of its own: a two-column table of named single values of one
     record in a case facts file, each in its own unit; like ``fact:``, a named
@@ -104,6 +109,7 @@ class Sources:
     wording: claims_module.Wording | None = None
     facts: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)  # by case file
     labels: Mapping[str, str] = field(default_factory=dict)  # identifier -> words, in tables
+    benchmarks: Mapping[str, Any] = field(default_factory=dict)  # results.json by benchmark
 
     @classmethod
     def from_repo(cls, summary: Mapping[str, Any], root: Path = REPO) -> Sources:
@@ -118,9 +124,11 @@ class Sources:
             "labels") or {}
         facts = {path.stem: json.loads(path.read_text())
                  for path in sorted((root / "cases" / "facts").glob("*.json"))}
+        benchmarks = {path.parent.name: json.loads(path.read_text()) for path in
+                      sorted((root / BENCHMARKS).glob("*/results.json"))}
         return cls(summary=summary, protocol=protocol, configs=configs,
                    claims={claim.id: claim for claim in claims}, wording=wording, facts=facts,
-                   labels=_labels(labels))
+                   labels=_labels(labels), benchmarks=benchmarks)
 
 
 def _path(data: Any, dotted: str, what: str) -> Any:
@@ -165,7 +173,149 @@ def _fact_value(expression: str, sources: Sources) -> Value:
     return Value(plain=node, unit=formats.unit_from_name(last))
 
 
+# ---------------------------------------------------------------- memo benchmark results
+BENCHMARKS = Path("llm") / "eval" / "benchmarks"
+BENCH = re.compile(r"^([A-Za-z0-9][A-Za-z0-9_.-]*):(/.*)$")
+SELECTOR = re.compile(r"^\[([^\[\]/]+)\]$")
+# Keys whose numbers are not shares: paired differences of shares print in percentage
+# points, a sign test's p-value as a plain number. Every other fraction in a results file
+# is a share of cases (results.json: rates, natural-mix and weighted rates, interval
+# bounds, levels), and each must lie between 0 and 1.
+BENCH_DIFFERENCES = ("difference", "natural_difference")
+BENCH_PLAIN = ("cluster_sign_test_p",)
+RATE_KEYS = {"denominator", "numerator", "value"}
+ENTRY_KEYS = {"source", "value"}
+
+
+def _pointer(pointer: str) -> list[str]:
+    """The reference tokens of an RFC 6901 pointer."""
+    if not pointer.startswith("/"):
+        raise KeyError(f"{pointer!r} is not a JSON pointer (it starts with /)")
+    tokens = pointer[1:].split("/")
+    for token in tokens:
+        if re.search(r"~(?![01])", token):
+            raise KeyError(f"{token!r}: ~ is escaped as ~0 and / as ~1")
+    return [token.replace("~1", "/").replace("~0", "~") for token in tokens]
+
+
+def _select_item(items: list[Any], token: str, where: str) -> Any:
+    match = SELECTOR.fullmatch(token)
+    if not match:
+        raise KeyError(f"{where} is a list: select an item by its fields, [key=value,...], "
+                       f"not {token!r}")
+    wanted = []
+    for pair in match.group(1).split(","):
+        key, equals, value = pair.partition("=")
+        if not equals or not key.strip() or not value.strip():
+            raise KeyError(f"{token!r}: each selector item is key=value")
+        wanted.append((key.strip(), value.strip()))
+    found = [item for item in items if isinstance(item, Mapping)
+             and all(key in item and _text(item[key]) == value for key, value in wanted)]
+    if len(found) != 1:
+        raise KeyError(f"{where}{token} selects {len(found)} items; it must select one")
+    return found[0]
+
+
+def _walk(document: Any, pointer: str, name: str) -> tuple[Any, Any, str]:
+    """The node at ``pointer``, its parent and the key it sits under."""
+    node, parent, key, where = document, None, "", ""
+    for token in _pointer(pointer):
+        parent = node
+        if isinstance(node, list):
+            node = _select_item(node, token, where or "/")
+        elif isinstance(node, Mapping):
+            if token not in node:
+                raise KeyError(f"benchmark {name!r} has no {where}/{token}")
+            node = node[token]
+        else:
+            raise KeyError(f"benchmark {name!r}: {where} is a single value, not a container")
+        key = token
+        where = f"{where}/{token.replace('~', '~0').replace('/', '~1')}"
+    return node, parent, key
+
+
+def bench_value(expression: str, sources: Sources) -> Value:
+    """The value at ``<id>:<pointer>`` of a benchmark's results, ready to format.
+
+    An endpoint entry (``{"source": <pointer>, "value": ...}``) is read at its source,
+    which must hold the same value. A rate (``{"denominator", "numerator", "value"}``)
+    is a share with its counts (formats ``pct``, ``of``, ``n``, ``numerator``,
+    ``denominator``). A pair of numbers is an interval (format ``bounds``); one under
+    a key with "difference" in it is an interval of differences. Other numbers are
+    shares, differences of shares (``difference``, ``natural_difference``: format
+    ``pp``) or plain (a sign test's p-value, any whole number); text and flags print
+    as they are. A null, as a degenerate interval is, and any other list or object
+    fail."""
+    match = BENCH.fullmatch(expression)
+    if not match:
+        raise KeyError(f"{expression!r} is not <benchmark id>:<JSON pointer>")
+    name, pointer = match.groups()
+    if name not in sources.benchmarks:
+        raise KeyError(f"no benchmark results {name!r} ({BENCHMARKS.as_posix()}/{name}/"
+                       "results.json)")
+    document = sources.benchmarks[name]
+    node, parent, key = _walk(document, pointer, name)
+    if isinstance(node, Mapping) and set(node) == ENTRY_KEYS:
+        source = node["source"]
+        if not isinstance(source, str):
+            raise KeyError(f"benchmark {name!r}: {pointer} has a source that is not a pointer")
+        found, parent, key = _walk(document, source, name)
+        if found != node["value"]:
+            raise KeyError(f"benchmark {name!r}: {pointer} does not hold the value at its "
+                           f"source {source}")
+        node = found
+    where = f"benchmark {name!r} {pointer}"
+    if node is None:
+        reason = parent.get("degenerate") if isinstance(parent, Mapping) else None
+        raise KeyError(f"{where} is null" + (f" ({reason}; print its degenerate reason)"
+                                             if reason else ""))
+    if isinstance(node, Mapping) and set(node) == RATE_KEYS:
+        return Value(metric=_bench_rate(node, where))
+    if isinstance(node, list):
+        if len(node) == 2 and all(_is_number(bound) for bound in node):
+            difference = "difference" in key
+            if not difference:
+                for bound in node:
+                    _share(bound, where)
+            return Value(plain=tuple(node), unit="share", difference=difference)
+        raise KeyError(f"{where} is a list, not a single value")
+    if isinstance(node, Mapping):
+        raise KeyError(f"{where} is not a single value; point at one of {sorted(node)}")
+    if isinstance(node, bool) or isinstance(node, str) or isinstance(node, int):
+        return Value(plain=node)
+    if isinstance(node, float):
+        if key in BENCH_PLAIN:
+            return Value(plain=node)
+        if key in BENCH_DIFFERENCES:
+            return Value(plain=node, unit="share", difference=True)
+        return Value(plain=_share(node, where), unit="share")
+    raise KeyError(f"{where} holds {node!r}")
+
+
+def _is_number(value: Any) -> bool:
+    return isinstance(value, int | float) and not isinstance(value, bool)
+
+
+def _share(value: Any, where: str) -> float:
+    if not _is_number(value) or not 0 <= value <= 1:
+        raise KeyError(f"{where}: {value!r} is not a share between 0 and 1")
+    return value
+
+
+def _bench_rate(rate: Mapping[str, Any], where: str) -> Metric:
+    top, bottom, shown = rate["numerator"], rate["denominator"], rate["value"]
+    if not (isinstance(top, int) and isinstance(bottom, int)) or isinstance(top, bool) \
+            or isinstance(bottom, bool) or not 0 <= top <= bottom or bottom == 0:
+        raise KeyError(f"{where}: {rate!r} is not a rate of whole counts")
+    if not _is_number(shown) or abs(shown - top / bottom) > 0.00005 + 1e-12:
+        raise KeyError(f"{where}: value {shown!r} is not {top}/{bottom} to four places")
+    return Metric(value=top / bottom, unit="share", population="benchmark cases",
+                  window="all", numerator=top, denominator=bottom)
+
+
 def _resolve(expression: str, sources: Sources) -> Value:
+    if expression.startswith("bench:"):
+        return bench_value(expression[len("bench:"):], sources)
     if expression.startswith("fact:"):
         return _fact_value(expression[len("fact:"):], sources)
     if expression.startswith("protocol:"):
