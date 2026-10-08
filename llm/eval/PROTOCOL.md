@@ -15,12 +15,15 @@ fields, competing hypotheses (one benign), a suggested disposition, the clauses 
 on, the next check and a short memo. It decides nothing; the referee scores the memo
 against fraud policy FP-2 and the verifier checks every claim against the packet.
 
-Two arms answer the same packets with the same prompt (`memo_fp2_v1`) and the same
-isolation: `sol` (GPT-6.1 Sol at high effort, through the Codex CLI) and `opus` (Claude
-Opus 5.5 at high effort, through the Claude Code CLI). The call caps are 400 for `sol` and
-330 for `opus` (with 10M tokens), counting retries and isolation checks. Each call is one
-model turn, with at most 16,000 output tokens a request, and at most one retry, for a
-transport failure. Development ran on codex-cli 0.159.2 and Claude Code 2.1.293. Each
+Two arms answer the same packets with the same prompt and the same isolation: `sol`
+(GPT-6.1 Sol at high effort, through the Codex CLI) and `opus` (Claude Opus 5.5 at high
+effort, through the Claude Code CLI). The final cohort and the case memos use prompt
+`memo_fp2_v2`; development ran on `memo_fp2_v1` (see Development so far for the one
+difference). The call caps are 400 for `sol` and 330 for `opus` (with 10M tokens),
+counting retries and isolation checks. Each call is one model turn with at most one
+retry, for a transport failure. `opus` requests are bounded to 16,000 output tokens; the
+Codex CLI cannot bound its output, so `sol`'s output is not capped and `sol` has no token
+cap. Development ran on codex-cli 0.159.2 and Claude Code 2.1.293. Each
 benchmark pins its arms' CLI versions and isolation at its first live call
 (`pins.json`), and a later run of that benchmark under other versions is refused; the
 final cohort's versions are the ones it pins, reported beside these.
@@ -56,7 +59,7 @@ All cases come from the test windows, under the incumbent rules at their tuned t
 | `2026-10-dev` | development seeds 416, 1041, 2718, baseline | 40 review decisions | `sol` |
 | `2026-10-dev-checks` | the same | 25 decisions after a check | `sol` |
 | `2026-10-dev-opus` | drawn from the two above | 20 + 20 | `opus` |
-| the final cohort | every final seed's baseline world | 120 review decisions + 80 after a check | both |
+| the final cohort | the baseline world of every final seed of the final run | 120 review decisions + 80 after a check | both |
 | the case memos | the case world (416, baseline) of the final run | the case files' alerts (at most 6) | `sol` |
 
 - **Strata.** On the review axis: each fraud pattern, and the legitimate orders by
@@ -71,6 +74,9 @@ All cases come from the test windows, under the incumbent rules at their tuned t
   at least 20 cases, or the selection is refused.
 - **Exclusions.** The final cohort shares no account and no episode with any development
   benchmark.
+- **The final pool.** The selection reads the baseline world of every final seed the
+  final run generated (at least eight, the protocol's minimum), from that one run, and is
+  refused otherwise, so leaving a world out cannot change the population.
 - **Probes and seed.** 40 final cases are also asked twice more: with their facts
   shuffled, and with fresh placeholder names. Selection uses seed `20261006`.
 - **Why 80 decisions after a check.** It is about their share of analyst decisions on
@@ -197,9 +203,35 @@ Beside it are the unweighted rate, and each axis's unweighted and weighted (Háj
   orders outright where `sol` asked for the check (`needs_check`); both are the standard
   action. This subset is not a probability sample, so these counts describe development
   only.
-- **The prompt** stays at its first version, as decided before these sets ran. A prompt
-  changed to fix one citation would be tuned on the development cases. No format problem
-  appeared in either arm.
+- **The failures.** Every complete-memo failure in development lists R04 among its
+  citations although R04 does not hold. The three `opus` failures misread
+  `amount_over_category_p95`, a ratio (R04 needs it above 1), as a flag. Each of those
+  memos writes "the amount is above the 95th percentile" for a ratio of 0.12 to 0.15, on
+  a new account's first order (R04's other two conditions), and then cites R04 as holding.
+  Over all development memos, `opus` claimed the field 6 times when it was 1 or less and
+  misread it in 3; `sol` claimed it 9 times when it was 1 or less and read it correctly
+  every time. `sol`'s one failure reads the ratio correctly ("no Context rule holds") and
+  still lists R04, a model error the prompt's citation rule ("the clauses and rules that
+  support the disposition") does not invite.
+- **Prompt `memo_fp2_v2`.** The first prompt described these ratios as "the amount over
+  the median and the 95th percentile", beside "Flags are 1 (yes) or 0 (no)", without
+  saying they are ratios or what 1 means. That is a defect in the instrument, not in the
+  policy-following it measures, so `memo_fp2_v2` gives every field of that kind a plain
+  factual description and changes nothing else (no schema change, no instruction change):
+  - `amount_over_category_median` and `amount_over_category_p95` are described as
+    ratios, not flags, with what 1, above 1 and below 1 mean;
+  - `installments_paid_share_user` is described as paid divided by due, from 0 to 1,
+    with 1 meaning every installment due was paid and 0 also when none was due;
+  - the counts whose names could read as flags are described as numbers:
+    `email_root_other_accounts`, `processor_declines_card_24h`,
+    `processor_declines_device_24h`, `approved_orders_user_ever`, the three installment
+    counts, `unauthorized_disputes_lost_user`, `victim_reports_user`,
+    `inr_disputes_opened_user`, `inr_claims_rejected_user` and
+    `promo_uses_linked_accounts`.
+
+  No development call ran on `memo_fp2_v2` (the call caps leave no room for it), so the
+  development evidence above is `memo_fp2_v1`'s. The final run uses `memo_fp2_v2` for
+  both arms. No format problem appeared in either arm.
 
 ## Limits
 
@@ -261,12 +293,26 @@ python -m llm.eval.select_cases --id 2026-10-dev-opus --combine 2026-10-dev \
 python -m llm.eval.select_cases --id <final id> --phase final --world <run>/worlds/<seed>-baseline ... \
     --development 2026-10-dev --development 2026-10-dev-checks --development 2026-10-dev-opus
 python -m llm.eval.select_cases --id <case memos id> --case-memos <run> --arm sol
+CLAUDE_CLI_BIN=<the Claude Code CLI, or a launcher that runs it> \
+python -m llm.eval.harness --benchmark <id> --arm <sol|opus> --live \
+    --log-dir <folder outside the repository> --private-terms <file> --max-calls <n>
 python -m llm.eval.harness --benchmark <id>             # every arm, from the cache
 python -m llm.eval.harness --benchmark 2026-10-dev --arm sol \
     --amend-scoring "the scoring changes made after this set ran"
 python -m llm.eval.harness --benchmark 2026-10-dev-checks --arm sol --amend-scoring "..."
 python -m llm.eval.harness --benchmark 2026-10-dev-opus --arm opus --amend-scoring "..."
 ```
+
+A live run checks the benchmark's shape and hashes and pins the arm's CLI first. It
+then asks one isolation question; any answer but a plain no, or a tool, file or hook in
+its log, parks the arm. Calls are made one at a time. A call is refused when it would
+break this run's `--max-calls`, the arm's call cap, or (for `opus`) the token cap less a
+1M stop margin, counting every call's reserved bound. A call whose reported usage exceeds
+its bound parks the arm, and a parked arm makes no call until the parking is removed by
+hand. A case gets at most one retry, for a transport failure or error events, and the
+run stops after three cases in a row fail in transport. A launcher in `CLAUDE_CLI_BIN`
+must keep each call to one model turn (the operator's precondition, like signing in with
+a personal subscription only).
 
 The development sets each hold one arm's records (`sol` for `2026-10-dev` and
 `2026-10-dev-checks`, `opus` for `2026-10-dev-opus`), so they are scored with `--arm`.
