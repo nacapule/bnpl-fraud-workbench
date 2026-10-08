@@ -13,13 +13,16 @@ The pipeline keeps only the first decisions (``review_decisions.pkl``,
 ``queue_sim.stage.review_decisions``). :func:`completion_decisions` therefore replays the
 incumbent's main run on the world again with the frozen code (its policy at the tuned
 thresholds, base staffing, the test window, history rebuilt under its decisions) with a
-reviewer that records what it is asked. The replay is refused unless it reproduces the
-kept first decisions exactly, every column of every row, so the rows it returns are the
-ones the run's own replay read.
+reviewer that records what it is asked. Before it does, the world's tables must match
+their manifest, and the world, the policy configuration and the tuning results must be
+the ones the run's replay stage recorded in its lineage, so the replay reads what the
+run's replay read. After it, the replay is refused unless it reproduces the kept first
+decisions exactly, every value of every row.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -30,7 +33,7 @@ import pandas as pd
 from core import asof, config
 from core.evidence import CheckResult
 from core.protocol import load_protocol
-from core.world import read_world
+from core.world import read_world, verify_manifest
 from model.train import RuleScorer
 from queue_sim import policies, stage
 from queue_sim.replay import PolicyHistory, Settings
@@ -40,6 +43,7 @@ from queue_sim.roster import ServiceCalendar
 from rules import engine
 
 ROW_COLUMNS = (*asof.KEY_COLUMNS, *asof.COLUMN_NAMES)
+POLICY_CONFIG = Path(__file__).resolve().parents[2] / "config" / "policy.yaml"
 
 
 class ReplayMismatch(RuntimeError):
@@ -63,16 +67,47 @@ class _Recorder(Reviewer):
 
 def run_paths(world_dir: Path) -> tuple[Path, Path]:
     """The tuning results and the fitted-models folder of the run a world belongs to
-    (``<run>/worlds/<seed>-<family>``): the results folder its lineage names, else
-    ``<run>/results``."""
+    (``<run>/worlds/<seed>-<family>``): ``<run>/results/tune.json``, or for a run that
+    published its results the one in the folder its lineage names (as the case files
+    read them)."""
     run_dir = Path(world_dir).resolve().parent.parent
-    results = run_dir / "results"
+    tune = run_dir / "results" / "tune.json"
     lineage = run_dir / "lineage.json"
-    if lineage.exists():
+    if not tune.exists() and lineage.exists():
         named = json.loads(lineage.read_text()).get("results_dir")
         if named:
-            results = Path(named)
-    return results / "tune.json", run_dir / "fit"
+            tune = Path(named) / "tune.json"
+    return tune, run_dir / "fit"
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def check_inputs(world_dir: Path, tables: Mapping[str, pd.DataFrame], tune_path: Path) -> None:
+    """The replay's inputs are the run's: the tables match the world's manifest, and the
+    world's identity, ``config/policy.yaml`` and the tuning results are those the run's
+    replay stage recorded in ``<run>/lineage.json``. Raises :class:`ReplayMismatch`."""
+    from pipeline import manifest_identity
+
+    world_dir = Path(world_dir)
+    manifest = json.loads((world_dir / "manifest.json").read_text())
+    try:
+        verify_manifest(tables, manifest)
+    except ValueError as error:
+        raise ReplayMismatch(f"{world_dir.name}: {error}") from error
+    lineage = world_dir.resolve().parent.parent / "lineage.json"
+    if not lineage.exists():
+        raise ReplayMismatch(f"no lineage beside {world_dir.name}: the run's replay inputs "
+                             "are unknown")
+    recorded = (json.loads(lineage.read_text()).get("stages", {}).get("replay", {})
+                .get("inputs", {}))
+    current = {f"world:{world_dir.name}": manifest_identity(manifest),
+               "config/policy.yaml": _sha256(POLICY_CONFIG),
+               "results/tune.json": _sha256(tune_path)}
+    differ = sorted(name for name, digest in current.items() if recorded.get(name) != digest)
+    if differ:
+        raise ReplayMismatch(f"not the inputs the run's replay recorded: {differ}")
 
 
 def incumbent_policy(tune_path: Path, fit_dir: Path, seed: int) -> policies.Policy:
@@ -108,14 +143,17 @@ def completion_decisions(world_dir: Path, kept: pd.DataFrame, *, seed: int,
     the time the row was assembled), ``checks`` (every completed check),
     ``disposition`` (the reviewer's decision then) and ``first_decision_at`` (the
     ``decision_at`` of the review's first decision). Raises :class:`ReplayMismatch`
-    unless the replay reproduces ``kept`` exactly.
+    unless the inputs are the run's (:func:`check_inputs`) and the replay reproduces
+    ``kept`` exactly.
     """
     world_dir = Path(world_dir)
     default_tune, default_fit = run_paths(world_dir)
+    tune_path = tune_path or default_tune
     tables = read_world(world_dir) if tables is None else tables
+    check_inputs(world_dir, tables, tune_path)
     protocol = load_protocol()
     policy_cfg = config.load("policy")
-    policy = incumbent_policy(tune_path or default_tune, fit_dir or default_fit, seed)
+    policy = incumbent_policy(tune_path, fit_dir or default_fit, seed)
     versions = set(kept["policy_version"])
     if versions and versions != {policy.version}:
         raise ReplayMismatch(f"the kept decisions are of policy versions {sorted(versions)}, "
@@ -134,7 +172,7 @@ def completion_decisions(world_dir: Path, kept: pd.DataFrame, *, seed: int,
     again = stage.decision_rows(policy, result)
     try:
         pd.testing.assert_frame_equal(again.reset_index(drop=True),
-                                      kept.reset_index(drop=True))
+                                      kept.reset_index(drop=True), check_exact=True)
     except AssertionError as error:
         raise ReplayMismatch(f"the replay does not reproduce the kept review decisions of "
                              f"{world_dir.name}: {str(error).splitlines()[0]}") from error

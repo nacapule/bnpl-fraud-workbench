@@ -1059,3 +1059,25 @@ def test_the_shape_holds_each_axis_to_its_configured_count() -> None:
         "review": 3, "check_completed": 2}
     with pytest.raises(harness.ShapeError, match="add up"):
         harness.final_axes({**SIZES, "final_axes": {"review": 1}})
+
+
+def test_the_paired_natural_mix_difference_and_equal_rates_as_a_tie() -> None:
+    cases = [{"case_id": f"c{i}", "cluster": f"g{i}", "weight": weight,
+              "axis": "review"} for i, weight in enumerate((1.0, 1.0, 8.0, 8.0))]
+    first, second = (True, False, True, False), (False, True, False, True)
+
+    def arm(marks):
+        return {"cases": {f"c{i}/primary": {"acceptable": ok, "complete_pass": ok}
+                          for i, ok in enumerate(marks)}}
+
+    paired = harness.statistics({"cases": cases}, {"a": arm(first), "b": arm(second)})[
+        "paired"]["a vs b"]["complete_pass"]
+    assert paired["difference"] == 0 and "tie" in paired  # one each way: equal rates
+    assert paired["difference_cluster_bootstrap"] is not None  # yet the cases differ
+    assert paired["natural_difference"] == 0
+    weighted = [{**case, "weight": w} for case, w in zip(cases, (1.0, 1.0, 1.0, 9.0),
+                                                          strict=True)]
+    gap = harness.statistics({"cases": weighted}, {"a": arm(first), "b": arm(second)})[
+        "paired"]["a vs b"]["complete_pass"]
+    assert gap["difference"] == 0 and gap["natural_difference"] == round(
+        (1 + 1) / 12 - (1 + 9) / 12, 4)

@@ -104,6 +104,7 @@ REPO = EVAL.parent.parent
 BENCHMARKS = EVAL / "benchmarks"
 LEDGER = BENCHMARKS / "ledger.json"
 PROBES = ("primary", "shuffled", "renamed")
+PHASES = ("development", "final")
 PROBE_SEED = 7919  # shuffles the context facts / draws fresh placeholder names per case
 SIZES = load("llm")["benchmark"]
 CAPS = load("llm")["caps"]
@@ -228,7 +229,7 @@ def check_shape(definition: Mapping[str, Any], sizes: Mapping[str, Any] | None =
     sizes = SIZES if sizes is None else sizes
     protocol = protocol or load_protocol()
     phase, cases = definition.get("phase"), definition.get("cases") or []
-    if phase not in ("development", "final"):
+    if phase not in PHASES:
         raise ShapeError(f"unknown phase {phase!r}")
     ids = [case["case_id"] for case in cases]
     if len(set(ids)) != len(ids):
@@ -1206,7 +1207,9 @@ def statistics(definition: Mapping[str, Any], arms: Mapping[str, Mapping[str, An
     cluster-bootstrap interval for the difference in rates (the same clusters
     resampled for both arms; null when every case agrees) and a sign test over clusters
     (each cluster's net count of cases only one arm passed), so linked cases are not
-    counted as independent evidence. A tie is reported as a tie, not equivalence."""
+    counted as independent evidence; the same for the difference in natural-mix rates. Equal
+    rates (as many cases only one arm passed as only the other) are reported as a tie, not
+    equivalence."""
     import numpy as np
 
     from core.stats import cluster_bootstrap, paired_outcomes, sign_test, wilson_interval
@@ -1253,23 +1256,32 @@ def statistics(definition: Mapping[str, Any], arms: Mapping[str, Mapping[str, An
             for measure in measures:
                 ok = marks[measure]
                 counts = paired_outcomes(ok[first], ok[second])
-                difference = np.array([ok[first][i] - ok[second][i] for i in ids], dtype=float)
+                one = np.array([ok[first][i] for i in ids], dtype=float)
+                two = np.array([ok[second][i] for i in ids], dtype=float)
+                difference = one - two
                 net: dict[str, float] = defaultdict(float)
                 for cluster, value in zip(clusters, difference, strict=True):
                     net[cluster] += value
                 test = sign_test(net.values())
-                tie = not difference.any()
+
+                def natural_gap(idx: np.ndarray | None = None, one: np.ndarray = one,
+                                two: np.ndarray = two) -> float:
+                    return float(natural_rate(definition, one, idx)
+                                 - natural_rate(definition, two, idx))
+
                 comparison[measure] = {
                     "both": counts.both, "only_first": counts.only_first,
                     "only_second": counts.only_second, "neither": counts.neither,
                     "difference": round(float(difference.mean()), 4),
                     "difference_cluster_bootstrap": interval(
                         difference, lambda idx, d=difference: float(d[idx].mean())),
+                    "natural_difference": round(natural_gap(), 4),
+                    "natural_difference_cluster_bootstrap": interval(difference, natural_gap),
                     "clusters_favouring_first": test.positive,
                     "clusters_favouring_second": test.negative,
                     "clusters_tied": test.zero,
                     "cluster_sign_test_p": round(test.p_value, 6),
-                    **({"tie": TIE_NOTE} if tie else {}),
+                    **({"tie": TIE_NOTE} if counts.only_first == counts.only_second else {}),
                 }
             out["paired"][f"{first} vs {second}"] = comparison
     return out
@@ -1356,7 +1368,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                              else f"results-{args.arm}.json"), results)
     for name, arm in results["arms"].items():
         print(name, json.dumps({k: v for k, v in arm["summary"].items()
-                                if k in ("n_cases", "outcomes", "complete_pass",
+                                if k in ("n_cases", "outcomes", "complete_pass_natural",
+                                         "complete_pass", "acceptable_natural",
                                          "acceptable")}))
     return 0
 

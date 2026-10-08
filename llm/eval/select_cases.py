@@ -7,7 +7,8 @@ world, on one of two decision-point axes:
 * ``check_completed``: the decision when the checks a hold ran have answered, at the
   last completion, with every completed check, on the row the replay's reviewer read
   then (:mod:`llm.eval.check_points`). These are the rows of fraud policy §5.3: after a
-  passed check every hold is prohibited; after a failed one the order is declined, or
+  passed check every hold is prohibited once every required check has passed (until then
+  the hold continues under §6.6(b)); after a failed one the order is declined, or
   escalated with Linkage. A hold that no check answers expires without an analyst
   decision, so §5.3(c) has no cases.
 
@@ -26,7 +27,10 @@ packets never carry it.
   movers, hardship, ...), the one rarest among the pool's legitimate orders
   (:func:`stratify`). On the check axis, the completed checks with their outcomes, the
   referee's standard disposition and the latent class (:func:`check_stratum`). More
-  strata than an axis's cases are refused, so every stratum has cases.
+  strata among phase one's cases than an axis's cases are refused, so every stratum
+  phase one reaches has cases; a stratum whose every case lost its group's draw in phase
+  one has none, as two-phase sampling allows, and the definition names it
+  (``strata_not_drawn``).
 * Sizes: the final cohort takes 120 review decisions and 80 decisions at check
   completions (``config/llm.yaml`` ``final_axes``; 80 is about the development pools'
   share of analyst decisions that follow a check, 283 of 743). Each check outcome in the
@@ -231,13 +235,15 @@ def _allocation(sizes: Mapping[str, int], total: int) -> dict[str, int]:
 
 
 def _with_minimum(quota: Mapping[str, int], sizes: Mapping[str, int],
-                  group_of: Mapping[str, str], minimum: int) -> dict[str, int]:
-    """``quota`` with at least ``minimum`` cases in every group of strata: cases move one
+                  group_of: Mapping[str, str], minimum: int,
+                  required: Iterable[str] = ()) -> dict[str, int]:
+    """``quota`` with at least ``minimum`` cases in every group of strata (and in every
+    group named in ``required``, the outcomes present before phase one): cases move one
     at a time to the group's stratum with the fewest, from the largest stratum of a
     group above the minimum (never leaving a stratum empty). Raises ValueError when a
     group has fewer than ``minimum`` cases available or none can move."""
     quota = dict(quota)
-    for group in sorted(set(group_of.values())):
+    for group in sorted(set(group_of.values()) | set(required)):
         members = sorted(s for s in sizes if group_of[s] == group)
         available = sum(sizes[s] for s in members)
         if available < minimum:
@@ -307,8 +313,9 @@ def select(pool: pd.DataFrame, total: int | Mapping[str, int], *, rng_seed: int,
                              "get no case and the weights could not reach them")
         share = _allocation(sizes, count)
         if axis == "check_completed" and min_per_outcome:
+            present = eligible.loc[eligible["axis"] == axis, "check_outcome"].dropna()
             share = _with_minimum(share, sizes, {s: str(outcome_of[s]) for s in sizes},
-                                  min_per_outcome)
+                                  min_per_outcome, required=set(present.astype(str)))
         if sum(share.values()) < count:
             raise ValueError(f"the pool yields {sum(share.values())} of the {count} "
                              f"{axis.replace('_', ' ')} cases asked for under the cluster "
@@ -389,7 +396,8 @@ def write_benchmark(directory: Path, *, benchmark_id: str, phase: str,
                     probes: Mapping[str, Sequence[str]] | None = None,
                     prompt_version: str = memo.PROMPT_VERSION,
                     axes: Mapping[str, Mapping[str, Any]] | None = None,
-                    drawn_from: Mapping[str, Any] | None = None) -> dict[str, Any]:
+                    drawn_from: Mapping[str, Any] | None = None,
+                    strata_not_drawn: Sequence[str] = ()) -> dict[str, Any]:
     """Write the packets, the referee's view of each and the definition. ``axes`` gives
     each decision-point axis's cases, eligible decisions and share (:func:`eligible_axes`;
     by default the cases' own axes, each with its share of the cases); ``drawn_from``
@@ -400,7 +408,7 @@ def write_benchmark(directory: Path, *, benchmark_id: str, phase: str,
         counts = cases["axis"].value_counts()
         axes = {axis: {"cases": int(n), "eligible": int(n), "share": int(n) / len(cases)}
                 for axis, n in sorted(counts.items())}
-    if phase not in ("development", "final"):
+    if phase not in harness.PHASES:
         raise ValueError(f"unknown phase {phase!r}")
     if set(packets) != set(cases["case_id"]):
         raise ValueError("every case needs exactly one packet")
@@ -440,6 +448,8 @@ def write_benchmark(directory: Path, *, benchmark_id: str, phase: str,
     }
     if drawn_from is not None:
         definition["drawn_from"] = dict(drawn_from)
+    if strata_not_drawn:
+        definition["strata_not_drawn"] = sorted(strata_not_drawn)
     (directory / "benchmark.json").write_text(
         json.dumps(definition, indent=1, sort_keys=True) + "\n")
     return definition
@@ -557,7 +567,9 @@ def build(benchmark_id: str, phase: str, world_dirs: Sequence[Path], *, rng_seed
     chosen = select(pool, totals, rng_seed=rng_seed, exclude_accounts=exclude["accounts"],
                     exclude_episodes=exclude["episodes"], min_per_outcome=minimum)
     axes = eligible_axes(pool, totals, exclude_accounts=exclude["accounts"],
-                       exclude_episodes=exclude["episodes"])
+                         exclude_episodes=exclude["episodes"])
+    eligible = _eligible(pool, set(totals), exclude["accounts"], exclude["episodes"])
+    not_drawn = sorted(set(eligible["stratum"]) - set(chosen["stratum"]))
     if phase == "final":
         earlier_frame = pd.DataFrame({"account_key": sorted(exclude["accounts"]),
                                       "episode_key": None})
@@ -582,7 +594,7 @@ def build(benchmark_id: str, phase: str, world_dirs: Sequence[Path], *, rng_seed
     probes = ({kind: probe_cases(chosen, int(sizes["probe_cases"]), rng_seed=rng_seed)
                for kind in sizes["probe_kinds"]} if phase == "final" else {})
     return _write(benchmark_id, phase=phase, cases=chosen, packets=packets, arms=arms,
-                  probes=probes, axes=axes)
+                  probes=probes, axes=axes, strata_not_drawn=not_drawn)
 
 
 def _write(benchmark_id: str, **fields: Any) -> dict[str, Any]:

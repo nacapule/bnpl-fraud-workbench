@@ -500,3 +500,18 @@ def test_a_development_subset_draws_from_both_sets(tmp_path, mini_phases, monkey
             (root / source / "packets" / f"{case['case_id']}.json").read_bytes()
     with pytest.raises(ValueError, match="unknown arms"):
         select_cases.combine("t-dev-other", ["t-dev", "t-dev-checks"], arms=["nobody"])
+
+
+def test_an_outcome_that_phase_one_drops_still_counts_for_the_minimum() -> None:
+    # three passed and one failed decision share one account: phase one keeps two
+    rows = [{"case_id": f"c{i}", "account_key": "3:1", "episode_key": None,
+             "axis": "check_completed", "check_outcome": outcome,
+             "stratum": f"after_check:id_check={outcome}:x:fraud"}
+            for i, outcome in enumerate(["passed", "passed", "passed", "failed"])]
+    frame = pd.DataFrame(rows)
+    dropped = [seed for seed in range(40)
+               if "failed" not in set(select(frame, {"check_completed": 2}, rng_seed=seed)
+                                      ["check_outcome"])]
+    assert dropped  # some draws keep no failed case
+    with pytest.raises(ValueError, match="after a failed check"):
+        select(frame, {"check_completed": 2}, rng_seed=dropped[0], min_per_outcome=1)

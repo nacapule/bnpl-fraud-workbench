@@ -57,6 +57,13 @@ def run(tmp_path_factory) -> tuple[Path, pd.DataFrame]:
                        stage.base_staffing(config.load("policy")))
     kept = stage.decision_rows(policy, result)
     kept.to_pickle(world_dir / "review_decisions.pkl")
+    from pipeline import manifest_identity
+
+    manifest = json.loads((world_dir / "manifest.json").read_text())
+    (root / "lineage.json").write_text(json.dumps({"stages": {"replay": {"inputs": {
+        f"world:{world_dir.name}": manifest_identity(manifest),
+        "config/policy.yaml": check_points._sha256(check_points.POLICY_CONFIG),
+        "results/tune.json": check_points._sha256(root / "results" / "tune.json")}}}}))
     return world_dir, kept
 
 
@@ -99,6 +106,24 @@ def test_a_replay_that_does_not_reproduce_the_kept_decisions_is_refused(run) -> 
         check_points.completion_decisions(world_dir, altered, seed=SEED)
 
 
+def test_the_replay_reads_only_the_runs_own_inputs(run, tmp_path) -> None:
+    world_dir, kept = run
+    tables = read_world(world_dir)
+    changed = {**tables, "account_events": tables["account_events"].iloc[1:]}
+    with pytest.raises(check_points.ReplayMismatch, match="does not match its manifest"):
+        check_points.completion_decisions(world_dir, kept, seed=SEED, tables=changed)
+    lineage = world_dir.parent.parent / "lineage.json"
+    original = lineage.read_text()
+    recorded = json.loads(original)
+    recorded["stages"]["replay"]["inputs"]["config/policy.yaml"] = "0" * 64
+    lineage.write_text(json.dumps(recorded))
+    try:
+        with pytest.raises(check_points.ReplayMismatch, match="config/policy.yaml"):
+            check_points.completion_decisions(world_dir, kept, seed=SEED, tables=tables)
+    finally:
+        lineage.write_text(original)
+
+
 def test_the_incumbent_must_have_the_version_tuning_chose(run, tmp_path) -> None:
     world_dir, _ = run
     tune, fit = check_points.run_paths(world_dir)
@@ -121,3 +146,6 @@ def test_the_run_paths_follow_the_lineage(tmp_path) -> None:
     (tmp_path / "run" / "lineage.json").write_text(json.dumps(
         {"results_dir": str(tmp_path / "elsewhere")}))
     assert check_points.run_paths(world_dir)[0] == tmp_path / "elsewhere" / "tune.json"
+    (tmp_path / "run" / "results").mkdir()
+    (tmp_path / "run" / "results" / "tune.json").write_text("{}")  # the run's own first
+    assert check_points.run_paths(world_dir)[0] == tmp_path / "run" / "results" / "tune.json"
