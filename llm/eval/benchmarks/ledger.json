@@ -1,5 +1,350 @@
 {
  "arms": {
+  "opus": {
+   "by_benchmark": {
+    "2026-10-dev-opus": {
+     "calls": 41,
+     "charged_tokens": 516616
+    }
+   },
+   "calls": 41,
+   "charged_tokens": 516616,
+   "input_tokens": 422936,
+   "interrupted_calls": 0,
+   "output_tokens": 93680,
+   "pending": {},
+   "receipts": {
+    "2026-10-dev-opus:88102:05552e28e76e": {
+     "calls": 1,
+     "case": "5a19c29e3b993ef9933cf7fe1cbd8780",
+     "charged_tokens": 12891,
+     "input_tokens": 10565,
+     "output_tokens": 2326,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:06ebd21ef52a": {
+     "calls": 1,
+     "case": "ac954cb7a130f12047bf5358b1bb21f5",
+     "charged_tokens": 13301,
+     "input_tokens": 10517,
+     "output_tokens": 2784,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:071e340cc398": {
+     "calls": 1,
+     "case": "90ed92e20ebec7e6952278eae7fbcbcb",
+     "charged_tokens": 12794,
+     "input_tokens": 10522,
+     "output_tokens": 2272,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:072f5121fa7c": {
+     "calls": 1,
+     "case": "3e5897cca1d902eeb25bd32802fb06ca",
+     "charged_tokens": 12600,
+     "input_tokens": 10576,
+     "output_tokens": 2024,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:078718e00267": {
+     "calls": 1,
+     "case": "fe68b69c6533bbe5088de697471ded5d",
+     "charged_tokens": 13382,
+     "input_tokens": 10526,
+     "output_tokens": 2856,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:078f82afd0e1": {
+     "calls": 1,
+     "case": "6fbc1e6d6236a7ed1f30966a2e41d172",
+     "charged_tokens": 12134,
+     "input_tokens": 10590,
+     "output_tokens": 1544,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:133f4c063152": {
+     "calls": 1,
+     "case": "93006c04b4dab6aea606435e9c8f0233",
+     "charged_tokens": 13280,
+     "input_tokens": 10520,
+     "output_tokens": 2760,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:141551fef681": {
+     "calls": 1,
+     "case": "dd2c1115f4081d3c6b7eb7bf98902e27",
+     "charged_tokens": 13091,
+     "input_tokens": 10581,
+     "output_tokens": 2510,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:1aaa810f21a0": {
+     "calls": 1,
+     "case": "1f21a84155b3c703685ad419333add44",
+     "charged_tokens": 12687,
+     "input_tokens": 10589,
+     "output_tokens": 2098,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:1b78037226e0": {
+     "calls": 1,
+     "case": "70081da3c0b0ca96c9f93b6ccc060d49",
+     "charged_tokens": 12972,
+     "input_tokens": 10590,
+     "output_tokens": 2382,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:29281ff964f1": {
+     "calls": 1,
+     "case": "5e6382dcde2fc4dc41d49367785473ec",
+     "charged_tokens": 12791,
+     "input_tokens": 10572,
+     "output_tokens": 2219,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:2b416beb5a76": {
+     "calls": 1,
+     "case": "e7f1ddfee4a4b90083c5f7f5d4c84a47",
+     "charged_tokens": 13089,
+     "input_tokens": 10529,
+     "output_tokens": 2560,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:2db28817ba5f": {
+     "calls": 1,
+     "case": "f4eba7673206785910edad28a08788ff",
+     "charged_tokens": 12683,
+     "input_tokens": 10525,
+     "output_tokens": 2158,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:2e9b8a3512a9": {
+     "calls": 1,
+     "case": "c74b2877b304c4ba6c331b0e78c586a6",
+     "charged_tokens": 13075,
+     "input_tokens": 10529,
+     "output_tokens": 2546,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:31ba6b0fb7e1": {
+     "calls": 1,
+     "case": "105a85cfc599f8400fd1e6d66192750c",
+     "charged_tokens": 12648,
+     "input_tokens": 10530,
+     "output_tokens": 2118,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:337893cdbc37": {
+     "calls": 1,
+     "case": "b39ccb23c9ea528f3ecb1157f195353c",
+     "charged_tokens": 12343,
+     "input_tokens": 10583,
+     "output_tokens": 1760,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:359a5e1a0dd8": {
+     "calls": 1,
+     "case": "1fd1812794968ff8c3af07abe541c870",
+     "charged_tokens": 13072,
+     "input_tokens": 10522,
+     "output_tokens": 2550,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:4544c78be6c0": {
+     "calls": 1,
+     "case": "0ade2f904e59ada104004354bdc9bfd3",
+     "charged_tokens": 12533,
+     "input_tokens": 10571,
+     "output_tokens": 1962,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:45b42ef6bf50": {
+     "calls": 1,
+     "case": "116818f67e73f91483b02e9d052f53f2",
+     "charged_tokens": 12613,
+     "input_tokens": 10562,
+     "output_tokens": 2051,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:47dc170733a7": {
+     "calls": 1,
+     "case": "94614ad597fd50594256508a2f35bb98",
+     "charged_tokens": 13756,
+     "input_tokens": 10508,
+     "output_tokens": 3248,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:50b889787778": {
+     "calls": 1,
+     "case": "74daf35fcbc573c3c70cd9e816e2f397",
+     "charged_tokens": 13214,
+     "input_tokens": 10526,
+     "output_tokens": 2688,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:5d7b1df887ba": {
+     "calls": 1,
+     "case": "3ee563521d741f0754e689c9343ca12f",
+     "charged_tokens": 13172,
+     "input_tokens": 10585,
+     "output_tokens": 2587,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:63149e997c50": {
+     "calls": 1,
+     "case": "e58beb62d65132210893112b8060a72f",
+     "charged_tokens": 12827,
+     "input_tokens": 10589,
+     "output_tokens": 2238,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:6b1acb0743fc": {
+     "calls": 1,
+     "case": "64950b787427af04e225bbc0c31d89d3",
+     "charged_tokens": 12869,
+     "input_tokens": 10528,
+     "output_tokens": 2341,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:7dbf4dfad05e": {
+     "calls": 1,
+     "case": "15fdb5abf72f4f707c82fce678fe9624",
+     "charged_tokens": 12872,
+     "input_tokens": 10580,
+     "output_tokens": 2292,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:83229a6128c6": {
+     "calls": 1,
+     "case": "ec9578285a52574cb14aa796bb97ddf3",
+     "charged_tokens": 13369,
+     "input_tokens": 10529,
+     "output_tokens": 2840,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:950d4fdeb3c2": {
+     "calls": 1,
+     "case": "cdad72b0e09bc56cf9cd2b9e1535d8f1",
+     "charged_tokens": 12785,
+     "input_tokens": 10529,
+     "output_tokens": 2256,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:98087b0d9a67": {
+     "calls": 1,
+     "case": "a4be4928abe1b5ed47421e49e3ef5d43",
+     "charged_tokens": 12924,
+     "input_tokens": 10529,
+     "output_tokens": 2395,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:9c2b8234c585": {
+     "calls": 1,
+     "case": "isolation-check:2026-10-dev-opus:canary-88102-26d56e",
+     "charged_tokens": 854,
+     "input_tokens": 825,
+     "output_tokens": 29,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:9dcff3a7fc37": {
+     "calls": 1,
+     "case": "8216439c5e2144d39c5d45fd974087db",
+     "charged_tokens": 12670,
+     "input_tokens": 10534,
+     "output_tokens": 2136,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:a7d72f289d28": {
+     "calls": 1,
+     "case": "d8b40ba0991ee797d8c7df63cbd2ab37",
+     "charged_tokens": 12638,
+     "input_tokens": 10586,
+     "output_tokens": 2052,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:a9b62461bbca": {
+     "calls": 1,
+     "case": "08efa27bed697306e25fcb7cc8fbc8a1",
+     "charged_tokens": 12630,
+     "input_tokens": 10589,
+     "output_tokens": 2041,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:a9e44170d1bc": {
+     "calls": 1,
+     "case": "96fc7b032e725f3fa7009f92a87606ce",
+     "charged_tokens": 13113,
+     "input_tokens": 10591,
+     "output_tokens": 2522,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:aaeb566b44b5": {
+     "calls": 1,
+     "case": "4a7183b67178d489aa5b91589f07a410",
+     "charged_tokens": 12611,
+     "input_tokens": 10578,
+     "output_tokens": 2033,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:acd1365fd04e": {
+     "calls": 1,
+     "case": "9799be2884304c5e1b1755346b22f36b",
+     "charged_tokens": 13380,
+     "input_tokens": 10519,
+     "output_tokens": 2861,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:bd34254d5754": {
+     "calls": 1,
+     "case": "41bb34f36a699faa1834c9b266e89951",
+     "charged_tokens": 12553,
+     "input_tokens": 10560,
+     "output_tokens": 1993,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:ca5960ab5acc": {
+     "calls": 1,
+     "case": "a06519c3b8319c5c2e2a2c16a1f017fa",
+     "charged_tokens": 12931,
+     "input_tokens": 10584,
+     "output_tokens": 2347,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:cd854639433d": {
+     "calls": 1,
+     "case": "383da3551942bb95d51b3148ce2f94ea",
+     "charged_tokens": 13199,
+     "input_tokens": 10533,
+     "output_tokens": 2666,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:e7429e7a3d9e": {
+     "calls": 1,
+     "case": "307cd4176c197bfb4228a63ab3b0a1e8",
+     "charged_tokens": 13056,
+     "input_tokens": 10580,
+     "output_tokens": 2476,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:eb5379f8802f": {
+     "calls": 1,
+     "case": "eb0cf46624da4802f3e68da2853299e3",
+     "charged_tokens": 12772,
+     "input_tokens": 10526,
+     "output_tokens": 2246,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev-opus:88102:fe41e9a522a7": {
+     "calls": 1,
+     "case": "512d178b678c3fa63d4671436141ec2f",
+     "charged_tokens": 12442,
+     "input_tokens": 10529,
+     "output_tokens": 1913,
+     "unknown_usage_calls": 0
+    }
+   },
+   "unknown_usage_calls": 0
+  },
   "sol": {
    "by_benchmark": {
     "2026-10-dev": {
