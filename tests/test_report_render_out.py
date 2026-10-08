@@ -121,3 +121,15 @@ def test_another_spelling_of_the_repository_is_the_repository(tmp_path: Path,
     with pytest.raises(RenderError, match="evaluate.gain.hybrid"):
         render_all(_sources(), variant, templates, root=tmp_path / "elsewhere")
     assert not (repo / "README.md").exists()
+
+
+def test_a_hard_link_in_the_folder_is_replaced_not_written_through(tmp_path: Path) -> None:
+    root, out = tmp_path / "repo", tmp_path / "docs"
+    templates = _templates(root)
+    (root / "README.md").write_text("the published README\n")
+    out.mkdir()
+    (out / "README.md").hardlink_to(root / "README.md")
+    render_all(_sources(), out, templates, root)  # the memo is skipped, the README rendered
+    assert (root / "README.md").read_text() == "the published README\n"
+    assert (out / "README.md").read_text().endswith("Things: 7.\n")
+    assert (out / NOT_RENDERED).exists()

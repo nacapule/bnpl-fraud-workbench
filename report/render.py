@@ -48,8 +48,10 @@ unknown format or a format that does not fit the unit. Templates live under
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
+import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -700,8 +702,7 @@ def render_all(sources: Sources, out_root: Path, templates: Path = TEMPLATES,
     written = []
     for doc, text in rendered.items():
         target = out_root / doc.output
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(text)
+        _replace(target, text)
         written.append(target)
     notice = out_root / NOT_RENDERED
     if skipped:
@@ -709,15 +710,30 @@ def render_all(sources: Sources, out_root: Path, templates: Path = TEMPLATES,
         for doc, error in skipped.items():
             (out_root / doc.output).unlink(missing_ok=True)
             lines += [f"{doc.name}:", *(f"  {problem}" for problem in error.problems)]
-        notice.parent.mkdir(parents=True, exist_ok=True)
-        notice.write_text("Documents not rendered from this summary, and why:\n"
-                          + "\n".join(lines) + "\n")
+        _replace(notice, "Documents not rendered from this summary, and why:\n"
+                 + "\n".join(lines) + "\n")
         written.append(notice)
         print(f"report: {len(skipped)} of {len(skipped) + len(rendered)} documents not "
               f"rendered from this summary (see {notice})", file=sys.stderr)
     else:
         notice.unlink(missing_ok=True)
     return written
+
+
+def _replace(target: Path, text: str) -> None:
+    """Write ``text`` to a new file beside ``target`` and move it into place, so a
+    destination that shares its contents with another path (a hard link) is replaced,
+    never written through."""
+    target.parent.mkdir(parents=True, exist_ok=True)
+    handle, temporary = tempfile.mkstemp(dir=target.parent, prefix=f".{target.name}.")
+    try:
+        with os.fdopen(handle, "w") as stream:
+            stream.write(text)
+        os.chmod(temporary, 0o644)
+        os.replace(temporary, target)
+    except BaseException:
+        Path(temporary).unlink(missing_ok=True)
+        raise
 
 
 def is_repository(path: Path, root: Path = REPO) -> bool:
