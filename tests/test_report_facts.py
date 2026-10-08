@@ -96,6 +96,27 @@ def test_named_values_of_a_record_render_as_a_two_column_table(sources):
         render(f'Inline {{{{ facts:{row} | amount_cents }}}} here.', sources)
 
 
+@pytest.mark.parametrize("entry, message", [
+    ('analyst_started_at "Started"', "fact 'analyst_started_at' is null"),
+    ('recorded_action "Action" nonexistent', "unknown format 'nonexistent'"),
+    ('recorded_action "Action" usd', "format 'usd' does not fit"),
+])
+def test_a_named_value_that_cannot_print_fails(sources, entry, message):
+    with pytest.raises(RenderError, match=message):
+        render(f"{{{{ facts:account_takeover:alerts.account_takeover.decision | {entry} }}}}",
+               sources)
+
+
+def test_a_yes_or_no_fact_takes_no_format(sources):
+    later = "account_takeover:alerts.account_takeover.later"
+    assert render(f'{{{{ facts:{later} | differs "Differs" }}}}', sources).endswith(
+        "| Differs | yes |")
+    with pytest.raises(RenderError, match="unknown format 'nonexistent'"):
+        render(f'{{{{ facts:{later} | differs "Differs" nonexistent }}}}', sources)
+    with pytest.raises(RenderError, match="takes no format"):
+        render(f'{{{{ facts:{later} | differs "Differs" usd }}}}', sources)
+
+
 def test_the_repository_reads_every_case_facts_file(tmp_path):
     for part in ("experiments/protocol.yaml", "report/claims.yaml"):
         (tmp_path / part).parent.mkdir(parents=True, exist_ok=True)

@@ -23,10 +23,13 @@ A template is Markdown whose numbers come only from placeholders:
     a case fact from ``cases/facts/<file>.json`` (a list item by its index), its
     unit from the suffix of the path's last name, like a setting;
 ``{{ table:fact:<file>:<dotted.path> | column "Header" format, ... }}``
-    on a line of its own: a table from a list of records in a case facts file;
+    on a line of its own: a table from a list of records in a case facts file
+    (a record without such a value, such as a shipment's amount, holds null and
+    prints "n/a", as in result tables);
 ``{{ facts:<file>:<dotted.path> ["Header" "Header"] | name "Label" format, ... }}``
     on a line of its own: a two-column table of named single values of one
-    record in a case facts file, each in its own unit.
+    record in a case facts file, each in its own unit; like ``fact:``, a named
+    value that is null fails.
 
 Rendering fails, listing every problem with its line, on a missing key, an
 unknown format or a format that does not fit the unit. Templates live under
@@ -278,6 +281,9 @@ def render_facts(body: str, sources: Sources) -> str:
             continue
         key, label, form = found.groups()
         format_name, *args = (form or "value").split(":")
+        if format_name not in formats.FORMATS:
+            problems.append(f"unknown format {format_name!r} for fact {key!r}")
+            continue
         if key not in record:
             problems.append(f"no fact {key!r} in {expression!r}")
             continue
@@ -286,8 +292,12 @@ def render_facts(body: str, sources: Sources) -> str:
             problems.append(f"fact {key!r} is not a single value")
             continue
         if value is None:
-            cell = "n/a"
-        elif isinstance(value, bool):
+            problems.append(f"fact {key!r} is null")
+            continue
+        if isinstance(value, bool):
+            if form is not None:
+                problems.append(f"fact {key!r} is yes or no and takes no format")
+                continue
             cell = "yes" if value else "no"
         else:
             try:

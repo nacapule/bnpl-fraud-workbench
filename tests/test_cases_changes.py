@@ -260,6 +260,11 @@ def test_a_change_runs_only_for_the_order_it_was_declared_for(tables, tmp_path):
     with pytest.raises(changes_module.RuleError, match="declared for order 136685; the "
                                                       "selection gives 12"):
         changes_module.run_changes(run, built)
+    # a missing slot is not another order: the file keeps the change's effect on the world
+    blocks = changes_module.run_changes(run, built, changes=(change("traveller"),))
+    result = blocks["traveller"]["result"]
+    assert result["selected_order"] is None and result["case_order"] is None
+    assert result["world"]["difference"]["review"]["reviews"] <= 0
 
 
 def test_the_rules_model_must_be_the_runs(tables, tmp_path):

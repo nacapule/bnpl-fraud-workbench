@@ -401,13 +401,15 @@ def run_changes(run: Run, facts: Mapping[str, Mapping[str, Any]],
     """Each file's ``tested_change`` block (module docstring), by file name.
 
     A change's motivation describes the case order it was declared for; with
-    ``check_declared`` a selection that gives another order is refused.
+    ``check_declared`` a selection that gives another order is refused. A file whose
+    slot is missing (no order) still gets the change's effect on the world, with no case
+    order.
     """
     for change in changes:
         entry = facts[change.file] if change.file in facts else None
         selected = None if entry is None else \
             entry["alerts"][entry["primary_alert"]]["publication"]["order_id"]
-        if check_declared and selected != change.declared_for:
+        if check_declared and selected is not None and selected != change.declared_for:
             raise RuleError(f"{change.name} was declared for order {change.declared_for}; "
                             f"the selection gives {selected}")
     tables = run.tables
@@ -458,6 +460,7 @@ def run_changes(run: Run, facts: Mapping[str, Mapping[str, Any]],
             **change.declared(), "illustration": ILLUSTRATION,
             "result": {
                 "policy_version": variant.row["policy_version"],
+                "selected_order": order,
                 "world": {"incumbent": _world_block(incumbent),
                           "variant": _world_block(variant),
                           "difference": _difference(variant, incumbent)},
