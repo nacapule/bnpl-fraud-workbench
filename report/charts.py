@@ -532,7 +532,7 @@ def draw_staffing(data: Mapping[str, Any]):
         "orders decided, with thresholds tuned at the base allotment and held fixed. The "
         "evening layout runs the base minutes at different hours. Hollow: fails an "
         "eligibility criterion in that cell; ringed: the rule's recommendation there.",
-        left=0.10, right=0.86, bottom=0.2)
+        left=0.125, right=0.86, bottom=0.2)
     cells = data["cells"]
     positions = list(range(len(cells)))
     line_end = max(i for i, cell in enumerate(cells) if cell["minutes_per_shift"] is not None)
