@@ -331,6 +331,23 @@ def bps_pct(resolved: Value, args: list[str]) -> str:
     return _text(resolved.number / 100, decimals, suffix="%")
 
 
+def yesno(resolved: Value, args: list[str]) -> str:
+    """A flag as ``yes`` or ``no``: a plain 0 or 1 with no unit (a context row's
+    ``avs_mismatch``), or a bool. Anything else is refused, so a count cannot print
+    as a flag."""
+    if args:
+        raise FormatError("the yesno format takes no arguments")
+    if resolved.metric is not None:
+        raise FormatError("the yesno format is for flags, not result metrics")
+    _unit(resolved, (None,), "yesno")
+    flag = resolved.plain
+    if isinstance(flag, bool):
+        return "yes" if flag else "no"
+    if isinstance(flag, int) and flag in (0, 1):
+        return "yes" if flag else "no"
+    raise FormatError(f"{flag!r} is not a flag (0 or 1, true or false)")
+
+
 FORMATS: dict[str, Format] = {
     "value": value,
     "usd": usd,
@@ -350,6 +367,7 @@ FORMATS: dict[str, Format] = {
     "define": define,
     "date": date,
     "bps_pct": bps_pct,
+    "yesno": yesno,
 }
 
 # Formats that describe a metric rather than print its value, so they also
