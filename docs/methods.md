@@ -700,15 +700,20 @@ takes no analyst time.
 ### Upper bound
 
 The perfect reviewer uses simulation truth at review completion, without
-checks: it declines every order generated as fraud or abuse and clears the
-rest. It
-uses the same queue, timing and allotment and is reported as a labelled upper
-bound diagnostic. Its declines include undelivered merchant bust-out orders
-whose customers are genuine. Both friction definitions are the same in every
-replay: the simulation-truth counts treat these customers as legitimate, and
-the adjudicated counts the rule uses follow each order's label. Only the
-perfect reviewer declines them on simulation truth, so only its truth-layer
-friction includes those declines.
+checks: it declines every order generated as fraud or abuse, clears the rest
+and never escalates. It runs with the same thresholds, shifts, allotment and
+per-order service-time draws as the evidence-based reviewer, and is reported as
+a labelled upper-bound diagnostic. Its decisions still feed back through the
+replay: the accounts its declines block and the history later orders are
+scored on differ, so later routing, the queue's workload and its timing differ
+too. The
+[operations appendix](../reports/appendix-operations.md#a-reviewer-who-always-knows-the-truth-a-diagnostic)
+gives the difference for each policy. Its declines include undelivered
+merchant bust-out orders whose customers are genuine. Both friction
+definitions are the same in every replay: the simulation-truth counts treat
+these customers as legitimate, and the adjudicated counts the rule uses follow
+each order's label. Only the perfect reviewer declines them on simulation
+truth, so only its truth-layer friction includes those declines.
 
 ### Its confusion matrix
 
