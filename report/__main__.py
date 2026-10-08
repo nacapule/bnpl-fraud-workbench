@@ -1,11 +1,13 @@
 """Render or check the published documents.
 
-    python -m report render [--summary results/summary.json] [--out DIR]
+    python -m report render [--summary results/summary.json] [--out DIR] [--strict]
     python -m report check  [--summary results/summary.json]
 
 ``render`` writes every document from its template. The repository's own
-documents are written only from the committed ``results/summary.json``; a
-summary from another run renders into ``--out`` elsewhere. ``check`` changes
+documents are written only from the committed ``results/summary.json``, and a
+document that cannot be rendered fails the render; a summary from another run
+renders into ``--out`` elsewhere, where a document it cannot render is skipped and
+listed in ``NOT_RENDERED.txt`` (``--strict`` fails instead). ``check`` changes
 nothing: it fails when a committed document differs from a fresh render, a
 claim no longer holds or no template places it, or the lint finds a number or
 a comparative word typed into a template.
@@ -47,13 +49,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("command", choices=("render", "check"))
     parser.add_argument("--summary", type=Path, default=SUMMARY)
     parser.add_argument("--out", type=Path, default=REPO, help="where to write documents")
+    parser.add_argument("--strict", action="store_true",
+                        help="fail on a document that cannot be rendered, outside the "
+                             "repository too")
     args = parser.parse_args(argv)
     if args.command == "render":
         if args.out.resolve() == REPO and args.summary.resolve() != SUMMARY:
             print("the repository's documents are rendered only from results/summary.json; "
                   "give --out for another summary", file=sys.stderr)
             return 1
-        for path in render_all(_sources(args.summary), args.out):
+        for path in render_all(_sources(args.summary), args.out, strict=args.strict):
             print(f"wrote {path}")
         return 0
     problems = check(args.summary)

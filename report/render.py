@@ -48,6 +48,7 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -592,16 +593,51 @@ def render_document(document: Document, sources: Sources, root: Path = REPO) -> 
     return HEADER.format(template=template_name) + body
 
 
+NOT_RENDERED = "NOT_RENDERED.txt"
+
+
 def render_all(sources: Sources, out_root: Path, templates: Path = TEMPLATES,
-               root: Path = REPO) -> list[Path]:
-    """Render every template into ``out_root``; returns the paths written."""
+               root: Path = REPO, *, strict: bool = False) -> list[Path]:
+    """Render every template into ``out_root``; returns the paths written.
+
+    Into the repository (``out_root`` is ``root``), or with ``strict``, a document
+    that cannot be rendered fails the render and nothing is written. Anywhere else
+    (a development or small run's ``docs`` folder) the documents whose result keys or
+    case facts the run has are written, the others are skipped: they and their
+    problems are listed in ``out_root/NOT_RENDERED.txt``, a copy of a skipped
+    document left there by an earlier render is removed, and a one-line notice is
+    printed. A render that skips nothing removes an old list.
+    """
+    strict = strict or Path(out_root).resolve() == Path(root).resolve()
+    rendered: dict[Document, str] = {}
+    skipped: dict[Document, RenderError] = {}
+    for doc in documents(templates):
+        try:
+            rendered[doc] = render_document(doc, sources, root)
+        except RenderError as error:
+            if strict:
+                raise
+            skipped[doc] = error
     written = []
-    rendered = {doc: render_document(doc, sources, root) for doc in documents(templates)}
     for doc, text in rendered.items():
         target = out_root / doc.output
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(text)
         written.append(target)
+    notice = Path(out_root) / NOT_RENDERED
+    if skipped:
+        lines = []
+        for doc, error in skipped.items():
+            (Path(out_root) / doc.output).unlink(missing_ok=True)
+            lines += [f"{doc.name}:", *(f"  {problem}" for problem in error.problems)]
+        notice.parent.mkdir(parents=True, exist_ok=True)
+        notice.write_text("Documents not rendered from this summary, and why:\n"
+                          + "\n".join(lines) + "\n")
+        written.append(notice)
+        print(f"report: {len(skipped)} of {len(skipped) + len(rendered)} documents not "
+              f"rendered from this summary (see {notice})", file=sys.stderr)
+    else:
+        notice.unlink(missing_ok=True)
     return written
 
 
