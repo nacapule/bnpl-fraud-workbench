@@ -1,0 +1,363 @@
+{
+  "inputs": {
+    "world:1260106251-baseline": "8911936485fb5626046001ff9db37e57f3856e66be5efa2d8e8ad469c4e16467",
+    "world:1629189384-baseline": "007c726df2a7acb8122d17c8226a9b0582a34b59bbf170c05e3d07152501ba5b",
+    "world:1671034716-baseline": "19b511e8dc946cb98532c7685a9c66d11fb57f021083bf3fd780acf25f663a72",
+    "world:1891170948-baseline": "a418e1d1bb38df5877f97cf893f4dc9a596996dca26eb880e58ea512be9a47d3",
+    "world:200041300-baseline": "cb6ca4ae493550714cf553cec65836abd6aaf3e870310d83378103eded32542e",
+    "world:2066792625-baseline": "7f0820b9f941d381fe46aab1c24682592b654ab845ba0463790deed66c2431db",
+    "world:35244829-baseline": "0586d9cb581072a508a2639992e301377fd2196046d538596c82191e4429feb0",
+    "world:416-baseline": "208122eba8effdd94fb5b19bcac8d9916c5c13a7d71119c972ab24c368b7bc29",
+    "world:717729117-baseline": "475f6395b8df6b3c0c6f2626fc83783995a623555b0e4b67bc16e289e433b551",
+    "world:793746605-baseline": "ac90e0cb08a4955bb3b8b4f3dc98dad300c20d85517835cb7e871a5f8be06420",
+    "world:931592514-baseline": "bb86ec6652001c5abf3b14af389ab5894b7f60b74035cffd4b38ef6225327902"
+  },
+  "metrics": {
+    "fit.detection.boosting.average_precision.validation": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "processor-approved orders at checkout in the validation window with a known label",
+      "seeds": {
+        "per_seed": {
+          "1260106251": 0.6478284228450766,
+          "1629189384": 0.5652723306593879,
+          "1671034716": 0.5252935430965912,
+          "1891170948": 0.5875438558229689,
+          "200041300": 0.5002127780054774,
+          "2066792625": 0.5474277235662995,
+          "35244829": 0.43775939874653086,
+          "717729117": 0.569570068022275,
+          "793746605": 0.49267426110864493,
+          "931592514": 0.47782923327724613
+        }
+      },
+      "unit": "score",
+      "value": 0.5351411615150499,
+      "window": "validation"
+    },
+    "fit.detection.boosting.brier.validation": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "processor-approved orders at checkout in the validation window with a known label",
+      "seeds": {
+        "per_seed": {
+          "1260106251": 0.0044986225170912265,
+          "1629189384": 0.0040893913951738315,
+          "1671034716": 0.0047995458591771276,
+          "1891170948": 0.004352558131209092,
+          "200041300": 0.005621074271898621,
+          "2066792625": 0.004887192982628519,
+          "35244829": 0.0045716837434822645,
+          "717729117": 0.0040833634673163146,
+          "793746605": 0.004423032448941638,
+          "931592514": 0.004876118002413739
+        }
+      },
+      "unit": "score",
+      "value": 0.0046202582819332375,
+      "window": "validation"
+    },
+    "fit.detection.calibration.orders": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "processor-approved orders at checkout, labels known in time (calibration)",
+      "seeds": {
+        "per_seed": {
+          "1260106251": 7377,
+          "1629189384": 7321,
+          "1671034716": 7333,
+          "1891170948": 7368,
+          "200041300": 7149,
+          "2066792625": 7261,
+          "35244829": 7314,
+          "717729117": 7441,
+          "793746605": 7208,
+          "931592514": 7273
+        }
+      },
+      "unit": "count",
+      "value": 7304.5,
+      "window": "calibration"
+    },
+    "fit.detection.calibration.positives": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "processor-approved orders at checkout, labels known in time (calibration)",
+      "seeds": {
+        "per_seed": {
+          "1260106251": 52,
+          "1629189384": 50,
+          "1671034716": 46,
+          "1891170948": 59,
+          "200041300": 41,
+          "2066792625": 45,
+          "35244829": 47,
+          "717729117": 47,
+          "793746605": 43,
+          "931592514": 43
+        }
+      },
+      "unit": "count",
+      "value": 47.3,
+      "window": "calibration"
+    },
+    "fit.detection.fit.orders": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "processor-approved orders at checkout, labels known in time (fit)",
+      "seeds": {
+        "per_seed": {
+          "1260106251": 26249,
+          "1629189384": 26271,
+          "1671034716": 26260,
+          "1891170948": 26167,
+          "200041300": 26162,
+          "2066792625": 26232,
+          "35244829": 26380,
+          "717729117": 26793,
+          "793746605": 26317,
+          "931592514": 26311
+        }
+      },
+      "unit": "count",
+      "value": 26314.2,
+      "window": "fit"
+    },
+    "fit.detection.fit.positives": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "processor-approved orders at checkout, labels known in time (fit)",
+      "seeds": {
+        "per_seed": {
+          "1260106251": 242,
+          "1629189384": 224,
+          "1671034716": 210,
+          "1891170948": 223,
+          "200041300": 241,
+          "2066792625": 242,
+          "35244829": 258,
+          "717729117": 223,
+          "793746605": 220,
+          "931592514": 253
+        }
+      },
+      "unit": "count",
+      "value": 233.6,
+      "window": "fit"
+    },
+    "fit.detection.logistic.average_precision.validation": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "processor-approved orders at checkout in the validation window with a known label",
+      "seeds": {
+        "per_seed": {
+          "1260106251": 0.5944472867431642,
+          "1629189384": 0.581520750544628,
+          "1671034716": 0.3898134690345253,
+          "1891170948": 0.5976611183372963,
+          "200041300": 0.5417982715841543,
+          "2066792625": 0.5630955845583702,
+          "35244829": 0.40087651759931425,
+          "717729117": 0.49845508962811663,
+          "793746605": 0.4761574166471176,
+          "931592514": 0.5018167473333554
+        }
+      },
+      "unit": "score",
+      "value": 0.5145642252010042,
+      "window": "validation"
+    },
+    "fit.detection.logistic.brier.validation": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "processor-approved orders at checkout in the validation window with a known label",
+      "seeds": {
+        "per_seed": {
+          "1260106251": 0.004734363126020026,
+          "1629189384": 0.004374749795767463,
+          "1671034716": 0.00579386957642086,
+          "1891170948": 0.004430063933128093,
+          "200041300": 0.005167841695677455,
+          "2066792625": 0.00484346626683276,
+          "35244829": 0.00504424473776166,
+          "717729117": 0.004867595243707398,
+          "793746605": 0.004743694175751476,
+          "931592514": 0.004561251484239445
+        }
+      },
+      "unit": "score",
+      "value": 0.0048561140035306635,
+      "window": "validation"
+    },
+    "fit.detection.rules.average_precision.validation": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "processor-approved orders at checkout in the validation window with a known label",
+      "seeds": {
+        "per_seed": {
+          "1260106251": 0.23567189964015345,
+          "1629189384": 0.26839594266242794,
+          "1671034716": 0.16178315104766144,
+          "1891170948": 0.23569384492858145,
+          "200041300": 0.25561300440769125,
+          "2066792625": 0.23938988597768007,
+          "35244829": 0.20227872587749188,
+          "717729117": 0.27400905959121147,
+          "793746605": 0.2983492332327538,
+          "931592514": 0.19610301350378462
+        }
+      },
+      "unit": "score",
+      "value": 0.23672877608694373,
+      "window": "validation"
+    },
+    "fit.detection.rules.brier.validation": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "processor-approved orders at checkout in the validation window with a known label",
+      "seeds": {
+        "per_seed": {
+          "1260106251": 0.00702478098634076,
+          "1629189384": 0.005865899465145303,
+          "1671034716": 0.007063671019837041,
+          "1891170948": 0.0064651061083749765,
+          "200041300": 0.0067950352242217285,
+          "2066792625": 0.007176088439790861,
+          "35244829": 0.005915048714968049,
+          "717729117": 0.005839174736931372,
+          "793746605": 0.00540327746987194,
+          "931592514": 0.00610559004381765
+        }
+      },
+      "unit": "score",
+      "value": 0.006365367220929968,
+      "window": "validation"
+    },
+    "fit.detection.tree.average_precision.validation": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "processor-approved orders at checkout in the validation window with a known label",
+      "seeds": {
+        "per_seed": {
+          "1260106251": 0.10843404420323052,
+          "1629189384": 0.20949240348709294,
+          "1671034716": 0.045327258619799485,
+          "1891170948": 0.17610616573029614,
+          "200041300": 0.13184627064257148,
+          "2066792625": 0.06812823120263412,
+          "35244829": 0.08915213979415287,
+          "717729117": 0.19580358942519727,
+          "793746605": 0.13721907882581527,
+          "931592514": 0.04753725920276767
+        }
+      },
+      "unit": "score",
+      "value": 0.12090464411335577,
+      "window": "validation"
+    },
+    "fit.detection.tree.brier.validation": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "processor-approved orders at checkout in the validation window with a known label",
+      "seeds": {
+        "per_seed": {
+          "1260106251": 0.007511627030338453,
+          "1629189384": 0.005778452497546662,
+          "1671034716": 0.007649460524498317,
+          "1891170948": 0.006532840511423887,
+          "200041300": 0.00764577969079079,
+          "2066792625": 0.008051086299566287,
+          "35244829": 0.006455567099111548,
+          "717729117": 0.006098145010466295,
+          "793746605": 0.006310833237768083,
+          "931592514": 0.00708166488053901
+        }
+      },
+      "unit": "score",
+      "value": 0.006911545678204933,
+      "window": "validation"
+    },
+    "fit.detection.validation.orders": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "processor-approved orders at checkout in the validation window with a known label",
+      "seeds": {
+        "per_seed": {
+          "1260106251": 23614,
+          "1629189384": 23585,
+          "1671034716": 23615,
+          "1891170948": 23566,
+          "200041300": 23577,
+          "2066792625": 23771,
+          "35244829": 23794,
+          "717729117": 23581,
+          "793746605": 23567,
+          "931592514": 23869
+        }
+      },
+      "unit": "count",
+      "value": 23653.9,
+      "window": "validation"
+    },
+    "fit.detection.validation.positives": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "processor-approved orders at checkout in the validation window with a known label",
+      "seeds": {
+        "per_seed": {
+          "1260106251": 194,
+          "1629189384": 171,
+          "1671034716": 187,
+          "1891170948": 184,
+          "200041300": 198,
+          "2066792625": 200,
+          "35244829": 164,
+          "717729117": 171,
+          "793746605": 160,
+          "931592514": 169
+        }
+      },
+      "unit": "count",
+      "value": 179.8,
+      "window": "validation"
+    }
+  },
+  "notes": [],
+  "schema_version": 1,
+  "stage": "fit",
+  "tables": {},
+  "versions": {
+    "features": "515539b84eea4a46",
+    "models": "dfc5f61de49bfa34",
+    "protocol": "0a703655be6a3d04",
+    "world": "b2593f6f45a5380c"
+  }
+}

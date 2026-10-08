@@ -1,0 +1,593 @@
+{
+  "inputs": {},
+  "metrics": {
+    "llm.history.luna_v2.final.action_correct": {
+      "denominator": 200,
+      "interval": {
+        "high": 0.665394,
+        "level": 0.95,
+        "low": 0.530837,
+        "method": "wilson"
+      },
+      "note": null,
+      "numerator": 120,
+      "population": "200 archived development cases, memo_v2__gpt-5.6-luna, final",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.6,
+      "window": "all"
+    },
+    "llm.history.luna_v2.final.decline_recall": {
+      "denominator": 57,
+      "interval": null,
+      "note": null,
+      "numerator": 22,
+      "population": "200 archived development cases, memo_v2__gpt-5.6-luna, final",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.38596491228070173,
+      "window": "all"
+    },
+    "llm.history.luna_v2.final.unmatched_token_memos": {
+      "denominator": 200,
+      "interval": null,
+      "note": null,
+      "numerator": 3,
+      "population": "valid final outputs, memo_v2__gpt-5.6-luna",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.015,
+      "window": "all"
+    },
+    "llm.history.luna_v2.final.valid_outputs": {
+      "denominator": 200,
+      "interval": null,
+      "note": null,
+      "numerator": 200,
+      "population": "200 archived development cases, memo_v2__gpt-5.6-luna, final",
+      "seeds": null,
+      "unit": "rate",
+      "value": 1.0,
+      "window": "all"
+    },
+    "llm.history.luna_v2.first_attempt.action_correct": {
+      "denominator": 200,
+      "interval": {
+        "high": 0.660622,
+        "level": 0.95,
+        "low": 0.525797,
+        "method": "wilson"
+      },
+      "note": null,
+      "numerator": 119,
+      "population": "200 archived development cases, memo_v2__gpt-5.6-luna, first_attempt",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.595,
+      "window": "all"
+    },
+    "llm.history.luna_v2.first_attempt.valid_outputs": {
+      "denominator": 200,
+      "interval": null,
+      "note": null,
+      "numerator": 199,
+      "population": "200 archived development cases, memo_v2__gpt-5.6-luna, first_attempt",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.995,
+      "window": "all"
+    },
+    "llm.history.luna_v2.probe_agreement": {
+      "denominator": 0,
+      "interval": null,
+      "note": "nothing to count",
+      "numerator": 0,
+      "population": "complete probe sets of the first 50 cases, memo_v2__gpt-5.6-luna",
+      "seeds": null,
+      "unit": "rate",
+      "value": null,
+      "window": "all"
+    },
+    "llm.history.luna_v2.probe_agreement_with_original": {
+      "denominator": 0,
+      "interval": null,
+      "note": "nothing to count",
+      "numerator": 0,
+      "population": "complete probe sets of the first 50 cases, memo_v2__gpt-5.6-luna",
+      "seeds": null,
+      "unit": "rate",
+      "value": null,
+      "window": "all"
+    },
+    "llm.history.paired.prompt_v1_vs_v2_action.difference": {
+      "denominator": 200,
+      "interval": {
+        "high": 0.186892,
+        "level": 0.95,
+        "low": 0.0643407,
+        "method": "cluster_bootstrap"
+      },
+      "note": "second arm minus first; interval resamples users",
+      "numerator": 25,
+      "population": "all 200 cases; final outputs; action in the acceptable set",
+      "seeds": null,
+      "unit": "share",
+      "value": 0.125,
+      "window": "all"
+    },
+    "llm.history.paired.prompt_v1_vs_v2_action.only_first": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "all 200 cases; final outputs; action in the acceptable set",
+      "seeds": null,
+      "unit": "count",
+      "value": 8,
+      "window": "all"
+    },
+    "llm.history.paired.prompt_v1_vs_v2_action.only_second": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "all 200 cases; final outputs; action in the acceptable set",
+      "seeds": null,
+      "unit": "count",
+      "value": 33,
+      "window": "all"
+    },
+    "llm.history.paired.prompt_v1_vs_v2_unmatched_tokens.difference": {
+      "denominator": 200,
+      "interval": {
+        "high": 0.359606,
+        "level": 0.95,
+        "low": 0.22999,
+        "method": "cluster_bootstrap"
+      },
+      "note": "second arm minus first; interval resamples users",
+      "numerator": 59,
+      "population": "all 200 cases; final outputs; no unmatched token in signals_observed (a memo with one fails)",
+      "seeds": null,
+      "unit": "share",
+      "value": 0.295,
+      "window": "all"
+    },
+    "llm.history.paired.prompt_v1_vs_v2_unmatched_tokens.only_first": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "all 200 cases; final outputs; no unmatched token in signals_observed (a memo with one fails)",
+      "seeds": null,
+      "unit": "count",
+      "value": 1,
+      "window": "all"
+    },
+    "llm.history.paired.prompt_v1_vs_v2_unmatched_tokens.only_second": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "all 200 cases; final outputs; no unmatched token in signals_observed (a memo with one fails)",
+      "seeds": null,
+      "unit": "count",
+      "value": 60,
+      "window": "all"
+    },
+    "llm.history.paired.prompt_v1_vs_v2_unmatched_tokens_archived_check.difference": {
+      "denominator": 200,
+      "interval": {
+        "high": 0.355008,
+        "level": 0.95,
+        "low": 0.227256,
+        "method": "cluster_bootstrap"
+      },
+      "note": "second arm minus first; interval resamples users",
+      "numerator": 58,
+      "population": "all 200 cases; final outputs; no unmatched token in signals_observed under the archived token check",
+      "seeds": null,
+      "unit": "share",
+      "value": 0.29,
+      "window": "all"
+    },
+    "llm.history.paired.prompt_v1_vs_v2_unmatched_tokens_archived_check.only_first": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "all 200 cases; final outputs; no unmatched token in signals_observed under the archived token check",
+      "seeds": null,
+      "unit": "count",
+      "value": 1,
+      "window": "all"
+    },
+    "llm.history.paired.prompt_v1_vs_v2_unmatched_tokens_archived_check.only_second": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "all 200 cases; final outputs; no unmatched token in signals_observed under the archived token check",
+      "seeds": null,
+      "unit": "count",
+      "value": 59,
+      "window": "all"
+    },
+    "llm.history.paired.sonnet_vs_luna_action.difference": {
+      "denominator": 200,
+      "interval": {
+        "high": -0.0792079,
+        "level": 0.95,
+        "low": -0.190974,
+        "method": "cluster_bootstrap"
+      },
+      "note": "second arm minus first; interval resamples users",
+      "numerator": -27,
+      "population": "all 200 cases; final outputs (Luna's stored retry for alert 6188 included); action in the acceptable set",
+      "seeds": null,
+      "unit": "share",
+      "value": -0.135,
+      "window": "all"
+    },
+    "llm.history.paired.sonnet_vs_luna_action.only_first": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "all 200 cases; final outputs (Luna's stored retry for alert 6188 included); action in the acceptable set",
+      "seeds": null,
+      "unit": "count",
+      "value": 32,
+      "window": "all"
+    },
+    "llm.history.paired.sonnet_vs_luna_action.only_second": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "all 200 cases; final outputs (Luna's stored retry for alert 6188 included); action in the acceptable set",
+      "seeds": null,
+      "unit": "count",
+      "value": 5,
+      "window": "all"
+    },
+    "llm.history.paired.sonnet_vs_terra_action.difference": {
+      "denominator": 86,
+      "interval": {
+        "high": 0.0705882,
+        "level": 0.95,
+        "low": -0.0465116,
+        "method": "cluster_bootstrap"
+      },
+      "note": "second arm minus first; interval resamples users",
+      "numerator": 1,
+      "population": "Terra's 86 cases (the first 86 of cases.json); action in the acceptable set",
+      "seeds": null,
+      "unit": "share",
+      "value": 0.011627906976744186,
+      "window": "all"
+    },
+    "llm.history.paired.sonnet_vs_terra_action.only_first": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "Terra's 86 cases (the first 86 of cases.json); action in the acceptable set",
+      "seeds": null,
+      "unit": "count",
+      "value": 3,
+      "window": "all"
+    },
+    "llm.history.paired.sonnet_vs_terra_action.only_second": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "Terra's 86 cases (the first 86 of cases.json); action in the acceptable set",
+      "seeds": null,
+      "unit": "count",
+      "value": 4,
+      "window": "all"
+    },
+    "llm.history.sonnet_v1.final.action_correct": {
+      "denominator": 200,
+      "interval": {
+        "high": 0.674917,
+        "level": 0.95,
+        "low": 0.540937,
+        "method": "wilson"
+      },
+      "note": null,
+      "numerator": 122,
+      "population": "200 archived development cases, memo_v1__claude-sonnet-5, final",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.61,
+      "window": "all"
+    },
+    "llm.history.sonnet_v1.final.decline_recall": {
+      "denominator": 57,
+      "interval": null,
+      "note": null,
+      "numerator": 27,
+      "population": "200 archived development cases, memo_v1__claude-sonnet-5, final",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.47368421052631576,
+      "window": "all"
+    },
+    "llm.history.sonnet_v1.final.unmatched_token_memos": {
+      "denominator": 200,
+      "interval": null,
+      "note": null,
+      "numerator": 68,
+      "population": "valid final outputs, memo_v1__claude-sonnet-5",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.34,
+      "window": "all"
+    },
+    "llm.history.sonnet_v1.final.valid_outputs": {
+      "denominator": 200,
+      "interval": null,
+      "note": null,
+      "numerator": 200,
+      "population": "200 archived development cases, memo_v1__claude-sonnet-5, final",
+      "seeds": null,
+      "unit": "rate",
+      "value": 1.0,
+      "window": "all"
+    },
+    "llm.history.sonnet_v1.first_attempt.action_correct": {
+      "denominator": 200,
+      "interval": {
+        "high": 0.674917,
+        "level": 0.95,
+        "low": 0.540937,
+        "method": "wilson"
+      },
+      "note": null,
+      "numerator": 122,
+      "population": "200 archived development cases, memo_v1__claude-sonnet-5, first_attempt",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.61,
+      "window": "all"
+    },
+    "llm.history.sonnet_v1.first_attempt.valid_outputs": {
+      "denominator": 200,
+      "interval": null,
+      "note": null,
+      "numerator": 200,
+      "population": "200 archived development cases, memo_v1__claude-sonnet-5, first_attempt",
+      "seeds": null,
+      "unit": "rate",
+      "value": 1.0,
+      "window": "all"
+    },
+    "llm.history.sonnet_v1.probe_agreement": {
+      "denominator": 47,
+      "interval": {
+        "high": 0.940154,
+        "level": 0.95,
+        "low": 0.748261,
+        "method": "wilson"
+      },
+      "note": null,
+      "numerator": 41,
+      "population": "complete probe sets of the first 50 cases, memo_v1__claude-sonnet-5",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.8723404255319149,
+      "window": "all"
+    },
+    "llm.history.sonnet_v1.probe_agreement_with_original": {
+      "denominator": 47,
+      "interval": {
+        "high": 0.880103,
+        "level": 0.95,
+        "low": 0.65096,
+        "method": "wilson"
+      },
+      "note": null,
+      "numerator": 37,
+      "population": "complete probe sets of the first 50 cases, memo_v1__claude-sonnet-5",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.7872340425531915,
+      "window": "all"
+    },
+    "llm.history.sonnet_v2.final.action_correct": {
+      "denominator": 200,
+      "interval": {
+        "high": 0.791318,
+        "level": 0.95,
+        "low": 0.669824,
+        "method": "wilson"
+      },
+      "note": null,
+      "numerator": 147,
+      "population": "200 archived development cases, memo_v2__claude-sonnet-5, final",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.735,
+      "window": "all"
+    },
+    "llm.history.sonnet_v2.final.decline_recall": {
+      "denominator": 57,
+      "interval": null,
+      "note": null,
+      "numerator": 30,
+      "population": "200 archived development cases, memo_v2__claude-sonnet-5, final",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.5263157894736842,
+      "window": "all"
+    },
+    "llm.history.sonnet_v2.final.unmatched_token_memos": {
+      "denominator": 200,
+      "interval": null,
+      "note": null,
+      "numerator": 9,
+      "population": "valid final outputs, memo_v2__claude-sonnet-5",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.045,
+      "window": "all"
+    },
+    "llm.history.sonnet_v2.final.valid_outputs": {
+      "denominator": 200,
+      "interval": null,
+      "note": null,
+      "numerator": 200,
+      "population": "200 archived development cases, memo_v2__claude-sonnet-5, final",
+      "seeds": null,
+      "unit": "rate",
+      "value": 1.0,
+      "window": "all"
+    },
+    "llm.history.sonnet_v2.first_attempt.action_correct": {
+      "denominator": 200,
+      "interval": {
+        "high": 0.791318,
+        "level": 0.95,
+        "low": 0.669824,
+        "method": "wilson"
+      },
+      "note": null,
+      "numerator": 147,
+      "population": "200 archived development cases, memo_v2__claude-sonnet-5, first_attempt",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.735,
+      "window": "all"
+    },
+    "llm.history.sonnet_v2.first_attempt.valid_outputs": {
+      "denominator": 200,
+      "interval": null,
+      "note": null,
+      "numerator": 200,
+      "population": "200 archived development cases, memo_v2__claude-sonnet-5, first_attempt",
+      "seeds": null,
+      "unit": "rate",
+      "value": 1.0,
+      "window": "all"
+    },
+    "llm.history.sonnet_v2.probe_agreement": {
+      "denominator": 50,
+      "interval": {
+        "high": 0.916626,
+        "level": 0.95,
+        "low": 0.714858,
+        "method": "wilson"
+      },
+      "note": null,
+      "numerator": 42,
+      "population": "complete probe sets of the first 50 cases, memo_v2__claude-sonnet-5",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.84,
+      "window": "all"
+    },
+    "llm.history.sonnet_v2.probe_agreement_with_original": {
+      "denominator": 50,
+      "interval": {
+        "high": 0.887562,
+        "level": 0.95,
+        "low": 0.669629,
+        "method": "wilson"
+      },
+      "note": null,
+      "numerator": 40,
+      "population": "complete probe sets of the first 50 cases, memo_v2__claude-sonnet-5",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.8,
+      "window": "all"
+    },
+    "llm.history.terra_v2.final.action_correct": {
+      "denominator": 86,
+      "interval": {
+        "high": 0.844109,
+        "level": 0.95,
+        "low": 0.667904,
+        "method": "wilson"
+      },
+      "note": null,
+      "numerator": 66,
+      "population": "86 archived development cases, memo_v2__gpt-5.6-terra, final",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.7674418604651163,
+      "window": "all"
+    },
+    "llm.history.terra_v2.final.decline_recall": {
+      "denominator": 20,
+      "interval": null,
+      "note": null,
+      "numerator": 14,
+      "population": "86 archived development cases, memo_v2__gpt-5.6-terra, final",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.7,
+      "window": "all"
+    },
+    "llm.history.terra_v2.final.unmatched_token_memos": {
+      "denominator": 86,
+      "interval": null,
+      "note": null,
+      "numerator": 1,
+      "population": "valid final outputs, memo_v2__gpt-5.6-terra",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.011627906976744186,
+      "window": "all"
+    },
+    "llm.history.terra_v2.final.valid_outputs": {
+      "denominator": 86,
+      "interval": null,
+      "note": null,
+      "numerator": 86,
+      "population": "86 archived development cases, memo_v2__gpt-5.6-terra, final",
+      "seeds": null,
+      "unit": "rate",
+      "value": 1.0,
+      "window": "all"
+    },
+    "llm.history.terra_v2.first_attempt.action_correct": {
+      "denominator": 86,
+      "interval": {
+        "high": 0.844109,
+        "level": 0.95,
+        "low": 0.667904,
+        "method": "wilson"
+      },
+      "note": null,
+      "numerator": 66,
+      "population": "86 archived development cases, memo_v2__gpt-5.6-terra, first_attempt",
+      "seeds": null,
+      "unit": "rate",
+      "value": 0.7674418604651163,
+      "window": "all"
+    },
+    "llm.history.terra_v2.first_attempt.valid_outputs": {
+      "denominator": 86,
+      "interval": null,
+      "note": null,
+      "numerator": 86,
+      "population": "86 archived development cases, memo_v2__gpt-5.6-terra, first_attempt",
+      "seeds": null,
+      "unit": "rate",
+      "value": 1.0,
+      "window": "all"
+    }
+  },
+  "notes": [],
+  "schema_version": 1,
+  "stage": "llm",
+  "tables": {},
+  "versions": {
+    "benchmark": "7bd34edb56950157",
+    "policy": "65c3decf203153f3"
+  }
+}

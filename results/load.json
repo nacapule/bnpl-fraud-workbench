@@ -1,0 +1,128 @@
+{
+  "inputs": {
+    "world:416-baseline": "208122eba8effdd94fb5b19bcac8d9916c5c13a7d71119c972ab24c368b7bc29"
+  },
+  "metrics": {
+    "load.rows": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "rows loaded into MySQL, world 416-baseline",
+      "seeds": null,
+      "unit": "count",
+      "value": 3629802,
+      "window": "all"
+    }
+  },
+  "notes": [],
+  "schema_version": 1,
+  "stage": "load",
+  "tables": {
+    "load.tables": [
+      {
+        "rows": 212565,
+        "table": "account_events"
+      },
+      {
+        "rows": 48695,
+        "table": "accounts"
+      },
+      {
+        "rows": 61421,
+        "table": "address_links"
+      },
+      {
+        "rows": 50141,
+        "table": "addresses"
+      },
+      {
+        "rows": 72821,
+        "table": "cards"
+      },
+      {
+        "rows": 774074,
+        "table": "cash_events"
+      },
+      {
+        "rows": 148120,
+        "table": "deliveries"
+      },
+      {
+        "rows": 92934,
+        "table": "device_links"
+      },
+      {
+        "rows": 90771,
+        "table": "devices"
+      },
+      {
+        "rows": 1855,
+        "table": "dispute_openings"
+      },
+      {
+        "rows": 1855,
+        "table": "dispute_resolutions"
+      },
+      {
+        "rows": 151268,
+        "table": "fulfilments"
+      },
+      {
+        "rows": 605072,
+        "table": "installment_schedule"
+      },
+      {
+        "rows": 151473,
+        "table": "labels"
+      },
+      {
+        "rows": 48695,
+        "table": "latent_accounts"
+      },
+      {
+        "rows": 584,
+        "table": "latent_episodes"
+      },
+      {
+        "rows": 153413,
+        "table": "latent_orders"
+      },
+      {
+        "rows": 158,
+        "table": "merchants"
+      },
+      {
+        "rows": 153413,
+        "table": "order_attempts"
+      },
+      {
+        "rows": 652998,
+        "table": "payment_attempts"
+      },
+      {
+        "rows": 1340,
+        "table": "payment_reversals"
+      },
+      {
+        "rows": 4688,
+        "table": "plan_writeoffs"
+      },
+      {
+        "rows": 151268,
+        "table": "plans"
+      },
+      {
+        "rows": 6,
+        "table": "promotions"
+      },
+      {
+        "rows": 174,
+        "table": "victim_reports"
+      }
+    ]
+  },
+  "versions": {
+    "world": "b2593f6f45a5380c"
+  }
+}

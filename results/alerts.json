@@ -1,0 +1,30 @@
+{
+  "inputs": {
+    "db/policy_tables.sql": "63fa3a82963f6de079678d2906abac418935547fa305d9e6e13dc62c31f52cce",
+    "results/tune.json": "943b655a680268c33083e810632d2f41370a4c95ef5ee4bf716a39733526593b",
+    "world:416-baseline": "208122eba8effdd94fb5b19bcac8d9916c5c13a7d71119c972ab24c368b7bc29"
+  },
+  "metrics": {
+    "alerts.rows": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "routing decisions, world 416-baseline",
+      "seeds": null,
+      "unit": "count",
+      "value": 260,
+      "window": "all"
+    }
+  },
+  "notes": [],
+  "schema_version": 1,
+  "stage": "alerts",
+  "tables": {},
+  "versions": {
+    "models": "dfc5f61de49bfa34",
+    "policy": "65c3decf203153f3",
+    "tuning": "shortlist",
+    "world": "b2593f6f45a5380c"
+  }
+}

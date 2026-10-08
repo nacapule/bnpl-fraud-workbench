@@ -1,0 +1,438 @@
+{
+  "inputs": {
+    "config/world.yaml": "7a1063554ad32250d6ad0c4bbbc383de2a5f3fcbef7b99d64a0f45dfb5277494",
+    "experiments/protocol.yaml": "77f921daffd4e1607363b5fd9c58de6f6212887330673f815c5c83a6828978c7"
+  },
+  "metrics": {
+    "world.worlds": {
+      "denominator": null,
+      "interval": null,
+      "note": null,
+      "numerator": null,
+      "population": "worlds generated for the run",
+      "seeds": null,
+      "unit": "count",
+      "value": 51,
+      "window": "all"
+    }
+  },
+  "notes": [],
+  "schema_version": 1,
+  "stage": "world",
+  "tables": {
+    "world.worlds": [
+      {
+        "accounts": 48695,
+        "family": "baseline",
+        "order_attempts": 153413,
+        "positive_labels": 1228,
+        "processor_approved": 151268,
+        "seed": 416
+      },
+      {
+        "accounts": 52233,
+        "family": "acquisition_surge",
+        "order_attempts": 158673,
+        "positive_labels": 1307,
+        "processor_approved": 156606,
+        "seed": 35244829
+      },
+      {
+        "accounts": 48717,
+        "family": "baseline",
+        "order_attempts": 154281,
+        "positive_labels": 1299,
+        "processor_approved": 152263,
+        "seed": 35244829
+      },
+      {
+        "accounts": 48717,
+        "family": "fraud_mix_shift",
+        "order_attempts": 154416,
+        "positive_labels": 1373,
+        "processor_approved": 152355,
+        "seed": 35244829
+      },
+      {
+        "accounts": 48717,
+        "family": "lag_double",
+        "order_attempts": 154281,
+        "positive_labels": 1299,
+        "processor_approved": 152263,
+        "seed": 35244829
+      },
+      {
+        "accounts": 48717,
+        "family": "lag_half",
+        "order_attempts": 154281,
+        "positive_labels": 1299,
+        "processor_approved": 152263,
+        "seed": 35244829
+      },
+      {
+        "accounts": 52244,
+        "family": "acquisition_surge",
+        "order_attempts": 157364,
+        "positive_labels": 1276,
+        "processor_approved": 155261,
+        "seed": 200041300
+      },
+      {
+        "accounts": 48683,
+        "family": "baseline",
+        "order_attempts": 152913,
+        "positive_labels": 1269,
+        "processor_approved": 150854,
+        "seed": 200041300
+      },
+      {
+        "accounts": 48683,
+        "family": "fraud_mix_shift",
+        "order_attempts": 153051,
+        "positive_labels": 1352,
+        "processor_approved": 150948,
+        "seed": 200041300
+      },
+      {
+        "accounts": 48683,
+        "family": "lag_double",
+        "order_attempts": 152913,
+        "positive_labels": 1269,
+        "processor_approved": 150854,
+        "seed": 200041300
+      },
+      {
+        "accounts": 48683,
+        "family": "lag_half",
+        "order_attempts": 152913,
+        "positive_labels": 1269,
+        "processor_approved": 150854,
+        "seed": 200041300
+      },
+      {
+        "accounts": 52067,
+        "family": "acquisition_surge",
+        "order_attempts": 158701,
+        "positive_labels": 1200,
+        "processor_approved": 156649,
+        "seed": 717729117
+      },
+      {
+        "accounts": 48661,
+        "family": "baseline",
+        "order_attempts": 154295,
+        "positive_labels": 1199,
+        "processor_approved": 152300,
+        "seed": 717729117
+      },
+      {
+        "accounts": 48661,
+        "family": "fraud_mix_shift",
+        "order_attempts": 154428,
+        "positive_labels": 1270,
+        "processor_approved": 152387,
+        "seed": 717729117
+      },
+      {
+        "accounts": 48661,
+        "family": "lag_double",
+        "order_attempts": 154295,
+        "positive_labels": 1199,
+        "processor_approved": 152300,
+        "seed": 717729117
+      },
+      {
+        "accounts": 48661,
+        "family": "lag_half",
+        "order_attempts": 154295,
+        "positive_labels": 1199,
+        "processor_approved": 152300,
+        "seed": 717729117
+      },
+      {
+        "accounts": 52246,
+        "family": "acquisition_surge",
+        "order_attempts": 157371,
+        "positive_labels": 1204,
+        "processor_approved": 155299,
+        "seed": 793746605
+      },
+      {
+        "accounts": 48668,
+        "family": "baseline",
+        "order_attempts": 152957,
+        "positive_labels": 1198,
+        "processor_approved": 150942,
+        "seed": 793746605
+      },
+      {
+        "accounts": 48668,
+        "family": "fraud_mix_shift",
+        "order_attempts": 153074,
+        "positive_labels": 1266,
+        "processor_approved": 151025,
+        "seed": 793746605
+      },
+      {
+        "accounts": 48668,
+        "family": "lag_double",
+        "order_attempts": 152957,
+        "positive_labels": 1198,
+        "processor_approved": 150942,
+        "seed": 793746605
+      },
+      {
+        "accounts": 48668,
+        "family": "lag_half",
+        "order_attempts": 152957,
+        "positive_labels": 1198,
+        "processor_approved": 150942,
+        "seed": 793746605
+      },
+      {
+        "accounts": 52256,
+        "family": "acquisition_surge",
+        "order_attempts": 157108,
+        "positive_labels": 1255,
+        "processor_approved": 154985,
+        "seed": 931592514
+      },
+      {
+        "accounts": 48586,
+        "family": "baseline",
+        "order_attempts": 152552,
+        "positive_labels": 1247,
+        "processor_approved": 150474,
+        "seed": 931592514
+      },
+      {
+        "accounts": 48586,
+        "family": "fraud_mix_shift",
+        "order_attempts": 152715,
+        "positive_labels": 1321,
+        "processor_approved": 150564,
+        "seed": 931592514
+      },
+      {
+        "accounts": 48586,
+        "family": "lag_double",
+        "order_attempts": 152552,
+        "positive_labels": 1247,
+        "processor_approved": 150474,
+        "seed": 931592514
+      },
+      {
+        "accounts": 48586,
+        "family": "lag_half",
+        "order_attempts": 152552,
+        "positive_labels": 1247,
+        "processor_approved": 150474,
+        "seed": 931592514
+      },
+      {
+        "accounts": 52199,
+        "family": "acquisition_surge",
+        "order_attempts": 158359,
+        "positive_labels": 1320,
+        "processor_approved": 156234,
+        "seed": 1260106251
+      },
+      {
+        "accounts": 48766,
+        "family": "baseline",
+        "order_attempts": 153984,
+        "positive_labels": 1318,
+        "processor_approved": 151907,
+        "seed": 1260106251
+      },
+      {
+        "accounts": 48766,
+        "family": "fraud_mix_shift",
+        "order_attempts": 154114,
+        "positive_labels": 1394,
+        "processor_approved": 151998,
+        "seed": 1260106251
+      },
+      {
+        "accounts": 48766,
+        "family": "lag_double",
+        "order_attempts": 153984,
+        "positive_labels": 1318,
+        "processor_approved": 151907,
+        "seed": 1260106251
+      },
+      {
+        "accounts": 48766,
+        "family": "lag_half",
+        "order_attempts": 153984,
+        "positive_labels": 1318,
+        "processor_approved": 151907,
+        "seed": 1260106251
+      },
+      {
+        "accounts": 52112,
+        "family": "acquisition_surge",
+        "order_attempts": 157465,
+        "positive_labels": 1248,
+        "processor_approved": 155309,
+        "seed": 1629189384
+      },
+      {
+        "accounts": 48684,
+        "family": "baseline",
+        "order_attempts": 153130,
+        "positive_labels": 1246,
+        "processor_approved": 151017,
+        "seed": 1629189384
+      },
+      {
+        "accounts": 48684,
+        "family": "fraud_mix_shift",
+        "order_attempts": 153254,
+        "positive_labels": 1324,
+        "processor_approved": 151102,
+        "seed": 1629189384
+      },
+      {
+        "accounts": 48684,
+        "family": "lag_double",
+        "order_attempts": 153130,
+        "positive_labels": 1246,
+        "processor_approved": 151017,
+        "seed": 1629189384
+      },
+      {
+        "accounts": 48684,
+        "family": "lag_half",
+        "order_attempts": 153130,
+        "positive_labels": 1246,
+        "processor_approved": 151017,
+        "seed": 1629189384
+      },
+      {
+        "accounts": 52140,
+        "family": "acquisition_surge",
+        "order_attempts": 158068,
+        "positive_labels": 1272,
+        "processor_approved": 156033,
+        "seed": 1671034716
+      },
+      {
+        "accounts": 48672,
+        "family": "baseline",
+        "order_attempts": 153565,
+        "positive_labels": 1268,
+        "processor_approved": 151578,
+        "seed": 1671034716
+      },
+      {
+        "accounts": 48672,
+        "family": "fraud_mix_shift",
+        "order_attempts": 153693,
+        "positive_labels": 1351,
+        "processor_approved": 151671,
+        "seed": 1671034716
+      },
+      {
+        "accounts": 48672,
+        "family": "lag_double",
+        "order_attempts": 153565,
+        "positive_labels": 1268,
+        "processor_approved": 151578,
+        "seed": 1671034716
+      },
+      {
+        "accounts": 48672,
+        "family": "lag_half",
+        "order_attempts": 153565,
+        "positive_labels": 1268,
+        "processor_approved": 151578,
+        "seed": 1671034716
+      },
+      {
+        "accounts": 52151,
+        "family": "acquisition_surge",
+        "order_attempts": 158405,
+        "positive_labels": 1203,
+        "processor_approved": 156317,
+        "seed": 1891170948
+      },
+      {
+        "accounts": 48602,
+        "family": "baseline",
+        "order_attempts": 153907,
+        "positive_labels": 1199,
+        "processor_approved": 151880,
+        "seed": 1891170948
+      },
+      {
+        "accounts": 48602,
+        "family": "fraud_mix_shift",
+        "order_attempts": 154040,
+        "positive_labels": 1266,
+        "processor_approved": 151963,
+        "seed": 1891170948
+      },
+      {
+        "accounts": 48602,
+        "family": "lag_double",
+        "order_attempts": 153907,
+        "positive_labels": 1199,
+        "processor_approved": 151880,
+        "seed": 1891170948
+      },
+      {
+        "accounts": 48602,
+        "family": "lag_half",
+        "order_attempts": 153907,
+        "positive_labels": 1199,
+        "processor_approved": 151880,
+        "seed": 1891170948
+      },
+      {
+        "accounts": 52156,
+        "family": "acquisition_surge",
+        "order_attempts": 157427,
+        "positive_labels": 1199,
+        "processor_approved": 155342,
+        "seed": 2066792625
+      },
+      {
+        "accounts": 48748,
+        "family": "baseline",
+        "order_attempts": 153148,
+        "positive_labels": 1190,
+        "processor_approved": 151106,
+        "seed": 2066792625
+      },
+      {
+        "accounts": 48748,
+        "family": "fraud_mix_shift",
+        "order_attempts": 153275,
+        "positive_labels": 1267,
+        "processor_approved": 151194,
+        "seed": 2066792625
+      },
+      {
+        "accounts": 48748,
+        "family": "lag_double",
+        "order_attempts": 153148,
+        "positive_labels": 1190,
+        "processor_approved": 151106,
+        "seed": 2066792625
+      },
+      {
+        "accounts": 48748,
+        "family": "lag_half",
+        "order_attempts": 153148,
+        "positive_labels": 1190,
+        "processor_approved": 151106,
+        "seed": 2066792625
+      }
+    ]
+  },
+  "versions": {
+    "protocol": "0a703655be6a3d04",
+    "world": "b2593f6f45a5380c"
+  }
+}
