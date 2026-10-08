@@ -799,9 +799,9 @@ evidence.
 | How fast goods ship | fulfilment lag | ×0.5 and ×2 from the test window | flip table; operations appendix |
 | The review allotment | allotment level | 17 and 50 minutes per shift (base 33) | flip table; operations appendix |
 | When analysts work | shift layout | evening layout at 33 minutes per shift | flip table; operations appendix |
-| Stable traffic and fraud mix | world family | acquisition surge; fraud-mix shift | flip table; appendices |
-| Policy-specific history | frozen approve-all history (diagnostic) | none | appendices |
-| How much better review could be | perfect reviewer (diagnostic) | none | appendices |
+| Stable traffic and fraud mix | world family | acquisition surge; fraud-mix shift | flip table; operations appendix |
+| Policy-specific history | frozen approve-all history (diagnostic) | none | [detection appendix](../reports/appendix-detection.md) |
+| How much better review could be | perfect reviewer (diagnostic) | none | operations appendix |
 
 The [operating review](../reports/operating-review.md) reports the flip table
 and its verdict ("holds in N of M cells"); appendices give the figures for
