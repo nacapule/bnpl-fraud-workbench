@@ -574,6 +574,8 @@ def build(benchmark_id: str, phase: str, world_dirs: Sequence[Path], *, rng_seed
             check_packets.update(packets)
         worlds[(seed, family)] = (tables, decisions)
     pool = pd.concat(pools, ignore_index=True)
+    # one time type for every world (a world without review decisions has none to infer)
+    pool["decision_at"] = pd.to_datetime(pool["decision_at"]).astype("datetime64[ns]")
     review = pool["axis"].eq("review").to_numpy()
     if review.any():  # trait rarity over every world of the build
         pool.loc[review, "stratum"] = stratify(pool.loc[review])
@@ -609,8 +611,10 @@ def build(benchmark_id: str, phase: str, world_dirs: Sequence[Path], *, rng_seed
         mine = first[(first["seed"] == seed) & (first["family"] == family)]
         if mine.empty:
             continue
-        rows = decisions.merge(mine[["order_id", "decision_at", "case_id"]],
-                               on=["order_id", "decision_at"], how="inner")
+        rows = decisions.assign(
+            decision_at=decisions["decision_at"].astype("datetime64[ns]")).merge(
+            mine[["order_id", "decision_at", "case_id"]], on=["order_id", "decision_at"],
+            how="inner")
         checks: dict[tuple[int, datetime], tuple[CheckResult, ...]] = {
             (int(r.order_id), pd.Timestamp(r.decision_at)): _checks(getattr(r, "checks", None))
             for r in rows.itertuples()}

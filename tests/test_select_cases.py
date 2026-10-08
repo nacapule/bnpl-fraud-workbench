@@ -462,7 +462,9 @@ def with_completions(directory: Path, monkeypatch) -> None:
                                                 at.to_pydatetime()),),
                          "disposition": "decline" if outcome == "failed" else "clear",
                          "first_decision_at": pd.Timestamp(row.decision_at)})
-        return pd.DataFrame(rows)
+        return pd.DataFrame(rows, columns=[*select_cases.check_points.ROW_COLUMNS,
+                                           "assembled_at", "checks", "disposition",
+                                           "first_decision_at"])
 
     monkeypatch.setattr(select_cases.check_points, "completion_decisions", completions)
 
@@ -477,11 +479,19 @@ def test_a_final_cohort_takes_both_axes(tmp_path, mini_phases, monkeypatch) -> N
     select_cases.build("t-dev", "development", [dev], rng_seed=1)
     select_cases.build("t-dev-checks", "development", [dev], rng_seed=1,
                        axis="check_completed")
-    finals = final_run(tmp_path / "final")
+    finals = final_run(tmp_path / "final", seeds=(*FINAL_SEEDS, 1891170948))
     for final in finals:
         with_completions(final, monkeypatch)
+    # a final seed whose incumbent reviewed nothing: its world adds no candidate
+    empty = pd.read_pickle(finals[3] / "review_decisions.pkl").iloc[0:0].astype(
+        {"decision_at": object})
+    empty.to_pickle(finals[3] / "review_decisions.pkl")
+    (finals[3] / "review_decisions.csv").write_text(
+        pd.read_csv(finals[3] / "review_decisions.csv").iloc[0:0].to_csv(index=False))
     definition = select_cases.build("t-final", "final", finals, rng_seed=2,
                                     development=["t-dev", "t-dev-checks"])
+    assert int(json.loads((finals[3] / "manifest.json").read_text())["seed"]) not in {
+        case["seed"] for case in definition["cases"]}
     axes = pd.Series([case["axis"] for case in definition["cases"]]).value_counts()
     assert axes.to_dict() == {"review": 12, "check_completed": 6}
     assert set(definition["axes"]) == {"review", "check_completed"}
