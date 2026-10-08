@@ -284,6 +284,12 @@ def test_benchmarks_are_built_from_worlds_and_their_review_decisions(tmp_path, m
     with pytest.raises(ValueError, match="one run"):
         select_cases.build("t-mixed", "final", [*partial, finals[2]], rng_seed=2,
                            development="t-dev")
+    with pytest.raises(ValueError, match="given twice"):
+        select_cases.build("t-twice", "final", [*finals, finals[0]], rng_seed=2,
+                           development="t-dev")
+    with pytest.raises(ValueError, match="given twice"):
+        select_cases.build("t-twice", "development", [tmp_path / "dev", tmp_path / "dev"],
+                           rng_seed=1)
 
 
 @pytest.mark.parametrize("form", ["triples", "results"])

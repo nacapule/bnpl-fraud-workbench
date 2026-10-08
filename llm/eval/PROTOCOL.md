@@ -75,8 +75,9 @@ All cases come from the test windows, under the incumbent rules at their tuned t
 - **Exclusions.** The final cohort shares no account and no episode with any development
   benchmark.
 - **The final pool.** The selection reads the baseline world of every final seed the
-  final run generated (at least eight, the protocol's minimum), from that one run, and is
-  refused otherwise, so leaving a world out cannot change the population.
+  final run generated (at least eight, the protocol's minimum), each once, from that one
+  run, and is refused otherwise, so leaving a world out or repeating one cannot change the
+  population.
 - **Probes and seed.** 40 final cases are also asked twice more: with their facts
   shuffled, and with fresh placeholder names. Selection uses seed `20261006`.
 - **Why 80 decisions after a check.** It is about their share of analyst decisions on
@@ -219,7 +220,8 @@ Beside it are the unweighted rate, and each axis's unweighted and weighted (Háj
   policy-following it measures, so `memo_fp2_v2` gives every field of that kind a plain
   factual description and changes nothing else (no schema change, no instruction change):
   - `amount_over_category_median` and `amount_over_category_p95` are described as
-    ratios, not flags, with what 1, above 1 and below 1 mean;
+    ratios, not flags, of earlier processor-approved amounts (as R04 words it), with what
+    1, above 1 and below 1 mean;
   - `installments_paid_share_user` is described as paid divided by due, from 0 to 1,
     with 1 meaning every installment due was paid and 0 also when none was due;
   - the counts whose names could read as flags are described as numbers:

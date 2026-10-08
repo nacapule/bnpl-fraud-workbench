@@ -76,8 +76,8 @@ Packet fields:
   - `email_root_other_accounts`: the number of other accounts holding a matching
     normalized email at the decision.
   - `amount_over_category_median`, `amount_over_category_p95`: ratios, not flags: the
-    amount divided by the median and by the 95th percentile of earlier approved amounts
-    in the category. 1 means the amount equals that reference; above 1, the amount is
+    amount divided by the median and by the 95th percentile of earlier processor-approved
+    amounts in the category. 1 means the amount equals that reference; above 1, the amount is
     larger, and below 1, smaller.
   - `attempts_user_24h`, `attempts_device_24h`: order attempts by the account and on
     the device in the 24 hours up to and including this one.

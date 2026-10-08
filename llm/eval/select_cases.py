@@ -496,8 +496,11 @@ def check_final_worlds(world_dirs: Sequence[Path], protocol: Any) -> None:
         raise ValueError(f"no lineage in {next(iter(runs)).name}: its seeds are unknown")
     generated = set(json.loads(lineage.read_text()).get("seeds") or ()) & set(
         protocol.final_seeds)
-    supplied = {int(json.loads((Path(world_dir) / "manifest.json").read_text())["seed"])
-                for world_dir in world_dirs}
+    seeds = [int(json.loads((Path(world_dir) / "manifest.json").read_text())["seed"])
+             for world_dir in world_dirs]
+    if len(set(seeds)) != len(seeds):
+        raise ValueError(f"a final seed's world is given twice: {sorted(seeds)}")
+    supplied = set(seeds)
     minimum = int(protocol.raw["seeds"].get("minimum_final", MIN_FINAL_SEEDS))
     if supplied != generated or len(generated) < minimum:
         raise ValueError(f"the final cohort reads the baseline world of every final seed of "
@@ -543,6 +546,8 @@ def build(benchmark_id: str, phase: str, world_dirs: Sequence[Path], *, rng_seed
     for world_dir in world_dirs:
         manifest = json.loads((world_dir / "manifest.json").read_text())
         seed, family = int(manifest["seed"]), str(manifest["family"])
+        if (seed, family) in worlds:
+            raise ValueError(f"world {seed}-{family} is given twice")
         if seed not in allowed_seeds:
             raise ValueError(f"seed {seed} is not a {phase} seed")
         if rules["families"] is not None and family not in rules["families"]:
@@ -687,7 +692,8 @@ def combine(benchmark_id: str, sources: Sequence[str], *, arms: Sequence[str]
     are copied as they are; the subset is not a probability sample, so its reweighted
     rates estimate nothing (its axes' shares are the sources' eligible decisions when every
     source recorded them, else its own case shares) and its clusters are its own linked
-    groups."""
+    groups. It keeps the sources' prompt version (they must share one), so its records
+    pair with theirs on the same packets."""
     wanted = {str(axis): int(n) for axis, n in harness.SIZES["development_combined"].items()}
     definitions = {source: json.loads((BENCHMARKS / source / "benchmark.json").read_text())
                    for source in sources}
