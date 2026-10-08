@@ -18,7 +18,12 @@ against fraud policy FP-2 and the verifier checks every claim against the packet
 Two arms answer the same packets with the same prompt (`memo_fp2_v1`) and the same
 isolation: `sol` (GPT-6.1 Sol at high effort, through the Codex CLI) and `opus` (Claude
 Opus 5.5 at high effort, through the Claude Code CLI). The call caps are 400 for `sol` and
-330 for `opus` (with 10M tokens), counting retries and isolation checks.
+330 for `opus` (with 10M tokens), counting retries and isolation checks. Each call is one
+model turn, with at most 16,000 output tokens a request, and at most one retry, for a
+transport failure. Development ran on codex-cli 0.159.2 and Claude Code 2.1.293. Each
+benchmark pins its arms' CLI versions and isolation at its first live call
+(`pins.json`), and a later run of that benchmark under other versions is refused; the
+final cohort's versions are the ones it pins, reported beside these.
 
 ## Decision points
 
@@ -176,8 +181,25 @@ Beside it are the unweighted rate, and each axis's unweighted and weighted (Háj
   order). Its weight therefore takes the natural-mix pass rate on this set to 0.65, with
   a cluster-bootstrap interval of 0.23 to 1. Development sets are this small by design;
   the final cohort's 80 decisions after a check are what the estimate rests on.
-- **The prompt** stays at its first version, as decided before this set ran. A prompt
-  changed to fix one citation would be tuned on the development cases.
+- **`2026-10-dev-opus`.** All 40 `opus` memos were valid in format (each in a JSON code
+  fence, which the parser accepts), acceptable, standard in action and right in their next
+  check, with no claim error in 735 claims. 37 of 40 passed. The three that did not list
+  R04 among their citations though R04 does not hold, as `sol`'s one failure does; one of
+  the three is that same case. Two memos stated a correct duration from placement to the
+  decision as a derived difference of two packet times, which the verifier could not yet
+  recompute. The verifier now reads such a difference in the unit the claim names
+  (seconds, minutes, hours or days), for both arms; no `sol` memo had one. 41 calls (with
+  the isolation check), 516,616 tokens, median 23 s a call, no retry.
+- **The two arms on the same 40 cases.** Complete-memo pass: `opus` 37, `sol` 39. Both
+  passed 37, only `sol` 2, neither 1. The difference is −0.05, with a cluster-bootstrap
+  interval of −0.13 to 0. Two clusters favour `sol` and none `opus` (sign test p = 0.5).
+  Acceptable dispositions are 40 of 40 for both, a tie. `opus` held two first-review
+  orders outright where `sol` asked for the check (`needs_check`); both are the standard
+  action. This subset is not a probability sample, so these counts describe development
+  only.
+- **The prompt** stays at its first version, as decided before these sets ran. A prompt
+  changed to fix one citation would be tuned on the development cases. No format problem
+  appeared in either arm.
 
 ## Limits
 
@@ -240,14 +262,14 @@ python -m llm.eval.select_cases --id <final id> --phase final --world <run>/worl
     --development 2026-10-dev --development 2026-10-dev-checks --development 2026-10-dev-opus
 python -m llm.eval.select_cases --id <case memos id> --case-memos <run> --arm sol
 python -m llm.eval.harness --benchmark <id>             # every arm, from the cache
-python -m llm.eval.harness --benchmark 2026-10-dev-checks --arm sol \
-    --amend-scoring "the scoring changes made after this set ran"
 python -m llm.eval.harness --benchmark 2026-10-dev --arm sol \
-    --amend-scoring "the scoring additions made after this set ran"
+    --amend-scoring "the scoring changes made after this set ran"
+python -m llm.eval.harness --benchmark 2026-10-dev-checks --arm sol --amend-scoring "..."
+python -m llm.eval.harness --benchmark 2026-10-dev-opus --arm opus --amend-scoring "..."
 ```
 
-The development sets each take one arm, so they are scored with `--arm`. `2026-10-dev`
-and `2026-10-dev-checks` hold `sol`'s records. `2026-10-dev-opus` is prepared for `opus`
-and can be scored once its live run has made its records.
-`2026-10-dev` and `2026-10-dev-checks` were fixed before the last scoring changes, so
-scoring them names the change with `--amend-scoring`, which the results record.
+The development sets each hold one arm's records (`sol` for `2026-10-dev` and
+`2026-10-dev-checks`, `opus` for `2026-10-dev-opus`), so they are scored with `--arm`.
+All three were fixed before the last scoring change (the time differences), so scoring
+them names the change with `--amend-scoring`, which the results record. The final
+cohort is fixed with the scoring code as it stands at this protocol's commit.
