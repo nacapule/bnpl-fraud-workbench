@@ -98,7 +98,7 @@ CI. Every value is in `config/world.yaml`.
 | AVS and CVV failures | 4.0% and 2.0% of legitimate orders | Stated in the fraud policy (FP-2 §6.5(a)). |
 | Processor declines | 1.2% of legitimate attempts, half retried minutes later | Insufficient funds and card errors. |
 | Late payers | 15% of customers; their installments fail first 30% of the time (others 3%), retried after 3 and 7 days | Late but recovered payments. |
-| Defaults | 3.5% of a new customer's first plan, 1.2% of other plans, 4 times for 5% fragile customers; 70% (first plans) and 35% (others) zero-effort | Credit loss, including new customers who never pay; most first-plan defaults look exactly like never-pay. |
+| Defaults | 3.5% of a new customer's first plan (placed within 30 days of signup), 1.2% of other plans, 4 times for 5% fragile customers; 70% (first plans) and 35% (others) zero-effort | Credit loss, including new customers who never pay; most first-plan defaults look exactly like never-pay. |
 | After a default | 70% stop ordering | Defaulters rarely keep shopping. |
 | Reversals | 0.3% of collected installments bounce 2 to 5 days later; 75% are repaid 2 days later | Bank returns. |
 | Fulfilment | merchant median hours lognormal around 12 h (sigma 0.5, 2 to 72 h); each order lognormal around its merchant's median (sigma 0.6) | Goods ship within hours, which the replay's race between review and shipment depends on. |
