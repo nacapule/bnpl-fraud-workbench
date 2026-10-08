@@ -558,12 +558,14 @@ point of view (`core/ledger.py`). The product it models:
 - **Installments.** The rest is paid in three fortnightly installments, the
   first 14 days after approval. Leftover cents go to the earliest installments,
   one cent each, so a $100.01 order is paid as $25.00, $25.01, $25.00 and $25.00.
-- **Merchant settlement.** The merchant is paid when it ships, net of a 5%
-  merchant fee on its price (rounded half up). The fee is income only through
-  this netting, never a separate cash event.
+- **Merchant settlement.** The merchant is paid when it ships: its price net of
+  a 5% merchant fee on the price (rounded half up) and of any promotion
+  discount. The fee is income only through this netting, never a separate cash
+  event.
 - **Promotions.** Discounts are funded by the platform: the customer owes the
-  discounted price, and the platform pays the merchant the discount on top of the
-  settlement.
+  discounted price, and the platform pays the merchant the discount as a
+  separate promotion-funding event, so the merchant receives its price less the
+  fee.
 - **Disputes.** When the platform learns of a dispute, the disputed payments are
   debited and a $15 fee is charged. If the dispute is resolved for the platform,
   the amount is credited back (the fee is not). If it is lost, the platform
