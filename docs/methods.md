@@ -245,8 +245,9 @@ verification check answers. Actions follow FP-2 §4 and `core/actions.py`:
 
 - An order proceeds while waiting for review. The merchant ships at the
   world's time unless a hold or decline comes first.
-- A checkout decline prevents all of the order's events and cash, without
-  blocking the account.
+- A checkout decline means the order is never created: no plan, shipment,
+  payments or later outcomes, and no cash. The attempt stays logged, and no
+  account is blocked.
 - A pre-shipment hold pauses shipment and merchant settlement for up to 48
   hours. When the checks clear the order, it is released: shipment and
   everything after it move by the pause, and installments not yet due start
@@ -257,28 +258,40 @@ verification check answers. Actions follow FP-2 §4 and `core/actions.py`:
   prevents later events. After shipment the loss stands. Both block the
   account, whose later orders are declined at checkout.
 - An escalation is a decline that also blocks accounts linked at the decision
-  and adds 20 minutes of senior review to the queue. Under FP-2 §2.5, linked accounts are
-  other accounts with an order attempt or account event on the device, or an
-  order attempt to the shipping address, in the preceding 30 days.
+  and adds 20 minutes of senior review to the queue. Under FP-2 §2.5, linked
+  accounts are other accounts with an order attempt or account event on the
+  device, or an order attempt to the shipping address, in the preceding 30 days.
 
 The policy's cash comes from the same ledger as the world's (below). An order
-the policy left alone keeps the world's cash events; a declined or cancelled
-order keeps the cash that had moved and gets compensating refunds; a released
-order's cash moves with its events. Outcomes are counted for the window's
-orders with the labels and cash known before 2025-12-30, the end of
+the policy left alone, or declined after shipment, keeps the world's cash
+events; an order voided before shipment (declined, escalated or cancelled)
+keeps the cash that had moved and gets refunds of the payments collected; a
+released order's cash moves with its events. Outcomes are counted for the
+window's orders with the cash and labels known before 2025-12-30, the end of
 observation. Reviews still waiting then remain undecided.
 
-**History under the policy.** Decisions never see repayments or disputes from
-orders the same policy prevented. Attempt-derived columns (velocity, linkage,
+The labels are the approve-all world's, the same for every policy: an order a
+policy declined is counted as fraud or legitimate by the label its outcomes
+would have earned had it been approved, and no action re-adjudicates any
+order. The policy's actions change the realized history and the cash, not the
+labels.
+
+**History under the policy.** Attempt-derived columns (velocity, linkage,
 tenure, credential changes) are shared across policies because declined
 attempts remain logged. Outcome-derived columns cover approvals, installments
 due and paid, disputes, promotion redemptions and blocks. At each replay day's
 start, they are rebuilt from the policy's realized events
 (`core.asof.policy_rows`) for every account it has declined, held, voided or
 blocked, and every account that has shared a device, address or email with one.
-Other accounts retain approve-all rows. These columns can be up to one replay
-day old, never from the future. The frozen-history diagnostic keeps all
-outcome-derived columns at approve-all values to measure the effect of
+Other accounts retain approve-all rows. So a decision sees the policy's own
+history as of the start of its day, never the outcomes of an order the policy
+prevented on an earlier day. Decisions made during the day enter these columns
+only at the next day's rebuild: until then, a later order of an account the
+policy first acted on that day sees the earlier order as approve-all would
+(for example approved, with an open balance, after the policy declined it at
+checkout that morning). A block takes effect at once: the account's later
+orders that day are declined at checkout. The frozen-history diagnostic keeps
+all outcome-derived columns at approve-all values to measure the effect of
 policy-specific history.
 
 Review times, check outcomes and answer delays are keyed to the world's seed,
@@ -329,10 +342,11 @@ separate cap on legitimate friction; the recommendation rule supplies it.
 The chosen point is the shortlist's best feasible point in the searched grid.
 It is flagged if either threshold is the cut-point for the highest rate
 searched, since a wider grid might do better. Every replayed point is kept
-with its history, and the frontier is published even when flat. A policy with
-no feasible point would be reported as not evaluated on that seed, without a
-fallback; "no review, no decline" offers no minutes, so a feasible point
-always exists. The shortlist stands in for replaying the whole grid with
+with its history, and the frontier is published even when flat. A point with
+review switched off offers no minutes and is feasible in the screen, but it
+need not enter the shortlist; if no shortlisted point is feasible under
+policy-specific history, the policy is reported as not evaluated on that seed,
+with no fallback. The shortlist stands in for replaying the whole grid with
 policy-specific history. The protocol adopted it because, on the three
 development worlds, it chose the same threshold pair as that full replay for
 every tuned policy on every world (18 of 18).
@@ -346,7 +360,11 @@ minutes per shift limit the work. Each shift has one analyst who takes the next
 queued order whenever on shift with allotment left. Reviews and escalations'
 senior work use the same allotment; senior work goes first, in escalation
 order. Work that exhausts the allotment or reaches shift end resumes on that
-analyst's next shift.
+analyst's next shift. Analysts keep working the window's queue after the
+window ends, through the end of observation, with each later shift's
+allotment. Feasibility compares the work offered with the allotment inside the
+window, and the recommendation rule charges only that allotment; review
+minutes used include the work done after the window.
 
 | Layout | Early shift | Late shift |
 | --- | --- | --- |
@@ -356,15 +374,14 @@ analyst's next shift.
 Each shift has 6.5 productive hours. The evening layout moves the same shifts
 later to cover the evening arrival peak.
 
-The base allotment was set from today's queue before any policy comparison. Today's
-rules at today's bands (review at a rule score of 30, decline at 90) were
-replayed over the fit windows of development worlds 416, 1041 and 2718 with
-policy-specific history and staffing far above demand. They offered 4,481,
-4,452 and 4,846 review minutes including senior work (mean 4,593.1).
-Staffing so that this queue uses 80% of the allotment gives
-4,593.1 / 0.8 / 174 fit-window shift instances = 33.0, or 33 minutes per shift.
-A productive shift is almost 12 times that, so capacity levels change the
-allotment rather than whole analysts.
+The base allotment was set from today's queue before any policy comparison.
+Today's rules at today's bands (review at a rule score of 30, decline at 90)
+were replayed over the fit windows of development worlds 416, 1041 and 2718 with
+policy-specific history and staffing far above demand. They offered 4,481, 4,452
+and 4,846 review minutes including senior work (mean 4,593.1). Staffing so that
+this queue uses 80% of the allotment gives 4,593.1 / 0.8 / 174 fit-window shift
+instances = 33.0, or 33 minutes per shift. A productive shift is almost 12 times
+that, so capacity levels change the allotment rather than whole analysts.
 
 | Level | Review minutes per shift | Times the base |
 | --- | --- | --- |
@@ -372,24 +389,23 @@ allotment rather than whole analysts.
 | Base | 33 | 1 |
 | High | 50 | 1.515 |
 
-Low and high are the fewest whole minutes per shift that give at least half
-and 1.5 times the base's minutes. Low binds on every development world: 17 minutes on 174 shifts give
-2,958 fit-window minutes, below each world's offered 4,452 to 4,846. Families
-share the allotment, so acquisition surge brings more orders to the same
-capacity. The evening layout has 33 minutes on each of the same shift
-instances, giving the same total. Base-tuned thresholds stay fixed at low,
-high and evening. Realized review minutes per 1,000 orders are reported by
-family.
+Low and high are the fewest whole minutes per shift that give at least half and
+1.5 times the base's minutes. Low binds on every development world: 17 minutes
+on 174 shifts give 2,958 fit-window minutes, below each world's offered 4,452 to
+4,846. Families share the allotment, so acquisition surge brings more orders to
+the same capacity. The evening layout has 33 minutes on each of the same shift
+instances, giving the same total. Base-tuned thresholds stay fixed at low, high
+and evening. Realized review minutes per 1,000 orders are reported by family.
 
-**Priority and service targets.** Priority is fixed at queue entry
-(FP-2 §7.1): P0 when R05 or R07 holds, or the merchant's stated median time
-to shipment is under 2 hours (excluded by the generator's 2-hour floor); P1
-when the amount is at least $500 or R02, R08 or R10 holds; P2 otherwise.
-All entries occur at checkout, so P3 (already shipped or cancelled at entry)
-does not occur. Targets are 1, 4 and 8 service hours for P0 to P2 (24 for
-P3), from entry to the analyst's first decision (a hold counts as one). The service calendar is fixed at 08:00 to 20:00
-every day, regardless of roster. An order undecided at observation end misses
-its target.
+**Priority and service targets.** Priority is fixed at queue entry (FP-2 §7.1):
+P0 when R05 or R07 holds, or the merchant's stated median time to shipment is
+under 2 hours (excluded by the generator's 2-hour floor); P1 when the amount is
+at least $500 or R02, R08 or R10 holds; P2 otherwise. All entries occur at
+checkout, so P3 (already shipped or cancelled at entry) does not occur. Targets
+are 1, 4 and 8 service hours for P0 to P2 (24 for P3), from entry to the
+analyst's first decision (a hold counts as one). The service calendar is fixed
+at 08:00 to 20:00 every day, regardless of roster. An order undecided at
+observation end misses its target.
 
 ### Seeds, pooling and intervals
 
@@ -452,9 +468,10 @@ as a diagnostic.
   and 200 on every seed;
 - legitimate orders held: at most 300 per 10,000 on the mean and 600 on every
   seed;
-- service: at every priority, the mean over seeds of the share decided within
-  target must be at least 90%. Priorities with fewer than 50 entries pooled
-  over seeds are reported without assessment; approve-all has no queue.
+- service: at every priority, the mean of the share decided within target,
+  over the seeds with entries at that priority, must be at least 90%.
+  Priorities with fewer than 50 entries pooled over seeds are reported without
+  assessment; approve-all has no queue.
 
 The friction caps form the guardrail: risk-appetite assumptions, not
 benchmarks. If the incumbent fails a criterion in a cell, that criterion
@@ -490,10 +507,10 @@ in each cell that differs from the primary cell in one respect:
 - LTV proxies of $5 and $45.
 
 For the recommendation rule and flip table, sensitivities are never combined.
-For each cell the flip table states whether the primary outcome holds and,
-if not, why: a different policy cleared the bar, the primary winner fails an
-eligibility criterion there, or no challenger cleared the bar. The verdict reads "holds in N
-of M cells".
+For each cell the flip table states whether the primary outcome holds and, if
+not, why: a different policy cleared the bar, the primary winner fails an
+eligibility criterion there, or no challenger cleared the bar. The verdict reads
+"holds in N of M cells".
 
 ### Sensitivities and diagnostics
 
@@ -535,7 +552,8 @@ that determines the numbers (`freeze.files` in the protocol): the protocol,
 `config/world.yaml`, `config/policy.yaml`, the fraud policy, the code for
 world generation, context building, fitting, routing, review, replay,
 accounting, evaluation and choice, the LLM referee, the archived LLM study the
-pipeline replays, the freeze check, every module these import, and the
+pipeline replays, the freeze check, every module these import except
+`report/` (which writes sentences and figures from the results), and the
 dependency lock.
 
 The final run refuses to generate a final-seed world without a complete
@@ -606,7 +624,8 @@ reviewer never reads labels, latent tables or policy scores (FP-2 §6.5(d)).
 | A check answers | the row as for a first decision on that day, with every check completed so far |
 | The hold's 48 hours end | no evaluation: an order not yet shipped is cancelled, a shipped one is unchanged |
 
-Evidence can be up to one replay day old, never from the future.
+Evidence can be up to one replay day old, never from the future; the
+policy's own decisions earlier the same day are not in it yet (The replay).
 
 ### Procedure
 
@@ -674,18 +693,21 @@ checks: it declines every order generated as fraud or abuse and clears the
 rest. It
 uses the same queue, timing and allotment and is reported as a labelled upper
 bound diagnostic. Its declines include undelivered merchant bust-out orders
-whose customers are genuine. Simulation-truth friction counts treat those
-customers as legitimate, so these declines count as friction; adjudicated
-counts used by the rule follow each order's label. This treatment applies
-only to the perfect-reviewer replay, not the primary cell.
+whose customers are genuine. Both friction definitions are the same in every
+replay: the simulation-truth counts treat these customers as legitimate, and
+the adjudicated counts the rule uses follow each order's label. Only the
+perfect reviewer declines them on simulation truth, so only its truth-layer
+friction includes those declines.
 
 ### Its confusion matrix
 
 The replay records each reviewed order's final outcome (clear, decline,
 escalate, cancelled after an unanswered hold, unchanged after shipment,
 undecided) by adjudicated label basis, shipment status at the first decision,
-and evidence strength then (0, 1, 2 or more adverse families). A diagnostic
-substitutes latent pattern for label. Both appear as `replay.confusion` and
+and evidence strength then (0, 1, 2 or more adverse families). An order never
+decided has strength "undecided" and is filed under "before shipping", which
+for it records no decision. A diagnostic version substitutes the latent pattern
+for the label. Both appear as `replay.confusion` and
 `replay.confusion_latent` in `results/replay.json` and are rendered in the
 [operations appendix](../reports/appendix-operations.md).
 
@@ -706,37 +728,41 @@ verification pass rates or customer and attacker behaviour. Patterns, signals
 and rates are generator choices (the fraud table above); detection performance
 measures how distinct the design makes each pattern. At about 8,000 orders a
 month, the world is small for a pay-in-4 platform, which is why capacity is an
-allotment of minutes rather than headcount. Costs (LTV proxy, analyst hour, hurdle) and friction caps are assumptions and
-risk appetite, not benchmarks. Results describe mechanisms under these
-assumptions, not a real portfolio.
+allotment of minutes rather than headcount. Costs (LTV proxy, analyst hour,
+hurdle) and friction caps are assumptions and risk appetite, not benchmarks.
+Results describe mechanisms under these assumptions, not a real portfolio.
 
 The ten final worlds share the generator and its parameters. Their spread
 measures variation between worlds, not whether the parameters are right.
 World size, capacity base and tuning procedure were set with the development
 worlds open; final worlds were generated after the freeze. Adjudicated labels
 miss fraud without a determinable trace: a never-pay customer's single default
-reads as credit loss, and an address-only promotion farm stays unlabelled.
-Friction counts treat these orders as legitimate; simulation-truth counts
-appear alongside. Case files illustrate a development-world replay, not final
-evidence.
+reads as credit loss, and an address-only promotion farm is never identified
+as promotion abuse. Once their negative labels mature, friction counts treat
+these orders as legitimate; simulation-truth counts appear alongside. Case
+files illustrate a development-world replay, not final evidence.
 
 ### Assumptions of the replay
 
 - **Fixed attempted traffic.** Policies see the same attempts; they neither
   bring customers nor drive them away.
 - **No attacker adaptation.** Declined or blocked fraudsters do not retry with
-  new details, move accounts or change tactics. Later attempts arrive as
-  generated, so the value of a decline is an upper bound.
+  new details, move accounts or change tactics; their later attempts arrive as
+  generated. The replay can overstate the benefit of declines and blocks if
+  attackers would evade them.
 - **No customer churn.** Legitimate customers keep placing generated orders
   after holds, cancellations or declines; account blocks refuse them at
   checkout. The flat LTV proxy prices lost future value.
 - **Training labels for every order.** Classifiers use approve-all labels,
   including those for orders today's rules would decline.
+- **Evaluation labels from the approve-all world.** A prevented order is judged
+  by what it would have become; actions never re-adjudicate an order.
 - **Linkage at decision time.** Escalation blocks accounts linked then; later
   links cause no blocks.
 - **Action starts at the evaluated window.** Every policy uses approve-all
   history before it.
-- **Evidence up to one replay day old** (The replay, Reviewer).
+- **Evidence up to one replay day old** (The replay, Reviewer): a decision
+  does not yet see the policy's own decisions earlier the same day.
 - **A fixed reviewer procedure.** It always takes the standard disposition
   and makes no other errors. All orders use the same review-time distribution,
   independent of evidence. Check-triggered re-evaluation takes no analyst
@@ -769,5 +795,6 @@ and its verdict ("holds in N of M cells"); appendices give the figures for
 each cell. Fixed traffic, attacker adaptation, churn and training-label
 availability have no sensitivity, and neither do the review-time distribution,
 the check answer delays, the 48-hour hold or the 20 senior minutes. Without
-attacker adaptation, the value of declining is an upper bound. Customer churn
-is not simulated; the flat LTV proxy is an assumed cost of lost future value.
+attacker adaptation, the replay can overstate what declines and blocks are
+worth. Customer churn is not simulated; the flat LTV proxy is an assumed cost
+of lost future value.
