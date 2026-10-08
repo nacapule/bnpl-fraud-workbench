@@ -107,3 +107,17 @@ def test_nothing_is_written_or_removed_through_a_link_out_of_the_folder(tmp_path
         render_all(_sources(), out, templates, root)
     assert (published / "memo.md").read_text() == "a published document\n"
     assert not (out / "README.md").exists()
+
+
+def test_another_spelling_of_the_repository_is_the_repository(tmp_path: Path,
+                                                              monkeypatch) -> None:
+    repo = tmp_path / "repo"
+    templates = _templates(repo)
+    monkeypatch.setattr(render, "REPO", repo)
+    variant = tmp_path / "REPO"
+    if not variant.exists():
+        pytest.skip("a case-sensitive file system: no other spelling reaches the folder")
+    assert render.is_repository(variant)
+    with pytest.raises(RenderError, match="evaluate.gain.hybrid"):
+        render_all(_sources(), variant, templates, root=tmp_path / "elsewhere")
+    assert not (repo / "README.md").exists()

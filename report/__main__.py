@@ -22,7 +22,15 @@ from pathlib import Path
 from core.results import read_summary
 from report import claims as claims_module
 from report import lint as lint_module
-from report.render import REPO, SUMMARY, Sources, documents, out_of_sync, render_all
+from report.render import (
+    REPO,
+    SUMMARY,
+    Sources,
+    documents,
+    is_repository,
+    out_of_sync,
+    render_all,
+)
 
 
 def _sources(summary_path: Path) -> Sources:
@@ -54,7 +62,9 @@ def main(argv: list[str] | None = None) -> int:
                              "repository too")
     args = parser.parse_args(argv)
     if args.command == "render":
-        if args.out.resolve() == REPO and args.summary.resolve() != SUMMARY:
+        same_summary = args.summary.resolve() == SUMMARY.resolve() or (
+            args.summary.exists() and SUMMARY.exists() and args.summary.samefile(SUMMARY))
+        if is_repository(args.out) and not same_summary:
             print("the repository's documents are rendered only from results/summary.json; "
                   "give --out for another summary", file=sys.stderr)
             return 1

@@ -228,7 +228,8 @@ def render_table(body: str, sources: Sources) -> str:
     units: dict[str, str | None] = {}
     contrasts: set[str] = set()
     if clauses:
-        rows, units, contrasts = select(rows, parse_selection(clauses), name)
+        rows, units, contrasts = select(rows, parse_selection(clauses), name,
+                                        unevaluated=unevaluated_worlds(sources.summary))
     problems: list[str] = []
     columns = []
     for item in spec.split(",") if spec.strip() else []:
@@ -427,11 +428,32 @@ def _aggregate(cells: list[Any], how: str, column: str) -> int | float | None:
     return total if how == "sum" else total / len(numbers)
 
 
-def select(rows: list[dict[str, Any]], selection: Selection,
-           name: str) -> tuple[list[dict[str, Any]], dict[str, str | None], set[str]]:
+WORLD_KEYS = ("seed", "family", "policy")  # a policy's replay of one world
+
+
+def unevaluated_worlds(summary: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """The policies' worlds the replay did not evaluate (``replay.outcomes`` rows with
+    ``evaluated`` false: no feasible operating point on that seed), by seed, family and
+    policy; the per-world tables hold no rows, or rows of nulls, for them."""
+    try:
+        rows = table(summary, "replay.outcomes")
+    except KeyError:
+        return []
+    return [{key: row.get(key) for key in WORLD_KEYS} for row in rows
+            if row.get("evaluated") is False]
+
+
+def select(rows: list[dict[str, Any]], selection: Selection, name: str,
+           unevaluated: list[dict[str, Any]] = ()
+           ) -> tuple[list[dict[str, Any]], dict[str, str | None], set[str]]:
     """The rows ``selection`` keeps and aggregates, the units of spread columns, and
     which of them hold paired differences; raises :class:`RenderError` listing every
-    problem."""
+    problem.
+
+    An aggregation whose selection reaches a world in ``unevaluated`` (one the ``where``
+    clauses on seed, family and policy do not exclude) fails: its total would leave that
+    world out, or count its absent rows as zero, without saying so.
+    """
     problems = []
     columns = set(rows[0]) if rows else set()
     named = [column for column, _ in selection.where] + list(selection.by) + \
@@ -443,6 +465,13 @@ def select(rows: list[dict[str, Any]], selection: Selection,
                      if (reason := aggregation_refused(name, column, selection.aggregate))]
         if overlap := set(selection.columns) & set(selection.by):
             problems.append(f"{sorted(overlap)} both group and are aggregated")
+        scope = {column: wanted for column, wanted in selection.where if column in WORLD_KEYS}
+        for world in unevaluated:
+            if all(_text(world.get(column)) == wanted for column, wanted in scope.items()):
+                problems.append(
+                    f"policy {world.get('policy')!r} was not evaluated on seed "
+                    f"{world.get('seed')} ({world.get('family')}), which this selection "
+                    "reaches: a total over worlds would leave it out; narrow the selection")
     if problems:
         raise RenderError(f"table {name!r}", problems)
     kept = [row for row in rows
@@ -654,7 +683,7 @@ def render_all(sources: Sources, out_root: Path, templates: Path = TEMPLATES,
     link would carry outside ``out_root`` fails the render before anything is written.
     """
     out_root = Path(out_root)
-    strict = strict or out_root.resolve() in {Path(root).resolve(), REPO.resolve()}
+    strict = strict or is_repository(out_root, root)
     targets = [doc.output for doc in documents(templates)] + [Path(NOT_RENDERED)]
     if escaping := [path.as_posix() for path in targets if not _inside(out_root, path)]:
         raise ValueError(f"{escaping} would be written outside {out_root} through a link; "
@@ -689,6 +718,21 @@ def render_all(sources: Sources, out_root: Path, templates: Path = TEMPLATES,
     else:
         notice.unlink(missing_ok=True)
     return written
+
+
+def is_repository(path: Path, root: Path = REPO) -> bool:
+    """Whether ``path`` is the repository (``root`` or :data:`REPO`): the same directory
+    on disk, whatever spelling, case or link leads to it."""
+    path = Path(path)
+    for place in {Path(root), REPO}:
+        if path.resolve() == place.resolve():
+            return True
+        try:
+            if path.exists() and place.exists() and path.samefile(place):
+                return True
+        except OSError:
+            continue
+    return False
 
 
 def _inside(out_root: Path, relative: Path) -> bool:

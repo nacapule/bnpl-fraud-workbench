@@ -71,22 +71,39 @@ def test_where_keeps_the_rows_whose_cells_read_as_given(sources):
         "| 1 | 10 | yes |", "| 2 | 14 | yes |"]
     assert table("replay.outcomes where evaluated=false | policy, net_cents usd",
                  sources) == ["| policy | net_cents |", "|---|---:|", "| hybrid | n/a |"]
+    assert parse_selection(["where", "seed=1"]).where == (("seed", "1"),)
 
 
 def test_sum_adds_counts_and_money_over_the_rows_of_each_group(sources):
-    # oracle by hand: incumbent 10 + 14 reviews, $10.00 - $2.50; hybrid's second seed
-    # has nothing measured, so its totals are unknown, not the first seed's alone
-    assert table(f"replay.outcomes {PRIMARY} sum reviews, net_cents, net_vs_approve_all_cents "
-                 "by policy | policy, reviews count, net_cents usd:2, "
+    # oracle by hand: incumbent 10 + 14 reviews, $10.00 - $2.50, $1.00 - $0.40
+    assert table(f"replay.outcomes {PRIMARY} policy=incumbent_rules sum reviews, net_cents, "
+                 "net_vs_approve_all_cents by policy | policy, reviews count, net_cents usd:2, "
                  "net_vs_approve_all_cents usd:2, rows_count count", sources) == [
         "| policy | reviews | net_cents | net_vs_approve_all_cents | rows_count |",
         "|---|---:|---:|---:|---:|",
-        "| incumbent_rules | 24 | $7.50 | $0.60 | 2 |",
-        "| hybrid | n/a | n/a | n/a | 2 |"]
-    # without the not-evaluated seed, the group shows the one seed it covers
-    assert table("replay.outcomes where family=baseline evaluated=true sum net_cents by policy "
-                 "| policy, net_cents usd, rows_count", sources)[2:] == [
-        "| incumbent_rules | $8 | 2 |", "| hybrid | $20 | 1 |"]
+        "| incumbent_rules | 24 | $7.50 | $0.60 | 2 |"]
+    assert table("replay.outcomes where seed=1 sum net_cents by family | family, net_cents usd, "
+                 "rows_count count", sources)[2:] == [
+        "| baseline | $30 | 2 |", "| surge | $100 | 1 |"]
+
+
+def test_a_total_never_leaves_out_a_world_the_replay_did_not_evaluate(sources):
+    # hybrid has no operating point on seed 2: a total over its worlds would be seed 1's
+    # alone, so any aggregation the hybrid's seed-2 world falls inside fails, whatever
+    # else it filters on; rows of other tables for that world simply do not exist
+    for spec in (f"replay.outcomes {PRIMARY} sum reviews by policy | policy",
+                 "replay.outcomes where family=baseline evaluated=true sum net_cents by policy "
+                 "| policy",
+                 "replay.confusion sum orders by truth across final | truth",
+                 "replay.confusion where policy=hybrid sum orders by truth | truth"):
+        with pytest.raises(RenderError, match="'hybrid' was not evaluated on seed 2"):
+            table(spec, sources)
+    # a selection that excludes the world is fine, and so is listing rows
+    assert table("replay.outcomes where family=baseline seed=1 sum reviews by policy | "
+                 "policy, reviews count", sources)[2:] == ["| incumbent_rules | 10 |",
+                                                           "| hybrid | 6 |"]
+    assert table("replay.outcomes where evaluated=false | policy, reviews", sources)[2:] == [
+        "| hybrid | n/a |"]
 
 
 def test_mean_averages_levels_with_the_rows_it_covers(sources):
@@ -143,9 +160,9 @@ def test_across_spreads_one_column_into_columns_holding_its_sum(sources):
         table("replay.confusion where policy=incumbent_rules sum orders by truth across final "
               "| truth, escalate", sources)
     # each spread row says how many rows it covers
-    assert table("replay.confusion sum orders by policy across final | policy, decline count, "
-                 "escalate count, rows_count count", sources)[2:] == [
-        "| incumbent_rules | 5 | 0 | 4 |", "| hybrid | 0 | 8 | 1 |"]
+    assert table("replay.confusion where seed=1 sum orders by policy across final | policy, "
+                 "decline count, escalate count, rows_count count", sources)[2:] == [
+        "| incumbent_rules | 5 | 0 | 2 |", "| hybrid | 0 | 8 | 1 |"]
 
 
 @pytest.mark.parametrize("rows, message", [
@@ -176,7 +193,7 @@ def test_spread_columns_must_be_distinct_names(rows, message):
      "sums one column"),
     ("replay.outcomes sum policy by seed | seed", "'policy' is not a count or money column"),
     ("replay.outcomes sum reviews by reviews | reviews", "both group and are aggregated"),
-    ("replay.outcomes sum reviews by policy | policy, seed", "no column 'seed'"),
+    ("replay.outcomes where seed=1 sum reviews by policy | policy, seed", "no column 'seed'"),
     ("replay.outcomes filter family=baseline | policy", "is not a clause"),
 ])
 def test_a_selection_that_cannot_mean_what_it_says_fails(sources, spec, message):
