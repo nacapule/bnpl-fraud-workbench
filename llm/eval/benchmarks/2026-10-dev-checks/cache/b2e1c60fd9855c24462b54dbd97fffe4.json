@@ -1,0 +1,65 @@
+{
+ "attempts": 1,
+ "duration_ms": 39904,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "sol",
+  "backend": "codex",
+  "benchmark": "2026-10-dev-checks",
+  "case": "416-baseline-128767-20250604T171025",
+  "cli_version": "codex-cli 0.159.2",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "6745a8bdeaecb841f0a27ea77348aff93049750a2946f6da385d643eb66a753c",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "7aa2fb96a78e7695a91b9dd5e7b44e3a97c36ed7b1802768b2750119a909b963",
+   "llm/memo.py": "5ce3d380cb85eec55d7121283d6f8101dda2d587201a42314dd29175d0b3d264",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol",
+  "packet_sha256": "49f9f1968b9e5083d308c35f0ae56b9aaf985ae8b5500c3dea5167d25310dc6c",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "4683d17a1fc24e26b409931a93f228f41a1718f2afd05ecb704193fd334fcbba",
+  "prompt_version": "memo_fp2_v1"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "codex",
+  "cli_version": "codex-cli 0.159.2",
+  "effort": "high",
+  "event_counts": {
+   "item.completed:agent_message": 1,
+   "thread.started": 1,
+   "turn.completed": 1,
+   "turn.started": 1
+  },
+  "input_tokens": 7229,
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol",
+  "n_error_events": 0,
+  "n_events": 4,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 1227,
+  "protocol_ok": true,
+  "tools_offered": null
+ },
+ "text": "{\n  \"claims\": [\n    {\n      \"field\": \"decision.checks[0].check\",\n      \"value\": \"id_check\",\n      \"statement\": \"The completed verification was an identity and issuer-authentication check.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"decision.checks[0].outcome\",\n      \"value\": \"failed\",\n      \"statement\": \"The identity check failed.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.accounts_on_address_30d\",\n      \"value\": 3,\n      \"statement\": \"Three accounts had activity at the shipping address within the relevant window, satisfying R08.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.ship_to_home\",\n      \"value\": 1,\n      \"statement\": \"The shipping address is the account's home address.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.home_address_age_days\",\n      \"value\": 28.221481481481483,\n      \"statement\": \"The home address has not been registered long enough for the household exception.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.unauthorized_disputes_lost_user\",\n      \"value\": 0,\n      \"statement\": \"No earlier unauthorized-use dispute was resolved against the platform.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.never_pay_determined_user\",\n      \"value\": 0,\n      \"statement\": \"There is no earlier never-pay determination.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.inr_claims_rejected_user\",\n      \"value\": 0,\n      \"statement\": \"No earlier delivered-order item-not-received claim was resolved against the account.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.shipped_at_decision\",\n      \"value\": 0,\n      \"statement\": \"The order had not shipped at decision time.\",\n      \"derived\": null\n    }\n  ],\n  \"hypotheses\": [\n    {\n      \"explanation\": \"stolen_card\",\n      \"likelihood\": \"medium\",\n      \"reasoning\": \"Failed issuer authentication or identity verification is consistent with unauthorized payment use. Address linkage adds concern but does not establish which part of verification failed.\"\n    },\n    {\n      \"explanation\": \"household\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"Shipping to a shared home plausibly explains the address linkage. However, the household exception does not apply, and shared residence does not resolve the failed identity check.\"\n    }\n  ],\n  \"disposition\": \"escalate\",\n  \"citations\": [\n    \"R08\",\n    \"FP-2 \u00a76.4(b)\",\n    \"FP-2 \u00a76.3\",\n    \"FP-2 \u00a76.6(b)\",\n    \"FP-2 \u00a75.2\",\n    \"FP-2 \u00a75.3(b)\",\n    \"FP-2 \u00a74.2\"\n  ],\n  \"next_check\": \"none\",\n  \"memo\": \"R08 is the only rule condition met, establishing Linkage. Although shipping is to the account's home, its registration age prevents the household exception. No earlier outcome settles this order. The ordinary decision-table row is \u00a76.6(b), but the failed required id_check now decides under \u00a75.3(b): escalate is standard because Linkage remains present; decline is also permitted. Shared household use is a plausible benign explanation for the address linkage, but it does not overcome the failed check. Recommend escalation before shipment; no further check is needed. This memo is advisory and sets no queue priority.\"\n}",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 8456,
+  "input_tokens": 7229,
+  "output_tokens": 1227,
+  "unknown_usage_calls": 0
+ }
+}

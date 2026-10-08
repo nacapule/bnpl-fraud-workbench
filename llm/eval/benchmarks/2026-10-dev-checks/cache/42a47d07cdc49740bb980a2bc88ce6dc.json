@@ -1,0 +1,65 @@
+{
+ "attempts": 1,
+ "duration_ms": 33871,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "sol",
+  "backend": "codex",
+  "benchmark": "2026-10-dev-checks",
+  "case": "1041-baseline-134889-20250629T114507",
+  "cli_version": "codex-cli 0.159.2",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "6745a8bdeaecb841f0a27ea77348aff93049750a2946f6da385d643eb66a753c",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "7aa2fb96a78e7695a91b9dd5e7b44e3a97c36ed7b1802768b2750119a909b963",
+   "llm/memo.py": "5ce3d380cb85eec55d7121283d6f8101dda2d587201a42314dd29175d0b3d264",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol",
+  "packet_sha256": "c2466c43313e751a7a8b50751b2b024bf7d59398087022bc2b9d6d17be0592ef",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "4683d17a1fc24e26b409931a93f228f41a1718f2afd05ecb704193fd334fcbba",
+  "prompt_version": "memo_fp2_v1"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "codex",
+  "cli_version": "codex-cli 0.159.2",
+  "effort": "high",
+  "event_counts": {
+   "item.completed:agent_message": 1,
+   "thread.started": 1,
+   "turn.completed": 1,
+   "turn.started": 1
+  },
+  "input_tokens": 7223,
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol",
+  "n_error_events": 0,
+  "n_events": 4,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 1350,
+  "protocol_ok": true,
+  "tools_offered": null
+ },
+ "text": "{\n  \"claims\": [\n    {\"field\":\"context.account_age_days\",\"value\":181.04922453703705,\"statement\":\"The account is 181.04922453703705 days old.\",\"derived\":null},\n    {\"field\":\"context.hours_since_password_reset\",\"value\":0.3252777777777778,\"statement\":\"The password was reset 0.3252777777777778 hours before the order.\",\"derived\":null},\n    {\"field\":\"context.device_link_age_hours\",\"value\":0.4602777777777778,\"statement\":\"The device was first used on the account 0.4602777777777778 hours before the order.\",\"derived\":null},\n    {\"field\":\"decision.checks[0].check\",\"value\":\"contact\",\"statement\":\"The completed verification was contact.\",\"derived\":null},\n    {\"field\":\"decision.checks[0].outcome\",\"value\":\"passed\",\"statement\":\"The contact check passed.\",\"derived\":null},\n    {\"field\":\"context.avs_mismatch\",\"value\":1,\"statement\":\"AVS verification failed.\",\"derived\":null},\n    {\"field\":\"context.bin_ip_country_mismatch\",\"value\":0,\"statement\":\"The card issuing country and IP country do not differ.\",\"derived\":null},\n    {\"field\":\"context.geo_kmh_from_previous_attempt\",\"value\":0.0,\"statement\":\"The recorded implied speed from the previous attempt is 0.0 km/h.\",\"derived\":null},\n    {\"field\":\"context.processor_declines_card_24h\",\"value\":0,\"statement\":\"The card had no processor declines in the preceding window.\",\"derived\":null},\n    {\"field\":\"context.processor_declines_device_24h\",\"value\":0,\"statement\":\"The device had no processor declines in the preceding window.\",\"derived\":null},\n    {\"field\":\"context.attempts_user_24h\",\"value\":1,\"statement\":\"The account attempt count in the stated window is 1.\",\"derived\":null},\n    {\"field\":\"context.attempts_device_24h\",\"value\":1,\"statement\":\"The device attempt count in the stated window is 1.\",\"derived\":null},\n    {\"field\":\"context.accounts_on_device_30d\",\"value\":1,\"statement\":\"The device has activity from 1 account in the stated window.\",\"derived\":null},\n    {\"field\":\"context.accounts_on_address_30d\",\"value\":1,\"statement\":\"The shipping address has orders from 1 account in the stated window.\",\"derived\":null},\n    {\"field\":\"context.email_root_other_accounts\",\"value\":0,\"statement\":\"No other account holds a matching normalized email.\",\"derived\":null},\n    {\"field\":\"order.promotion_used\",\"value\":false,\"statement\":\"The order did not use a promotion.\",\"derived\":null},\n    {\"field\":\"context.email_domain_class\",\"value\":0,\"statement\":\"The email uses a common provider rather than a disposable domain.\",\"derived\":null},\n    {\"field\":\"context.is_first_attempt_user\",\"value\":0,\"statement\":\"This is not the account's first order attempt.\",\"derived\":null},\n    {\"field\":\"context.inr_disputes_opened_user\",\"value\":0,\"statement\":\"The account has opened no earlier item-not-received disputes.\",\"derived\":null},\n    {\"field\":\"context.unauthorized_disputes_lost_user\",\"value\":0,\"statement\":\"No earlier unauthorized-use dispute was resolved against the platform.\",\"derived\":null},\n    {\"field\":\"context.never_pay_determined_user\",\"value\":0,\"statement\":\"There is no earlier never-pay determination.\",\"derived\":null},\n    {\"field\":\"context.inr_claims_rejected_user\",\"value\":0,\"statement\":\"No earlier delivered-order item-not-received claim was resolved against the account.\",\"derived\":null},\n    {\"field\":\"context.shipped_at_decision\",\"value\":1,\"statement\":\"The order had shipped by the decision.\",\"derived\":null}\n  ],\n  \"hypotheses\": [\n    {\n      \"explanation\":\"new_device\",\n      \"likelihood\":\"high\",\n      \"reasoning\":\"A legitimate device replacement with a password reset plausibly explains the access trail. The passed contact check confirms that the account holder placed the order.\"\n    },\n    {\n      \"explanation\":\"account_takeover\",\n      \"likelihood\":\"low\",\n      \"reasoning\":\"The recent password reset and newly linked device on an established account initially support takeover concern under R01. The passed required contact check resolves that concern under the policy.\"\n    }\n  ],\n  \"disposition\":\"clear\",\n  \"citations\":[\"R01\",\"FP-2 \u00a76.3\",\"FP-2 \u00a76.4\",\"FP-2 \u00a76.6(b)\",\"FP-2 \u00a75.2\",\"FP-2 \u00a75.3(a)\",\"FP-2 \u00a76.5(a)\",\"FP-2 \u00a76.5(b)\"],\n  \"next_check\":\"none\",\n  \"memo\":\"R01 holds; Account access is the only adverse family. No other rule holds, no household exception is needed, and no earlier outcome settles the order. Row \u00a76.6(b) therefore applies, with contact as the sole required check. Contact passed, so \u00a75.3(a) requires clear and prohibits further adverse dispositions. A legitimate new device and password reset are the strongest benign explanation. The isolated AVS failure lacks R03's country mismatch and cannot independently support action. The order has already shipped. No additional check is required.\"\n}",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 8573,
+  "input_tokens": 7223,
+  "output_tokens": 1350,
+  "unknown_usage_calls": 0
+ }
+}
