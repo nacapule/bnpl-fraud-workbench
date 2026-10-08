@@ -43,7 +43,7 @@ jobs:
         run: make lint
       - name: Tests, MySQL required
         run: make test-mysql
-      - name: Documents match the results; claims hold; no typed numbers
+      - name: Documents and figures match the results; claims hold; no typed numbers
         run: make docs-check
       - name: Archived LLM benchmark replayed offline
         run: make llm-history

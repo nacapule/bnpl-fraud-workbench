@@ -34,5 +34,5 @@ jobs:
         run: make venv
       - name: The protocol is frozen and the frozen files are unchanged
         run: .venv/bin/python -c "from core import protocol; protocol.require_freeze()"
-      - name: Documents match the committed results
+      - name: Documents and figures match the committed results
         run: make docs-check
