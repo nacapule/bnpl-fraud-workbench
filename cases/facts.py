@@ -9,7 +9,11 @@ per file of the protocol's ``cases.files``, and per alert:
   candidate counts (:class:`cases.rule.Pick`);
 * ``decision``: the checkout, when the evidence was assembled (``evidence_at``), when the
   analyst started (reviewed alerts), when the action was taken and the recorded action
-  (the first disposition of a reviewed alert, the band of a checkout alert);
+  (the first disposition of a reviewed alert, the band of a checkout alert); and
+  ``same_day_orders``, the account's orders checked out earlier on the evidence's replay
+  day with the route the policy gave each: known when the evidence was assembled, but not
+  yet in its outcome-derived columns, which the replay rebuilds from the policy's
+  decisions before the start of each day (they count such an order as approved);
 * ``evidence``: the saved row the replay decided on, as it had it, with the §6.2
   conditions that hold on it and the rule score (computed from the row alone);
   ``routing``: the same for the checkout row; ``reviewer``: for a reviewed alert, how the
@@ -345,9 +349,21 @@ def _decision(run: Run, pick: Pick) -> tuple[dict[str, Any], dict[str, Any]]:
         decision = {"kind": "checkout", "evidence_at": checkout_row["decision_at"],
                     "analyst_started_at": None, "action_at": checkout_row["decision_at"],
                     "recorded_action": fate["route"]}
-    decision.update(checkout_at=fate["checkout_at"], band=fate["route"])
+    decision.update(checkout_at=fate["checkout_at"], band=fate["route"],
+                    same_day_orders=same_day_orders(run.fates, order, decision["evidence_at"]))
     _check_times(order, decision, row)
     return decision, row
+
+
+def same_day_orders(fates: pd.DataFrame, order: int, evidence_at: Any) -> list[dict[str, Any]]:
+    """The order's account's other orders checked out on the replay day of ``evidence_at``
+    before it, with their routes (the decisions the day's evidence rows do not reflect)."""
+    at = pd.Timestamp(evidence_at)
+    user = _row(fates, order)["user_id"]
+    same = fates.loc[(fates["user_id"] == user) & (fates["order_id"] != order)
+                     & (fates["checkout_at"] >= at.normalize()) & (fates["checkout_at"] < at)]
+    return [{"order_id": int(r["order_id"]), "checkout_at": r["checkout_at"], "route": r["route"]}
+            for r in same.sort_values(["checkout_at", "order_id"]).to_dict("records")]
 
 
 def _check_times(order: int, decision: Mapping[str, Any], row: Mapping[str, Any]) -> None:

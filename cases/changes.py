@@ -101,6 +101,7 @@ class Change:
 
     file: str
     name: str
+    declared_for: int  # the case order the motivation describes
     change: str
     motivation: str
     mechanism: str
@@ -108,6 +109,7 @@ class Change:
     review: Callable[[pd.DataFrame], np.ndarray]  # the review score of the rows
     decline: Callable[[pd.DataFrame], np.ndarray] | None = None  # None: the review score
     evidence: Callable[[Evidence, Mapping[str, Any]], Evidence] | None = None
+    noted_after_run: str | None = None  # a correction found after the run, kept apart
 
     def policy(self, incumbent: policies.Policy) -> policies.Policy:
         base = incumbent.review
@@ -123,8 +125,10 @@ class Change:
         return Reviewer() if self.evidence is None else VariantReviewer(self.evidence)
 
     def declared(self) -> dict[str, Any]:
-        return {"name": self.name, "change": self.change, "motivation": self.motivation,
-                "mechanism": self.mechanism, "parameters": dict(self.parameters)}
+        return {"name": self.name, "declared_for_order": self.declared_for,
+                "change": self.change, "motivation": self.motivation,
+                "mechanism": self.mechanism, "parameters": dict(self.parameters),
+                "noted_after_run": self.noted_after_run}
 
 
 class VariantReviewer(Reviewer):
@@ -175,7 +179,7 @@ def _score(rows: pd.DataFrame) -> np.ndarray:
 W = definitions.WEIGHTS
 CHANGES: tuple[Change, ...] = (
     Change(
-        file="account_takeover", name="takeover_without_credential_change",
+        file="account_takeover", name="takeover_without_credential_change", declared_for=136685,
         change=("A new Account-access condition, weight 35 (the review band): an account at "
                 "least 90 days old, a device first used on it at most 72 h before the order, "
                 "and a shipping address first used at this order that is not home. The "
@@ -198,6 +202,7 @@ CHANGES: tuple[Change, ...] = (
         evidence=_account_access),
     Change(
         file="never_pay_vs_hardship", name="no_second_plan_before_first_installment",
+        declared_for=140378,
         change=("Decline at checkout an order from an account with an open plan on which no "
                 "installment has yet fallen due (installments_due_user = 0 and "
                 "open_balance_user_cents > 0)."),
@@ -214,7 +219,7 @@ CHANGES: tuple[Change, ...] = (
                     "columns": ["installments_due_user", "open_balance_user_cents"]},
         review=lambda rows: _score(rows) + 1000.0 * stacked_plan(rows)),
     Change(
-        file="traveller", name="r03_known_device_and_home",
+        file="traveller", name="r03_known_device_and_home", declared_for=149795,
         change=("R03 does not count, in the rule score or the family count, when the device "
                 "was first used on the account at least 90 days before the order and the "
                 "order ships to the account's home address registered at least 90 days "
@@ -233,7 +238,7 @@ CHANGES: tuple[Change, ...] = (
         review=lambda rows: _score(rows) - W["R03"] * known_device_home(rows),
         evidence=_r03_excepted),
     Change(
-        file="card_testing", name="r07_one_device_decline_new_account",
+        file="card_testing", name="r07_one_device_decline_new_account", declared_for=135235,
         change=("R07 also holds, at its weight of 40 (auto-decline), when the account is under "
                 "7 days old and the device had at least 1 processor decline in the 24 h "
                 "before the order (otherwise 3)."),
@@ -246,9 +251,16 @@ CHANGES: tuple[Change, ...] = (
         parameters={"account_age_days_below": 7, "processor_declines_device_24h_min": 1,
                     "weight": 40, "rule": "R07",
                     "columns": ["processor_declines_device_24h", "account_age_days"]},
-        review=lambda rows: _score(rows) + W["R07"] * new_account_device_decline(rows)),
+        review=lambda rows: _score(rows) + W["R07"] * new_account_device_decline(rows),
+        noted_after_run=(
+            "The row's approved_orders_user_24h = 1 and $448.65 open balance, which the "
+            "motivation cites, were approve-all values: the incumbent had auto-declined the "
+            "account's 09:33 order (R07 already held, at 3 device declines) 25 minutes "
+            "earlier on the same replay day, and the row's outcome-derived columns reflect "
+            "the policy's decisions up to the start of the day (the decision's "
+            "same_day_orders). No order of this session was approved.")),
     Change(
-        file="ring", name="linkage_only_to_review",
+        file="ring", name="linkage_only_to_review", declared_for=136908,
         change=("An order whose only §6.2 conditions are Linkage conditions goes to review "
                 "instead of auto-decline (its decline score is 0; its review score is "
                 "unchanged), so an analyst can escalate (FP-2 §5.3(b), §6.6), which blocks "
@@ -384,8 +396,20 @@ def _orders_block(variant: Measured, incumbent: Measured, orders: list[int],
 
 def run_changes(run: Run, facts: Mapping[str, Mapping[str, Any]],
                 changes: tuple[Change, ...] = CHANGES,
-                log: Callable[[str], None] = lambda text: None) -> dict[str, dict[str, Any]]:
-    """Each file's ``tested_change`` block (module docstring), by file name."""
+                log: Callable[[str], None] = lambda text: None,
+                check_declared: bool = True) -> dict[str, dict[str, Any]]:
+    """Each file's ``tested_change`` block (module docstring), by file name.
+
+    A change's motivation describes the case order it was declared for; with
+    ``check_declared`` a selection that gives another order is refused.
+    """
+    for change in changes:
+        entry = facts[change.file] if change.file in facts else None
+        selected = None if entry is None else \
+            entry["alerts"][entry["primary_alert"]]["publication"]["order_id"]
+        if check_declared and selected != change.declared_for:
+            raise RuleError(f"{change.name} was declared for order {change.declared_for}; "
+                            f"the selection gives {selected}")
     tables = run.tables
     observed = run.protocol.observed_until
     bench = stage.Bench.of(tables, _context(run), seed=run.rule.seed, observed_until=observed)

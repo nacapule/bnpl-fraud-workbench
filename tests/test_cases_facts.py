@@ -214,6 +214,24 @@ def test_a_checkout_alert_that_was_also_reviewed_keeps_the_checkout_row(reviewed
     assert "reviewer" not in facts
 
 
+def test_same_day_orders_are_the_decisions_the_days_evidence_does_not_reflect():
+    fates = pd.DataFrame({
+        "order_id": [1, 2, 3, 4, 5], "user_id": [7, 7, 7, 7, 8],
+        "checkout_at": pd.to_datetime(["2025-06-27 23:50", "2025-06-28 09:26", "2025-06-28 09:33",
+                                       "2025-06-28 09:58", "2025-06-28 09:30"]),
+        "route": ["approve", "approve", "auto_decline", "auto_decline", "review"]})
+    assert facts_module.same_day_orders(fates, 4, "2025-06-28 09:58:00") == [
+        {"order_id": 2, "checkout_at": pd.Timestamp("2025-06-28 09:26"), "route": "approve"},
+        {"order_id": 3, "checkout_at": pd.Timestamp("2025-06-28 09:33"), "route": "auto_decline"}]
+    # a review's evidence assembled at the start of a day reflects everything before it
+    assert facts_module.same_day_orders(fates, 4, "2025-06-28 00:00:00") == []
+
+
+def test_the_facts_list_the_same_day_orders(declined_facts):
+    for file in ("account_takeover", "never_pay_vs_hardship", "card_testing"):
+        assert alert(declined_facts, file)["decision"]["same_day_orders"] == []
+
+
 # ------------------------------------------------------------------ amounts and the ledger
 
 

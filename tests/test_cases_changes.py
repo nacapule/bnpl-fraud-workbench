@@ -183,7 +183,7 @@ def test_the_replay_is_the_stage_benchs(tables, incumbent):
 def tested(tables, tmp_path_factory):
     run = facts_module.load_run(make_run(tmp_path_factory.mktemp("changes"), tables, 35.0, 40.0))
     built = facts_module.build(run)
-    return run, built, changes_module.run_changes(run, built)
+    return run, built, changes_module.run_changes(run, built, check_declared=False)
 
 
 def _rule_net(world_block, raw) -> Fraction:
@@ -206,6 +206,8 @@ def test_every_file_records_its_declared_change_and_one_run(tested):
             "name": c.name, "change": c.change, "motivation": c.motivation,
             "mechanism": c.mechanism}
         assert block["superseded"] == [] and "development world" in block["illustration"]
+        assert block["declared_for_order"] == c.declared_for
+        assert block["noted_after_run"] == c.noted_after_run
 
 
 def test_the_effect_is_the_difference_of_the_results_measures(tested):
@@ -249,7 +251,15 @@ def test_the_incumbent_must_be_the_runs(tables, tmp_path):
     run = facts_module.load_run(make_run(tmp_path, tables, 35.0, 40.0))
     run.fates = run.fates.assign(route=run.fates["route"].replace({"review": "approve"}))
     with pytest.raises(changes_module.RuleError, match="differs from the run's"):
-        changes_module.run_changes(run, {})
+        changes_module.run_changes(run, {}, check_declared=False)
+
+
+def test_a_change_runs_only_for_the_order_it_was_declared_for(tables, tmp_path):
+    run = facts_module.load_run(make_run(tmp_path, tables, 35.0, 40.0))
+    built = facts_module.build(run)  # the mini world selects other orders
+    with pytest.raises(changes_module.RuleError, match="declared for order 136685; the "
+                                                      "selection gives 12"):
+        changes_module.run_changes(run, built)
 
 
 def test_the_rules_model_must_be_the_runs(tables, tmp_path):
