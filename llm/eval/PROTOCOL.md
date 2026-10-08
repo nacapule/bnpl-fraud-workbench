@@ -69,7 +69,8 @@ All cases come from the test windows, under the incumbent rules at their tuned t
 - **Probes and seed.** 40 final cases are also asked twice more: with their facts
   shuffled, and with fresh placeholder names. Selection uses seed `20261006`.
 - **Why 80 decisions after a check.** It is about their share of analyst decisions in
-  the development pools: 283 of 743.
+  the development pools: 283 of 743 (460 first decisions and 283 completions in the
+  development run's three baseline worlds; `2026-10-dev-checks` records the 283).
 - **Why baseline worlds only.** A lag-sensitivity world repeats its baseline world's
   reviewed orders, and the shifted futures would blend other populations into one
   natural-mix rate.
@@ -80,7 +81,10 @@ All cases come from the test windows, under the incumbent rules at their tuned t
 - one case is taken per stratum in turn;
 - a case that would put more than two cases in one linked group is passed over.
 
-The subset is not a probability sample, so its reweighted rates estimate nothing.
+The subset is not a probability sample, so its reweighted rates estimate nothing. Its
+axes' shares are the sources' eligible decisions when every source recorded them;
+`2026-10-dev` predates that record, so this subset's shares are its own case shares (one
+half each).
 
 The case memos (phase `cases`) are one memo for each alert the case files present. The
 packet is built from the row the replay decided on, with no check completed. They are
@@ -94,16 +98,19 @@ hold:
 - its format is valid;
 - its disposition is acceptable (standard or also permitted);
 - its next check is the one the policy requires (`none` when none is);
-- its citations are valid: no unknown clause, no rule that does not hold, the
-  disposition's own clause cited, and no non-payment ground when no installment is due;
-- the verifier finds no claim error.
+- its citations are valid: no unknown clause and no rule that does not hold; for an
+  adverse disposition or `needs_check`, the disposition's own clause cited (a clear may
+  cite none); and no non-payment clause cited when no installment is due (the clause ids
+  are checked, not the prose);
+- the verifier finds no claim error in the structured claims (their fields, values and
+  declared calculations).
 
 A failure to answer counts as a failing memo. The rate is reported as the natural-mix
 rate:
 - within each axis, the two-phase Hájek rate with the selection weights;
 - the axes weighted by their shares of the eligible decisions.
 
-Each axis's rate and the unweighted rate are reported beside it.
+Beside it are the unweighted rate, and each axis's unweighted and weighted (Hájek) rates.
 
 **Secondary endpoints:**
 - each of the five components;
@@ -129,13 +136,18 @@ Each axis's rate and the unweighted rate are reported beside it.
 ## Intervals, bounds and ties
 
 - **Clusters.** The cluster is the linked group of accounts and episodes.
-- **Bootstrap.** Rates get percentile cluster-bootstrap intervals: 2,000 resamples of
-  whole clusters, seed 0, 95%. The Wilson interval is shown beside them.
+- **Bootstrap.** The complete-memo pass rate and the acceptable rate, natural-mix and
+  unweighted, get percentile cluster-bootstrap intervals: 2,000 resamples of whole
+  clusters, seed 0, 95%. The Wilson interval of the unweighted rate is shown beside them.
+  The other endpoints are reported as rates without intervals.
 - **When nothing fails.** If every case passes (or none does), every resample gives the
-  same value and a bootstrap interval collapses to a point. It is then not reported.
-  The exact Clopper–Pearson bound with clusters as the units stands in its place: with
-  no failing cluster among k, the one-sided 95% upper bound on the share of clusters with
-  a failure is 1 − 0.05^(1/k), about 3/k. That bound is reported in every case.
+  same value and a bootstrap interval collapses to a point, so none is reported; the
+  primary rate then has no interval. What is reported instead, and in every case, is a
+  separate diagnostic: the exact Clopper–Pearson bound on the share of clusters that hold
+  a failing memo, with clusters as the units. With no failing cluster among k, its
+  one-sided 95% upper bound is 1 − 0.05^(1/k), about 3/k. It treats the clusters as
+  independent and alike, ignores the selection weights, and bounds that unweighted
+  cluster share, not the natural-mix rate.
 - **Paired comparison.** The two arms are compared on the same cases:
   - counts of cases both arms passed, only one passed, or neither;
   - the difference in rates, unweighted and natural-mix, each with a cluster-bootstrap
@@ -143,16 +155,18 @@ Each axis's rate and the unweighted rate are reported beside it.
   - a sign test over clusters.
 
   It is made only once both arms are scored.
-- **Ties.** Equal rates (as many cases passed by only one arm as by only the other) are
-  reported as a tie. A tie is not evidence that the arms are equivalent, and the
-  comparison may well be inconclusive.
+- **Ties.** Equal unweighted rates (as many cases passed by only one arm as by only the
+  other) are reported as a tie, with the natural-mix difference beside it, which can
+  differ. A tie is not evidence that the arms are equivalent, and the comparison may well
+  be inconclusive.
 
 ## Development so far
 
 - **`2026-10-dev`.** Every development case passed: all 40 memos from `sol` passed every
   component, with no claim error in 889 claims. All 40 were first decisions with no
   check run (§6.6(c) and §6.6(b) with one family), which is why the cases after a check
-  were added. One review stratum of the pools (`P-MERCH`) had no case after phase one.
+  were added. Rebuilt with the current code, the set names one review stratum of the
+  pools (`P-MERCH`) that had no case after phase one.
 - **`2026-10-dev-checks`.** Every disposition was acceptable and standard, and the next
   check was right in all 25 cases (§5.3(a) 10, §5.3(b) without Linkage 9, with Linkage
   6). There was no claim error in 529 claims. 24 of 25 memos passed. The one that did not
@@ -171,11 +185,18 @@ Each axis's rate and the unweighted rate are reported beside it.
   before shipment, unchanged after it. No analyst decision follows. The policy's rule
   after `no_response` is therefore outside the benchmark.
 - **The referee and the simulated reviewer share one reading of FP-2.** Both apply
-  `core.evidence`. On the development pools, the referee's standard contained the
-  reviewer's decision at all 283 completions. That agreement checks the packet's round
-  trip (fields, values, checks); it is not two independent readings of the policy. The
-  scoring rules have not been checked by a person until the author's referee check
-  (below) is complete.
+  `core.evidence`. On the development run's three baseline worlds, the referee's
+  standard on the packets built at the 283 completions contained the reviewer's decision
+  at each of them (a check made before selection; the committed set holds 25 of those
+  packets). That agreement checks the packet's round trip (fields, values, checks); it is
+  not two independent readings of the policy. The scoring rules have not been checked by
+  a person until the author's referee check (below) is complete.
+- **The verifier reads structure, not meaning.** It checks each claim's field, value and
+  declared calculation against the packet. It does not check that a claim's sentence says
+  what the field shows: a sentence that misstates a correct field passes. Words of the
+  memo that match no packet value are counted and reported, but do not fail a memo.
+  Whether the sentences mean what they cite, whether decision-critical evidence is left
+  out and whether a memo is defensible are left to the author's referee check.
 - **The decisions are simulated.** Every decision after a check rests on facts as of the
   start of its day, as the simulated reviewer saw them.
 - **No headroom is claimed.** A rate of one on development cases is a result on those
@@ -217,5 +238,12 @@ python -m llm.eval.select_cases --id <final id> --phase final --world <run>/worl
     --development 2026-10-dev --development 2026-10-dev-checks --development 2026-10-dev-opus
 python -m llm.eval.select_cases --id <case memos id> --case-memos <run> --arm sol
 python -m llm.eval.harness --benchmark <id>             # every arm, from the cache
-python -m llm.eval.harness --benchmark <id> --arm sol   # one arm alone, no pairing
+python -m llm.eval.harness --benchmark 2026-10-dev-opus --arm opus   # one arm, no pairing
+python -m llm.eval.harness --benchmark 2026-10-dev --arm sol \
+    --amend-scoring "the scoring additions made after this set ran"
 ```
+
+The development sets each hold one arm's records (`sol` for `2026-10-dev` and
+`2026-10-dev-checks`, `opus` for `2026-10-dev-opus`), so they are scored with `--arm`.
+`2026-10-dev` and `2026-10-dev-checks` were fixed before the last scoring changes, so
+scoring them names the change with `--amend-scoring`, which the results record.
