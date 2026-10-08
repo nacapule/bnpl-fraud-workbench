@@ -8,14 +8,7 @@ features and how they were fitted are in the [methods](../docs/methods.md#polici
 
 ## Ranking and calibration on the validation window
 
-The classifiers were fitted on each seed's fit window
-({{ protocol:windows.fit.start | date }} to {{ protocol:windows.fit.end | date }})
-with the labels known by the classifier freeze
-({{ protocol:freezes.classifier | date }}), and one isotonic calibrator per score was
-fitted on the calibration month with the labels known by
-{{ protocol:freezes.calibrator | date }}. Both were then measured on the validation
-window's processor-approved orders whose label was known by the policy freeze, before
-any threshold was tuned.
+The classifiers were fitted on each seed's fit window ({{ protocol:windows.fit.start | date }} to {{ protocol:windows.fit.end | date }}) with the labels known by the classifier freeze ({{ protocol:freezes.classifier | date }}), and one isotonic calibrator per score was fitted on the calibration month with the labels known by {{ protocol:freezes.calibrator | date }}. Both were then measured on the validation window's processor-approved orders whose label was known by the policy freeze, before any threshold was tuned.
 
 | Score | Average precision | Brier score |
 | --- | ---: | ---: |

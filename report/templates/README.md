@@ -31,12 +31,7 @@ is the decision memo; the appendices hold the tables behind it.
 - what changes the answer (the flip table's cells), in one clause;
 - link the operating review. Directions only through claims. -->
 
-All results come from synthetic worlds, not from a real portfolio: they show how
-these policies behave under the stated assumptions, not real fraud rates. The table
-covers the primary cell (the baseline world at the base review allotment) on the
-test window, from {{ protocol:windows.test.start | date }} until
-{{ protocol:windows.test.end | date }}, each figure a mean over the final seeds, one
-simulated world per seed.
+All results come from synthetic worlds, not from a real portfolio: they show how these policies behave under the stated assumptions, not real fraud rates. The table covers the primary cell (the baseline world at the base review allotment) on the test window, from {{ protocol:windows.test.start | date }} until {{ protocol:windows.test.end | date }}, each figure a mean over the final seeds, one simulated world per seed.
 
 | Policy | Mean gain over the incumbent per 1,000 orders | Across seeds | Lost legitimate customers per 10,000 | Legitimate orders held per 10,000 | Fraud loss (bps of GMV) |
 | --- | ---: | --- | ---: | ---: | ---: |
@@ -48,20 +43,10 @@ simulated world per seed.
 | hybrid | {{ evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.hybrid | usd:signed }} | {{ evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.hybrid | signs }} | {{ evaluate.rule_lost_legitimate_per_10k.baseline.base.hybrid | num:1 }} | {{ evaluate.rule_held_legitimate_per_10k.baseline.base.hybrid | num:1 }} | {{ evaluate.loss_of_gmv.baseline.base.hybrid | num:1 }} |
 | expected loss | {{ evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.expected_loss | usd:signed }} | {{ evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.expected_loss | signs }} | {{ evaluate.rule_lost_legitimate_per_10k.baseline.base.expected_loss | num:1 }} | {{ evaluate.rule_held_legitimate_per_10k.baseline.base.expected_loss | num:1 }} | {{ evaluate.loss_of_gmv.baseline.base.expected_loss | num:1 }} |
 
-- **Mean gain over the incumbent:** rule net contribution minus the incumbent rules'
-  in the same world, per 1,000 orders decided (processor-approved checkouts in the
-  test window). Rule net contribution is the ledger's net cash for those orders minus
-  ${{ config:policy:costs.false_decline_ltv_usd | num:0 }} for each lost legitimate
-  customer and minus the analyst allotment at
-  ${{ config:policy:costs.analyst_loaded_hourly_usd | num:0 }} an hour.
+- **Mean gain over the incumbent:** rule net contribution minus the incumbent rules' in the same world, per 1,000 orders decided (processor-approved checkouts in the test window). Rule net contribution is the ledger's net cash for those orders minus ${{ config:policy:costs.false_decline_ltv_usd | num:0 }} for each lost legitimate customer and minus the analyst allotment at ${{ config:policy:costs.analyst_loaded_hourly_usd | num:0 }} an hour.
 - **Across seeds:** how many worlds the gain was positive or negative in.
-- **Lost legitimate customers:** legitimate orders declined at checkout, refused
-  because the account was blocked, declined after review, or cancelled after an
-  unanswered verification request. **Held:** legitimate orders asked to verify. Both
-  per 10,000 legitimate orders, mean over seeds; "legitimate" means no fraud finding
-  by the end of observation.
-- **Fraud loss:** cash lost on orders labelled fraud, in basis points of gross
-  merchandise value.
+- **Lost legitimate customers:** legitimate orders declined at checkout, refused because the account was blocked, declined after review, or cancelled after an unanswered verification request. **Held:** legitimate orders asked to verify. Both per 10,000 legitimate orders, mean over seeds; "legitimate" means no fraud finding by the end of observation.
+- **Fraud loss:** cash lost on orders labelled fraud, in basis points of gross merchandise value.
 
 What qualifies these figures: the seeds show variation between worlds
 that share one generator, not whether its parameters are right; fraudsters in the

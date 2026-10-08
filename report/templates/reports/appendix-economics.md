@@ -60,22 +60,11 @@ gives the same totals as the first table's ledger and approve-all columns.
 
 {{ table:replay.outcomes where family=baseline capacity_level=base layout=current history=policy reviewer=evidence verification=verification sum legitimate_declined, legitimate_cancelled, friction_cost_cents, available_minutes, review_band by policy | policy "Policy" label, legitimate_declined "Legitimate declined" count, legitimate_cancelled "Legitimate cancelled" count, friction_cost_cents "Friction cost" usd, available_minutes "Minutes allotted" count, review_band "Worlds with a review route" count, rows_count "Worlds" count }}
 
-In each world, the rule's net contribution is the ledger net minus the friction cost
-(${{ config:policy:costs.false_decline_ltv_usd | num:0 }} for each legitimate order
-declined or cancelled) minus the allotment's cost (the allotted minutes at
-${{ config:policy:costs.analyst_loaded_hourly_usd | num:0 }} an hour, charged only
-in worlds where the policy has a review route). The rule compares it with the
-incumbent's in the same world, per 1,000 orders, and averages over worlds, so these
-totals reproduce its figures only up to that averaging.
+In each world, the rule's net contribution is the ledger net minus the friction cost (${{ config:policy:costs.false_decline_ltv_usd | num:0 }} for each legitimate order declined or cancelled) minus the allotment's cost (the allotted minutes at ${{ config:policy:costs.analyst_loaded_hourly_usd | num:0 }} an hour, charged only in worlds where the policy has a review route). The rule compares it with the incumbent's in the same world, per 1,000 orders, and averages over worlds, so these totals reproduce its figures only up to that averaging.
 
 ## The value of a lost customer
 
-The rule recomputed with a lifetime-value proxy of
-${{ protocol:sensitivity.ltv_proxy_usd.0 }} and
-${{ protocol:sensitivity.ltv_proxy_usd.1 }} in place of
-${{ config:policy:costs.false_decline_ltv_usd | num:0 }}, from the same replays: only
-the valuation changes, not the decisions (the expected-loss policy keeps
-${{ config:policy:costs.false_decline_ltv_usd | num:0 }} inside its decline rule).
+The rule recomputed with a lifetime-value proxy of ${{ protocol:sensitivity.ltv_proxy_usd.0 }} and ${{ protocol:sensitivity.ltv_proxy_usd.1 }} in place of ${{ config:policy:costs.false_decline_ltv_usd | num:0 }}, from the same replays: only the valuation changes, not the decisions (the expected-loss policy keeps ${{ config:policy:costs.false_decline_ltv_usd | num:0 }} inside its decline rule).
 
 | Policy | Mean gain, ${{ protocol:sensitivity.ltv_proxy_usd.0 }} proxy | ${{ config:policy:costs.false_decline_ltv_usd | num:0 }} proxy | ${{ protocol:sensitivity.ltv_proxy_usd.1 }} proxy | Lost legitimate customers per 10,000 |
 | --- | ---: | ---: | ---: | ---: |

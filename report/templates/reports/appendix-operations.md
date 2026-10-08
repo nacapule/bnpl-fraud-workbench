@@ -12,14 +12,7 @@ reviewer with standard verification) on the test window.
 
 {{ table:replay.outcomes where family=baseline capacity_level=base layout=current history=policy reviewer=evidence verification=verification sum reviews, holds, checks_run, escalations, accounts_blocked, decided_after_shipping by policy | policy "Policy" label, reviews "Reviews" count, holds "Holds" count, checks_run "Checks" count, escalations "Escalations" count, accounts_blocked "Accounts blocked" count, decided_after_shipping "Decided after shipping" count, rows_count "Worlds" count }}
 
-*Reviews:* orders that entered the queue. *Holds:* orders paused for verification
-(at most {{ config:policy:actions.hold_max_hours }} hours; an order the checks have not
-cleared by then is cancelled before it ships). *Checks:* verification checks started.
-*Escalations:* declines that also blocked linked accounts and added
-{{ config:policy:actions.senior_review_minutes }} minutes of senior review.
-*Accounts blocked:* distinct accounts whose later orders were refused. *Decided after
-shipping:* reviews first decided after the goods shipped. All are totals over the
-final seeds' worlds (the last column counts them).
+*Reviews:* orders that entered the queue. *Holds:* orders paused for verification (at most {{ config:policy:actions.hold_max_hours }} hours; an order the checks have not cleared by then is cancelled before it ships). *Checks:* verification checks started. *Escalations:* declines that also blocked linked accounts and added {{ config:policy:actions.senior_review_minutes }} minutes of senior review. *Accounts blocked:* distinct accounts whose later orders were refused. *Decided after shipping:* reviews first decided after the goods shipped. All are totals over the final seeds' worlds (the last column counts them).
 
 {{ table:replay.outcomes where family=baseline capacity_level=base layout=current history=policy reviewer=evidence verification=verification sum review_minutes_offered, review_minutes_used, senior_minutes, available_minutes by policy | policy "Policy" label, review_minutes_offered "Minutes of work offered" count, review_minutes_used "Minutes used" count, senior_minutes "Of which senior review" count, available_minutes "Minutes allotted" count, rows_count "Worlds" count }}
 
@@ -37,17 +30,7 @@ world, mean over seeds. Approve-all sends nothing to review, so its row reads ze
 
 {{ table:evaluate.recommendation where cell=primary | policy "Policy" label, service_p0_entries_count "P0 entries" count, service_p0_in_time_mean_share "P0 in time" pct, service_p1_entries_count "P1 entries" count, service_p1_in_time_mean_share "P1 in time" pct, service_p2_entries_count "P2 entries" count, service_p2_in_time_mean_share "P2 in time" pct, fails "Misses" label }}
 
-*In time:* the share of the orders entering the queue at that priority that were
-decided within its target ({{ config:policy:sla.target_hours.P0 }},
-{{ config:policy:sla.target_hours.P1 }} and {{ config:policy:sla.target_hours.P2 }}
-service hours for P0 to P2, counted from {{ config:policy:sla.calendar.start }} to
-{{ config:policy:sla.calendar.end }} every day; an order still undecided at the end
-of observation is a miss), mean over the seeds with entries. Entries are pooled over
-seeds; a priority with fewer than
-{{ protocol:reporting.recommendation_rule.eligibility.service_min_pooled_entries }}
-pooled entries is reported but not assessed by the recommendation rule. Priority is
-fixed at queue entry (FP-2 §7.1); P3 does not occur because every order enters at
-checkout ([methods](../docs/methods.md#capacity)).
+*In time:* the share of the orders entering the queue at that priority that were decided within its target ({{ config:policy:sla.target_hours.P0 }}, {{ config:policy:sla.target_hours.P1 }} and {{ config:policy:sla.target_hours.P2 }} service hours for P0 to P2, counted from {{ config:policy:sla.calendar.start }} to {{ config:policy:sla.calendar.end }} every day; an order still undecided at the end of observation is a miss), mean over the seeds with entries. Entries are pooled over seeds; a priority with fewer than {{ protocol:reporting.recommendation_rule.eligibility.service_min_pooled_entries }} pooled entries is reported but not assessed by the recommendation rule. Priority is fixed at queue entry (FP-2 §7.1); P3 does not occur because every order enters at checkout ([methods](../docs/methods.md#capacity)).
 
 ## Staffing
 
@@ -86,16 +69,7 @@ orders summed over the final seeds' baseline worlds.
 
 {{ table:replay.confusion where family=baseline policy=incumbent_rules decision_point=after_shipping sum orders by truth across final | truth "Decided after shipping" label, clear "Cleared" count, decline "Declined" count, escalate "Escalated" count, unchanged "Unchanged" count }}
 
-*Cleared:* cleared by the analyst, at once or once the checks passed; a held order
-then ships. *Declined* and *escalated:* declined after a failed check or an earlier
-outcome that settles the order; an order not yet shipped is voided, a shipped one's
-loss stands, and the account is blocked (an escalation also blocks linked accounts and
-adds senior review). *Cancelled:* held before shipment with no answer to the checks
-within {{ config:policy:actions.hold_max_hours }} hours, then cancelled and refunded.
-*Unchanged:* held after shipment with no answer, which changes nothing. The analyst
-reads only the evidence known at the decision, so a fraud order cleared here showed
-no adverse evidence or passed its checks, with nothing yet known that settled it
-([methods](../docs/methods.md#procedure)).
+*Cleared:* cleared by the analyst, at once or once the checks passed; a held order then ships. *Declined* and *escalated:* declined after a failed check or an earlier outcome that settles the order; an order not yet shipped is voided, a shipped one's loss stands, and the account is blocked (an escalation also blocks linked accounts and adds senior review). *Cancelled:* held before shipment with no answer to the checks within {{ config:policy:actions.hold_max_hours }} hours, then cancelled and refunded. *Unchanged:* held after shipment with no answer, which changes nothing. The analyst reads only the evidence known at the decision, so a fraud order cleared here showed no adverse evidence or passed its checks, with nothing yet known that settled it ([methods](../docs/methods.md#procedure)).
 
 <!-- Phase B: add the recommended (or leading) challenger's matrix if it reviews, with
 the columns its final values need. -->
@@ -109,21 +83,7 @@ sees ("legitimate" is no pattern; a bust-out merchant's customers are genuine):
 
 ## Operating sensitivities
 
-The recommendation rule was applied again in each cell that differs from the primary
-cell in one respect, with the primary cell's thresholds: the acquisition surge and
-fraud-mix shift families, goods shipping in
-{{ protocol:sensitivity.fulfilment_lag.families.lag_half | num:1 }} and
-{{ protocol:sensitivity.fulfilment_lag.families.lag_double | num:1 }} times the
-drawn time from the test window on, the low and high allotments, the evening layout,
-and weaker verification (a takeover's contact check passing at
-{{ config:policy:reviewer.verification_weak.takeover.contact.passed | num:2 }}
-instead of {{ config:policy:reviewer.verification.takeover.contact.passed | num:2 }},
-and takeover and third-party identity checks at
-{{ config:policy:reviewer.verification_weak.takeover.id_check.passed | num:2 }}
-instead of {{ config:policy:reviewer.verification.takeover.id_check.passed | num:2 }}).
-The outcome in each cell is the flip table in the
-[operating review](operating-review.md#when-the-answer-changes); the rule's figures
-for every policy in each cell follow.
+The recommendation rule was applied again in each cell that differs from the primary cell in one respect, with the primary cell's thresholds: the acquisition surge and fraud-mix shift families, goods shipping in {{ protocol:sensitivity.fulfilment_lag.families.lag_half | num:1 }} and {{ protocol:sensitivity.fulfilment_lag.families.lag_double | num:1 }} times the drawn time from the test window on, the low and high allotments, the evening layout, and weaker verification (a takeover's contact check passing at {{ config:policy:reviewer.verification_weak.takeover.contact.passed | num:2 }} instead of {{ config:policy:reviewer.verification.takeover.contact.passed | num:2 }}, and takeover and third-party identity checks at {{ config:policy:reviewer.verification_weak.takeover.id_check.passed | num:2 }} instead of {{ config:policy:reviewer.verification.takeover.id_check.passed | num:2 }}). The outcome in each cell is the flip table in the [operating review](operating-review.md#when-the-answer-changes); the rule's figures for every policy in each cell follow.
 
 ![Each challenger's gain over the incumbent in each operating cell](figures/operating_cells.svg)
 

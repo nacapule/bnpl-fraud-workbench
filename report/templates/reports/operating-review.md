@@ -5,14 +5,7 @@ policy should a small pay-in-4 fraud team run, with a fixed allotment of analyst
 time, evidence and labels that arrive late, goods that ship within hours, and a real
 cost to holding or declining good customers? And when does the answer change?
 
-**The evidence** is simulated, not a real portfolio: synthetic marketplaces generated
-from one set of stated assumptions ([methods](../docs/methods.md)). Every policy was
-tuned on an earlier window and frozen, then replayed on the orders placed in the test
-window, from {{ protocol:windows.test.start | date }} until
-{{ protocol:windows.test.end | date }}, with outcomes observed until
-{{ protocol:windows.follow_up.end | date }}. Each final seed is one simulated world;
-figures are means over those worlds, and a paired difference is said to be "positive
-on k of n seeds" when it is above zero in k of the n worlds.
+**The evidence** is simulated, not a real portfolio: synthetic marketplaces generated from one set of stated assumptions ([methods](../docs/methods.md)). Every policy was tuned on an earlier window and frozen, then replayed on the orders placed in the test window, from {{ protocol:windows.test.start | date }} until {{ protocol:windows.test.end | date }}, with outcomes observed until {{ protocol:windows.follow_up.end | date }}. Each final seed is one simulated world; figures are means over those worlds, and a paired difference is said to be "positive on k of n seeds" when it is above zero in k of the n worlds.
 
 Unless a table says otherwise, figures are for the **primary cell**: the baseline
 world, the base allotment on the current shift layout, each policy seeing the history
@@ -56,37 +49,17 @@ A rule written down before any final world existed then chooses among them:
 
 - **Eligibility.** Lost legitimate customers (below) within {{ protocol:reporting.recommendation_rule.eligibility.lost_legitimate_per_10000.mean_at_most }} per 10,000 legitimate orders on the mean over seeds and within {{ protocol:reporting.recommendation_rule.eligibility.lost_legitimate_per_10000.any_seed_at_most }} on every seed; legitimate orders held within {{ protocol:reporting.recommendation_rule.eligibility.held_legitimate_per_10000.mean_at_most }} and {{ protocol:reporting.recommendation_rule.eligibility.held_legitimate_per_10000.any_seed_at_most }}; and at each queue priority, a share of entries decided within the service target of {{ protocol:reporting.recommendation_rule.eligibility.service_share_at_least | num:2 }} or above (a priority with too few entries is reported, not assessed). Where today's rules miss a criterion, challengers are held only to today's level on it.
 - **Hurdle.** A mean gain in rule net contribution over the incumbent of ${{ protocol:reporting.recommendation_rule.hurdle.mean_improvement_usd_per_1000_orders }} per 1,000 orders or above, an allowance for the cost of changing a policy, and a positive gain on nearly every seed (the count needed is in the table). This is a consistency bar across simulated worlds, not a significance test.
-- **Choice.** Among eligible challengers that clear the hurdle, the one with the
-  highest mean gain. If none clears it, the incumbent stays.
+- **Choice.** Among eligible challengers that clear the hurdle, the one with the highest mean gain. If none clears it, the incumbent stays.
 
 {{ table:evaluate.recommendation where cell=primary | policy "Policy" label, rule_net_vs_incumbent_rules_per_1000_mean_cents "Mean gain" usd:signed, rule_net_vs_incumbent_rules_per_1000_min_cents "Lowest seed" usd:signed, rule_net_vs_incumbent_rules_per_1000_max_cents "Highest seed" usd:signed, positive_seeds_count "Seeds positive" count, positive_seeds_needed_count "Needed" count, eligible "Eligible", fails "Misses" label, recommended "Recommended" }}
 
-*Mean gain:* per 1,000 orders, the policy's rule net contribution minus the incumbent's in
-the same world, mean over seeds. The orders are those the policy decides:
-processor-approved checkouts in the test window. *Rule net contribution* is the ledger's net cash for the window's orders,
-minus ${{ config:policy:costs.false_decline_ltv_usd | num:0 }} (the lifetime-value
-proxy) for each lost legitimate customer and minus the analyst allotment at
-${{ config:policy:costs.analyst_loaded_hourly_usd | num:0 }} an hour, unused minutes
-included; a policy that sends nothing to review is charged no allotment. *Misses:* the
-criteria a policy fails; for the incumbent, which is the reference and has no gain of
-its own, the criteria today's rules miss.
+*Mean gain:* per 1,000 orders, the policy's rule net contribution minus the incumbent's in the same world, mean over seeds. The orders are those the policy decides: processor-approved checkouts in the test window. *Rule net contribution* is the ledger's net cash for the window's orders, minus ${{ config:policy:costs.false_decline_ltv_usd | num:0 }} (the lifetime-value proxy) for each lost legitimate customer and minus the analyst allotment at ${{ config:policy:costs.analyst_loaded_hourly_usd | num:0 }} an hour, unused minutes included; a policy that sends nothing to review is charged no allotment. *Misses:* the criteria a policy fails; for the incumbent, which is the reference and has no gain of its own, the criteria today's rules miss.
 
 ## Customers, service and loss
 
 {{ table:evaluate.recommendation where cell=primary | policy "Policy" label, lost_legitimate_per_10k_mean_bps "Lost per 10k (mean)" num:1, lost_legitimate_per_10k_max_bps "Lost per 10k (highest seed)" num:1, held_legitimate_per_10k_mean_bps "Held per 10k (mean)" num:1, service_p1_entries_count "P1 entries" count, service_p1_in_time_mean_share "P1 in time" pct, service_p2_entries_count "P2 entries" count, service_p2_in_time_mean_share "P2 in time" pct }}
 
-*Lost legitimate customers:* legitimate orders declined at checkout, refused because
-the account had been blocked, declined or escalated after review, or cancelled after
-a verification request nobody answered, per 10,000 legitimate orders. *Held:*
-legitimate orders asked to verify, per 10,000 legitimate orders. "Legitimate" is the
-adjudicated label at the end of observation: no fraud finding, credit losses
-included. *In time:* the share of the orders entering the review queue at that
-priority that were decided within its target
-({{ config:policy:sla.target_hours.P1 }} service hours for P1,
-{{ config:policy:sla.target_hours.P2 }} for P2, counted from
-{{ config:policy:sla.calendar.start }} to {{ config:policy:sla.calendar.end }} every
-day), mean over seeds; entries are pooled over seeds. P0 entries are too few to assess
-in this world ([operations appendix](appendix-operations.md)).
+*Lost legitimate customers:* legitimate orders declined at checkout, refused because the account had been blocked, declined or escalated after review, or cancelled after a verification request nobody answered, per 10,000 legitimate orders. *Held:* legitimate orders asked to verify, per 10,000 legitimate orders. "Legitimate" is the adjudicated label at the end of observation: no fraud finding, credit losses included. *In time:* the share of the orders entering the review queue at that priority that were decided within its target ({{ config:policy:sla.target_hours.P1 }} service hours for P1, {{ config:policy:sla.target_hours.P2 }} for P2, counted from {{ config:policy:sla.calendar.start }} to {{ config:policy:sla.calendar.end }} every day), mean over seeds; entries are pooled over seeds. P0 entries are too few to assess in this world ([operations appendix](appendix-operations.md)).
 
 | Policy | Ledger net against approve-all | Fraud loss (bps of GMV) | Legitimate declined per 10,000 | Review minutes used | Decided after shipping |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -116,13 +89,7 @@ and its lost customers against the incumbent's, never for the selected policy. -
 
 ## Review capacity and staffing
 
-Capacity here is analyst time allotted to the fraud queue: one analyst on each covered
-shift, with
-{{ config:policy:capacity.levels.base.review_minutes_per_shift.early }} minutes per
-shift for review and escalation work at the base level. At this world's volume a
-single analyst's shift could clear the whole queue many times over, so headcount
-cannot be the binding limit; the allotment is. The base was sized on today's queue
-before any policy comparison was read ([methods](../docs/methods.md#capacity)).
+Capacity here is analyst time allotted to the fraud queue: one analyst on each covered shift, with {{ config:policy:capacity.levels.base.review_minutes_per_shift.early }} minutes per shift for review and escalation work at the base level. At this world's volume a single analyst's shift could clear the whole queue many times over, so headcount cannot be the binding limit; the allotment is. The base was sized on today's queue before any policy comparison was read ([methods](../docs/methods.md#capacity)).
 
 The table varies the staffing with each policy's thresholds held as tuned at the base
 allotment. Each cell is the policy's mean gain over the incumbent in rule net
@@ -169,23 +136,11 @@ table (no computed share is rendered; state the rows, not a percentage). -->
 
 ## When the answer changes
 
-The rule was applied again, unchanged, in each cell that differs from the primary
-cell in one respect, never two at once, with the thresholds tuned in the primary cell:
-the two other world families (an acquisition surge of new customers and a shift
-towards account takeover and aged stolen-card accounts), goods shipping in half or
-twice the time, the low and high allotments, the evening layout, weaker verification,
-and a lifetime-value proxy of
-${{ protocol:sensitivity.ltv_proxy_usd.0 }} or
-${{ protocol:sensitivity.ltv_proxy_usd.1 }} in place of
-${{ config:policy:costs.false_decline_ltv_usd | num:0 }}.
+The rule was applied again, unchanged, in each cell that differs from the primary cell in one respect, never two at once, with the thresholds tuned in the primary cell: the two other world families (an acquisition surge of new customers and a shift towards account takeover and aged stolen-card accounts), goods shipping in half or twice the time, the low and high allotments, the evening layout, weaker verification, and a lifetime-value proxy of ${{ protocol:sensitivity.ltv_proxy_usd.0 }} or ${{ protocol:sensitivity.ltv_proxy_usd.1 }} in place of ${{ config:policy:costs.false_decline_ltv_usd | num:0 }}.
 
 {{ table:evaluate.flips | cell "Cell" label, outcome "Outcome" label, recommended "Recommended" label, best_challenger "Leading challenger" label, reason "Against the primary cell" label, incumbent_misses "Today's rules miss" label }}
 
-The primary cell's outcome holds in
-{{ evaluate.recommendation.holds | numerator }} of the
-{{ evaluate.recommendation.holds | denominator }} other cells.
-*Leading challenger:* the eligible challenger with the highest mean gain, or the highest
-of all when none is eligible.
+The primary cell's outcome holds in {{ evaluate.recommendation.holds | numerator }} of the {{ evaluate.recommendation.holds | denominator }} other cells. *Leading challenger:* the eligible challenger with the highest mean gain, or the highest of all when none is eligible.
 
 ![The rule's outcome in each operating cell](figures/operating_cells.svg)
 
