@@ -51,6 +51,37 @@ was due, so nothing could cite non-payment (§8.1). The competing readings are s
 stolen card details, or a new customer retrying after declines on a device new to the account
 (§6.5(b) covers the new device), which the identity check would settle.
 
+## The memo drafter's memo
+
+The project's memo drafter wrote this memo in the benchmark's case phase
+([protocol](../llm/eval/PROTOCOL.md)). Its packet came from the checkout row above, with no check
+completed. The pinned model was `{{ bench:2026-10-cases:/pins/sol/model }}` at
+{{ bench:2026-10-cases:/pins/sol/effort }} effort ({{ bench:2026-10-cases:/pins/sol/cli_version }}).
+
+| Recommendation and score | |
+|---|---|
+| Recommended disposition | `{{ bench:2026-10-cases:/case_memos/[file=card_testing,slot=card_testing]/arms/sol/memo/disposition }}` |
+| Next check | `{{ bench:2026-10-cases:/case_memos/[file=card_testing,slot=card_testing]/arms/sol/memo/next_check }}` |
+| Explanations named (likelihood) | `{{ bench:2026-10-cases:/case_memos/[file=card_testing,slot=card_testing]/arms/sol/memo/hypotheses/[explanation=new_customer]/explanation }}` ({{ bench:2026-10-cases:/case_memos/[file=card_testing,slot=card_testing]/arms/sol/memo/hypotheses/[explanation=new_customer]/likelihood }}); `{{ bench:2026-10-cases:/case_memos/[file=card_testing,slot=card_testing]/arms/sol/memo/hypotheses/[explanation=stolen_card]/explanation }}` ({{ bench:2026-10-cases:/case_memos/[file=card_testing,slot=card_testing]/arms/sol/memo/hypotheses/[explanation=stolen_card]/likelihood }}) |
+| Complete benchmark pass | {{ bench:2026-10-cases:/case_memos/[file=card_testing,slot=card_testing]/arms/sol/score/complete_pass | yesno }} |
+| Acceptable under FP-2 | {{ bench:2026-10-cases:/case_memos/[file=card_testing,slot=card_testing]/arms/sol/score/acceptable | yesno }} |
+| Matches FP-2's standard action | {{ bench:2026-10-cases:/case_memos/[file=card_testing,slot=card_testing]/arms/sol/score/standard_action | yesno }} |
+| Names the required check | {{ bench:2026-10-cases:/case_memos/[file=card_testing,slot=card_testing]/arms/sol/score/next_check_ok | yesno }} |
+| Citations valid | {{ bench:2026-10-cases:/case_memos/[file=card_testing,slot=card_testing]/arms/sol/score/citation_ok | yesno }} |
+| Structured claims checked | {{ bench:2026-10-cases:/case_memos/[file=card_testing,slot=card_testing]/arms/sol/score/verification/n_claims }} |
+| Structured claim errors found | {{ bench:2026-10-cases:/case_memos/[file=card_testing,slot=card_testing]/arms/sol/score/verification/n_claim_errors }} |
+
+For analyst review of this packet, FP-2's standard action is `{{ fact:card_testing:alerts.card_testing.policy_view.standard.0 }}` with
+`{{ fact:card_testing:alerts.card_testing.policy_view.required_checks.0 }}` under {{ fact:card_testing:alerts.card_testing.policy_view.row }}; `decline` and `needs_check` are also
+permitted. The memo agrees with that action and check: the analyst would carry out its
+`needs_check` recommendation as a hold with the required check (§4.3).
+
+It chooses verification over the permitted decline. In its own words:
+
+> {{ bench:2026-10-cases:/case_memos/[file=card_testing,slot=card_testing]/arms/sol/memo/memo }}
+
+The memo is advisory; the case's recorded action does not depend on it.
+
 ## What happened later
 
 The order was never created: no shipment, no plan and no cash under the incumbent
@@ -95,8 +126,3 @@ the device before checkout. This order belongs to a stolen-card episode
 {{ fact:card_testing:alerts.card_testing.latent.account.actor }} on one account,
 {{ fact:card_testing:alerts.card_testing.latent.episode.orders }} order attempts in all, and
 the incumbent declined every one of them the processor approved.
-
-## The memo drafter's memo
-
-Pending: the LLM drafter's memo for this alert's packet will appear here with the memo
-benchmark results.

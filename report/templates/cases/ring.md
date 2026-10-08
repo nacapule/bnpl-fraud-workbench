@@ -43,6 +43,38 @@ and blocked none of the device's accounts. The competing readings are a ring of 
 identities sharing a device, or a household or shared computer (§6.4); the account's clean
 repayment record counts for nothing either way (§6.5(f)).
 
+## The memo drafter's memo
+
+The project's memo drafter wrote this memo in the benchmark's case phase
+([protocol](../llm/eval/PROTOCOL.md)). Its packet came from the checkout row above, with no check
+completed. The pinned model was `{{ bench:2026-10-cases:/pins/sol/model }}` at
+{{ bench:2026-10-cases:/pins/sol/effort }} effort ({{ bench:2026-10-cases:/pins/sol/cli_version }}).
+
+| Recommendation and score | |
+|---|---|
+| Recommended disposition | `{{ bench:2026-10-cases:/case_memos/[file=ring,slot=ring]/arms/sol/memo/disposition }}` |
+| Next check | `{{ bench:2026-10-cases:/case_memos/[file=ring,slot=ring]/arms/sol/memo/next_check }}` |
+| Explanations named (likelihood) | `{{ bench:2026-10-cases:/case_memos/[file=ring,slot=ring]/arms/sol/memo/hypotheses/[explanation=household]/explanation }}` ({{ bench:2026-10-cases:/case_memos/[file=ring,slot=ring]/arms/sol/memo/hypotheses/[explanation=household]/likelihood }}); `{{ bench:2026-10-cases:/case_memos/[file=ring,slot=ring]/arms/sol/memo/hypotheses/[explanation=synthetic_identity]/explanation }}` ({{ bench:2026-10-cases:/case_memos/[file=ring,slot=ring]/arms/sol/memo/hypotheses/[explanation=synthetic_identity]/likelihood }}) |
+| Complete benchmark pass | {{ bench:2026-10-cases:/case_memos/[file=ring,slot=ring]/arms/sol/score/complete_pass | yesno }} |
+| Acceptable under FP-2 | {{ bench:2026-10-cases:/case_memos/[file=ring,slot=ring]/arms/sol/score/acceptable | yesno }} |
+| Matches FP-2's standard action | {{ bench:2026-10-cases:/case_memos/[file=ring,slot=ring]/arms/sol/score/standard_action | yesno }} |
+| Names the required check | {{ bench:2026-10-cases:/case_memos/[file=ring,slot=ring]/arms/sol/score/next_check_ok | yesno }} |
+| Citations valid | {{ bench:2026-10-cases:/case_memos/[file=ring,slot=ring]/arms/sol/score/citation_ok | yesno }} |
+| Structured claims checked | {{ bench:2026-10-cases:/case_memos/[file=ring,slot=ring]/arms/sol/score/verification/n_claims }} |
+| Structured claim errors found | {{ bench:2026-10-cases:/case_memos/[file=ring,slot=ring]/arms/sol/score/verification/n_claim_errors }} |
+
+For analyst review of this packet, FP-2's standard action is `{{ fact:ring:alerts.ring.policy_view.standard.0 }}` with
+`{{ fact:ring:alerts.ring.policy_view.required_checks.0 }}` under {{ fact:ring:alerts.ring.policy_view.row }}; `needs_check` is also
+permitted. The memo agrees with that action and check: the analyst would carry out its
+`needs_check` recommendation as a hold with the required check (§4.3).
+
+It says an analyst cannot decline or escalate on this evidence, and rates household sharing
+as more likely than a ring of synthetic identities. In its own words:
+
+> {{ bench:2026-10-cases:/case_memos/[file=ring,slot=ring]/arms/sol/memo/memo }}
+
+The memo is advisory; the case's recorded action does not depend on it.
+
 ## What happened later
 
 The order was never created and no cash moved under the incumbent
@@ -95,8 +127,3 @@ test-window orders was {{ fact:ring:tested_change.result.latent_episode.incumben
 under the incumbent and
 {{ fact:ring:tested_change.result.latent_episode.variant.net_cents | usd:2 }} with the change,
 which blocked ring accounts but did not reach the ring orders the rules had approved.
-
-## The memo drafter's memo
-
-Pending: the LLM drafter's memo for this alert's packet will appear here with the memo
-benchmark results.

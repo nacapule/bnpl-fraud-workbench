@@ -99,6 +99,38 @@ The competing explanations at the decision:
 Account age and repayment history do not establish who ordered and cannot support an adverse
 action here (§6.4, §6.5(f)).
 
+## The memo drafter's memo
+
+The project's memo drafter wrote this memo in the benchmark's case phase
+([protocol](../llm/eval/PROTOCOL.md)). Its packet came from the evidence row above, with no check
+completed. The pinned model was `gpt-6.1-sol` at
+high effort (codex-cli 0.159.2).
+
+| Recommendation and score | |
+|---|---|
+| Recommended disposition | `needs_check` |
+| Next check | `id_check` |
+| Explanations named (likelihood) | `stolen_card` (medium); `traveller` (medium) |
+| Complete benchmark pass | yes |
+| Acceptable under FP-2 | yes |
+| Matches FP-2's standard action | yes |
+| Names the required check | yes |
+| Citations valid | yes |
+| Structured claims checked | 30 |
+| Structured claim errors found | 0 |
+
+For this packet, FP-2's standard action is `hold` with
+`id_check` under §6.6(b); `needs_check` is also
+permitted. The memo agrees with that action and check: the analyst would carry out its
+`needs_check` recommendation as a hold with the required check (§4.3).
+
+It names stolen card use and travel, but omits takeover without a credential change, which
+the case lists first. The required check is the same. In its own words:
+
+> Only R03 holds: the card issuing country differs from the IP country and CVV failed. Card is the sole adverse family; no household exception or earlier settling outcome applies. No check has run. Recommend needs_check, implemented as a hold with id_check under FP-2 §6.6(b). Contact is not required because no Account access rule holds. Travel plausibly explains the foreign IP, new device and non-home shipping address, but does not resolve the Card concern. The required id_check would establish whether the customer holds both the card and account identity.
+
+The memo is advisory; the case's recorded action does not depend on it.
+
 ## Recorded action in the replay
 
 The simulated analyst recorded the standard action,
@@ -223,8 +255,3 @@ does not rank them.
 The account belongs to a legitimate customer. The takeover episode began at
 2025-07-03 15:25:52 and contains only
 this order.
-
-## The memo drafter's memo
-
-Pending: the LLM drafter's advisory memo for this alert's packet, built from the evidence row
-above, will appear here with the memo benchmark results.

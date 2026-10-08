@@ -64,6 +64,37 @@ was due, so nothing could cite non-payment (§8.1). The competing readings are s
 stolen card details, or a new customer retrying after declines on a device new to the account
 (§6.5(b) covers the new device), which the identity check would settle.
 
+## The memo drafter's memo
+
+The project's memo drafter wrote this memo in the benchmark's case phase
+([protocol](../llm/eval/PROTOCOL.md)). Its packet came from the checkout row above, with no check
+completed. The pinned model was `gpt-6.1-sol` at
+high effort (codex-cli 0.159.2).
+
+| Recommendation and score | |
+|---|---|
+| Recommended disposition | `needs_check` |
+| Next check | `id_check` |
+| Explanations named (likelihood) | `new_customer` (medium); `stolen_card` (medium) |
+| Complete benchmark pass | yes |
+| Acceptable under FP-2 | yes |
+| Matches FP-2's standard action | yes |
+| Names the required check | yes |
+| Citations valid | yes |
+| Structured claims checked | 20 |
+| Structured claim errors found | 0 |
+
+For analyst review of this packet, FP-2's standard action is `hold` with
+`id_check` under §6.6(b); `decline` and `needs_check` are also
+permitted. The memo agrees with that action and check: the analyst would carry out its
+`needs_check` recommendation as a hold with the required check (§4.3).
+
+It chooses verification over the permitted decline. In its own words:
+
+> R07 establishes Card from three device processor declines; R05 establishes Velocity from five account attempts. No other rule holds, no household exception applies, and no earlier outcome settles the order. The country mismatch does not trigger R03 because neither AVS nor CVV failed. Repeated checkout difficulties by a new customer remain plausible alongside card testing. With no completed checks, §6.6(b) permits decline, but verification offers a less restrictive resolution. Recommend needs_check, implemented as a hold with id_check before shipment. This single check covers both present families; a pass requires clear, while failure requires decline without Linkage. No installments were due, so non-payment cannot support this recommendation.
+
+The memo is advisory; the case's recorded action does not depend on it.
+
 ## What happened later
 
 The order was never created: no shipment, no plan and no cash under the incumbent
@@ -108,8 +139,3 @@ the device before checkout. This order belongs to a stolen-card episode
 fraudster on one account,
 5 order attempts in all, and
 the incumbent declined every one of them the processor approved.
-
-## The memo drafter's memo
-
-Pending: the LLM drafter's memo for this alert's packet will appear here with the memo
-benchmark results.

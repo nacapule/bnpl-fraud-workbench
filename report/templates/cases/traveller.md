@@ -73,6 +73,38 @@ The competing explanations at the decision:
    recorded. The row offers no account-access condition, but it does not establish the
    orderer's identity.
 
+## The memo drafter's memo
+
+The project's memo drafter wrote this memo in the benchmark's case phase
+([protocol](../llm/eval/PROTOCOL.md)). Its packet came from the evidence row above, with no check
+completed. The pinned model was `{{ bench:2026-10-cases:/pins/sol/model }}` at
+{{ bench:2026-10-cases:/pins/sol/effort }} effort ({{ bench:2026-10-cases:/pins/sol/cli_version }}).
+
+| Recommendation and score | |
+|---|---|
+| Recommended disposition | `{{ bench:2026-10-cases:/case_memos/[file=traveller,slot=traveller]/arms/sol/memo/disposition }}` |
+| Next check | `{{ bench:2026-10-cases:/case_memos/[file=traveller,slot=traveller]/arms/sol/memo/next_check }}` |
+| Explanations named (likelihood) | `{{ bench:2026-10-cases:/case_memos/[file=traveller,slot=traveller]/arms/sol/memo/hypotheses/[explanation=traveller]/explanation }}` ({{ bench:2026-10-cases:/case_memos/[file=traveller,slot=traveller]/arms/sol/memo/hypotheses/[explanation=traveller]/likelihood }}); `{{ bench:2026-10-cases:/case_memos/[file=traveller,slot=traveller]/arms/sol/memo/hypotheses/[explanation=stolen_card]/explanation }}` ({{ bench:2026-10-cases:/case_memos/[file=traveller,slot=traveller]/arms/sol/memo/hypotheses/[explanation=stolen_card]/likelihood }}) |
+| Complete benchmark pass | {{ bench:2026-10-cases:/case_memos/[file=traveller,slot=traveller]/arms/sol/score/complete_pass | yesno }} |
+| Acceptable under FP-2 | {{ bench:2026-10-cases:/case_memos/[file=traveller,slot=traveller]/arms/sol/score/acceptable | yesno }} |
+| Matches FP-2's standard action | {{ bench:2026-10-cases:/case_memos/[file=traveller,slot=traveller]/arms/sol/score/standard_action | yesno }} |
+| Names the required check | {{ bench:2026-10-cases:/case_memos/[file=traveller,slot=traveller]/arms/sol/score/next_check_ok | yesno }} |
+| Citations valid | {{ bench:2026-10-cases:/case_memos/[file=traveller,slot=traveller]/arms/sol/score/citation_ok | yesno }} |
+| Structured claims checked | {{ bench:2026-10-cases:/case_memos/[file=traveller,slot=traveller]/arms/sol/score/verification/n_claims }} |
+| Structured claim errors found | {{ bench:2026-10-cases:/case_memos/[file=traveller,slot=traveller]/arms/sol/score/verification/n_claim_errors }} |
+
+For this packet, FP-2's standard action is `{{ fact:traveller:alerts.traveller.policy_view.standard.0 }}` with
+`{{ fact:traveller:alerts.traveller.policy_view.required_checks.0 }}` under {{ fact:traveller:alerts.traveller.policy_view.row }}; `needs_check` is also
+permitted. The memo agrees with that action and check: the analyst would carry out its
+`needs_check` recommendation as a hold with the required check (§4.3).
+
+It gives travel, the benign explanation, and stolen card use the same likelihood. In its own
+words:
+
+> {{ bench:2026-10-cases:/case_memos/[file=traveller,slot=traveller]/arms/sol/memo/memo }}
+
+The memo is advisory; the case's recorded action does not depend on it.
+
 ## Recorded action in the replay
 
 The simulated analyst recorded the standard action,
@@ -157,8 +189,3 @@ eligible but does not rank them.
 {{ facts:traveller:alerts.traveller.latent.order "The order" "Truth" | intent "Intent", mimic "Benign trait the generator drew" }}
 
 {{ facts:traveller:alerts.traveller.latent.account "The account" "Truth" | actor "Account holder" }}
-
-## The memo drafter's memo
-
-Pending: the LLM drafter's advisory memo for this alert's packet, built from the evidence row
-above, will appear here with the memo benchmark results.

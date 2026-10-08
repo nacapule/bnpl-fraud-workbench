@@ -99,6 +99,46 @@ The competing explanations at the decisions:
   the code; the first attempt does not establish fraud (§6.5(b), §6.5(c)). Never-pay remains
   a possible hypothesis, but this row gives no evidence of repayment intent.
 
+## The memo drafter's memos
+
+The project's memo drafter wrote these memos in the benchmark's case phase
+([protocol](../llm/eval/PROTOCOL.md)). Each packet came from its order's evidence row above, with
+no check completed. The pinned model was `{{ bench:2026-10-cases:/pins/sol/model }}` at
+{{ bench:2026-10-cases:/pins/sol/effort }} effort ({{ bench:2026-10-cases:/pins/sol/cli_version }}).
+
+| Recommendation and score | Never-pay order | Hardship order |
+|---|---|---|
+| Recommended disposition | `{{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=never_pay]/arms/sol/memo/disposition }}` | `{{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=hardship]/arms/sol/memo/disposition }}` |
+| Next check | `{{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=never_pay]/arms/sol/memo/next_check }}` | `{{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=hardship]/arms/sol/memo/next_check }}` |
+| Explanations named (likelihood) | `{{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=never_pay]/arms/sol/memo/hypotheses/[explanation=household]/explanation }}` ({{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=never_pay]/arms/sol/memo/hypotheses/[explanation=household]/likelihood }}); `{{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=never_pay]/arms/sol/memo/hypotheses/[explanation=synthetic_identity]/explanation }}` ({{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=never_pay]/arms/sol/memo/hypotheses/[explanation=synthetic_identity]/likelihood }}) | `{{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=hardship]/arms/sol/memo/hypotheses/[explanation=stolen_card]/explanation }}` ({{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=hardship]/arms/sol/memo/hypotheses/[explanation=stolen_card]/likelihood }}); `{{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=hardship]/arms/sol/memo/hypotheses/[explanation=new_customer]/explanation }}` ({{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=hardship]/arms/sol/memo/hypotheses/[explanation=new_customer]/likelihood }}) |
+| Complete benchmark pass | {{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=never_pay]/arms/sol/score/complete_pass | yesno }} | {{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=hardship]/arms/sol/score/complete_pass | yesno }} |
+| Acceptable under FP-2 | {{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=never_pay]/arms/sol/score/acceptable | yesno }} | {{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=hardship]/arms/sol/score/acceptable | yesno }} |
+| Matches FP-2's standard action | {{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=never_pay]/arms/sol/score/standard_action | yesno }} | {{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=hardship]/arms/sol/score/standard_action | yesno }} |
+| Names the required check | {{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=never_pay]/arms/sol/score/next_check_ok | yesno }} | {{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=hardship]/arms/sol/score/next_check_ok | yesno }} |
+| Citations valid | {{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=never_pay]/arms/sol/score/citation_ok | yesno }} | {{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=hardship]/arms/sol/score/citation_ok | yesno }} |
+| Structured claims checked | {{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=never_pay]/arms/sol/score/verification/n_claims }} | {{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=hardship]/arms/sol/score/verification/n_claims }} |
+| Structured claim errors found | {{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=never_pay]/arms/sol/score/verification/n_claim_errors }} | {{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=hardship]/arms/sol/score/verification/n_claim_errors }} |
+
+For both packets, FP-2's standard action is `{{ fact:never_pay_vs_hardship:alerts.never_pay.policy_view.standard.0 }}` with
+`{{ fact:never_pay_vs_hardship:alerts.never_pay.policy_view.required_checks.0 }}` under {{ fact:never_pay_vs_hardship:alerts.never_pay.policy_view.row }}; `needs_check` is also
+permitted. Both memos agree with that action and check: the analyst would carry out each
+`needs_check` recommendation as a hold with the required check (§4.3).
+
+The never-pay memo names household sharing as its benign explanation; the hardship memo
+names a new customer. Each also names a fraud explanation and says non-payment cannot support
+its recommendation (§8.1). Neither names never-pay, which §8.1 permits as a hypothesis but not
+as grounds for action.
+
+The never-pay order's memo:
+
+> {{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=never_pay]/arms/sol/memo/memo }}
+
+The hardship order's memo:
+
+> {{ bench:2026-10-cases:/case_memos/[file=never_pay_vs_hardship,slot=hardship]/arms/sol/memo/memo }}
+
+The memos are advisory; the case's recorded actions do not depend on them.
+
 ## Recorded action in the replay
 
 The simulated analyst recorded the standard action on each order:
@@ -172,7 +212,7 @@ hardship order had no earlier open plan, so the new condition does not apply to 
 |---|---:|---:|---:|
 | Fraud loss prevented | {{ fact:never_pay_vs_hardship:tested_change.result.world.incumbent.cash.prevented_loss_cents | usd:2 }} | {{ fact:never_pay_vs_hardship:tested_change.result.world.variant.cash.prevented_loss_cents | usd:2 }} | {{ fact:never_pay_vs_hardship:tested_change.result.world.difference.cash.prevented_loss_cents | usd:2:signed }} |
 | Legitimate orders declined | {{ fact:never_pay_vs_hardship:tested_change.result.world.incumbent.adjudicated.legitimate_declined }} | {{ fact:never_pay_vs_hardship:tested_change.result.world.variant.adjudicated.legitimate_declined }} | {{ fact:never_pay_vs_hardship:tested_change.result.world.difference.adjudicated.legitimate_declined | count:signed }} |
-| Friction cost of declined and cancelled legitimate orders | {{ fact:never_pay_vs_hardship:tested_change.result.world.incumbent.cash.friction_cost_cents | usd:2 }} | {{ fact:never_pay_vs_hardship:tested_change.result.world.variant.cash.friction_cost_cents | usd:2 }} | {{ fact:never_pay_vs_hardship:tested_change.result.world.difference.cash.friction_cost_cents | usd:2:signed }} |
+| Lost-customer cost of declined and cancelled legitimate orders | {{ fact:never_pay_vs_hardship:tested_change.result.world.incumbent.cash.friction_cost_cents | usd:2 }} | {{ fact:never_pay_vs_hardship:tested_change.result.world.variant.cash.friction_cost_cents | usd:2 }} | {{ fact:never_pay_vs_hardship:tested_change.result.world.difference.cash.friction_cost_cents | usd:2:signed }} |
 | Legitimate orders held | {{ fact:never_pay_vs_hardship:tested_change.result.world.incumbent.adjudicated.legitimate_held }} | {{ fact:never_pay_vs_hardship:tested_change.result.world.variant.adjudicated.legitimate_held }} | {{ fact:never_pay_vs_hardship:tested_change.result.world.difference.adjudicated.legitimate_held | count:signed }} |
 | Reviews | {{ fact:never_pay_vs_hardship:tested_change.result.world.incumbent.review.reviews }} | {{ fact:never_pay_vs_hardship:tested_change.result.world.variant.review.reviews }} | {{ fact:never_pay_vs_hardship:tested_change.result.world.difference.review.reviews | count:signed }} |
 | Review minutes used | {{ fact:never_pay_vs_hardship:tested_change.result.world.incumbent.review.review_minutes_used }} | {{ fact:never_pay_vs_hardship:tested_change.result.world.variant.review.review_minutes_used }} | {{ fact:never_pay_vs_hardship:tested_change.result.world.difference.review.review_minutes_used | count:signed }} |
@@ -220,8 +260,3 @@ under the incumbent and
 {{ fact:never_pay_vs_hardship:tested_change.result.latent_episode.variant.net_cents | usd:2 }}
 with the tested change.
 The hardship customer is legitimate and was drawn to default by the generator.
-
-## The memo drafter's memo
-
-Pending: the LLM drafter's advisory memos for these alerts' packets, built from the evidence
-rows above, will appear here with the memo benchmark results.

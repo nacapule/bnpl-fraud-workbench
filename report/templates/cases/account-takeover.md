@@ -73,6 +73,38 @@ The competing explanations at the decision:
 Account age and repayment history do not establish who ordered and cannot support an adverse
 action here (§6.4, §6.5(f)).
 
+## The memo drafter's memo
+
+The project's memo drafter wrote this memo in the benchmark's case phase
+([protocol](../llm/eval/PROTOCOL.md)). Its packet came from the evidence row above, with no check
+completed. The pinned model was `{{ bench:2026-10-cases:/pins/sol/model }}` at
+{{ bench:2026-10-cases:/pins/sol/effort }} effort ({{ bench:2026-10-cases:/pins/sol/cli_version }}).
+
+| Recommendation and score | |
+|---|---|
+| Recommended disposition | `{{ bench:2026-10-cases:/case_memos/[file=account_takeover,slot=account_takeover]/arms/sol/memo/disposition }}` |
+| Next check | `{{ bench:2026-10-cases:/case_memos/[file=account_takeover,slot=account_takeover]/arms/sol/memo/next_check }}` |
+| Explanations named (likelihood) | `{{ bench:2026-10-cases:/case_memos/[file=account_takeover,slot=account_takeover]/arms/sol/memo/hypotheses/[explanation=stolen_card]/explanation }}` ({{ bench:2026-10-cases:/case_memos/[file=account_takeover,slot=account_takeover]/arms/sol/memo/hypotheses/[explanation=stolen_card]/likelihood }}); `{{ bench:2026-10-cases:/case_memos/[file=account_takeover,slot=account_takeover]/arms/sol/memo/hypotheses/[explanation=traveller]/explanation }}` ({{ bench:2026-10-cases:/case_memos/[file=account_takeover,slot=account_takeover]/arms/sol/memo/hypotheses/[explanation=traveller]/likelihood }}) |
+| Complete benchmark pass | {{ bench:2026-10-cases:/case_memos/[file=account_takeover,slot=account_takeover]/arms/sol/score/complete_pass | yesno }} |
+| Acceptable under FP-2 | {{ bench:2026-10-cases:/case_memos/[file=account_takeover,slot=account_takeover]/arms/sol/score/acceptable | yesno }} |
+| Matches FP-2's standard action | {{ bench:2026-10-cases:/case_memos/[file=account_takeover,slot=account_takeover]/arms/sol/score/standard_action | yesno }} |
+| Names the required check | {{ bench:2026-10-cases:/case_memos/[file=account_takeover,slot=account_takeover]/arms/sol/score/next_check_ok | yesno }} |
+| Citations valid | {{ bench:2026-10-cases:/case_memos/[file=account_takeover,slot=account_takeover]/arms/sol/score/citation_ok | yesno }} |
+| Structured claims checked | {{ bench:2026-10-cases:/case_memos/[file=account_takeover,slot=account_takeover]/arms/sol/score/verification/n_claims }} |
+| Structured claim errors found | {{ bench:2026-10-cases:/case_memos/[file=account_takeover,slot=account_takeover]/arms/sol/score/verification/n_claim_errors }} |
+
+For this packet, FP-2's standard action is `{{ fact:account_takeover:alerts.account_takeover.policy_view.standard.0 }}` with
+`{{ fact:account_takeover:alerts.account_takeover.policy_view.required_checks.0 }}` under {{ fact:account_takeover:alerts.account_takeover.policy_view.row }}; `needs_check` is also
+permitted. The memo agrees with that action and check: the analyst would carry out its
+`needs_check` recommendation as a hold with the required check (§4.3).
+
+It names stolen card use and travel, but omits takeover without a credential change, which
+the case lists first. The required check is the same. In its own words:
+
+> {{ bench:2026-10-cases:/case_memos/[file=account_takeover,slot=account_takeover]/arms/sol/memo/memo }}
+
+The memo is advisory; the case's recorded action does not depend on it.
+
 ## Recorded action in the replay
 
 The simulated analyst recorded the standard action,
@@ -172,8 +204,3 @@ does not rank them.
 The account belongs to a legitimate customer. The takeover episode began at
 {{ fact:account_takeover:alerts.account_takeover.latent.episode.started_at }} and contains only
 this order.
-
-## The memo drafter's memo
-
-Pending: the LLM drafter's advisory memo for this alert's packet, built from the evidence row
-above, will appear here with the memo benchmark results.

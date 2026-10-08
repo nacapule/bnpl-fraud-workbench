@@ -100,6 +100,46 @@ The competing explanations at the decisions:
   the code; the first attempt does not establish fraud (§6.5(b), §6.5(c)). Never-pay remains
   a possible hypothesis, but this row gives no evidence of repayment intent.
 
+## The memo drafter's memos
+
+The project's memo drafter wrote these memos in the benchmark's case phase
+([protocol](../llm/eval/PROTOCOL.md)). Each packet came from its order's evidence row above, with
+no check completed. The pinned model was `gpt-6.1-sol` at
+high effort (codex-cli 0.159.2).
+
+| Recommendation and score | Never-pay order | Hardship order |
+|---|---|---|
+| Recommended disposition | `needs_check` | `needs_check` |
+| Next check | `id_check` | `id_check` |
+| Explanations named (likelihood) | `household` (medium); `synthetic_identity` (low) | `stolen_card` (medium); `new_customer` (medium) |
+| Complete benchmark pass | yes | yes |
+| Acceptable under FP-2 | yes | yes |
+| Matches FP-2's standard action | yes | yes |
+| Names the required check | yes | yes |
+| Citations valid | yes | yes |
+| Structured claims checked | 22 | 22 |
+| Structured claim errors found | 0 | 0 |
+
+For both packets, FP-2's standard action is `hold` with
+`id_check` under §6.6(b); `needs_check` is also
+permitted. Both memos agree with that action and check: the analyst would carry out each
+`needs_check` recommendation as a hold with the required check (§4.3).
+
+The never-pay memo names household sharing as its benign explanation; the hardship memo
+names a new customer. Each also names a fraud explanation and says non-payment cannot support
+its recommendation (§8.1). Neither names never-pay, which §8.1 permits as a hypothesis but not
+as grounds for action.
+
+The never-pay order's memo:
+
+> Only R08 holds: three accounts use the shipping address. Linkage is the sole adverse family. Although shipping is to the registered home, its recent registration prevents the household exception. All other rule conditions are unmet, and no earlier outcome settles the order. A legitimate shared household is plausible; coordinated identities remain possible but unproven. No installments were due, so non-payment cannot support an adverse recommendation. Under FP-2 §6.6(b), recommend needs_check, implemented by the analyst as a hold with id_check. Contact is not required. The order has not shipped and no checks have run; successful required verification would clear it.
+
+The hardship order's memo:
+
+> Only R03 holds: the GB-issued card was used from a US IP and CVV failed. Card is the sole adverse family; no other rule holds, no household exception applies, and no earlier outcome settles the order. No checks have run. Recommend needs_check with issuer authentication and identity verification under §6.6(b); decline and escalate are not permitted on this evidence. A legitimate new customer using a foreign-issued card with a CVV-entry error remains plausible. No installments were due, so non-payment cannot support a finding. The order is unshipped; the analyst can hold it while conducting id_check.
+
+The memos are advisory; the case's recorded actions do not depend on them.
+
 ## Recorded action in the replay
 
 The simulated analyst recorded the standard action on each order:
@@ -206,7 +246,7 @@ hardship order had no earlier open plan, so the new condition does not apply to 
 |---|---:|---:|---:|
 | Fraud loss prevented | $20,884.70 | $31,857.04 | +$10,972.34 |
 | Legitimate orders declined | 104 | 573 | +469 |
-| Friction cost of declined and cancelled legitimate orders | $1,680.00 | $8,715.00 | +$7,035.00 |
+| Lost-customer cost of declined and cancelled legitimate orders | $1,680.00 | $8,715.00 | +$7,035.00 |
 | Legitimate orders held | 68 | 68 | 0 |
 | Reviews | 107 | 103 | -4 |
 | Review minutes used | 879 | 837 | -42 |
@@ -254,8 +294,3 @@ under the incumbent and
 -$1,292.14
 with the tested change.
 The hardship customer is legitimate and was drawn to default by the generator.
-
-## The memo drafter's memo
-
-Pending: the LLM drafter's advisory memos for these alerts' packets, built from the evidence
-rows above, will appear here with the memo benchmark results.

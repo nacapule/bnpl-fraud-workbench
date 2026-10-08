@@ -98,6 +98,38 @@ The competing explanations at the decision:
    recorded. The row offers no account-access condition, but it does not establish the
    orderer's identity.
 
+## The memo drafter's memo
+
+The project's memo drafter wrote this memo in the benchmark's case phase
+([protocol](../llm/eval/PROTOCOL.md)). Its packet came from the evidence row above, with no check
+completed. The pinned model was `gpt-6.1-sol` at
+high effort (codex-cli 0.159.2).
+
+| Recommendation and score | |
+|---|---|
+| Recommended disposition | `needs_check` |
+| Next check | `id_check` |
+| Explanations named (likelihood) | `traveller` (medium); `stolen_card` (medium) |
+| Complete benchmark pass | yes |
+| Acceptable under FP-2 | yes |
+| Matches FP-2's standard action | yes |
+| Names the required check | yes |
+| Citations valid | yes |
+| Structured claims checked | 25 |
+| Structured claim errors found | 0 |
+
+For this packet, FP-2's standard action is `hold` with
+`id_check` under §6.6(b); `needs_check` is also
+permitted. The memo agrees with that action and check: the analyst would carry out its
+`needs_check` recommendation as a hold with the required check (§4.3).
+
+It gives travel, the benign explanation, and stolen card use the same likelihood. In its own
+words:
+
+> R03 holds because the Canadian card is used from a Spanish IP and address verification failed. Card is the sole adverse family; no other rule holds, no household exception is needed, and no earlier outcome settles the order. Travel is a plausible benign explanation, particularly with the longstanding device and home delivery, but cannot resolve card ownership. Recommend holding the unshipped order for id_check. No check has run, so needs_check is permitted; decline is not permitted with only this family. The issuer-authentication and identity check would most change the decision.
+
+The memo is advisory; the case's recorded action does not depend on it.
+
 ## Recorded action in the replay
 
 The simulated analyst recorded the standard action,
@@ -201,8 +233,3 @@ eligible but does not rank them.
 | The account | Truth |
 |---|---:|
 | Account holder | legitimate |
-
-## The memo drafter's memo
-
-Pending: the LLM drafter's advisory memo for this alert's packet, built from the evidence row
-above, will appear here with the memo benchmark results.

@@ -53,6 +53,38 @@ and blocked none of the device's accounts. The competing readings are a ring of 
 identities sharing a device, or a household or shared computer (§6.4); the account's clean
 repayment record counts for nothing either way (§6.5(f)).
 
+## The memo drafter's memo
+
+The project's memo drafter wrote this memo in the benchmark's case phase
+([protocol](../llm/eval/PROTOCOL.md)). Its packet came from the checkout row above, with no check
+completed. The pinned model was `gpt-6.1-sol` at
+high effort (codex-cli 0.159.2).
+
+| Recommendation and score | |
+|---|---|
+| Recommended disposition | `needs_check` |
+| Next check | `id_check` |
+| Explanations named (likelihood) | `household` (medium); `synthetic_identity` (low) |
+| Complete benchmark pass | yes |
+| Acceptable under FP-2 | yes |
+| Matches FP-2's standard action | yes |
+| Names the required check | yes |
+| Citations valid | yes |
+| Structured claims checked | 20 |
+| Structured claim errors found | 0 |
+
+For analyst review of this packet, FP-2's standard action is `hold` with
+`id_check` under §6.6(b); `needs_check` is also
+permitted. The memo agrees with that action and check: the analyst would carry out its
+`needs_check` recommendation as a hold with the required check (§4.3).
+
+It says an analyst cannot decline or escalate on this evidence, and rates household sharing
+as more likely than a ring of synthetic identities. In its own words:
+
+> R02 holds because the device links 3 accounts. Its tenure on this account does not qualify for the household exception. Linkage is the only adverse family; no other rule holds, and no earlier outcome settles the order. Household sharing remains plausible, but cannot remove the Linkage family here. With no completed checks, recommend needs_check under §6.6(b), implemented by the analyst as a hold with id_check. That check establishes possession of the card and account identity, not fraudulent intent. Decline and escalation are not permitted on the current evidence. The order has not shipped.
+
+The memo is advisory; the case's recorded action does not depend on it.
+
 ## What happened later
 
 The order was never created and no cash moved under the incumbent
@@ -105,8 +137,3 @@ test-window orders was -$906.95
 under the incumbent and
 -$906.95 with the change,
 which blocked ring accounts but did not reach the ring orders the rules had approved.
-
-## The memo drafter's memo
-
-Pending: the LLM drafter's memo for this alert's packet will appear here with the memo
-benchmark results.
