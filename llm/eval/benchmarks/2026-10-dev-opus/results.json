@@ -1,0 +1,2397 @@
+{
+ "arms": {
+  "opus": {
+   "arm": {
+    "backend": "claude",
+    "effort": "high",
+    "model": "claude-opus-5-5",
+    "name": "opus"
+   },
+   "cases": {
+    "1041-baseline-129477-20250608T114034/primary": {
+     "acceptable": true,
+     "action": "clear",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "clear",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 19,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 23,
+       "n_unmatched": 3,
+       "n_with_tokens": 9
+      }
+     }
+    },
+    "1041-baseline-130102-20250611T105017/primary": {
+     "acceptable": true,
+     "action": "decline",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "decline",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 25,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 29,
+       "n_unmatched": 4,
+       "n_with_tokens": 10
+      }
+     }
+    },
+    "1041-baseline-131529-20250616T000000/primary": {
+     "acceptable": true,
+     "action": "clear",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "clear",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 14,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 18,
+       "n_unmatched": 1,
+       "n_with_tokens": 7
+      }
+     }
+    },
+    "1041-baseline-131926-20250617T185638/primary": {
+     "acceptable": true,
+     "action": "decline",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "decline",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "account_takeover",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 16,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 20,
+       "n_unmatched": 3,
+       "n_with_tokens": 7
+      }
+     }
+    },
+    "1041-baseline-133031-20250621T131655/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "contact",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": "account_takeover",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 16,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 20,
+       "n_unmatched": 0,
+       "n_with_tokens": 12
+      }
+     }
+    },
+    "1041-baseline-133046-20250622T235238/primary": {
+     "acceptable": true,
+     "action": "clear",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "clear",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "new_device",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 16,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 20,
+       "n_unmatched": 0,
+       "n_with_tokens": 9
+      }
+     }
+    },
+    "1041-baseline-133651-20250624T000000/primary": {
+     "acceptable": true,
+     "action": "clear",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "clear",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "legitimate_customer",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 20,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 23,
+       "n_unmatched": 0,
+       "n_with_tokens": 10
+      }
+     }
+    },
+    "1041-baseline-134771-20250628T085148/primary": {
+     "acceptable": true,
+     "action": "decline",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "decline",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "stolen_card",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 17,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 21,
+       "n_unmatched": 0,
+       "n_with_tokens": 5
+      }
+     }
+    },
+    "1041-baseline-134889-20250629T114507/primary": {
+     "acceptable": true,
+     "action": "clear",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "clear",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 18,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 22,
+       "n_unmatched": 0,
+       "n_with_tokens": 9
+      }
+     }
+    },
+    "1041-baseline-136485-20250704T152812/primary": {
+     "acceptable": true,
+     "action": "clear",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "clear",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "household",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 16,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 20,
+       "n_unmatched": 1,
+       "n_with_tokens": 6
+      }
+     }
+    },
+    "1041-baseline-137967-20250709T152944/primary": {
+     "acceptable": true,
+     "action": "clear",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "clear",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 21,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 25,
+       "n_unmatched": 3,
+       "n_with_tokens": 10
+      }
+     }
+    },
+    "1041-baseline-138191-20250710T104913/primary": {
+     "acceptable": true,
+     "action": "decline",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "decline",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "account_takeover",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 20,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 24,
+       "n_unmatched": 3,
+       "n_with_tokens": 10
+      }
+     }
+    },
+    "1041-baseline-139347-20250714T000000/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "hold",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 21,
+      "n_derived_claims": 1,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 25,
+       "n_unmatched": 3,
+       "n_with_tokens": 9
+      }
+     }
+    },
+    "1041-baseline-144108-20250730T152615/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": "legitimate_customer",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 17,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 21,
+       "n_unmatched": 4,
+       "n_with_tokens": 10
+      }
+     }
+    },
+    "1041-baseline-148628-20250816T062718/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": "household",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 12,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 16,
+       "n_unmatched": 1,
+       "n_with_tokens": 7
+      }
+     }
+    },
+    "1041-baseline-148850-20250817T172658/primary": {
+     "acceptable": true,
+     "action": "decline",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "decline",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "stolen_card",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 20,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 24,
+       "n_unmatched": 0,
+       "n_with_tokens": 6
+      }
+     }
+    },
+    "1041-baseline-149077-20250817T151145/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": "legitimate_customer",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 20,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 24,
+       "n_unmatched": 0,
+       "n_with_tokens": 8
+      }
+     }
+    },
+    "1041-baseline-149095-20250817T155133/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": "traveller",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 18,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 22,
+       "n_unmatched": 4,
+       "n_with_tokens": 10
+      }
+     }
+    },
+    "1041-baseline-150280-20250822T000000/primary": {
+     "acceptable": true,
+     "action": "clear",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "clear",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "legitimate_customer",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 19,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 23,
+       "n_unmatched": 1,
+       "n_with_tokens": 8
+      }
+     }
+    },
+    "1041-baseline-151060-20250824T123203/primary": {
+     "acceptable": true,
+     "action": "clear",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "clear",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "legitimate_customer",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 21,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 24,
+       "n_unmatched": 0,
+       "n_with_tokens": 9
+      }
+     }
+    },
+    "1041-baseline-151693-20250827T000000/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": false,
+     "complete_pass": false,
+     "components": {
+      "acceptable": true,
+      "citations_valid": false,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [
+      "cites rules that do not hold: ['R04']"
+     ],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 16,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 21,
+       "n_unmatched": 0,
+       "n_with_tokens": 6
+      }
+     }
+    },
+    "1041-baseline-153195-20250901T094608/primary": {
+     "acceptable": true,
+     "action": "clear",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "clear",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 23,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 27,
+       "n_unmatched": 3,
+       "n_with_tokens": 11
+      }
+     }
+    },
+    "2718-baseline-128851-20250603T000000/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "hold",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "legitimate_customer",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 20,
+      "n_derived_claims": 1,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 24,
+       "n_unmatched": 4,
+       "n_with_tokens": 10
+      }
+     }
+    },
+    "2718-baseline-128851-20250603T134914/primary": {
+     "acceptable": true,
+     "action": "decline",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "decline",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "stolen_card",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 19,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 23,
+       "n_unmatched": 0,
+       "n_with_tokens": 5
+      }
+     }
+    },
+    "2718-baseline-132817-20250617T000000/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 24,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 30,
+       "n_unmatched": 2,
+       "n_with_tokens": 13
+      }
+     }
+    },
+    "2718-baseline-132817-20250617T083727/primary": {
+     "acceptable": true,
+     "action": "escalate",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "escalate",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "synthetic_identity",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 11,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 16,
+       "n_unmatched": 2,
+       "n_with_tokens": 9
+      }
+     }
+    },
+    "2718-baseline-142952-20250723T193420/primary": {
+     "acceptable": true,
+     "action": "escalate",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "escalate",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "account_takeover",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 12,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 16,
+       "n_unmatched": 0,
+       "n_with_tokens": 6
+      }
+     }
+    },
+    "2718-baseline-147456-20250808T000000/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 21,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 25,
+       "n_unmatched": 2,
+       "n_with_tokens": 12
+      }
+     }
+    },
+    "2718-baseline-152293-20250825T000000/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": "legitimate_customer",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 21,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 25,
+       "n_unmatched": 0,
+       "n_with_tokens": 11
+      }
+     }
+    },
+    "2718-baseline-153263-20250828T151853/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": "legitimate_customer",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 25,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 29,
+       "n_unmatched": 6,
+       "n_with_tokens": 14
+      }
+     }
+    },
+    "416-baseline-128755-20250605T104418/primary": {
+     "acceptable": true,
+     "action": "escalate",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "escalate",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "synthetic_identity",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 11,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 15,
+       "n_unmatched": 2,
+       "n_with_tokens": 5
+      }
+     }
+    },
+    "416-baseline-128767-20250604T171025/primary": {
+     "acceptable": true,
+     "action": "escalate",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "escalate",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "synthetic_identity",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 15,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 20,
+       "n_unmatched": 2,
+       "n_with_tokens": 9
+      }
+     }
+    },
+    "416-baseline-134244-20250626T024725/primary": {
+     "acceptable": true,
+     "action": "escalate",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "escalate",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 18,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 23,
+       "n_unmatched": 2,
+       "n_with_tokens": 8
+      }
+     }
+    },
+    "416-baseline-135921-20250701T112712/primary": {
+     "acceptable": true,
+     "action": "clear",
+     "citation_ok": false,
+     "complete_pass": false,
+     "components": {
+      "acceptable": true,
+      "citations_valid": false,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "clear",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [
+      "cites rules that do not hold: ['R04']"
+     ],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "new_customer",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 21,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 25,
+       "n_unmatched": 0,
+       "n_with_tokens": 5
+      }
+     }
+    },
+    "416-baseline-136224-20250702T111220/primary": {
+     "acceptable": true,
+     "action": "clear",
+     "citation_ok": false,
+     "complete_pass": false,
+     "components": {
+      "acceptable": true,
+      "citations_valid": false,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "clear",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [
+      "cites rules that do not hold: ['R04']"
+     ],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "new_customer",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 13,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 18,
+       "n_unmatched": 1,
+       "n_with_tokens": 5
+      }
+     }
+    },
+    "416-baseline-136685-20250704T211711/primary": {
+     "acceptable": true,
+     "action": "decline",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "decline",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "stolen_card",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 26,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 30,
+       "n_unmatched": 0,
+       "n_with_tokens": 8
+      }
+     }
+    },
+    "416-baseline-138232-20250709T092403/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 21,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 26,
+       "n_unmatched": 0,
+       "n_with_tokens": 8
+      }
+     }
+    },
+    "416-baseline-140378-20250717T074808/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 20,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 25,
+       "n_unmatched": 0,
+       "n_with_tokens": 12
+      }
+     }
+    },
+    "416-baseline-152210-20250828T000000/primary": {
+     "acceptable": true,
+     "action": "clear",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "clear",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": true,
+      "n_claim_errors": 0,
+      "n_claims": 20,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 25,
+       "n_unmatched": 5,
+       "n_with_tokens": 12
+      }
+     }
+    },
+    "416-baseline-152613-20250829T165840/primary": {
+     "acceptable": true,
+     "action": "clear",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "clear",
+     "format_valid": true,
+     "needs_check": false,
+     "next_check": "none",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": true,
+     "standard_action": true,
+     "top_hypothesis": "legitimate_customer",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 12,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 15,
+       "n_unmatched": 0,
+       "n_with_tokens": 4
+      }
+     }
+    }
+   },
+   "disagreement": {
+    "clear -> clear": 14,
+    "decline -> decline": 7,
+    "escalate -> escalate": 5,
+    "hold -> hold": 2,
+    "hold -> needs_check": 12
+   },
+   "latent_diagnostic": {
+    "fraud_cleared": {
+     "denominator": 17,
+     "numerator": 5,
+     "value": 0.2941
+    },
+    "legitimate_adverse": {
+     "denominator": 23,
+     "numerator": 14,
+     "value": 0.6087
+    },
+    "top_hypothesis_names_latent": {
+     "denominator": 40,
+     "numerator": 18,
+     "value": 0.45
+    },
+    "top_hypothesis_names_latent_by_class": {
+     "fraud": {
+      "denominator": 17,
+      "numerator": 7,
+      "value": 0.4118
+     },
+     "legitimate": {
+      "denominator": 23,
+      "numerator": 11,
+      "value": 0.4783
+     }
+    },
+    "top_hypothesis_tied": 14
+   },
+   "spend": {
+    "calls": 40,
+    "charged_tokens": 515762,
+    "input_tokens": 422111,
+    "output_tokens": 93651,
+    "unknown_usage_calls": 0
+   },
+   "summary": {
+    "acceptable": {
+     "denominator": 40,
+     "numerator": 40,
+     "value": 1.0
+    },
+    "acceptable_natural": 1.0,
+    "acceptable_reweighted": 1.0,
+    "citation_ok": {
+     "denominator": 40,
+     "numerator": 37,
+     "value": 0.925
+    },
+    "claim_errors": {
+     "denominator": 735,
+     "numerator": 0,
+     "value": 0.0
+    },
+    "clusters": 36,
+    "complete_pass": {
+     "denominator": 40,
+     "numerator": 37,
+     "value": 0.925
+    },
+    "complete_pass_natural": 0.7628,
+    "components": {
+     "acceptable": {
+      "denominator": 40,
+      "numerator": 40,
+      "value": 1.0
+     },
+     "citations_valid": {
+      "denominator": 40,
+      "numerator": 37,
+      "value": 0.925
+     },
+     "format_valid": {
+      "denominator": 40,
+      "numerator": 40,
+      "value": 1.0
+     },
+     "next_check_ok": {
+      "denominator": 40,
+      "numerator": 40,
+      "value": 1.0
+     },
+     "no_claim_error": {
+      "denominator": 40,
+      "numerator": 40,
+      "value": 1.0
+     }
+    },
+    "invariance": {},
+    "memos_with_claim_error": {
+     "denominator": 40,
+     "numerator": 0,
+     "value": 0.0
+    },
+    "memos_with_unmatched_token": {
+     "denominator": 40,
+     "numerator": 23,
+     "value": 0.575
+    },
+    "n_cases": 40,
+    "needs_check": {
+     "denominator": 40,
+     "numerator": 12,
+     "value": 0.3
+    },
+    "next_check_ok": {
+     "denominator": 40,
+     "numerator": 40,
+     "value": 1.0
+    },
+    "nonpayment_violations": 0,
+    "outcomes": {
+     "scored": 40
+    },
+    "per_axis": {
+     "check_completed": {
+      "acceptable": {
+       "denominator": 20,
+       "numerator": 20,
+       "value": 1.0
+      },
+      "acceptable_weighted": 1.0,
+      "complete_pass": {
+       "denominator": 20,
+       "numerator": 18,
+       "value": 0.9
+      },
+      "complete_pass_weighted": 0.5859
+     },
+     "review": {
+      "acceptable": {
+       "denominator": 20,
+       "numerator": 20,
+       "value": 1.0
+      },
+      "acceptable_weighted": 1.0,
+      "complete_pass": {
+       "denominator": 20,
+       "numerator": 19,
+       "value": 0.95
+      },
+      "complete_pass_weighted": 0.9396
+     }
+    },
+    "per_referee_row": {
+     "\u00a75.3(a)": {
+      "acceptable": {
+       "denominator": 8,
+       "numerator": 8,
+       "value": 1.0
+      },
+      "complete_pass": {
+       "denominator": 8,
+       "numerator": 6,
+       "value": 0.75
+      }
+     },
+     "\u00a75.3(b), with Linkage": {
+      "acceptable": {
+       "denominator": 5,
+       "numerator": 5,
+       "value": 1.0
+      },
+      "complete_pass": {
+       "denominator": 5,
+       "numerator": 5,
+       "value": 1.0
+      }
+     },
+     "\u00a75.3(b), without Linkage": {
+      "acceptable": {
+       "denominator": 7,
+       "numerator": 7,
+       "value": 1.0
+      },
+      "complete_pass": {
+       "denominator": 7,
+       "numerator": 7,
+       "value": 1.0
+      }
+     },
+     "\u00a75.3(c)": {
+      "n": 0,
+      "not_evaluated": "a hold without an answer expires; no analyst decision follows"
+     },
+     "\u00a76.6(a)": {
+      "n": 0,
+      "not_evaluated": "no case in the cohort"
+     },
+     "\u00a76.6(b), one family": {
+      "acceptable": {
+       "denominator": 14,
+       "numerator": 14,
+       "value": 1.0
+      },
+      "complete_pass": {
+       "denominator": 14,
+       "numerator": 13,
+       "value": 0.9286
+      }
+     },
+     "\u00a76.6(b), two or more families": {
+      "n": 0,
+      "not_evaluated": "no case in the cohort"
+     },
+     "\u00a76.6(c)": {
+      "acceptable": {
+       "denominator": 6,
+       "numerator": 6,
+       "value": 1.0
+      },
+      "complete_pass": {
+       "denominator": 6,
+       "numerator": 6,
+       "value": 1.0
+      }
+     }
+    },
+    "per_stratum": {
+     "P-ATO": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "P-INR-ABUSE": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "P-NEVERPAY": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "P-PROMO": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "P-SYNTH": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "after_check:contact=failed:decline:fraud": {
+      "denominator": 2,
+      "numerator": 2,
+      "value": 1.0
+     },
+     "after_check:contact=passed:clear:fraud": {
+      "denominator": 2,
+      "numerator": 2,
+      "value": 1.0
+     },
+     "after_check:contact=passed:clear:legitimate": {
+      "denominator": 2,
+      "numerator": 2,
+      "value": 1.0
+     },
+     "after_check:id_check=failed:decline:fraud": {
+      "denominator": 3,
+      "numerator": 3,
+      "value": 1.0
+     },
+     "after_check:id_check=failed:decline:legitimate": {
+      "denominator": 2,
+      "numerator": 2,
+      "value": 1.0
+     },
+     "after_check:id_check=failed:escalate:fraud": {
+      "denominator": 3,
+      "numerator": 3,
+      "value": 1.0
+     },
+     "after_check:id_check=failed:escalate:legitimate": {
+      "denominator": 2,
+      "numerator": 2,
+      "value": 1.0
+     },
+     "after_check:id_check=passed:clear:fraud": {
+      "denominator": 2,
+      "numerator": 2,
+      "value": 1.0
+     },
+     "after_check:id_check=passed:clear:legitimate": {
+      "denominator": 2,
+      "numerator": 2,
+      "value": 1.0
+     },
+     "legitimate:existing": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "legitimate:fragile": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "legitimate:gift": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "legitimate:hardship": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "legitimate:hardship_default": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "legitimate:household": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "legitimate:large_first_order": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "legitimate:late_payer": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "legitimate:merchant_acquired": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "legitimate:new_customer": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "legitimate:new_customer_first_order": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "legitimate:new_phone_reset": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "legitimate:shared_device": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "legitimate:travel": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "legitimate:traveller": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     }
+    },
+    "prohibited": {
+     "denominator": 40,
+     "numerator": 0,
+     "value": 0.0
+    },
+    "standard": {
+     "denominator": 40,
+     "numerator": 28,
+     "value": 0.7
+    },
+    "standard_action": {
+     "denominator": 40,
+     "numerator": 40,
+     "value": 1.0
+    }
+   }
+  }
+ },
+ "axes": {
+  "check_completed": 0.5,
+  "review": 0.5
+ },
+ "benchmark": "2026-10-dev-opus",
+ "endpoints": {
+  "diagnostics": {
+   "opus": {
+    "against_simulation_truth": {
+     "source": "/arms/opus/latent_diagnostic",
+     "value": {
+      "fraud_cleared": {
+       "denominator": 17,
+       "numerator": 5,
+       "value": 0.2941
+      },
+      "legitimate_adverse": {
+       "denominator": 23,
+       "numerator": 14,
+       "value": 0.6087
+      },
+      "top_hypothesis_names_latent": {
+       "denominator": 40,
+       "numerator": 18,
+       "value": 0.45
+      },
+      "top_hypothesis_names_latent_by_class": {
+       "fraud": {
+        "denominator": 17,
+        "numerator": 7,
+        "value": 0.4118
+       },
+       "legitimate": {
+        "denominator": 23,
+        "numerator": 11,
+        "value": 0.4783
+       }
+      },
+      "top_hypothesis_tied": 14
+     }
+    },
+    "failing_cluster_bound": {
+     "clusters": {
+      "source": "/statistics/arms/opus/complete_pass/exact_clusters/clusters",
+      "value": 36
+     },
+     "clusters_with_failure": {
+      "source": "/statistics/arms/opus/complete_pass/exact_clusters/clusters_with_failure",
+      "value": 3
+     },
+     "failure_share_upper_one_sided": {
+      "source": "/statistics/arms/opus/complete_pass/exact_clusters/failure_share_upper_one_sided",
+      "value": 0.2015
+     },
+     "level": {
+      "source": "/statistics/arms/opus/complete_pass/exact_clusters/level",
+      "value": 0.95
+     }
+    }
+   }
+  },
+  "primary": {
+   "arms": {
+    "opus": {
+     "natural_mix": {
+      "source": "/statistics/arms/opus/complete_pass/natural",
+      "value": 0.7628
+     },
+     "natural_mix_cluster_bootstrap": {
+      "source": "/statistics/arms/opus/complete_pass/natural_cluster_bootstrap",
+      "value": [
+       0.5392,
+       1.0
+      ]
+     },
+     "per_axis": {
+      "check_completed": {
+       "unweighted": {
+        "source": "/arms/opus/summary/per_axis/check_completed/complete_pass",
+        "value": {
+         "denominator": 20,
+         "numerator": 18,
+         "value": 0.9
+        }
+       },
+       "weighted": {
+        "source": "/arms/opus/summary/per_axis/check_completed/complete_pass_weighted",
+        "value": 0.5859
+       }
+      },
+      "review": {
+       "unweighted": {
+        "source": "/arms/opus/summary/per_axis/review/complete_pass",
+        "value": {
+         "denominator": 20,
+         "numerator": 19,
+         "value": 0.95
+        }
+       },
+       "weighted": {
+        "source": "/arms/opus/summary/per_axis/review/complete_pass_weighted",
+        "value": 0.9396
+       }
+      }
+     },
+     "unweighted": {
+      "source": "/arms/opus/summary/complete_pass",
+      "value": {
+       "denominator": 40,
+       "numerator": 37,
+       "value": 0.925
+      }
+     },
+     "unweighted_cluster_bootstrap": {
+      "source": "/statistics/arms/opus/complete_pass/cluster_bootstrap",
+      "value": [
+       0.8371,
+       1.0
+      ]
+     },
+     "unweighted_wilson": {
+      "source": "/statistics/arms/opus/complete_pass/wilson",
+      "value": [
+       0.8014,
+       0.9742
+      ]
+     }
+    }
+   },
+   "name": "complete-memo pass rate, per arm",
+   "reported_as": "natural_mix"
+  },
+  "protocol": "llm/eval/PROTOCOL.md",
+  "secondary": {
+   "arms": {
+    "opus": {
+     "acceptable_rate": {
+      "degenerate": {
+       "source": "/statistics/arms/opus/acceptable/degenerate",
+       "value": "every case passed"
+      },
+      "natural_mix": {
+       "source": "/statistics/arms/opus/acceptable/natural",
+       "value": 1.0
+      },
+      "natural_mix_cluster_bootstrap": {
+       "source": "/statistics/arms/opus/acceptable/natural_cluster_bootstrap",
+       "value": null
+      },
+      "unweighted": {
+       "source": "/arms/opus/summary/acceptable",
+       "value": {
+        "denominator": 40,
+        "numerator": 40,
+        "value": 1.0
+       }
+      },
+      "unweighted_cluster_bootstrap": {
+       "source": "/statistics/arms/opus/acceptable/cluster_bootstrap",
+       "value": null
+      },
+      "unweighted_wilson": {
+       "source": "/statistics/arms/opus/acceptable/wilson",
+       "value": [
+        0.9124,
+        1.0
+       ]
+      }
+     },
+     "components": {
+      "source": "/arms/opus/summary/components",
+      "value": {
+       "acceptable": {
+        "denominator": 40,
+        "numerator": 40,
+        "value": 1.0
+       },
+       "citations_valid": {
+        "denominator": 40,
+        "numerator": 37,
+        "value": 0.925
+       },
+       "format_valid": {
+        "denominator": 40,
+        "numerator": 40,
+        "value": 1.0
+       },
+       "next_check_ok": {
+        "denominator": 40,
+        "numerator": 40,
+        "value": 1.0
+       },
+       "no_claim_error": {
+        "denominator": 40,
+        "numerator": 40,
+        "value": 1.0
+       }
+      }
+     },
+     "functional_invariance": {
+      "source": "/arms/opus/summary/invariance",
+      "value": {}
+     },
+     "per_policy_row": {
+      "source": "/arms/opus/summary/per_referee_row",
+      "value": {
+       "\u00a75.3(a)": {
+        "acceptable": {
+         "denominator": 8,
+         "numerator": 8,
+         "value": 1.0
+        },
+        "complete_pass": {
+         "denominator": 8,
+         "numerator": 6,
+         "value": 0.75
+        }
+       },
+       "\u00a75.3(b), with Linkage": {
+        "acceptable": {
+         "denominator": 5,
+         "numerator": 5,
+         "value": 1.0
+        },
+        "complete_pass": {
+         "denominator": 5,
+         "numerator": 5,
+         "value": 1.0
+        }
+       },
+       "\u00a75.3(b), without Linkage": {
+        "acceptable": {
+         "denominator": 7,
+         "numerator": 7,
+         "value": 1.0
+        },
+        "complete_pass": {
+         "denominator": 7,
+         "numerator": 7,
+         "value": 1.0
+        }
+       },
+       "\u00a75.3(c)": {
+        "n": 0,
+        "not_evaluated": "a hold without an answer expires; no analyst decision follows"
+       },
+       "\u00a76.6(a)": {
+        "n": 0,
+        "not_evaluated": "no case in the cohort"
+       },
+       "\u00a76.6(b), one family": {
+        "acceptable": {
+         "denominator": 14,
+         "numerator": 14,
+         "value": 1.0
+        },
+        "complete_pass": {
+         "denominator": 14,
+         "numerator": 13,
+         "value": 0.9286
+        }
+       },
+       "\u00a76.6(b), two or more families": {
+        "n": 0,
+        "not_evaluated": "no case in the cohort"
+       },
+       "\u00a76.6(c)": {
+        "acceptable": {
+         "denominator": 6,
+         "numerator": 6,
+         "value": 1.0
+        },
+        "complete_pass": {
+         "denominator": 6,
+         "numerator": 6,
+         "value": 1.0
+        }
+       }
+      }
+     },
+     "spend": {
+      "source": "/arms/opus/spend",
+      "value": {
+       "calls": 40,
+       "charged_tokens": 515762,
+       "input_tokens": 422111,
+       "output_tokens": 93651,
+       "unknown_usage_calls": 0
+      }
+     },
+     "standard_action_agreement": {
+      "rate": {
+       "source": "/arms/opus/summary/standard_action",
+       "value": {
+        "denominator": 40,
+        "numerator": 40,
+        "value": 1.0
+       }
+      },
+      "table": {
+       "source": "/arms/opus/disagreement",
+       "value": {
+        "clear -> clear": 14,
+        "decline -> decline": 7,
+        "escalate -> escalate": 5,
+        "hold -> hold": 2,
+        "hold -> needs_check": 12
+       }
+      }
+     }
+    }
+   },
+   "paired_comparison": {
+    "not_made": "made only when the benchmark has two arms and both are scored"
+   }
+  }
+ },
+ "pins": {
+  "opus": {
+   "backend": "claude",
+   "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+   "effort": "high",
+   "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+   "model": "claude-opus-5-5"
+  }
+ },
+ "scoring_amendment": {
+  "changed_code": [
+   "llm/eval/verifier.py",
+   "llm/memo.py"
+  ],
+  "reason": "scored with the final cohort's scoring code; since this set was fixed: a difference of two packet times is a duration in the unit the claim names (verifier); the default prompt is v2 (memo; this set keeps v1)"
+ },
+ "statistics": {
+  "arms": {
+   "opus": {
+    "acceptable": {
+     "cluster_bootstrap": null,
+     "degenerate": "every case passed",
+     "exact_clusters": {
+      "clusters": 36,
+      "clusters_with_failure": 0,
+      "failure_share_upper_one_sided": 0.0798,
+      "level": 0.95,
+      "pass_share_interval": [
+       0.9026,
+       1.0
+      ]
+     },
+     "natural": 1.0,
+     "natural_cluster_bootstrap": null,
+     "rate": 1.0,
+     "wilson": [
+      0.9124,
+      1.0
+     ]
+    },
+    "complete_pass": {
+     "cluster_bootstrap": [
+      0.8371,
+      1.0
+     ],
+     "exact_clusters": {
+      "clusters": 36,
+      "clusters_with_failure": 3,
+      "failure_share_upper_one_sided": 0.2015,
+      "level": 0.95,
+      "pass_share_interval": [
+       0.7753,
+       0.9825
+      ]
+     },
+     "natural": 0.7628,
+     "natural_cluster_bootstrap": [
+      0.5392,
+      1.0
+     ],
+     "rate": 0.925,
+     "wilson": [
+      0.8014,
+      0.9742
+     ]
+    }
+   }
+  },
+  "clusters": 36,
+  "paired": {}
+ }
+}

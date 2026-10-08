@@ -1,0 +1,2131 @@
+{
+ "arms": {
+  "sol": {
+   "arm": {
+    "backend": "codex",
+    "effort": "high",
+    "model": "gpt-6.1-sol",
+    "name": "sol"
+   },
+   "cases": {
+    "416-baseline-135235-20250628T095843/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 20,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 23,
+       "n_unmatched": 0,
+       "n_with_tokens": 0
+      }
+     }
+    },
+    "416-baseline-136685-20250703T154004/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 30,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 33,
+       "n_unmatched": 0,
+       "n_with_tokens": 0
+      }
+     }
+    },
+    "416-baseline-136908-20250704T134914/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": "household",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 20,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 23,
+       "n_unmatched": 0,
+       "n_with_tokens": 8
+      }
+     }
+    },
+    "416-baseline-140378-20250717T074808/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": "household",
+     "top_hypothesis_tied": false,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 22,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 25,
+       "n_unmatched": 0,
+       "n_with_tokens": 3
+      }
+     }
+    },
+    "416-baseline-141664-20250722T000000/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 22,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 25,
+       "n_unmatched": 0,
+       "n_with_tokens": 14
+      }
+     }
+    },
+    "416-baseline-149795-20250819T103657/primary": {
+     "acceptable": true,
+     "action": "hold",
+     "citation_ok": true,
+     "complete_pass": true,
+     "components": {
+      "acceptable": true,
+      "citations_valid": true,
+      "format_valid": true,
+      "next_check_ok": true,
+      "no_claim_error": true
+     },
+     "disposition": "needs_check",
+     "format_valid": true,
+     "needs_check": true,
+     "next_check": "id_check",
+     "next_check_ok": true,
+     "nonpayment_violation": false,
+     "outcome": "scored",
+     "problems": [],
+     "prohibited": false,
+     "standard": false,
+     "standard_action": true,
+     "top_hypothesis": null,
+     "top_hypothesis_tied": true,
+     "verification": {
+      "claim_errors": [],
+      "has_claim_error": false,
+      "has_unmatched_token": false,
+      "n_claim_errors": 0,
+      "n_claims": 25,
+      "n_derived_claims": 0,
+      "unmatched_tokens": {
+       "n_derived": 0,
+       "n_texts": 28,
+       "n_unmatched": 0,
+       "n_with_tokens": 2
+      }
+     }
+    }
+   },
+   "disagreement": {
+    "hold -> needs_check": 6
+   },
+   "latent_diagnostic": {
+    "fraud_cleared": {
+     "denominator": 4,
+     "numerator": 0,
+     "value": 0.0
+    },
+    "legitimate_adverse": {
+     "denominator": 2,
+     "numerator": 2,
+     "value": 1.0
+    },
+    "top_hypothesis_names_latent": {
+     "denominator": 6,
+     "numerator": 0,
+     "value": 0.0
+    },
+    "top_hypothesis_names_latent_by_class": {
+     "fraud": {
+      "denominator": 4,
+      "numerator": 0,
+      "value": 0.0
+     },
+     "legitimate": {
+      "denominator": 2,
+      "numerator": 0,
+      "value": 0.0
+     }
+    },
+    "top_hypothesis_tied": 4
+   },
+   "spend": {
+    "calls": 6,
+    "charged_tokens": 52149,
+    "input_tokens": 43766,
+    "output_tokens": 8383,
+    "unknown_usage_calls": 0
+   },
+   "summary": {
+    "acceptable": {
+     "denominator": 6,
+     "numerator": 6,
+     "value": 1.0
+    },
+    "acceptable_natural": 1.0,
+    "acceptable_reweighted": 1.0,
+    "citation_ok": {
+     "denominator": 6,
+     "numerator": 6,
+     "value": 1.0
+    },
+    "claim_errors": {
+     "denominator": 139,
+     "numerator": 0,
+     "value": 0.0
+    },
+    "clusters": 6,
+    "complete_pass": {
+     "denominator": 6,
+     "numerator": 6,
+     "value": 1.0
+    },
+    "complete_pass_natural": 1.0,
+    "components": {
+     "acceptable": {
+      "denominator": 6,
+      "numerator": 6,
+      "value": 1.0
+     },
+     "citations_valid": {
+      "denominator": 6,
+      "numerator": 6,
+      "value": 1.0
+     },
+     "format_valid": {
+      "denominator": 6,
+      "numerator": 6,
+      "value": 1.0
+     },
+     "next_check_ok": {
+      "denominator": 6,
+      "numerator": 6,
+      "value": 1.0
+     },
+     "no_claim_error": {
+      "denominator": 6,
+      "numerator": 6,
+      "value": 1.0
+     }
+    },
+    "invariance": {},
+    "memos_with_claim_error": {
+     "denominator": 6,
+     "numerator": 0,
+     "value": 0.0
+    },
+    "memos_with_unmatched_token": {
+     "denominator": 6,
+     "numerator": 0,
+     "value": 0.0
+    },
+    "n_cases": 6,
+    "needs_check": {
+     "denominator": 6,
+     "numerator": 6,
+     "value": 1.0
+    },
+    "next_check_ok": {
+     "denominator": 6,
+     "numerator": 6,
+     "value": 1.0
+    },
+    "nonpayment_violations": 0,
+    "outcomes": {
+     "scored": 6
+    },
+    "per_axis": {
+     "review": {
+      "acceptable": {
+       "denominator": 6,
+       "numerator": 6,
+       "value": 1.0
+      },
+      "acceptable_weighted": 1.0,
+      "complete_pass": {
+       "denominator": 6,
+       "numerator": 6,
+       "value": 1.0
+      },
+      "complete_pass_weighted": 1.0
+     }
+    },
+    "per_referee_row": {
+     "\u00a75.3(a)": {
+      "n": 0,
+      "not_evaluated": "no case in the cohort"
+     },
+     "\u00a75.3(b), with Linkage": {
+      "n": 0,
+      "not_evaluated": "no case in the cohort"
+     },
+     "\u00a75.3(b), without Linkage": {
+      "n": 0,
+      "not_evaluated": "no case in the cohort"
+     },
+     "\u00a75.3(c)": {
+      "n": 0,
+      "not_evaluated": "a hold without an answer expires; no analyst decision follows"
+     },
+     "\u00a76.6(a)": {
+      "n": 0,
+      "not_evaluated": "no case in the cohort"
+     },
+     "\u00a76.6(b), one family": {
+      "acceptable": {
+       "denominator": 5,
+       "numerator": 5,
+       "value": 1.0
+      },
+      "complete_pass": {
+       "denominator": 5,
+       "numerator": 5,
+       "value": 1.0
+      }
+     },
+     "\u00a76.6(b), two or more families": {
+      "acceptable": {
+       "denominator": 1,
+       "numerator": 1,
+       "value": 1.0
+      },
+      "complete_pass": {
+       "denominator": 1,
+       "numerator": 1,
+       "value": 1.0
+      }
+     },
+     "\u00a76.6(c)": {
+      "n": 0,
+      "not_evaluated": "no case in the cohort"
+     }
+    },
+    "per_stratum": {
+     "account_takeover:account_takeover": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "card_testing:card_testing": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "never_pay_vs_hardship:hardship": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "never_pay_vs_hardship:never_pay": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "ring:ring": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     },
+     "traveller:traveller": {
+      "denominator": 1,
+      "numerator": 1,
+      "value": 1.0
+     }
+    },
+    "prohibited": {
+     "denominator": 6,
+     "numerator": 0,
+     "value": 0.0
+    },
+    "standard": {
+     "denominator": 6,
+     "numerator": 0,
+     "value": 0.0
+    },
+    "standard_action": {
+     "denominator": 6,
+     "numerator": 6,
+     "value": 1.0
+    }
+   }
+  }
+ },
+ "axes": {
+  "review": 1.0
+ },
+ "benchmark": "2026-10-cases",
+ "case_memos": [
+  {
+   "arms": {
+    "sol": {
+     "memo": {
+      "citations": [
+       "FP-2 \u00a76.6(b)",
+       "R07",
+       "R05",
+       "FP-2 \u00a75.2",
+       "FP-2 \u00a75.3(a)",
+       "FP-2 \u00a74.3",
+       "FP-2 \u00a76.3",
+       "FP-2 \u00a76.4",
+       "FP-2 \u00a78.1"
+      ],
+      "claims": [
+       {
+        "derived": null,
+        "field": "decision.checks",
+        "statement": "No verification checks have completed.",
+        "value": []
+       },
+       {
+        "derived": null,
+        "field": "context.attempts_user_24h",
+        "statement": "The account made five order attempts in the applicable window.",
+        "value": 5
+       },
+       {
+        "derived": null,
+        "field": "context.processor_declines_device_24h",
+        "statement": "The device had three processor declines before this order.",
+        "value": 3
+       },
+       {
+        "derived": null,
+        "field": "context.bin_ip_country_mismatch",
+        "statement": "The card issuing country differs from the IP country.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.avs_mismatch",
+        "statement": "AVS did not fail.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.cvv_mismatch",
+        "statement": "CVV did not fail.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.account_age_days",
+        "statement": "The account was newly opened at the order.",
+        "value": 0.024247685185185185
+       },
+       {
+        "derived": null,
+        "field": "context.geo_kmh_from_previous_attempt",
+        "statement": "The recorded implied travel speed is zero.",
+        "value": 0.0
+       },
+       {
+        "derived": null,
+        "field": "context.accounts_on_device_30d",
+        "statement": "Only this account had activity on the device in the applicable window.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.accounts_on_address_30d",
+        "statement": "Only this account had orders to the address in the applicable window.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.email_root_other_accounts",
+        "statement": "No other account has a matching normalized email.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "order.promotion_used",
+        "statement": "The order used no promotion.",
+        "value": false
+       },
+       {
+        "derived": null,
+        "field": "context.email_domain_class",
+        "statement": "The email uses a common provider.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.is_first_attempt_user",
+        "statement": "This is not the account's first order attempt.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.inr_disputes_opened_user",
+        "statement": "The account has opened no earlier item-not-received disputes.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.unauthorized_disputes_lost_user",
+        "statement": "No earlier unauthorized-use dispute was resolved against the platform.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.never_pay_determined_user",
+        "statement": "No earlier plan has a never-pay determination.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.inr_claims_rejected_user",
+        "statement": "No earlier delivered-order item-not-received claim was resolved against the account.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.installments_due_user",
+        "statement": "No installment was due before this decision.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.shipped_at_decision",
+        "statement": "The order has not shipped.",
+        "value": 0
+       }
+      ],
+      "disposition": "needs_check",
+      "hypotheses": [
+       {
+        "explanation": "new_customer",
+        "likelihood": "medium",
+        "reasoning": "A newly opened account may be retrying checkout after payment difficulties. Successful AVS and CVV and the absence of account linkage support this benign possibility."
+       },
+       {
+        "explanation": "stolen_card",
+        "likelihood": "medium",
+        "reasoning": "Repeated device-level processor declines alongside elevated account attempts could reflect card testing. Successful AVS and CVV mean the country mismatch does not independently establish the Card geography rule."
+       }
+      ],
+      "memo": "R07 establishes Card from three device processor declines; R05 establishes Velocity from five account attempts. No other rule holds, no household exception applies, and no earlier outcome settles the order. The country mismatch does not trigger R03 because neither AVS nor CVV failed. Repeated checkout difficulties by a new customer remain plausible alongside card testing. With no completed checks, \u00a76.6(b) permits decline, but verification offers a less restrictive resolution. Recommend needs_check, implemented as a hold with id_check before shipment. This single check covers both present families; a pass requires clear, while failure requires decline without Linkage. No installments were due, so non-payment cannot support this recommendation.",
+      "next_check": "id_check"
+     },
+     "problems": [],
+     "score": {
+      "acceptable": true,
+      "action": "hold",
+      "citation_ok": true,
+      "complete_pass": true,
+      "components": {
+       "acceptable": true,
+       "citations_valid": true,
+       "format_valid": true,
+       "next_check_ok": true,
+       "no_claim_error": true
+      },
+      "disposition": "needs_check",
+      "format_valid": true,
+      "needs_check": true,
+      "next_check": "id_check",
+      "next_check_ok": true,
+      "nonpayment_violation": false,
+      "outcome": "scored",
+      "problems": [],
+      "prohibited": false,
+      "standard": false,
+      "standard_action": true,
+      "top_hypothesis": null,
+      "top_hypothesis_tied": true,
+      "verification": {
+       "claim_errors": [],
+       "has_claim_error": false,
+       "has_unmatched_token": false,
+       "n_claim_errors": 0,
+       "n_claims": 20,
+       "n_derived_claims": 0,
+       "unmatched_tokens": {
+        "n_derived": 0,
+        "n_texts": 23,
+        "n_unmatched": 0,
+        "n_with_tokens": 0
+       }
+      }
+     }
+    }
+   },
+   "case_id": "416-baseline-135235-20250628T095843",
+   "file": "card_testing",
+   "slot": "card_testing"
+  },
+  {
+   "arms": {
+    "sol": {
+     "memo": {
+      "citations": [
+       "R03",
+       "FP-2 \u00a76.2",
+       "FP-2 \u00a76.3",
+       "FP-2 \u00a76.4",
+       "FP-2 \u00a76.5(b)",
+       "FP-2 \u00a76.6(b)",
+       "FP-2 \u00a75.1(b)",
+       "FP-2 \u00a75.2",
+       "FP-2 \u00a74.3"
+      ],
+      "claims": [
+       {
+        "derived": null,
+        "field": "order.ip_country",
+        "statement": "The order IP country is GB.",
+        "value": "GB"
+       },
+       {
+        "derived": null,
+        "field": "order.card_bin_country",
+        "statement": "The card issuing country is FR.",
+        "value": "FR"
+       },
+       {
+        "derived": null,
+        "field": "order.account_home_country",
+        "statement": "The account home country is US.",
+        "value": "US"
+       },
+       {
+        "derived": null,
+        "field": "context.bin_ip_country_mismatch",
+        "statement": "The card issuing country differs from the IP country.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.cvv_mismatch",
+        "statement": "CVV verification failed.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.avs_mismatch",
+        "statement": "AVS verification did not fail.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.device_link_age_hours",
+        "statement": "The device was recently first used on this account.",
+        "value": 0.23666666666666666
+       },
+       {
+        "derived": null,
+        "field": "context.card_first_use_age_hours",
+        "statement": "The card has a longstanding first-use history on the account.",
+        "value": 12287.519722222221
+       },
+       {
+        "derived": null,
+        "field": "context.ship_address_first_use_age_hours",
+        "statement": "This is the shipping address's first use on the account.",
+        "value": 0.0
+       },
+       {
+        "derived": null,
+        "field": "context.ship_to_home",
+        "statement": "The order is not shipping to the account's home address.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.hours_since_password_change",
+        "statement": "No password change is recorded.",
+        "value": 10000.0
+       },
+       {
+        "derived": null,
+        "field": "context.hours_since_password_reset",
+        "statement": "No password reset is recorded.",
+        "value": 10000.0
+       },
+       {
+        "derived": null,
+        "field": "context.hours_since_email_change",
+        "statement": "No email change is recorded.",
+        "value": 10000.0
+       },
+       {
+        "derived": null,
+        "field": "context.geo_kmh_from_previous_attempt",
+        "statement": "The packet records no qualifying impossible-travel speed.",
+        "value": 0.0
+       },
+       {
+        "derived": null,
+        "field": "context.attempts_user_24h",
+        "statement": "The account has one order attempt in the specified window.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.attempts_device_24h",
+        "statement": "The device has one order attempt in the specified window.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.processor_declines_card_24h",
+        "statement": "The card has no processor declines in the specified window.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.processor_declines_device_24h",
+        "statement": "The device has no processor declines in the specified window.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.accounts_on_device_30d",
+        "statement": "Only this account is counted on the device.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.accounts_on_address_30d",
+        "statement": "Only this account is counted at the shipping address.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.email_root_other_accounts",
+        "statement": "No other account has a matching normalized email.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "order.promotion_used",
+        "statement": "The order does not use a promotion.",
+        "value": false
+       },
+       {
+        "derived": null,
+        "field": "context.email_domain_class",
+        "statement": "The email uses a common provider rather than a disposable domain.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.is_first_attempt_user",
+        "statement": "This is not the account's first order attempt.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.inr_disputes_opened_user",
+        "statement": "The account has opened no item-not-received disputes.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.unauthorized_disputes_lost_user",
+        "statement": "No earlier unauthorized-use dispute was resolved against the platform.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.never_pay_determined_user",
+        "statement": "No earlier never-pay determination is recorded.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.inr_claims_rejected_user",
+        "statement": "No earlier item-not-received claim was rejected on a delivered order.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "decision.checks",
+        "statement": "No verification check has been completed.",
+        "value": []
+       },
+       {
+        "derived": null,
+        "field": "context.shipped_at_decision",
+        "statement": "The order has not shipped at decision time.",
+        "value": 0
+       }
+      ],
+      "disposition": "needs_check",
+      "hypotheses": [
+       {
+        "explanation": "stolen_card",
+        "likelihood": "medium",
+        "reasoning": "The issuing-country/IP mismatch combined with failed CVV supports concern about unauthorized card use. The card's longstanding account association does not establish who is ordering now."
+       },
+       {
+        "explanation": "traveller",
+        "likelihood": "medium",
+        "reasoning": "A customer travelling outside their home country could use an existing foreign-issued card, a new device and a non-home shipping address. A CVV entry error remains plausible, but issuer authentication and identity verification are needed to resolve the Card concern."
+       }
+      ],
+      "memo": "Only R03 holds: the card issuing country differs from the IP country and CVV failed. Card is the sole adverse family; no household exception or earlier settling outcome applies. No check has run. Recommend needs_check, implemented as a hold with id_check under FP-2 \u00a76.6(b). Contact is not required because no Account access rule holds. Travel plausibly explains the foreign IP, new device and non-home shipping address, but does not resolve the Card concern. The required id_check would establish whether the customer holds both the card and account identity.",
+      "next_check": "id_check"
+     },
+     "problems": [],
+     "score": {
+      "acceptable": true,
+      "action": "hold",
+      "citation_ok": true,
+      "complete_pass": true,
+      "components": {
+       "acceptable": true,
+       "citations_valid": true,
+       "format_valid": true,
+       "next_check_ok": true,
+       "no_claim_error": true
+      },
+      "disposition": "needs_check",
+      "format_valid": true,
+      "needs_check": true,
+      "next_check": "id_check",
+      "next_check_ok": true,
+      "nonpayment_violation": false,
+      "outcome": "scored",
+      "problems": [],
+      "prohibited": false,
+      "standard": false,
+      "standard_action": true,
+      "top_hypothesis": null,
+      "top_hypothesis_tied": true,
+      "verification": {
+       "claim_errors": [],
+       "has_claim_error": false,
+       "has_unmatched_token": false,
+       "n_claim_errors": 0,
+       "n_claims": 30,
+       "n_derived_claims": 0,
+       "unmatched_tokens": {
+        "n_derived": 0,
+        "n_texts": 33,
+        "n_unmatched": 0,
+        "n_with_tokens": 0
+       }
+      }
+     }
+    }
+   },
+   "case_id": "416-baseline-136685-20250703T154004",
+   "file": "account_takeover",
+   "slot": "account_takeover"
+  },
+  {
+   "arms": {
+    "sol": {
+     "memo": {
+      "citations": [
+       "R02",
+       "FP-2 \u00a76.2",
+       "FP-2 \u00a76.3",
+       "FP-2 \u00a76.4(a)",
+       "FP-2 \u00a76.6(b)",
+       "FP-2 \u00a75.1(b)",
+       "FP-2 \u00a75.2",
+       "FP-2 \u00a74.3"
+      ],
+      "claims": [
+       {
+        "derived": null,
+        "field": "context.accounts_on_device_30d",
+        "statement": "The device has activity from 3 accounts in the lookback window.",
+        "value": 3
+       },
+       {
+        "derived": null,
+        "field": "context.device_link_age_hours",
+        "statement": "The device was first used on this account 1126.643611111111 hours before the order.",
+        "value": 1126.643611111111
+       },
+       {
+        "derived": null,
+        "field": "context.account_age_days",
+        "statement": "The account was 46.9434837962963 days old at the order.",
+        "value": 46.9434837962963
+       },
+       {
+        "derived": null,
+        "field": "context.geo_kmh_from_previous_attempt",
+        "statement": "The implied speed from the previous attempt is 0.0 km/h.",
+        "value": 0.0
+       },
+       {
+        "derived": null,
+        "field": "context.bin_ip_country_mismatch",
+        "statement": "The card issuing country and IP country do not differ.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.processor_declines_card_24h",
+        "statement": "There were no processor declines on the card during the specified window.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.processor_declines_device_24h",
+        "statement": "There were no processor declines on the device during the specified window.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.attempts_user_24h",
+        "statement": "The account made 1 order attempt in the specified window.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.attempts_device_24h",
+        "statement": "The device had 1 order attempt in the specified window.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.accounts_on_address_30d",
+        "statement": "The shipping address has orders from 1 account in the lookback window.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.email_root_other_accounts",
+        "statement": "No other account has a matching normalized email.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "order.promotion_used",
+        "statement": "The order did not use a promotion.",
+        "value": false
+       },
+       {
+        "derived": null,
+        "field": "context.email_domain_class",
+        "statement": "The email domain is a common provider.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.is_first_attempt_user",
+        "statement": "This is not the account's first order attempt.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.inr_disputes_opened_user",
+        "statement": "The account has opened no item-not-received disputes.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.unauthorized_disputes_lost_user",
+        "statement": "No earlier unauthorized-use dispute was resolved against the platform.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.never_pay_determined_user",
+        "statement": "No earlier plan has a never-pay determination.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.inr_claims_rejected_user",
+        "statement": "No item-not-received claims were resolved against the account on delivered orders.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "decision.checks",
+        "statement": "No verification checks have been completed.",
+        "value": []
+       },
+       {
+        "derived": null,
+        "field": "context.shipped_at_decision",
+        "statement": "The order had not shipped at decision time.",
+        "value": 0
+       }
+      ],
+      "disposition": "needs_check",
+      "hypotheses": [
+       {
+        "explanation": "household",
+        "likelihood": "medium",
+        "reasoning": "Legitimate household members could share this device. However, the device's tenure on this account is insufficient for the household exception."
+       },
+       {
+        "explanation": "synthetic_identity",
+        "likelihood": "low",
+        "reasoning": "Shared-device linkage could indicate coordinated identities, but it does not establish identity fraud. There is no matching normalized email or accompanying Card or Velocity family evidence."
+       }
+      ],
+      "memo": "R02 holds because the device links 3 accounts. Its tenure on this account does not qualify for the household exception. Linkage is the only adverse family; no other rule holds, and no earlier outcome settles the order. Household sharing remains plausible, but cannot remove the Linkage family here. With no completed checks, recommend needs_check under \u00a76.6(b), implemented by the analyst as a hold with id_check. That check establishes possession of the card and account identity, not fraudulent intent. Decline and escalation are not permitted on the current evidence. The order has not shipped.",
+      "next_check": "id_check"
+     },
+     "problems": [],
+     "score": {
+      "acceptable": true,
+      "action": "hold",
+      "citation_ok": true,
+      "complete_pass": true,
+      "components": {
+       "acceptable": true,
+       "citations_valid": true,
+       "format_valid": true,
+       "next_check_ok": true,
+       "no_claim_error": true
+      },
+      "disposition": "needs_check",
+      "format_valid": true,
+      "needs_check": true,
+      "next_check": "id_check",
+      "next_check_ok": true,
+      "nonpayment_violation": false,
+      "outcome": "scored",
+      "problems": [],
+      "prohibited": false,
+      "standard": false,
+      "standard_action": true,
+      "top_hypothesis": "household",
+      "top_hypothesis_tied": false,
+      "verification": {
+       "claim_errors": [],
+       "has_claim_error": false,
+       "has_unmatched_token": false,
+       "n_claim_errors": 0,
+       "n_claims": 20,
+       "n_derived_claims": 0,
+       "unmatched_tokens": {
+        "n_derived": 0,
+        "n_texts": 23,
+        "n_unmatched": 0,
+        "n_with_tokens": 8
+       }
+      }
+     }
+    }
+   },
+   "case_id": "416-baseline-136908-20250704T134914",
+   "file": "ring",
+   "slot": "ring"
+  },
+  {
+   "arms": {
+    "sol": {
+     "memo": {
+      "citations": [
+       "FP-2 \u00a76.6(b)",
+       "R08",
+       "FP-2 \u00a76.4(b)",
+       "FP-2 \u00a76.3",
+       "FP-2 \u00a75.1(b)",
+       "FP-2 \u00a75.2",
+       "FP-2 \u00a74.3",
+       "FP-2 \u00a78.1"
+      ],
+      "claims": [
+       {
+        "derived": null,
+        "field": "context.accounts_on_address_30d",
+        "statement": "Three accounts have recent activity at the shipping address.",
+        "value": 3
+       },
+       {
+        "derived": null,
+        "field": "context.ship_to_home",
+        "statement": "The shipping address is the account's home address.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.home_address_age_days",
+        "statement": "The home address has been registered for 2.466238425925926 days.",
+        "value": 2.466238425925926
+       },
+       {
+        "derived": null,
+        "field": "context.accounts_on_device_30d",
+        "statement": "Only one account has recent activity on the device.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.email_root_other_accounts",
+        "statement": "No other account shares the normalized email.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "order.promotion_used",
+        "statement": "The order does not use a promotion.",
+        "value": false
+       },
+       {
+        "derived": null,
+        "field": "context.account_age_days",
+        "statement": "The account is 2.466238425925926 days old.",
+        "value": 2.466238425925926
+       },
+       {
+        "derived": null,
+        "field": "context.geo_kmh_from_previous_attempt",
+        "statement": "The recorded implied speed from the previous attempt is 0.0 km/h.",
+        "value": 0.0
+       },
+       {
+        "derived": null,
+        "field": "context.bin_ip_country_mismatch",
+        "statement": "The card issuing country and IP country match.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.processor_declines_card_24h",
+        "statement": "There were no processor declines on the card during the relevant window.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.processor_declines_device_24h",
+        "statement": "There were no processor declines on the device during the relevant window.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.attempts_user_24h",
+        "statement": "The account made one attempt during the relevant window.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.attempts_device_24h",
+        "statement": "The device had one attempt during the relevant window.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.email_domain_class",
+        "statement": "The email uses a common provider.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.is_first_attempt_user",
+        "statement": "This is not the account's first order attempt.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.inr_disputes_opened_user",
+        "statement": "The account has opened no item-not-received disputes.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.unauthorized_disputes_lost_user",
+        "statement": "No earlier unauthorized-use dispute was resolved against the platform.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.never_pay_determined_user",
+        "statement": "No earlier plan has a never-pay determination.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.inr_claims_rejected_user",
+        "statement": "No earlier item-not-received claim was resolved against the account.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.installments_due_user",
+        "statement": "No account installments were due before the decision.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "decision.checks",
+        "statement": "No verification checks have been completed.",
+        "value": []
+       },
+       {
+        "derived": null,
+        "field": "context.shipped_at_decision",
+        "statement": "The order has not shipped.",
+        "value": 0
+       }
+      ],
+      "disposition": "needs_check",
+      "hypotheses": [
+       {
+        "explanation": "household",
+        "likelihood": "medium",
+        "reasoning": "A shared home could explain the accounts using the same shipping address. However, the recently registered home address does not qualify for the household exception."
+       },
+       {
+        "explanation": "synthetic_identity",
+        "likelihood": "low",
+        "reasoning": "Multiple accounts shipping to a common destination could reflect coordinated identities. The absence of shared-device, normalized-email, card-testing and velocity signals limits support for that explanation."
+       }
+      ],
+      "memo": "Only R08 holds: three accounts use the shipping address. Linkage is the sole adverse family. Although shipping is to the registered home, its recent registration prevents the household exception. All other rule conditions are unmet, and no earlier outcome settles the order. A legitimate shared household is plausible; coordinated identities remain possible but unproven. No installments were due, so non-payment cannot support an adverse recommendation. Under FP-2 \u00a76.6(b), recommend needs_check, implemented by the analyst as a hold with id_check. Contact is not required. The order has not shipped and no checks have run; successful required verification would clear it.",
+      "next_check": "id_check"
+     },
+     "problems": [],
+     "score": {
+      "acceptable": true,
+      "action": "hold",
+      "citation_ok": true,
+      "complete_pass": true,
+      "components": {
+       "acceptable": true,
+       "citations_valid": true,
+       "format_valid": true,
+       "next_check_ok": true,
+       "no_claim_error": true
+      },
+      "disposition": "needs_check",
+      "format_valid": true,
+      "needs_check": true,
+      "next_check": "id_check",
+      "next_check_ok": true,
+      "nonpayment_violation": false,
+      "outcome": "scored",
+      "problems": [],
+      "prohibited": false,
+      "standard": false,
+      "standard_action": true,
+      "top_hypothesis": "household",
+      "top_hypothesis_tied": false,
+      "verification": {
+       "claim_errors": [],
+       "has_claim_error": false,
+       "has_unmatched_token": false,
+       "n_claim_errors": 0,
+       "n_claims": 22,
+       "n_derived_claims": 0,
+       "unmatched_tokens": {
+        "n_derived": 0,
+        "n_texts": 25,
+        "n_unmatched": 0,
+        "n_with_tokens": 3
+       }
+      }
+     }
+    }
+   },
+   "case_id": "416-baseline-140378-20250717T074808",
+   "file": "never_pay_vs_hardship",
+   "slot": "never_pay"
+  },
+  {
+   "arms": {
+    "sol": {
+     "memo": {
+      "citations": [
+       "R03",
+       "FP-2 \u00a76.6(b)",
+       "FP-2 \u00a74.3",
+       "FP-2 \u00a75.1(b)",
+       "FP-2 \u00a75.2",
+       "FP-2 \u00a76.3",
+       "FP-2 \u00a76.4",
+       "FP-2 \u00a76.5",
+       "FP-2 \u00a78.1"
+      ],
+      "claims": [
+       {
+        "derived": null,
+        "field": "order.ip_country",
+        "statement": "The order IP country is US.",
+        "value": "US"
+       },
+       {
+        "derived": null,
+        "field": "order.card_bin_country",
+        "statement": "The card issuing country is GB.",
+        "value": "GB"
+       },
+       {
+        "derived": null,
+        "field": "order.cvv_result",
+        "statement": "CVV verification failed.",
+        "value": "N"
+       },
+       {
+        "derived": null,
+        "field": "context.account_age_days",
+        "statement": "The account age is 0.028483796296296295 days.",
+        "value": 0.028483796296296295
+       },
+       {
+        "derived": null,
+        "field": "context.amount_over_category_p95",
+        "statement": "The amount is 0.21370750134916353 times the category's approved-order amount percentile reference.",
+        "value": 0.21370750134916353
+       },
+       {
+        "derived": null,
+        "field": "context.geo_kmh_from_previous_attempt",
+        "statement": "The implied speed from the previous attempt is 0.0 km/h.",
+        "value": 0.0
+       },
+       {
+        "derived": null,
+        "field": "context.processor_declines_card_24h",
+        "statement": "The card had 0 processor declines in the preceding window.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.processor_declines_device_24h",
+        "statement": "The device had 0 processor declines in the preceding window.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.attempts_user_24h",
+        "statement": "The account made 1 attempt in the applicable window.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.attempts_device_24h",
+        "statement": "The device recorded 1 attempt in the applicable window.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.accounts_on_device_30d",
+        "statement": "The device has activity from 1 account in the applicable window.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.accounts_on_address_30d",
+        "statement": "The shipping address has orders from 1 account in the applicable window.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.email_root_other_accounts",
+        "statement": "The normalized email matches 0 other accounts.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.email_domain_class",
+        "statement": "The email domain is classified as other, not disposable.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.promo_uses_linked_accounts",
+        "statement": "The same first-purchase promotion was used by 1 linked account, including this account.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.inr_disputes_opened_user",
+        "statement": "The account opened 0 earlier item-not-received disputes.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.unauthorized_disputes_lost_user",
+        "statement": "The account has 0 earlier unauthorized disputes resolved against the platform.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.never_pay_determined_user",
+        "statement": "No earlier plan has a never-pay determination.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.inr_claims_rejected_user",
+        "statement": "The account has 0 rejected item-not-received claims on delivered orders.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.installments_due_user",
+        "statement": "No account installments were due before the decision.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "decision.checks",
+        "statement": "No verification checks have been completed.",
+        "value": []
+       },
+       {
+        "derived": null,
+        "field": "context.shipped_at_decision",
+        "statement": "The order had not shipped at the decision.",
+        "value": 0
+       }
+      ],
+      "disposition": "needs_check",
+      "hypotheses": [
+       {
+        "explanation": "stolen_card",
+        "likelihood": "medium",
+        "reasoning": "The issuing-country/IP mismatch together with failed CVV supports concern about unauthorized card use. There is no accompanying decline burst, velocity or linkage evidence."
+       },
+       {
+        "explanation": "new_customer",
+        "likelihood": "medium",
+        "reasoning": "A legitimate new customer could use a foreign-issued card and enter CVV incorrectly. The modest category-relative amount and isolated attempt are consistent with ordinary shopping, but do not resolve card ownership."
+       }
+      ],
+      "memo": "Only R03 holds: the GB-issued card was used from a US IP and CVV failed. Card is the sole adverse family; no other rule holds, no household exception applies, and no earlier outcome settles the order. No checks have run. Recommend needs_check with issuer authentication and identity verification under \u00a76.6(b); decline and escalate are not permitted on this evidence. A legitimate new customer using a foreign-issued card with a CVV-entry error remains plausible. No installments were due, so non-payment cannot support a finding. The order is unshipped; the analyst can hold it while conducting id_check.",
+      "next_check": "id_check"
+     },
+     "problems": [],
+     "score": {
+      "acceptable": true,
+      "action": "hold",
+      "citation_ok": true,
+      "complete_pass": true,
+      "components": {
+       "acceptable": true,
+       "citations_valid": true,
+       "format_valid": true,
+       "next_check_ok": true,
+       "no_claim_error": true
+      },
+      "disposition": "needs_check",
+      "format_valid": true,
+      "needs_check": true,
+      "next_check": "id_check",
+      "next_check_ok": true,
+      "nonpayment_violation": false,
+      "outcome": "scored",
+      "problems": [],
+      "prohibited": false,
+      "standard": false,
+      "standard_action": true,
+      "top_hypothesis": null,
+      "top_hypothesis_tied": true,
+      "verification": {
+       "claim_errors": [],
+       "has_claim_error": false,
+       "has_unmatched_token": false,
+       "n_claim_errors": 0,
+       "n_claims": 22,
+       "n_derived_claims": 0,
+       "unmatched_tokens": {
+        "n_derived": 0,
+        "n_texts": 25,
+        "n_unmatched": 0,
+        "n_with_tokens": 14
+       }
+      }
+     }
+    }
+   },
+   "case_id": "416-baseline-141664-20250722T000000",
+   "file": "never_pay_vs_hardship",
+   "slot": "hardship"
+  },
+  {
+   "arms": {
+    "sol": {
+     "memo": {
+      "citations": [
+       "FP-2 \u00a76.2",
+       "R03",
+       "FP-2 \u00a76.3",
+       "FP-2 \u00a76.4",
+       "FP-2 \u00a76.5(b)",
+       "FP-2 \u00a76.6(b)",
+       "FP-2 \u00a74.3",
+       "FP-2 \u00a75.1(b)",
+       "FP-2 \u00a75.2"
+      ],
+      "claims": [
+       {
+        "derived": null,
+        "field": "order.ip_country",
+        "statement": "The order IP country is Spain.",
+        "value": "ES"
+       },
+       {
+        "derived": null,
+        "field": "order.card_bin_country",
+        "statement": "The card issuing country is Canada.",
+        "value": "CA"
+       },
+       {
+        "derived": null,
+        "field": "order.account_home_country",
+        "statement": "The account home country is Canada.",
+        "value": "CA"
+       },
+       {
+        "derived": null,
+        "field": "context.bin_ip_country_mismatch",
+        "statement": "The card issuing and IP countries differ.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.avs_mismatch",
+        "statement": "Address verification failed.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.cvv_mismatch",
+        "statement": "Card security-code verification did not fail.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.device_link_age_hours",
+        "statement": "The device was first linked to the account 5369.509722222222 hours before the order.",
+        "value": 5369.509722222222
+       },
+       {
+        "derived": null,
+        "field": "context.geo_kmh_from_previous_attempt",
+        "statement": "The recorded implied speed from the previous attempt is 0.0 km/h.",
+        "value": 0.0
+       },
+       {
+        "derived": null,
+        "field": "context.attempts_user_24h",
+        "statement": "The account made one order attempt in the applicable window.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.attempts_device_24h",
+        "statement": "The device had one order attempt in the applicable window.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.processor_declines_card_24h",
+        "statement": "The card had no processor declines in the applicable window.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.processor_declines_device_24h",
+        "statement": "The device had no processor declines in the applicable window.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.accounts_on_device_30d",
+        "statement": "One account was active on the device in the applicable window.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "context.accounts_on_address_30d",
+        "statement": "Two accounts ordered to the shipping address in the applicable window.",
+        "value": 2
+       },
+       {
+        "derived": null,
+        "field": "context.email_root_other_accounts",
+        "statement": "No other account has a matching normalized email.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "order.promotion_used",
+        "statement": "The order used no promotion.",
+        "value": false
+       },
+       {
+        "derived": null,
+        "field": "context.email_domain_class",
+        "statement": "The email uses a common provider rather than a disposable domain.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.is_first_attempt_user",
+        "statement": "This is not the account's first order attempt.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.inr_disputes_opened_user",
+        "statement": "The account has opened no item-not-received disputes.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.unauthorized_disputes_lost_user",
+        "statement": "No earlier unauthorized-use dispute was resolved against the platform.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.never_pay_determined_user",
+        "statement": "No earlier never-pay determination is recorded.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.inr_claims_rejected_user",
+        "statement": "No earlier item-not-received claim was rejected on a delivered order.",
+        "value": 0
+       },
+       {
+        "derived": null,
+        "field": "context.ship_to_home",
+        "statement": "The order ships to the account's home address.",
+        "value": 1
+       },
+       {
+        "derived": null,
+        "field": "decision.checks",
+        "statement": "No verification check has completed.",
+        "value": []
+       },
+       {
+        "derived": null,
+        "field": "context.shipped_at_decision",
+        "statement": "The order has not shipped at decision time.",
+        "value": 0
+       }
+      ],
+      "disposition": "needs_check",
+      "hypotheses": [
+       {
+        "explanation": "traveller",
+        "likelihood": "medium",
+        "reasoning": "A Canadian account holder travelling in Spain could legitimately use their Canadian card and ship home. The longstanding device and absence of unusual attempt activity support this explanation, but do not resolve the address-verification failure."
+       },
+       {
+        "explanation": "stolen_card",
+        "likelihood": "medium",
+        "reasoning": "The issuing-country/IP mismatch together with failed address verification satisfies R03. Successful security-code verification does not establish that the person ordering holds the card and account."
+       }
+      ],
+      "memo": "R03 holds because the Canadian card is used from a Spanish IP and address verification failed. Card is the sole adverse family; no other rule holds, no household exception is needed, and no earlier outcome settles the order. Travel is a plausible benign explanation, particularly with the longstanding device and home delivery, but cannot resolve card ownership. Recommend holding the unshipped order for id_check. No check has run, so needs_check is permitted; decline is not permitted with only this family. The issuer-authentication and identity check would most change the decision.",
+      "next_check": "id_check"
+     },
+     "problems": [],
+     "score": {
+      "acceptable": true,
+      "action": "hold",
+      "citation_ok": true,
+      "complete_pass": true,
+      "components": {
+       "acceptable": true,
+       "citations_valid": true,
+       "format_valid": true,
+       "next_check_ok": true,
+       "no_claim_error": true
+      },
+      "disposition": "needs_check",
+      "format_valid": true,
+      "needs_check": true,
+      "next_check": "id_check",
+      "next_check_ok": true,
+      "nonpayment_violation": false,
+      "outcome": "scored",
+      "problems": [],
+      "prohibited": false,
+      "standard": false,
+      "standard_action": true,
+      "top_hypothesis": null,
+      "top_hypothesis_tied": true,
+      "verification": {
+       "claim_errors": [],
+       "has_claim_error": false,
+       "has_unmatched_token": false,
+       "n_claim_errors": 0,
+       "n_claims": 25,
+       "n_derived_claims": 0,
+       "unmatched_tokens": {
+        "n_derived": 0,
+        "n_texts": 28,
+        "n_unmatched": 0,
+        "n_with_tokens": 2
+       }
+      }
+     }
+    }
+   },
+   "case_id": "416-baseline-149795-20250819T103657",
+   "file": "traveller",
+   "slot": "traveller"
+  }
+ ],
+ "endpoints": {
+  "diagnostics": {
+   "sol": {
+    "against_simulation_truth": {
+     "source": "/arms/sol/latent_diagnostic",
+     "value": {
+      "fraud_cleared": {
+       "denominator": 4,
+       "numerator": 0,
+       "value": 0.0
+      },
+      "legitimate_adverse": {
+       "denominator": 2,
+       "numerator": 2,
+       "value": 1.0
+      },
+      "top_hypothesis_names_latent": {
+       "denominator": 6,
+       "numerator": 0,
+       "value": 0.0
+      },
+      "top_hypothesis_names_latent_by_class": {
+       "fraud": {
+        "denominator": 4,
+        "numerator": 0,
+        "value": 0.0
+       },
+       "legitimate": {
+        "denominator": 2,
+        "numerator": 0,
+        "value": 0.0
+       }
+      },
+      "top_hypothesis_tied": 4
+     }
+    },
+    "failing_cluster_bound": {
+     "clusters": {
+      "source": "/statistics/arms/sol/complete_pass/exact_clusters/clusters",
+      "value": 6
+     },
+     "clusters_with_failure": {
+      "source": "/statistics/arms/sol/complete_pass/exact_clusters/clusters_with_failure",
+      "value": 0
+     },
+     "failure_share_upper_one_sided": {
+      "source": "/statistics/arms/sol/complete_pass/exact_clusters/failure_share_upper_one_sided",
+      "value": 0.393
+     },
+     "level": {
+      "source": "/statistics/arms/sol/complete_pass/exact_clusters/level",
+      "value": 0.95
+     }
+    }
+   }
+  },
+  "primary": {
+   "arms": {
+    "sol": {
+     "degenerate": {
+      "source": "/statistics/arms/sol/complete_pass/degenerate",
+      "value": "every case passed"
+     },
+     "natural_mix": {
+      "source": "/statistics/arms/sol/complete_pass/natural",
+      "value": 1.0
+     },
+     "natural_mix_cluster_bootstrap": {
+      "source": "/statistics/arms/sol/complete_pass/natural_cluster_bootstrap",
+      "value": null
+     },
+     "per_axis": {
+      "review": {
+       "unweighted": {
+        "source": "/arms/sol/summary/per_axis/review/complete_pass",
+        "value": {
+         "denominator": 6,
+         "numerator": 6,
+         "value": 1.0
+        }
+       },
+       "weighted": {
+        "source": "/arms/sol/summary/per_axis/review/complete_pass_weighted",
+        "value": 1.0
+       }
+      }
+     },
+     "unweighted": {
+      "source": "/arms/sol/summary/complete_pass",
+      "value": {
+       "denominator": 6,
+       "numerator": 6,
+       "value": 1.0
+      }
+     },
+     "unweighted_cluster_bootstrap": {
+      "source": "/statistics/arms/sol/complete_pass/cluster_bootstrap",
+      "value": null
+     },
+     "unweighted_wilson": {
+      "source": "/statistics/arms/sol/complete_pass/wilson",
+      "value": [
+       0.6097,
+       1.0
+      ]
+     }
+    }
+   },
+   "name": "complete-memo pass rate, per arm",
+   "reported_as": "natural_mix"
+  },
+  "protocol": "llm/eval/PROTOCOL.md",
+  "secondary": {
+   "arms": {
+    "sol": {
+     "acceptable_rate": {
+      "degenerate": {
+       "source": "/statistics/arms/sol/acceptable/degenerate",
+       "value": "every case passed"
+      },
+      "natural_mix": {
+       "source": "/statistics/arms/sol/acceptable/natural",
+       "value": 1.0
+      },
+      "natural_mix_cluster_bootstrap": {
+       "source": "/statistics/arms/sol/acceptable/natural_cluster_bootstrap",
+       "value": null
+      },
+      "unweighted": {
+       "source": "/arms/sol/summary/acceptable",
+       "value": {
+        "denominator": 6,
+        "numerator": 6,
+        "value": 1.0
+       }
+      },
+      "unweighted_cluster_bootstrap": {
+       "source": "/statistics/arms/sol/acceptable/cluster_bootstrap",
+       "value": null
+      },
+      "unweighted_wilson": {
+       "source": "/statistics/arms/sol/acceptable/wilson",
+       "value": [
+        0.6097,
+        1.0
+       ]
+      }
+     },
+     "components": {
+      "source": "/arms/sol/summary/components",
+      "value": {
+       "acceptable": {
+        "denominator": 6,
+        "numerator": 6,
+        "value": 1.0
+       },
+       "citations_valid": {
+        "denominator": 6,
+        "numerator": 6,
+        "value": 1.0
+       },
+       "format_valid": {
+        "denominator": 6,
+        "numerator": 6,
+        "value": 1.0
+       },
+       "next_check_ok": {
+        "denominator": 6,
+        "numerator": 6,
+        "value": 1.0
+       },
+       "no_claim_error": {
+        "denominator": 6,
+        "numerator": 6,
+        "value": 1.0
+       }
+      }
+     },
+     "functional_invariance": {
+      "source": "/arms/sol/summary/invariance",
+      "value": {}
+     },
+     "per_policy_row": {
+      "source": "/arms/sol/summary/per_referee_row",
+      "value": {
+       "\u00a75.3(a)": {
+        "n": 0,
+        "not_evaluated": "no case in the cohort"
+       },
+       "\u00a75.3(b), with Linkage": {
+        "n": 0,
+        "not_evaluated": "no case in the cohort"
+       },
+       "\u00a75.3(b), without Linkage": {
+        "n": 0,
+        "not_evaluated": "no case in the cohort"
+       },
+       "\u00a75.3(c)": {
+        "n": 0,
+        "not_evaluated": "a hold without an answer expires; no analyst decision follows"
+       },
+       "\u00a76.6(a)": {
+        "n": 0,
+        "not_evaluated": "no case in the cohort"
+       },
+       "\u00a76.6(b), one family": {
+        "acceptable": {
+         "denominator": 5,
+         "numerator": 5,
+         "value": 1.0
+        },
+        "complete_pass": {
+         "denominator": 5,
+         "numerator": 5,
+         "value": 1.0
+        }
+       },
+       "\u00a76.6(b), two or more families": {
+        "acceptable": {
+         "denominator": 1,
+         "numerator": 1,
+         "value": 1.0
+        },
+        "complete_pass": {
+         "denominator": 1,
+         "numerator": 1,
+         "value": 1.0
+        }
+       },
+       "\u00a76.6(c)": {
+        "n": 0,
+        "not_evaluated": "no case in the cohort"
+       }
+      }
+     },
+     "spend": {
+      "source": "/arms/sol/spend",
+      "value": {
+       "calls": 6,
+       "charged_tokens": 52149,
+       "input_tokens": 43766,
+       "output_tokens": 8383,
+       "unknown_usage_calls": 0
+      }
+     },
+     "standard_action_agreement": {
+      "rate": {
+       "source": "/arms/sol/summary/standard_action",
+       "value": {
+        "denominator": 6,
+        "numerator": 6,
+        "value": 1.0
+       }
+      },
+      "table": {
+       "source": "/arms/sol/disagreement",
+       "value": {
+        "hold -> needs_check": 6
+       }
+      }
+     }
+    }
+   },
+   "paired_comparison": {
+    "not_made": "made only when the benchmark has two arms and both are scored"
+   }
+  }
+ },
+ "pins": {
+  "sol": {
+   "backend": "codex",
+   "cli_version": "codex-cli 0.159.2",
+   "effort": "high",
+   "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+   "model": "gpt-6.1-sol"
+  }
+ },
+ "statistics": {
+  "arms": {
+   "sol": {
+    "acceptable": {
+     "cluster_bootstrap": null,
+     "degenerate": "every case passed",
+     "exact_clusters": {
+      "clusters": 6,
+      "clusters_with_failure": 0,
+      "failure_share_upper_one_sided": 0.393,
+      "level": 0.95,
+      "pass_share_interval": [
+       0.5407,
+       1.0
+      ]
+     },
+     "natural": 1.0,
+     "natural_cluster_bootstrap": null,
+     "rate": 1.0,
+     "wilson": [
+      0.6097,
+      1.0
+     ]
+    },
+    "complete_pass": {
+     "cluster_bootstrap": null,
+     "degenerate": "every case passed",
+     "exact_clusters": {
+      "clusters": 6,
+      "clusters_with_failure": 0,
+      "failure_share_upper_one_sided": 0.393,
+      "level": 0.95,
+      "pass_share_interval": [
+       0.5407,
+       1.0
+      ]
+     },
+     "natural": 1.0,
+     "natural_cluster_bootstrap": null,
+     "rate": 1.0,
+     "wilson": [
+      0.6097,
+      1.0
+     ]
+    }
+   }
+  },
+  "clusters": 6,
+  "paired": {}
+ }
+}

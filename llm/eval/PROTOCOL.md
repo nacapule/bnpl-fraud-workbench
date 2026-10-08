@@ -303,6 +303,7 @@ python -m llm.eval.harness --benchmark 2026-10-dev --arm sol \
     --amend-scoring "the scoring changes made after this set ran"
 python -m llm.eval.harness --benchmark 2026-10-dev-checks --arm sol --amend-scoring "..."
 python -m llm.eval.harness --benchmark 2026-10-dev-opus --arm opus --amend-scoring "..."
+python -m llm.eval.results --benchmark <id> [--amend-scoring "..."]   # results.json
 ```
 
 A live run checks the benchmark's shape and hashes and pins the arm's CLI first. It
@@ -318,9 +319,17 @@ a personal subscription only).
 
 The development sets each hold one arm's records (`sol` for `2026-10-dev` and
 `2026-10-dev-checks`, `opus` for `2026-10-dev-opus`), so they are scored with `--arm`.
-All three were fixed before the last scoring change (the time differences), so scoring
-them names the change with `--amend-scoring`, which the results record. The final
-cohort is fixed with the scoring code as it stands at this protocol's commit.
+Each was fixed before a later scoring change: `2026-10-dev` before the complete-memo
+scoring and the per-axis rates, `2026-10-dev-checks` before the per-axis rates, and all
+three before the time differences (and the v2 default prompt, which they do not use). So
+scoring them names those changes with `--amend-scoring`, which the results record. The
+final cohort is fixed with the scoring code as it stands at this protocol's commit.
+
+Each benchmark with records keeps its scores in `results.json`, written by
+`llm.eval.results` from the committed records alone (a test rescores them and compares
+the bytes). Beside the harness's output it names the endpoints above under
+`endpoints`, each a copy of a harness value with its JSON pointer, and for the case memos
+it holds each case's file, slot, memo and score.
 
 ## Corrections after pre-registration
 
