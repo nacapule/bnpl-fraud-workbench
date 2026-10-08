@@ -1,6 +1,8 @@
 """A relative link or image in a published document must reach a file in the
 repository, and a link to a heading must reach that heading, as GitHub writes its
-anchor; links inside code, and links with a scheme, are left alone."""
+anchor. Every link-like destination outside fenced code is checked, so a construct the
+check misreads (code, a title, quoted attribute text) adds a finding but never hides a
+link; links with a scheme are left alone."""
 
 from __future__ import annotations
 
@@ -39,7 +41,8 @@ BASE = {
     '<img src="reports/figures/chart.svg" alt="chart">',
     "[ref]: reports/figures/chart.svg",
     "[site](https://example.org/missing) and [mail](mailto:someone@example.org)",
-    "`[code](missing.md)` and\n\n```\n![fenced](missing.svg)\n```",
+    "```\n![fenced](missing.svg)\n```",
+    "[escaped](docs/methods\\.md) [entity](docs&#47;methods.md#upper&#45;bound)",
 ])
 def test_links_that_reach_their_targets_pass(tmp_path: Path, text: str) -> None:
     root = _repo(tmp_path, {**BASE, "README.md": text + "\n"})
@@ -57,6 +60,8 @@ def test_links_that_reach_their_targets_pass(tmp_path: Path, text: str) -> None:
     ("[ref]: reports/figures/gone.svg", "no such file"),
     ("[out](../elsewhere.md)", "leaves the repository"),
     ("[abs](/reports/memo.md)", "is absolute"),
+    ("[docs](docs)", "'docs': no such file"),
+    ("![figures](reports/figures)", "no such file"),
 ])
 def test_a_link_to_nothing_fails_with_its_line(tmp_path: Path, text: str,
                                                message: str) -> None:
@@ -65,6 +70,55 @@ def test_a_link_to_nothing_fails_with_its_line(tmp_path: Path, text: str,
     assert len(problems) == 1
     assert problems[0].startswith("README.md:3: ")
     assert message in problems[0]
+
+
+@pytest.mark.parametrize("text, found", [
+    # titles in any form, angle brackets, balanced parentheses
+    ("[a](x.md 'title') [b](y.md (title)) [c](<z w.md>) [d](f(1).md) [e](g.md \"a \\\"t\\\"\")",
+     ["x.md", "y.md", "z w.md", "f(1).md", "g.md"]),
+    # an image inside a link, in a table, in a quote, and a link wrapped over two lines
+    ("[![chart](img.svg)](page.md)", ["img.svg", "page.md"]),
+    ("| a | b |\n|---|---|\n| ![c](c.svg) | [d](d.md) |", ["c.svg", "d.md"]),
+    ("> See [the operating\n> review](quoted.md).", ["quoted.md"]),
+    ("[text over\ntwo lines](two.md)", ["two.md"]),
+    # a definition with its target below, a destination on the next line
+    ("[ref]:\n  below.md", ["below.md"]),
+    ("[a](\n  next.md)", ["next.md"]),
+    # exact src and href attributes anywhere in a tag, whatever the quotes hold
+    ('<a data-href="x.md" href="a.md">a</a>', ["a.md"]),
+    ('<img alt="Gain > hurdle" src="b.svg"> <a title="Loss < cap" href="c.md">m</a>',
+     ["b.svg", "c.md"]),
+    # a fence of four closed by four but not by three, a fence closed only by a bare line
+    ("````\n[a](in.md)\n```\n[b](in2.md)\n````\n[c](out.md)", ["out.md"]),
+    ("```\n[a](in.md)\n``` text\n[b](in2.md)\n```\n[c](out.md)", ["out.md"]),
+])
+def test_every_link_like_destination_is_collected(text: str, found: list[str]) -> None:
+    assert [target for _, target in links.targets(text)] == found
+
+
+@pytest.mark.parametrize("text, found", [
+    # code, titles and quoted attribute text are read as links: a finding, never a miss
+    ("`[a](in-code.md)` and [b](real.md)", ["in-code.md", "real.md"]),
+    ("# `\n## [out](a.md) `", ["a.md"]),
+    ('<img title="href=\'x.md\'" src="y.svg">', ["x.md", "y.svg"]),
+])
+def test_what_might_be_a_link_is_checked_as_one(text: str, found: list[str]) -> None:
+    assert [target for _, target in links.targets(text)] == found
+
+
+def test_a_known_non_link_is_exempted_by_its_document_and_line(tmp_path: Path,
+                                                                monkeypatch) -> None:
+    line = "Write `[label](target.md)` for a link."
+    root = _repo(tmp_path, {**BASE, "README.md": line + "\n"})
+    assert links.broken(root) == ["README.md:1: link 'target.md': no such file"]
+    monkeypatch.setattr(links, "NOT_LINKS", frozenset({("README.md", line)}))
+    assert links.broken(root) == []
+    monkeypatch.setattr(links, "NOT_LINKS", frozenset({("cases/ring.md", line)}))
+    assert links.broken(root) == ["README.md:1: link 'target.md': no such file"]
+
+
+def test_the_repository_exempts_nothing() -> None:
+    assert links.NOT_LINKS == frozenset()
 
 
 def test_every_published_document_is_read_relative_to_itself(tmp_path: Path) -> None:
@@ -80,46 +134,6 @@ def test_every_published_document_is_read_relative_to_itself(tmp_path: Path) -> 
         "cases/ring.md:2: link '../reports/figures/gone.svg': no such file"]
 
 
-def test_github_anchors_drop_punctuation_and_keep_hyphens() -> None:
-    assert links.slug("Operating review: which review policy to run") == \
-        "operating-review-which-review-policy-to-run"
-    assert links.slug("A reviewer who always knows the truth (a diagnostic)") == \
-        "a-reviewer-who-always-knows-the-truth-a-diagnostic"
-    assert links.slug("The analyst's decisions by label") == "the-analysts-decisions-by-label"
-    assert links.slug("Pay-in-4 and depth-3, §6.2") == "pay-in-4-and-depth-3-62"
-
-
-@pytest.mark.parametrize("text, found", [
-    # titles in either quote or in parentheses, angle brackets, balanced parentheses
-    ("[a](x.md 'title') [b](y.md (title)) [c](<z w.md>) [d](f(1).md)",
-     ["x.md", "y.md", "z w.md", "f(1).md"]),
-    # an image inside a link's text, and in a table cell
-    ("[![chart](img.svg)](page.md)", ["img.svg", "page.md"]),
-    ("| a | b |\n|---|---|\n| ![c](c.svg) | [d](d.md) |", ["c.svg", "d.md"]),
-    # a link across two lines of one paragraph, and a definition with its target below
-    ("[text over\ntwo lines](two.md)", ["two.md"]),
-    ("[ref]:\n  below.md", ["below.md"]),
-    # what is not a link: a destination with a space, an unclosed title, no bracket
-    ("[a](x y.md) [b](x.md 'open) (c](z.md)", []),
-    # code: a span across lines, a span of two backticks around one, a fence of four
-    # closed by four but not by three, and a fence closed only by a bare line
-    ("`[a](in.md)\n[b](still-in.md)` [c](out.md)", ["out.md"]),
-    ("``a ` [b](in.md) `` [c](out.md)", ["out.md"]),
-    ("````\n[a](in.md)\n```\n[b](in2.md)\n````\n[c](out.md)", ["out.md"]),
-    ("```\n[a](in.md)\n``` text\n[b](in2.md)\n```\n[c](out.md)", ["out.md"]),
-    # an unmatched backtick is text, so it hides nothing
-    ("a ` b [c](seen.md)", ["seen.md"]),
-])
-def test_links_are_read_as_github_writes_them(text: str, found: list[str]) -> None:
-    assert [target for _, target in links.targets(text)] == found
-
-
-def test_a_directory_is_not_a_file(tmp_path: Path) -> None:
-    root = _repo(tmp_path, {**BASE, "README.md": "[docs](docs) ![figures](reports/figures)\n"})
-    assert links.broken(root) == ["README.md:1: link 'docs': no such file",
-                                  "README.md:1: link 'reports/figures': no such file"]
-
-
 def test_a_link_out_of_the_repository_is_caught_in_every_form(tmp_path: Path) -> None:
     root = _repo(tmp_path / "repo", {**BASE, "README.md":
                                      "[a](../out.md 'title') [![b](../out.svg)](README.md)\n"})
@@ -130,42 +144,21 @@ def test_a_link_out_of_the_repository_is_caught_in_every_form(tmp_path: Path) ->
         "README.md:1: link '../out.svg' leaves the repository"]
 
 
+def test_github_anchors_drop_punctuation_and_keep_hyphens() -> None:
+    assert links.slug("Operating review: which review policy to run") == \
+        "operating-review-which-review-policy-to-run"
+    assert links.slug("A reviewer who always knows the truth (a diagnostic)") == \
+        "a-reviewer-who-always-knows-the-truth-a-diagnostic"
+    assert links.slug("The analyst's decisions by label") == "the-analysts-decisions-by-label"
+    assert links.slug("Pay-in-4 and depth-3, §6.2") == "pay-in-4-and-depth-3-62"
+    assert links.slug("[`code`](README.md)") == "code"
+    assert links.slug("[foo](a(b)c.md) bar") == "foo-bar"
+    assert links.slug("Syntax: `[label](README.md)`") == "syntax-labelreadmemd"
+
+
 def test_anchors_follow_githubs_rendered_text_and_repeat_numbers() -> None:
     text = ("# X\n\n# X\n\n# X-1\n\n## _Italics_ and snake_case\n\n"
             "## The `<foo>` tag\n\n## Caf&eacute; &amp; more\n\n"
             "```\n# not a heading\n```\n")
     assert links.anchors(text) == {"x", "x-1", "x-1-1", "italics-and-snake_case",
                                    "the-foo-tag", "café--more"}
-
-
-@pytest.mark.parametrize("text, found", [
-    # headings, list items and table rows are blocks of their own for code spans
-    ("# `\n## [out](a.md) `", ["a.md"]),
-    ("- `a\n- [b](b.md) `", ["b.md"]),
-    # an escaped backtick or bracket is text; an escaped backslash is not an escape
-    ("\\`[a](a.md)` [b](b.md)", ["a.md", "b.md"]),
-    ("\\\\[x](x.md)", ["x.md"]),
-    # a title with escaped delimiters
-    ('[a](a.md "a \\"title\\"") [b](b.md \'it\\\'s\') [c](c.md (one \\) two))',
-     ["a.md", "b.md", "c.md"]),
-    # the exact src and href attributes of a tag, whatever else it holds
-    ('<a data-href="x.md" href="a.md">a</a>', ["a.md"]),
-    ("<img title=\"href='x.md'\" src='b.svg'>", ["b.svg"]),
-])
-def test_blocks_escapes_titles_and_attributes(text: str, found: list[str]) -> None:
-    assert [target for _, target in links.targets(text)] == found
-
-
-def test_a_destination_is_resolved_after_its_escapes_and_entities(tmp_path: Path) -> None:
-    root = _repo(tmp_path, {**BASE, "README.md": "[a](docs/methods\\.md) [b](docs&#47;methods.md)"
-                                                 " [c](docs/methods.md#upper&#45;bound)\n"})
-    assert links.broken(root) == []
-
-
-@pytest.mark.parametrize("heading, anchor", [
-    ("[`code`](README.md)", "code"),
-    ("[foo](a(b)c.md) bar", "foo-bar"),
-    ("[foo][ref] and ![logo](logo.svg) more", "foo-and--more"),
-])
-def test_a_linked_heading_takes_its_label(heading: str, anchor: str) -> None:
-    assert links.slug(heading) == anchor

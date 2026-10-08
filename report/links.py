@@ -1,22 +1,21 @@
 """Relative links and images in the published Markdown documents must reach a file in
 the repository, and a link to a heading must reach that heading.
 
-The documents are the README, ``docs/``, ``reports/`` and ``cases/``. Checked: inline
-links and images, including an image inside a link's text (``[![alt](src)](target)``),
-with a destination in angle brackets or with balanced parentheses and a title in double
-quotes, single quotes or parentheses; reference definitions (``[name]: target``, the
-target on the same or the next line); and HTML ``src`` and ``href`` attributes. Not
-checked: targets with a scheme (``https:``, ``mailto:``) and anything inside fenced code
-or a code span. Like the number lint, the reader errs one way only: what it cannot place
-for certain as code (indented code, a span it cannot match) is read as text, so unusual
-Markdown can add a finding but never hide a link.
+The documents are the README, ``docs/``, ``reports/`` and ``cases/``. The check reads
+every line outside fenced code blocks and collects every link-like destination: whatever
+follows ``](``, the target of a reference definition (``[name]: target``), and the
+value of an attribute named exactly ``src`` or ``href``. It does not try to tell inline
+code, titles or quoted attribute text apart from links, so a construct it misreads can
+add a finding but never hide one, as with the number lint; a link-like string in our own
+documents that is not a link is exempted in :data:`NOT_LINKS` by file and line text.
+Targets with a scheme (``https:``, ``mailto:``) are not checked.
 
-A target must be a file inside the repository (not a directory). A fragment
-(``#heading``) must name an anchor of its Markdown target as GitHub writes it: the
-heading's text (code kept, markup and tags dropped), lower case, every character but
-letters, digits, ``_``, ``-`` and spaces dropped, each space a hyphen, and a repeat
-numbered ``-1``, ``-2``, ... until it is unused; ``<a id="...">`` and ``<a name="...">``
-count too. Only ATX headings (``#`` to ``######``) are read.
+A target, once its Markdown escapes and HTML entities are decoded, must be a file inside
+the repository. A fragment (``#heading``) must name an anchor of its Markdown target as
+GitHub writes it: the heading's text (a link's label, code kept, tags and emphasis
+dropped, entities decoded), lower case, every character but letters, digits, ``_``,
+``-`` and spaces dropped, each space a hyphen, and a repeat numbered ``-1``, ``-2``, ...
+until it is unused; ``<a id="...">`` and ``<a name="...">`` count too.
 """
 
 from __future__ import annotations
@@ -29,19 +28,22 @@ from urllib.parse import unquote
 from report.render import REPO
 
 PUBLISHED = ("README.md", "docs/*.md", "reports/**/*.md", "cases/*.md")
+# Link-like strings in the documents that are not links: (document, the line's text).
+NOT_LINKS: frozenset[tuple[str, str]] = frozenset()
 FENCE_OPEN = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
-DEFINITION = re.compile(r"^ {0,3}\[(?:[^\[\]\\]|\\.)+\]:[ \t]*\n?[ \t]*(<[^<>\n]*>|\S+)",
-                        re.MULTILINE)
-HTML_TAG = re.compile(r"<[A-Za-z][^<>]*>")
-HTML_ATTRIBUTE = re.compile(r"""([^\s=/>"']+)(?:\s*=\s*("[^"]*"|'[^']*'|[^\s"'=<>`]+))?""")
+# a destination: <...>, or text without spaces whose parentheses are balanced, one deep
+DESTINATION = r"(<[^<>\n]*>|[^\s()]*(?:\([^\s()]*\)[^\s()]*)*)"
+INLINE = re.compile(r"\]\(\s*" + DESTINATION)
+DEFINITION = re.compile(r"^ {0,3}\[[^\]]+\]:[ \t]*(\S*)")
+ATTRIBUTE = re.compile(r"""(?<![\w.:-])(?:src|href)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'<>`]+))""",
+                       re.IGNORECASE)
 ESCAPE = re.compile(r"\\([!-/:-@\[-`{-~])")  # a backslash before ASCII punctuation
-# A line that starts a block of its own: a heading, a list item, a table row, a quote.
-BLOCK_START = re.compile(r"^ {0,3}(#{1,6}([ \t]|$)|[-*+][ \t]|\d{1,9}[.)][ \t]|\||>)")
 SCHEME = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*:")
 HEADING = re.compile(r"^ {0,3}(#{1,6})(?:[ \t]+(.*?))?(?:[ \t]+#+)?[ \t]*$")
 ANCHOR = re.compile(r"""<a\s[^<>]*?\b(?:name|id)\s*=\s*["']([^"']+)["']""")
 TAG = re.compile(r"<[^<>]+>")
-TITLE_CLOSE = {'"': '"', "'": "'", "(": ")"}
+LABEL = r"\[((?:[^\[\]]|\[[^\[\]]*\])*)\]"
+TARGET = r"\((?:[^()]|\([^()]*\))*\)"
 
 
 def published(root: Path = REPO) -> list[Path]:
@@ -71,161 +73,50 @@ def _outside_fences(text: str) -> list[str]:
     return kept
 
 
-def _blocks(text: str) -> list[tuple[int, str]]:
-    """The text outside fenced code, as ``(first line number, block)``: runs of lines
-    separated by blank lines, each with its code spans blanked."""
-    blocks, current, start = [], [], 1
-    for number, line in enumerate(_outside_fences(text), start=1):
-        if not line.strip() or BLOCK_START.match(line):
-            if current:
-                blocks.append((start, _blank_code("\n".join(current))))
-            current = []
-            if not line.strip():
-                continue
-        if not current:
-            start = number
-        current.append(line)
-    if current:
-        blocks.append((start, _blank_code("\n".join(current))))
-    return blocks
-
-
-def _blank_code(block: str) -> str:
-    """``block`` with every code span (a run of backticks closed by a run of the same
-    length) blanked, newlines kept; an unmatched run is literal text."""
-    runs = [(match.start() + (1 if _escaped(block, match.start()) else 0), match.end())
-            for match in re.finditer(r"`+", block)]
-    runs = [(start, end) for start, end in runs if end > start]
-    out, index = list(block), 0
-    while index < len(runs):
-        start, end = runs[index]
-        length = end - start
-        closing = next((later for later in range(index + 1, len(runs))
-                        if runs[later][1] - runs[later][0] == length), None)
-        if closing is None:
-            index += 1
-            continue
-        for position in range(start, runs[closing][1]):
-            if out[position] != "\n":
-                out[position] = " "
-        index = closing + 1
-    return "".join(out)
-
-
-def _escaped(block: str, position: int) -> bool:
-    """Whether the character at ``position`` follows an odd run of backslashes."""
-    count = 0
-    while position - count - 1 >= 0 and block[position - count - 1] == "\\":
-        count += 1
-    return count % 2 == 1
-
-
-def _opening_bracket(block: str, close: int) -> int | None:
-    """The ``[`` that the ``]`` at ``close`` closes, if any."""
-    depth = 0
-    for position in range(close, -1, -1):
-        char = block[position]
-        if _escaped(block, position):
-            continue
-        if char == "]":
-            depth += 1
-        elif char == "[":
-            depth -= 1
-            if depth == 0:
-                return position
-    return None
-
-
-def _destination(block: str, start: int) -> str | None:
-    """The destination of an inline link whose ``(`` is at ``start - 1``, or ``None``
-    when what follows is not a link's destination, title and ``)``."""
-    position = start
-    while position < len(block) and block[position] in " \t\n":
-        position += 1
-    if position < len(block) and block[position] == "<":
-        end = block.find(">", position)
-        if end < 0 or "\n" in block[position:end] or "<" in block[position + 1:end]:
-            return None
-        target, position = block[position + 1:end], end + 1
-    else:
-        depth, begin = 0, position
-        while position < len(block):
-            char = block[position]
-            if char == "\\" and position + 1 < len(block):
-                position += 2
-                continue
-            if char in " \t\n" or (char == ")" and depth == 0):
-                break
-            depth += char == "("
-            depth -= char == ")"
-            position += 1
-        if depth:
-            return None
-        target = block[begin:position]
-    gap = position
-    while position < len(block) and block[position] in " \t\n":
-        position += 1
-    if position < len(block) and block[position] in TITLE_CLOSE and position > gap:
-        closer, close = TITLE_CLOSE[block[position]], position + 1
-        while close < len(block) and (block[close] != closer or _escaped(block, close)):
-            close += 1
-        if close >= len(block):
-            return None
-        position = close + 1
-        while position < len(block) and block[position] in " \t\n":
-            position += 1
-    if position >= len(block) or block[position] != ")":
-        return None
-    return target
-
-
-def targets(text: str) -> list[tuple[int, str]]:
-    """Every link and image target in a Markdown text, with its line, in order."""
+def targets(text: str, name: str = "") -> list[tuple[int, str]]:
+    """Every link-like destination in a Markdown text, with its line, in order; lines
+    listed in :data:`NOT_LINKS` for the document ``name`` are skipped."""
+    lines = _outside_fences(text)
     found = []
-    for first, block in _blocks(text):
-        def line(offset: int, first: int = first, block: str = block) -> int:
-            return first + block.count("\n", 0, offset)
-        for match in re.finditer(r"\]\(", block):
-            if _opening_bracket(block, match.start()) is None:
-                continue
-            target = _destination(block, match.end())
-            if target is not None:
-                found.append((line(match.start()), match.start(), target))
-        for match in DEFINITION.finditer(block):
+    for index, line in enumerate(lines):
+        if (name, line.strip()) in NOT_LINKS:
+            continue
+        number = index + 1
+        for match in INLINE.finditer(line):
             target = match.group(1)
-            found.append((line(match.start()), match.start(),
-                          target[1:-1] if target.startswith("<") else target))
-        for tag in HTML_TAG.finditer(block):
-            inside = tag.group(0)[1:-1]
-            for attribute in list(HTML_ATTRIBUTE.finditer(inside))[1:]:  # after the name
-                name, value = attribute.group(1).lower(), attribute.group(2)
-                if name in ("src", "href") and value is not None:
-                    found.append((line(tag.start()), tag.start() + attribute.start(),
-                                  value[1:-1] if value[0] in "\"'" else value))
-    return [(number, target) for number, _, target in sorted(found)]
-
-
-LABEL = r"\[((?:[^\[\]]|\[[^\[\]]*\])*)\]"
-TARGET = r"\((?:[^()]|\([^()]*\))*\)"
+            if not target and match.end() == len(line.rstrip()) and index + 1 < len(lines):
+                target = re.match(DESTINATION, lines[index + 1].strip()).group(1)
+            found.append((match.start(), number, target))
+        if definition := DEFINITION.match(line):
+            target = definition.group(1)
+            if not target and index + 1 < len(lines):
+                target = (lines[index + 1].split() or [""])[0]
+            found.append((definition.start(), number, target))
+        for match in ATTRIBUTE.finditer(line):
+            found.append((match.start(), number,
+                          next(group for group in match.groups() if group is not None)))
+    found.sort(key=lambda item: (item[1], item[0]))
+    return [(number, target[1:-1] if target.startswith("<") and target.endswith(">")
+             else target) for _, number, target in found]
 
 
 def _heading_text(raw: str) -> str:
     """A heading's text as it renders: link and image markup dropped (a link keeps its
     label), code spans kept literally, tags and emphasis markers dropped, entities
     decoded."""
-    raw = re.sub("!" + LABEL + "(?:" + TARGET + r"|\[[^\]]*\])", "", raw)  # images: no text
-    raw = re.sub(LABEL + "(?:" + TARGET + r"|\[[^\]]*\])", r"\1", raw)  # links: their label
-    parts = re.split(r"(`+)(.+?)\1", raw)
-    text = []
-    for index in range(0, len(parts), 3):
-        prose = parts[index]
-        prose = TAG.sub("", prose).replace("*", "")
-        prose = re.sub(r"(?<![^\W_])_+|_+(?![^\W_])", "", prose)  # emphasis, not snake_case
-        text.append(html.unescape(prose))
-        if index + 2 < len(parts):
-            text.append(parts[index + 2].strip() if parts[index + 2].strip() else
-                        parts[index + 2])
-    return "".join(text).strip()
+    code: list[str] = []
+
+    def hold(match: re.Match[str]) -> str:
+        code.append(match.group(2))
+        return f"\x00{len(code) - 1}\x00"
+
+    text = re.sub(r"(`+)(.+?)\1", hold, raw)  # code first, so code is never read as markup
+    text = re.sub("!" + LABEL + "(?:" + TARGET + r"|\[[^\]]*\])", "", text)
+    text = re.sub(LABEL + "(?:" + TARGET + r"|\[[^\]]*\])", r"\1", text)
+    text = TAG.sub("", text).replace("*", "")
+    text = re.sub(r"(?<![^\W_])_+|_+(?![^\W_])", "", text)  # emphasis, not snake_case
+    text = html.unescape(text)
+    return re.sub("\x00(\\d+)\x00", lambda match: code[int(match.group(1))], text).strip()
 
 
 def slug(heading: str) -> str:
@@ -258,26 +149,26 @@ def broken(root: Path = REPO, documents: list[Path] | None = None) -> list[str]:
     for document in documents if documents is not None else published(root):
         text = document.read_text()
         name = document.resolve().relative_to(root).as_posix()
-        for number, target in targets(text):
+        for number, written in targets(text, name):
+            target = html.unescape(ESCAPE.sub(r"\1", written))
             if SCHEME.match(target) or target.startswith("//"):
                 continue
-            target = html.unescape(ESCAPE.sub(r"\1", target))
             path_part, _, fragment = target.partition("#")
             path_part = unquote(path_part)
             if path_part.startswith("/"):
-                problems.append(f"{name}:{number}: link {target!r} is absolute; use a path "
+                problems.append(f"{name}:{number}: link {written!r} is absolute; use a path "
                                 "relative to the document")
                 continue
             resolved = (document.parent / path_part).resolve() if path_part else \
                 document.resolve()
             if root not in (resolved, *resolved.parents):
-                problems.append(f"{name}:{number}: link {target!r} leaves the repository")
+                problems.append(f"{name}:{number}: link {written!r} leaves the repository")
                 continue
             if not resolved.is_file():
-                problems.append(f"{name}:{number}: link {target!r}: no such file")
+                problems.append(f"{name}:{number}: link {written!r}: no such file")
                 continue
             if fragment and resolved.suffix == ".md" and \
                     unquote(fragment) not in anchors(resolved.read_text()):
-                problems.append(f"{name}:{number}: link {target!r}: no heading with anchor "
+                problems.append(f"{name}:{number}: link {written!r}: no heading with anchor "
                                 f"#{fragment} in {resolved.relative_to(root).as_posix()}")
     return problems
