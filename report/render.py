@@ -15,7 +15,8 @@ A template is Markdown whose numbers come only from placeholders:
 ``{{ table:name | column "Header" format, column "Header", ... }}``
     on a line of its own: a generated Markdown table from a result table, with
     the columns named (``format`` optional; ``label`` prints an identifier in
-    words, from ``wording.labels`` in ``report/claims.yaml``);
+    words, from ``wording.labels`` in ``report/claims.yaml``, and ``id`` prints
+    a seed or an order id as it is);
 ``{{ table:name where col=value ... sum col,col by col,col [across col] | ... }}``
     the same from selected rows of a result table (:func:`select`): ``where``
     keeps the rows whose cell reads ``value``; in the per-world tables of
@@ -241,7 +242,7 @@ def render_table(body: str, sources: Sources) -> str:
             continue
         column, header, form = match.groups()
         format_name, *args = (form or "value").split(":")
-        if format_name not in formats.FORMATS and format_name != LABEL:
+        if format_name not in formats.FORMATS and format_name not in (LABEL, IDENTIFIER):
             problems.append(f"unknown format {format_name!r} for column {column!r}")
         elif rows and column not in rows[0]:
             problems.append(f"no column {column!r}")
@@ -251,7 +252,7 @@ def render_table(body: str, sources: Sources) -> str:
         problems.append("no columns named")
     lines = [
         "| " + " | ".join(header for _, header, _, _ in columns) + " |",
-        "|" + "|".join("---" if form in ("value", LABEL) else "---:"
+        "|" + "|".join("---" if form in ("value", LABEL, IDENTIFIER) else "---:"
                        for _, _, form, _ in columns) + "|",
     ]
     for index, row in enumerate(rows):
@@ -262,6 +263,15 @@ def render_table(body: str, sources: Sources) -> str:
                 cells.append("n/a")
             elif isinstance(cell, bool):
                 cells.append("yes" if cell else "no")
+            elif format_name == IDENTIFIER:
+                if isinstance(cell, int | str) and not args and \
+                        formats.unit_from_name(column) is None:
+                    cells.append(str(cell))
+                else:
+                    problems.append(f"row {index} column {column!r}: the id format prints "
+                                    "an identifier (a seed, an order id) as it is, not a "
+                                    "quantity, and takes no arguments")
+                    cells.append("")
             elif format_name == LABEL:
                 if not isinstance(cell, str) or args:
                     problems.append(f"row {index} column {column!r}: the label format "
@@ -286,6 +296,7 @@ def render_table(body: str, sources: Sources) -> str:
 
 # ---------------------------------------------------------------- selecting rows of a table
 LABEL = "label"
+IDENTIFIER = "id"  # a seed or an order id in a table, without thousands separators
 ROWS_COUNT = "rows_count"
 NAME = re.compile(r"^[a-z0-9_]+$")
 CLAUSES = ("where", "sum", "mean", "by", "across")
@@ -486,6 +497,13 @@ def select(rows: list[dict[str, Any]], selection: Selection, name: str,
     groups: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
     for row in kept:
         groups.setdefault(tuple(row.get(column) for column in selection.by), []).append(row)
+    # groups in the order their values first appear in the whole table, so that every
+    # selection from one table lists its groups in the same order
+    first = [{value: rank for rank, value in
+              enumerate(dict.fromkeys(row.get(column) for row in rows))}
+             for column in selection.by]
+    groups = dict(sorted(groups.items(), key=lambda item: tuple(
+        rank[value] for rank, value in zip(first, item[0], strict=True))))
     out = []
     try:
         if selection.across:

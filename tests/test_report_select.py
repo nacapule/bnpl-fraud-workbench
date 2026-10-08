@@ -221,3 +221,24 @@ def test_a_cell_that_is_not_a_number_fails_the_sum():
     odd = Sources(summary={"metrics": {}, "tables": {"replay.outcomes": rows}})
     with pytest.raises(RenderError, match="holds 'many', not a number"):
         table("replay.outcomes sum reviews by policy | policy", odd)
+
+
+def test_identifiers_print_as_they_are(sources):
+    seeds = [{"seed": 35244829, "policy": "hybrid", "net_cents": 10, "reviews": 3}]
+    ids = Sources(summary={"metrics": {}, "tables": {"replay.outcomes": seeds}})
+    assert table("replay.outcomes | seed id, policy id", ids)[2:] == ["| 35244829 | hybrid |"]
+    for column in ("net_cents", "seed id:0"):
+        with pytest.raises(RenderError, match="the id format prints an identifier"):
+            table(f"replay.outcomes | {column if ' ' in column else column + ' id'}", ids)
+
+
+def test_groups_keep_one_order_across_selections_from_a_table():
+    rows = [{"policy": "a", "truth": "x", "final": "clear", "orders": 1},
+            {"policy": "a", "truth": "y", "final": "clear", "orders": 2},
+            {"policy": "b", "truth": "y", "final": "clear", "orders": 3},
+            {"policy": "b", "truth": "x", "final": "clear", "orders": 4}]
+    ordered = Sources(summary={"metrics": {}, "tables": {"replay.confusion": rows}})
+    for policy, first, second in (("a", 1, 2), ("b", 4, 3)):
+        lines = table(f"replay.confusion where policy={policy} sum orders by truth "
+                      "| truth, orders count", ordered)
+        assert lines[2:] == [f"| x | {first} |", f"| y | {second} |"]
