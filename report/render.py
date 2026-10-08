@@ -18,7 +18,15 @@ A template is Markdown whose numbers come only from placeholders:
 ``{{ claim:<id> }}``
     a directional claim from ``report/claims.yaml``, written from its record and
     the results with its evidence (:mod:`report.claims`); it fails to render
-    when the results no longer support it.
+    when the results no longer support it;
+``{{ fact:<file>:<dotted.path> | format }}``
+    a case fact from ``cases/facts/<file>.json`` (a list item by its index), its
+    unit from the suffix of the path's last name, like a setting;
+``{{ table:fact:<file>:<dotted.path> | column "Header" format, ... }}``
+    on a line of its own: a table from a list of records in a case facts file;
+``{{ facts:<file>:<dotted.path> ["Header" "Header"] | name "Label" format, ... }}``
+    on a line of its own: a two-column table of named single values of one
+    record in a case facts file, each in its own unit.
 
 Rendering fails, listing every problem with its line, on a missing key, an
 unknown format or a format that does not fit the unit. Templates live under
@@ -28,6 +36,7 @@ unknown format or a format that does not fit the unit. Templates live under
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -45,6 +54,9 @@ from report.formats import FormatError, Value
 REPO = Path(__file__).resolve().parent.parent
 TEMPLATES = REPO / "report" / "templates"
 SUMMARY = REPO / "results" / "summary.json"
+FACTS = REPO / "cases" / "facts"
+FACT = re.compile(r"^([a-z0-9_]+):([a-z0-9_]+(?:\.[a-z0-9_]+)*)$")
+FACTS_HEAD = re.compile(r'^facts:(\S+)(?:\s+"([^"]*)"\s+"([^"]*)")?$')
 PLACEHOLDER = re.compile(r"\{\{(.*?)\}\}", re.DOTALL)
 COLUMN = re.compile(r'^\s*([a-z0-9_]+)\s*(?:"([^"]*)")?\s*([a-z0-9_:]+)?\s*$')
 KEY = re.compile(r"^[a-z0-9_]+(\.[a-z0-9_]+)*$")
@@ -71,6 +83,7 @@ class Sources:
     configs: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
     claims: Mapping[str, claims_module.Claim] = field(default_factory=dict)
     wording: claims_module.Wording | None = None
+    facts: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)  # by case file
 
     @classmethod
     def from_repo(cls, summary: Mapping[str, Any], root: Path = REPO) -> Sources:
@@ -80,8 +93,10 @@ class Sources:
             for path in sorted((root / "config").glob("*.yaml"))
         }
         claims, wording = claims_module.load_claims(root / "report" / "claims.yaml")
+        facts = {path.stem: json.loads(path.read_text())
+                 for path in sorted((root / "cases" / "facts").glob("*.json"))}
         return cls(summary=summary, protocol=protocol, configs=configs,
-                   claims={claim.id: claim for claim in claims}, wording=wording)
+                   claims={claim.id: claim for claim in claims}, wording=wording, facts=facts)
 
 
 def _path(data: Any, dotted: str, what: str) -> Any:
@@ -98,7 +113,37 @@ def _path(data: Any, dotted: str, what: str) -> Any:
     return node
 
 
+def _fact(expression: str, sources: Sources) -> tuple[Any, str]:
+    """The node at ``<file>:<dotted.path>`` in a case facts file, and the path's last name."""
+    match = FACT.fullmatch(expression)
+    if not match:
+        raise KeyError(f"{expression!r} is not <file>:<dotted.path>")
+    name, dotted = match.groups()
+    if name not in sources.facts:
+        raise KeyError(f"no case facts file {name!r} (cases/facts/{name}.json)")
+    node: Any = sources.facts[name]
+    for part in dotted.split("."):
+        if isinstance(node, Mapping) and part in node:
+            node = node[part]
+        elif isinstance(node, list) and part.isdigit() and int(part) < len(node):
+            node = node[int(part)]
+        else:
+            raise KeyError(f"cases/facts/{name}.json has no {dotted!r}")
+    return node, dotted.rsplit(".", 1)[-1]
+
+
+def _fact_value(expression: str, sources: Sources) -> Value:
+    node, last = _fact(expression, sources)
+    if isinstance(node, Mapping | list):
+        raise KeyError(f"case fact {expression!r} is not a single value")
+    if node is None:
+        raise KeyError(f"case fact {expression!r} is null")
+    return Value(plain=node, unit=formats.unit_from_name(last))
+
+
 def _resolve(expression: str, sources: Sources) -> Value:
+    if expression.startswith("fact:"):
+        return _fact_value(expression[len("fact:"):], sources)
     if expression.startswith("protocol:"):
         dotted = expression[len("protocol:"):]
         return _setting(_path(sources.protocol, dotted, "the protocol"), dotted)
@@ -160,7 +205,8 @@ def render_table(body: str, sources: Sources) -> str:
     """
     head, _, spec = body.partition("|")
     name = head.strip()[len("table:"):].strip()
-    rows = table(sources.summary, name)
+    rows = _fact_rows(name[len("fact:"):], sources) if name.startswith("fact:") else \
+        table(sources.summary, name)
     problems: list[str] = []
     columns = []
     for item in spec.split(",") if spec.strip() else []:
@@ -204,6 +250,60 @@ def render_table(body: str, sources: Sources) -> str:
     return "\n".join(lines)
 
 
+def _fact_rows(expression: str, sources: Sources) -> list[dict[str, Any]]:
+    node, _ = _fact(expression, sources)
+    if not isinstance(node, list) or not all(isinstance(row, Mapping) for row in node):
+        raise KeyError(f"case fact {expression!r} is not a list of records")
+    return [dict(row) for row in node]
+
+
+def render_facts(body: str, sources: Sources) -> str:
+    """Render ``facts:<file>:<path> ["Header" "Header"] | name "Label" format, ...``: one
+    row per named single value of the record at the path, each formatted in the unit of
+    its own name; raises :class:`RenderError` listing every problem."""
+    head, _, spec = body.partition("|")
+    match = FACTS_HEAD.fullmatch(head.strip())
+    if not match:
+        raise KeyError(f"{head.strip()!r} is not facts:<file>:<dotted.path>")
+    expression, first, second = match.groups()
+    record, _ = _fact(expression, sources)
+    if not isinstance(record, Mapping):
+        raise KeyError(f"case fact {expression!r} is not a record")
+    problems: list[str] = []
+    lines = [f"| {first or 'Fact'} | {second or 'Value'} |", "|---|---:|"]
+    for item in spec.split(",") if spec.strip() else []:
+        found = COLUMN.match(item)
+        if not found:
+            problems.append(f"bad entry {item.strip()!r}")
+            continue
+        key, label, form = found.groups()
+        format_name, *args = (form or "value").split(":")
+        if key not in record:
+            problems.append(f"no fact {key!r} in {expression!r}")
+            continue
+        value = record[key]
+        if isinstance(value, Mapping | list):
+            problems.append(f"fact {key!r} is not a single value")
+            continue
+        if value is None:
+            cell = "n/a"
+        elif isinstance(value, bool):
+            cell = "yes" if value else "no"
+        else:
+            try:
+                cell = formats.apply(format_name, Value(plain=value,
+                                                        unit=formats.unit_from_name(key)), args)
+            except FormatError as error:
+                problems.append(f"fact {key!r}: {error}")
+                cell = ""
+        lines.append(f"| {label or key} | {cell} |")
+    if len(lines) == 2 and not problems:
+        problems.append("no facts named")
+    if problems:
+        raise RenderError(f"facts {expression!r}", problems)
+    return "\n".join(lines)
+
+
 def render(text: str, sources: Sources, name: str = "template") -> str:
     """Render a template's text; raises :class:`RenderError` listing every problem."""
     problems: list[str] = []
@@ -211,16 +311,18 @@ def render(text: str, sources: Sources, name: str = "template") -> str:
     for number, line in enumerate(text.split("\n"), start=1):
         stripped = line.strip()
         block = PLACEHOLDER.fullmatch(stripped)
-        if block and block.group(1).strip().startswith("table:"):
+        if block and block.group(1).strip().startswith(("table:", "facts:")):
+            render_block = render_facts if block.group(1).strip().startswith("facts:") \
+                else render_table
             try:
-                out_lines.append(render_table(block.group(1), sources))
+                out_lines.append(render_block(block.group(1), sources))
             except (KeyError, FormatError, ValueError) as error:
                 problems.append(f"line {number}: {_message(error)}")
             continue
 
         def replace(match: re.Match[str], number: int = number) -> str:
             body = match.group(1)
-            if body.strip().startswith("table:"):
+            if body.strip().startswith(("table:", "facts:")):
                 problems.append(f"line {number}: a table placeholder must be on its own line")
                 return ""
             try:
