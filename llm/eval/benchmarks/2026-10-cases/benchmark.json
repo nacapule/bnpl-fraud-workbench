@@ -1,0 +1,162 @@
+{
+ "arms": {
+  "sol": {
+   "backend": "codex",
+   "effort": "high",
+   "model": "gpt-6.1-sol"
+  }
+ },
+ "axes": {
+  "review": {
+   "cases": 6,
+   "eligible": 6,
+   "share": 1.0
+  }
+ },
+ "cases": [
+  {
+   "account": "416:45844",
+   "axis": "review",
+   "case_id": "416-baseline-135235-20250628T095843",
+   "cluster": "group 416:45844",
+   "episode": "416:537",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "6c8d149a28c8b09e63cee552ce736f5e929dde488561b14c08272225108429d3",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 416,
+   "stratum": "card_testing:card_testing",
+   "weight": 1.0
+  },
+  {
+   "account": "416:22168",
+   "axis": "review",
+   "case_id": "416-baseline-136685-20250703T154004",
+   "cluster": "group 416:22168",
+   "episode": "416:540",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-ATO"
+   },
+   "packet_sha256": "81e2b420ae55fb9733818fe8cbd64dd7eb9c59d988d182a8974d548907ff1eec",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 416,
+   "stratum": "account_takeover:account_takeover",
+   "weight": 1.0
+  },
+  {
+   "account": "416:44128",
+   "axis": "review",
+   "case_id": "416-baseline-136908-20250704T134914",
+   "cluster": "group 416:44128",
+   "episode": "416:478",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-SYNTH"
+   },
+   "packet_sha256": "7613cd45068f8f2a14c60afc2621b0c34a0de6afb305af26ef56165f0e368959",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 416,
+   "stratum": "ring:ring",
+   "weight": 1.0
+  },
+  {
+   "account": "416:46553",
+   "axis": "review",
+   "case_id": "416-baseline-140378-20250717T074808",
+   "cluster": "group 416:46553",
+   "episode": "416:539",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-NEVERPAY"
+   },
+   "packet_sha256": "111aa19efec4879198abf6042b6f48c4d1049b6fdb2787f3407a1be6c1683f64",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 416,
+   "stratum": "never_pay_vs_hardship:never_pay",
+   "weight": 1.0
+  },
+  {
+   "account": "416:46843",
+   "axis": "review",
+   "case_id": "416-baseline-141664-20250722T000000",
+   "cluster": "group 416:46843",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "f2a7bc311e5e6ee337f6dc4dc840ab5d47f4788ec3e23289eabd458472525b09",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 416,
+   "stratum": "never_pay_vs_hardship:hardship",
+   "weight": 1.0
+  },
+  {
+   "account": "416:38383",
+   "axis": "review",
+   "case_id": "416-baseline-149795-20250819T103657",
+   "cluster": "group 416:38383",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "fcfac14f09737172b4ef15b80564fac4311d063aa7b9c8fcf03639bdf357d922",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 416,
+   "stratum": "traveller:traveller",
+   "weight": 1.0
+  }
+ ],
+ "code_sha256": {
+  "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+  "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+  "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+  "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+  "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+  "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+  "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+  "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+  "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+  "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+ },
+ "id": "2026-10-cases",
+ "phase": "cases",
+ "policy": {
+  "id": "FP-2",
+  "sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75"
+ },
+ "probes": {},
+ "prompt": {
+  "sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "version": "memo_fp2_v2"
+ },
+ "referee_sha256": "1493a5f4e26ca2935b437c6a9c38e2547ff146327cc3bcb42b0b65396879722c"
+}

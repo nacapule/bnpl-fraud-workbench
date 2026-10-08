@@ -1,0 +1,4137 @@
+{
+ "arms": {
+  "opus": {
+   "backend": "claude",
+   "effort": "high",
+   "model": "claude-opus-5-5"
+  },
+  "sol": {
+   "backend": "codex",
+   "effort": "high",
+   "model": "gpt-6.1-sol"
+  }
+ },
+ "axes": {
+  "check_completed": {
+   "cases": 80,
+   "eligible": 703,
+   "share": 0.21511627906976744
+  },
+  "review": {
+   "cases": 120,
+   "eligible": 2565,
+   "share": 0.7848837209302325
+  }
+ },
+ "cases": [
+  {
+   "account": "1260106251:44851",
+   "axis": "review",
+   "case_id": "1260106251-baseline-128961-20250604T000000",
+   "cluster": "group 1260106251:44725",
+   "episode": "1260106251:511",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-NEVERPAY"
+   },
+   "packet_sha256": "d86bccad81601a33ba1d9638a402e39f087c625f92dbfb4bc7d6d9ee7130e965",
+   "phase_probabilities": [
+    0.6666666666666666,
+    0.1935483870967742
+   ],
+   "seed": 1260106251,
+   "stratum": "P-NEVERPAY",
+   "weight": 7.75
+  },
+  {
+   "account": "1260106251:44725",
+   "axis": "check_completed",
+   "case_id": "1260106251-baseline-128967-20250605T204608",
+   "cluster": "group 1260106251:44725",
+   "episode": "1260106251:511",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-NEVERPAY"
+   },
+   "packet_sha256": "a856184e15220ecbf8ca72114b8d2536fb32b047a2c08df7edae1eee5a5578ee",
+   "phase_probabilities": [
+    0.6666666666666666,
+    0.75
+   ],
+   "seed": 1260106251,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 2.0
+  },
+  {
+   "account": "1260106251:45410",
+   "axis": "check_completed",
+   "case_id": "1260106251-baseline-132671-20250617T112511",
+   "cluster": "group 1260106251:45410",
+   "episode": "1260106251:512",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "a08f4025bc8d72d15714cc0ba1496cb0f786a19ab4a6b46066cdb33b02216916",
+   "phase_probabilities": [
+    1.0,
+    0.75
+   ],
+   "seed": 1260106251,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 1.3333333333333333
+  },
+  {
+   "account": "1260106251:20264",
+   "axis": "review",
+   "case_id": "1260106251-baseline-133339-20250619T120815",
+   "cluster": "group 1260106251:20264",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "ce481057b732375a26be3d783eb1e411679a9e6a6d1594893efcaab2099daac4",
+   "phase_probabilities": [
+    1.0,
+    0.05434782608695652
+   ],
+   "seed": 1260106251,
+   "stratum": "legitimate:travel",
+   "weight": 18.400000000000002
+  },
+  {
+   "account": "1260106251:6806",
+   "axis": "review",
+   "case_id": "1260106251-baseline-133444-20250620T000000",
+   "cluster": "group 1260106251:6806",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "f2965720601928e2800df73ec3d279176092cdb9a9a2b4e72a32af300070bece",
+   "phase_probabilities": [
+    1.0,
+    0.18181818181818182
+   ],
+   "seed": 1260106251,
+   "stratum": "legitimate:fragile",
+   "weight": 5.5
+  },
+  {
+   "account": "1260106251:3410",
+   "axis": "review",
+   "case_id": "1260106251-baseline-133656-20250620T160031",
+   "cluster": "group 1260106251:3410",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "3d4e67a48aedd51ab302894bb11e3381c63b2861b510e60aee7396a2cd692d8e",
+   "phase_probabilities": [
+    1.0,
+    0.09230769230769231
+   ],
+   "seed": 1260106251,
+   "stratum": "legitimate:existing",
+   "weight": 10.833333333333332
+  },
+  {
+   "account": "1260106251:26402",
+   "axis": "check_completed",
+   "case_id": "1260106251-baseline-134660-20250624T084109",
+   "cluster": "group 1260106251:26402",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "d864f9b32d198ce63bba6c810263ec2ddb0fa503c6169d31e8f708284a6b6274",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 1260106251,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "1260106251:30066",
+   "axis": "review",
+   "case_id": "1260106251-baseline-134838-20250625T000000",
+   "cluster": "group 1260106251:30066",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "956c2db4d23f653c962c3f34ef9563f2cedb5aa70078baa270a1a906b946fffb",
+   "phase_probabilities": [
+    1.0,
+    0.06578947368421052
+   ],
+   "seed": 1260106251,
+   "stratum": "legitimate:new_customer",
+   "weight": 15.200000000000001
+  },
+  {
+   "account": "1260106251:46156",
+   "axis": "check_completed",
+   "case_id": "1260106251-baseline-137471-20250704T145628",
+   "cluster": "group 1260106251:46156",
+   "episode": "1260106251:542",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "f6e21298b0a6dd2fbabbdece22f9dab231dd5d11b6eb3db12f3dc7ab1b0b79a0",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 1260106251,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "1260106251:46476",
+   "axis": "check_completed",
+   "case_id": "1260106251-baseline-139484-20250711T133815",
+   "cluster": "group 1260106251:46261",
+   "episode": "1260106251:539",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "62c59b1369dfe47ee8d3e736e0b3155c0119b7c53b7da0d776beed51b6b2d850",
+   "phase_probabilities": [
+    0.3333333333333333,
+    0.75
+   ],
+   "seed": 1260106251,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 4.0
+  },
+  {
+   "account": "1260106251:42133",
+   "axis": "review",
+   "case_id": "1260106251-baseline-140193-20250713T162948",
+   "cluster": "group 1260106251:42133",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "2451c461da639702da4b504baacecda64b4975be10a7e39d522b6f9ba2de547d",
+   "phase_probabilities": [
+    1.0,
+    0.05154639175257732
+   ],
+   "seed": 1260106251,
+   "stratum": "legitimate:gift",
+   "weight": 19.400000000000002
+  },
+  {
+   "account": "1260106251:46737",
+   "axis": "check_completed",
+   "case_id": "1260106251-baseline-141058-20250717T112237",
+   "cluster": "group 1260106251:46737",
+   "episode": "1260106251:543",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-NEVERPAY"
+   },
+   "packet_sha256": "2f52dc83638c1cf1f9fd2171b354f72b78e2d1afa176a9e1951ea1bebbee903c",
+   "phase_probabilities": [
+    1.0,
+    0.75
+   ],
+   "seed": 1260106251,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 1.3333333333333333
+  },
+  {
+   "account": "1260106251:46875",
+   "axis": "check_completed",
+   "case_id": "1260106251-baseline-141863-20250720T150615",
+   "cluster": "group 1260106251:46261",
+   "episode": "1260106251:539",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "1f11ccb82d5969444352414b8a13e2c6f0a80c284ae57470deb202b2c38f3af2",
+   "phase_probabilities": [
+    0.3333333333333333,
+    0.75
+   ],
+   "seed": 1260106251,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 4.0
+  },
+  {
+   "account": "1260106251:41227",
+   "axis": "review",
+   "case_id": "1260106251-baseline-143530-20250726T000000",
+   "cluster": "group 1260106251:41227",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "ba19a8928630b0e9e53a3e80ee12bed75a8f623b0166477d17bff8ab95a59700",
+   "phase_probabilities": [
+    1.0,
+    0.03225806451612903
+   ],
+   "seed": 1260106251,
+   "stratum": "legitimate:household",
+   "weight": 31.0
+  },
+  {
+   "account": "1260106251:46730",
+   "axis": "check_completed",
+   "case_id": "1260106251-baseline-143913-20250727T123649",
+   "cluster": "group 1260106251:46730",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "8a0ae6c9e7ae0ce584b07d0e1f11b9453a0a4cd0bc4bb508c7d25dfe5f8350e5",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 1260106251,
+   "stratum": "after_check:id_check=failed:decline:legitimate",
+   "weight": 1.0
+  },
+  {
+   "account": "1260106251:18967",
+   "axis": "check_completed",
+   "case_id": "1260106251-baseline-145604-20250802T133245",
+   "cluster": "group 1260106251:18967",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "4453da931d74b5268c555e33cde980f11e99029b32f1ff7c928d2e45e189c543",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 1260106251,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "1260106251:47501",
+   "axis": "check_completed",
+   "case_id": "1260106251-baseline-145789-20250803T140322",
+   "cluster": "group 1260106251:47501",
+   "episode": "1260106251:559",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "ffc0a436eac4c0489449d81e203d9615ec4e28897a6b56b1cc4a4ab6b0da549a",
+   "phase_probabilities": [
+    0.2857142857142857,
+    0.75
+   ],
+   "seed": 1260106251,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 4.666666666666667
+  },
+  {
+   "account": "1260106251:44212",
+   "axis": "review",
+   "case_id": "1260106251-baseline-146334-20250805T000000",
+   "cluster": "group 1260106251:44212",
+   "episode": "1260106251:567",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-ATO"
+   },
+   "packet_sha256": "73991e51e2c653758254b872196b7a5b10b0fd075d51cd645293a016739dc618",
+   "phase_probabilities": [
+    1.0,
+    0.42857142857142855
+   ],
+   "seed": 1260106251,
+   "stratum": "P-ATO",
+   "weight": 2.3333333333333335
+  },
+  {
+   "account": "1260106251:48132",
+   "axis": "check_completed",
+   "case_id": "1260106251-baseline-150602-20250820T192109",
+   "cluster": "group 1260106251:48132",
+   "episode": "1260106251:577",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "b60cc72a8d62daba442d3f43d1b4906e22f3a1c302fe1776ae2e7fba48815ebd",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 1260106251,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "1260106251:48314",
+   "axis": "review",
+   "case_id": "1260106251-baseline-150927-20250821T104035",
+   "cluster": "group 1260106251:48314",
+   "episode": "1260106251:576",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-NEVERPAY"
+   },
+   "packet_sha256": "172ca2b34d6258d78b2576604c9e9ad43a9f608bf9acc4d03e3ecacc26199051",
+   "phase_probabilities": [
+    0.5,
+    0.1935483870967742
+   ],
+   "seed": 1260106251,
+   "stratum": "P-NEVERPAY",
+   "weight": 10.333333333333334
+  },
+  {
+   "account": "1629189384:23089",
+   "axis": "review",
+   "case_id": "1629189384-baseline-128284-20250604T000000",
+   "cluster": "group 1629189384:23089",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "4e29832a3e49a57adc400e26c5654473f201caa8145c4605b85eef69e9ebb8a5",
+   "phase_probabilities": [
+    1.0,
+    0.11904761904761904
+   ],
+   "seed": 1629189384,
+   "stratum": "legitimate:mover",
+   "weight": 8.4
+  },
+  {
+   "account": "1629189384:9722",
+   "axis": "review",
+   "case_id": "1629189384-baseline-128426-20250604T143431",
+   "cluster": "group 1629189384:9722",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "b62e01e6146ab8d7f5b9197d52dc218a77c83d8798b9b0121db1def10ff5e30a",
+   "phase_probabilities": [
+    1.0,
+    0.09230769230769231
+   ],
+   "seed": 1629189384,
+   "stratum": "legitimate:existing",
+   "weight": 10.833333333333332
+  },
+  {
+   "account": "1629189384:45062",
+   "axis": "check_completed",
+   "case_id": "1629189384-baseline-130269-20250611T162035",
+   "cluster": "group 1629189384:45062",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "c5bd5cbc0e4ab56aed616cce8e3781416ecb754aebc7898f27a49e063211593e",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 1629189384,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "1629189384:44486",
+   "axis": "review",
+   "case_id": "1629189384-baseline-130466-20250612T072502",
+   "cluster": "group 1629189384:44486",
+   "episode": "1629189384:521",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-ATO"
+   },
+   "packet_sha256": "7b5c4f3333b3a678307b1f65c381c2051bb1efbd94937ee85b6476125816ed9e",
+   "phase_probabilities": [
+    1.0,
+    0.42857142857142855
+   ],
+   "seed": 1629189384,
+   "stratum": "P-ATO",
+   "weight": 2.3333333333333335
+  },
+  {
+   "account": "1629189384:44486",
+   "axis": "check_completed",
+   "case_id": "1629189384-baseline-130466-20250612T104051",
+   "cluster": "group 1629189384:44486",
+   "episode": "1629189384:521",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-ATO"
+   },
+   "packet_sha256": "af111841f3dde480ff246d066ca0391db33ad73c471a16d74281d9b0e45ad8a7",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 1629189384,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "1629189384:24417",
+   "axis": "check_completed",
+   "case_id": "1629189384-baseline-132263-20250619T001850",
+   "cluster": "group 1629189384:24417",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "5e0d210cf943655a6d275649383c5a4fb165f0ac3475c42673e5f27b12b50cf2",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 1629189384,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "1629189384:12319",
+   "axis": "check_completed",
+   "case_id": "1629189384-baseline-132266-20250619T045452",
+   "cluster": "group 1629189384:12319",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "78ecb51bcfa28cb14e32affc1c2511cfb51044262b28bf52a98df9072a2b5f1a",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 1629189384,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "1629189384:45377",
+   "axis": "review",
+   "case_id": "1629189384-baseline-133011-20250621T000000",
+   "cluster": "group 1629189384:45377",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "6e57a486eb8c72a75b8ac5d7cf77a44992d35736a8309e4cd63aa42f1ee60bf2",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 1629189384,
+   "stratum": "legitimate:inr_abuse",
+   "weight": 1.0
+  },
+  {
+   "account": "1629189384:45537",
+   "axis": "review",
+   "case_id": "1629189384-baseline-133129-20250622T000000",
+   "cluster": "group 1629189384:45537",
+   "episode": "1629189384:518",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "1aed8bab1f72dbaff205c6aecdf6143cb17cbaeed5c4bdfedcb0540587b8e50d",
+   "phase_probabilities": [
+    1.0,
+    0.2608695652173913
+   ],
+   "seed": 1629189384,
+   "stratum": "P-PROMO",
+   "weight": 3.8333333333333335
+  },
+  {
+   "account": "1629189384:35145",
+   "axis": "check_completed",
+   "case_id": "1629189384-baseline-136936-20250706T050046",
+   "cluster": "group 1629189384:35145",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "d13fde336ca661e070bcbfea76da671074e6c0548a58a5da6c090b35036705b1",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 1629189384,
+   "stratum": "after_check:id_check=failed:decline:legitimate",
+   "weight": 1.0
+  },
+  {
+   "account": "1629189384:46210",
+   "axis": "review",
+   "case_id": "1629189384-baseline-137432-20250706T141432",
+   "cluster": "group 1629189384:46210",
+   "episode": "1629189384:544",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "cd32a0d789f1c7343b9724f8fd8893bfa3f25a6df5b45f124b714bf08edb663d",
+   "phase_probabilities": [
+    1.0,
+    0.15
+   ],
+   "seed": 1629189384,
+   "stratum": "P-STOLEN",
+   "weight": 6.666666666666667
+  },
+  {
+   "account": "1629189384:46304",
+   "axis": "check_completed",
+   "case_id": "1629189384-baseline-137916-20250710T075726",
+   "cluster": "group 1629189384:46304",
+   "episode": "1629189384:536",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "184e1e99a08e1314cfd016dcd824c2c3720a15e00b665641c729a2786f6a9817",
+   "phase_probabilities": [
+    1.0,
+    0.75
+   ],
+   "seed": 1629189384,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 1.3333333333333333
+  },
+  {
+   "account": "1629189384:6221",
+   "axis": "review",
+   "case_id": "1629189384-baseline-138251-20250710T000000",
+   "cluster": "group 1629189384:6221",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "d9f85b567c850ec970b354d22105471556ed8da135902cb079ba6d637337272f",
+   "phase_probabilities": [
+    1.0,
+    0.09230769230769231
+   ],
+   "seed": 1629189384,
+   "stratum": "legitimate:existing",
+   "weight": 10.833333333333332
+  },
+  {
+   "account": "1629189384:46361",
+   "axis": "review",
+   "case_id": "1629189384-baseline-138329-20250710T000000",
+   "cluster": "group 1629189384:46361",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "84ac28244acf7c43ea715e558bbf2867b54dadab5b832be9abcac5714478cab1",
+   "phase_probabilities": [
+    1.0,
+    0.0625
+   ],
+   "seed": 1629189384,
+   "stratum": "legitimate:hardship_default",
+   "weight": 16.0
+  },
+  {
+   "account": "1629189384:33985",
+   "axis": "review",
+   "case_id": "1629189384-baseline-139335-20250713T122744",
+   "cluster": "group 1629189384:33985",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "0cf574a2ed0a8f49a991a3e032db24a910028994804c51ac46d444d037cf9abd",
+   "phase_probabilities": [
+    0.6666666666666666,
+    0.11627906976744186
+   ],
+   "seed": 1629189384,
+   "stratum": "legitimate:new_phone_reset",
+   "weight": 12.9
+  },
+  {
+   "account": "1629189384:46584",
+   "axis": "review",
+   "case_id": "1629189384-baseline-139760-20250715T000000",
+   "cluster": "group 1629189384:46584",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "39e7e399c26fe9c56a37aa325bf9c42731bf0395d6f859aa67366ad3af40c245",
+   "phase_probabilities": [
+    1.0,
+    0.05154639175257732
+   ],
+   "seed": 1629189384,
+   "stratum": "legitimate:gift",
+   "weight": 19.400000000000002
+  },
+  {
+   "account": "1629189384:22591",
+   "axis": "review",
+   "case_id": "1629189384-baseline-141671-20250722T000000",
+   "cluster": "group 1629189384:22591",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "a1404b829e8b1272d71db1da0b6e6d4c434e32d2fb72ccbd3ba9b45191505984",
+   "phase_probabilities": [
+    1.0,
+    0.07352941176470588
+   ],
+   "seed": 1629189384,
+   "stratum": "legitimate:traveller",
+   "weight": 13.6
+  },
+  {
+   "account": "1629189384:46393",
+   "axis": "review",
+   "case_id": "1629189384-baseline-142301-20250724T000000",
+   "cluster": "group 1629189384:46393",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "dfac74725c22f52d2782d81a08b2bb5f7c8648b326afb4c638bb5ec50ae47882",
+   "phase_probabilities": [
+    0.5,
+    0.18181818181818182
+   ],
+   "seed": 1629189384,
+   "stratum": "legitimate:fragile",
+   "weight": 11.0
+  },
+  {
+   "account": "1629189384:47072",
+   "axis": "review",
+   "case_id": "1629189384-baseline-142851-20250726T000000",
+   "cluster": "group 1629189384:47072",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "0f7317c0ed4d31bcdd323ca41b7f9cad103a819d77a9c1b4970cd27e2cc42bf2",
+   "phase_probabilities": [
+    1.0,
+    0.04716981132075472
+   ],
+   "seed": 1629189384,
+   "stratum": "legitimate:shared_device",
+   "weight": 21.2
+  },
+  {
+   "account": "1629189384:47179",
+   "axis": "review",
+   "case_id": "1629189384-baseline-143622-20250728T141520",
+   "cluster": "group 1629189384:47179",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "7d11447b51124590a0d7e1f0d2fff47d561dde60c08f0c524388eb836b1efafc",
+   "phase_probabilities": [
+    1.0,
+    0.04716981132075472
+   ],
+   "seed": 1629189384,
+   "stratum": "legitimate:shared_device",
+   "weight": 21.2
+  },
+  {
+   "account": "1629189384:47366",
+   "axis": "review",
+   "case_id": "1629189384-baseline-144738-20250801T132559",
+   "cluster": "group 1629189384:47366",
+   "episode": "1629189384:565",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-NEVERPAY"
+   },
+   "packet_sha256": "4836b37fe29cdc44769e0047bea1824c074d328a163313479dffacd20da20691",
+   "phase_probabilities": [
+    1.0,
+    0.1935483870967742
+   ],
+   "seed": 1629189384,
+   "stratum": "P-NEVERPAY",
+   "weight": 5.166666666666667
+  },
+  {
+   "account": "1629189384:6555",
+   "axis": "review",
+   "case_id": "1629189384-baseline-144967-20250802T112246",
+   "cluster": "group 1629189384:6555",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "022d19d0948b909394acb38ca245217970debdf9145e4e54d06b381d9cce0936",
+   "phase_probabilities": [
+    1.0,
+    0.05154639175257732
+   ],
+   "seed": 1629189384,
+   "stratum": "legitimate:gift",
+   "weight": 19.400000000000002
+  },
+  {
+   "account": "1629189384:18909",
+   "axis": "review",
+   "case_id": "1629189384-baseline-146267-20250807T000000",
+   "cluster": "group 1629189384:18909",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "f4f010d6cfa24ad1e1e526bf9edc42a10ad4b471c126a102792a50cd149f4666",
+   "phase_probabilities": [
+    1.0,
+    0.5555555555555556
+   ],
+   "seed": 1629189384,
+   "stratum": "legitimate:genuine_non_delivery",
+   "weight": 1.7999999999999998
+  },
+  {
+   "account": "1629189384:47847",
+   "axis": "review",
+   "case_id": "1629189384-baseline-147984-20250814T000000",
+   "cluster": "group 1629189384:47847",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "9ae025aea264a4a02478e2f27fc2be3118c96a7e25cd1764c283c9eb66f5e7ab",
+   "phase_probabilities": [
+    1.0,
+    0.007052186177715092
+   ],
+   "seed": 1629189384,
+   "stratum": "legitimate:large_first_order",
+   "weight": 141.79999999999998
+  },
+  {
+   "account": "1629189384:1220",
+   "axis": "review",
+   "case_id": "1629189384-baseline-150079-20250821T000000",
+   "cluster": "group 1629189384:1220",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "6bf61410fbf13ab3d899ca7c87629882bf2fc6dc929b1f580bf97b339391b2f8",
+   "phase_probabilities": [
+    0.6666666666666666,
+    0.18518518518518517
+   ],
+   "seed": 1629189384,
+   "stratum": "legitimate:hardship",
+   "weight": 8.1
+  },
+  {
+   "account": "1629189384:48280",
+   "axis": "review",
+   "case_id": "1629189384-baseline-150650-20250823T000000",
+   "cluster": "group 1629189384:48280",
+   "episode": "1629189384:580",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "bb8e0416b004715204a06bdda8bed9d99ffeaa414e98fad801584de2e1072c6b",
+   "phase_probabilities": [
+    1.0,
+    0.15
+   ],
+   "seed": 1629189384,
+   "stratum": "P-STOLEN",
+   "weight": 6.666666666666667
+  },
+  {
+   "account": "1629189384:48280",
+   "axis": "check_completed",
+   "case_id": "1629189384-baseline-150650-20250823T213919",
+   "cluster": "group 1629189384:48280",
+   "episode": "1629189384:580",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "c9977282fd584f8b6d8f2d0269417071e362a37935aae561d857894086587c1f",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 1629189384,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "1629189384:46658",
+   "axis": "check_completed",
+   "case_id": "1629189384-baseline-152013-20250828T092219",
+   "cluster": "group 1629189384:46658",
+   "episode": "1629189384:583",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-ATO"
+   },
+   "packet_sha256": "2238190cdaf3bf066f53c3a8790a096173740449daa5ce1636fc3ef672a890ad",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 1629189384,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "1629189384:48504",
+   "axis": "review",
+   "case_id": "1629189384-baseline-152080-20250828T101313",
+   "cluster": "group 1629189384:48504",
+   "episode": "1629189384:577",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-NEVERPAY"
+   },
+   "packet_sha256": "19571ab933d9df722208d213aacc58d16130e6790c129cec381999b7c4c9c490",
+   "phase_probabilities": [
+    1.0,
+    0.1935483870967742
+   ],
+   "seed": 1629189384,
+   "stratum": "P-NEVERPAY",
+   "weight": 5.166666666666667
+  },
+  {
+   "account": "1671034716:44773",
+   "axis": "check_completed",
+   "case_id": "1671034716-baseline-128558-20250603T105758",
+   "cluster": "group 1671034716:44773",
+   "episode": "1671034716:517",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "8ec8bcd8c9fde55970ca7a730ce2dfe16eb90ce35b05429bc75682201c61977c",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 1671034716,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "1671034716:41147",
+   "axis": "review",
+   "case_id": "1671034716-baseline-129967-20250608T000000",
+   "cluster": "group 1671034716:41147",
+   "episode": "1671034716:522",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-ATO"
+   },
+   "packet_sha256": "83d7865581e9655838576386bbfc806bc06f2b76a20a6ccd0ad6e991a6157c85",
+   "phase_probabilities": [
+    1.0,
+    0.42857142857142855
+   ],
+   "seed": 1671034716,
+   "stratum": "P-ATO",
+   "weight": 2.3333333333333335
+  },
+  {
+   "account": "1671034716:21648",
+   "axis": "review",
+   "case_id": "1671034716-baseline-130217-20250609T000000",
+   "cluster": "group 1671034716:21648",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "486e8790993cfcc11711873d6179095056bae9d6bb39d9e61b717cc196e8f6ca",
+   "phase_probabilities": [
+    1.0,
+    0.05434782608695652
+   ],
+   "seed": 1671034716,
+   "stratum": "legitimate:travel",
+   "weight": 18.400000000000002
+  },
+  {
+   "account": "1671034716:35637",
+   "axis": "review",
+   "case_id": "1671034716-baseline-131025-20250612T000000",
+   "cluster": "group 1671034716:35637",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "dbfb2780ecf583f2706d9923bc75333c932ace32993bfd9c97975d8e9579e107",
+   "phase_probabilities": [
+    1.0,
+    0.11627906976744186
+   ],
+   "seed": 1671034716,
+   "stratum": "legitimate:new_phone_reset",
+   "weight": 8.6
+  },
+  {
+   "account": "1671034716:2181",
+   "axis": "review",
+   "case_id": "1671034716-baseline-131877-20250617T000000",
+   "cluster": "group 1671034716:2181",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "94fb069f1f63872b644c01103a0bbf2c4e221c2b743fbeed08739f6d1ff04516",
+   "phase_probabilities": [
+    1.0,
+    0.05434782608695652
+   ],
+   "seed": 1671034716,
+   "stratum": "legitimate:travel",
+   "weight": 18.400000000000002
+  },
+  {
+   "account": "1671034716:40981",
+   "axis": "check_completed",
+   "case_id": "1671034716-baseline-132561-20250617T232901",
+   "cluster": "group 1671034716:40981",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "aa49121faa3ad498e7ca8a343d99de16a15bf7a6b3c4e56cf64845d8e5ea2063",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 1671034716,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "1671034716:45466",
+   "axis": "review",
+   "case_id": "1671034716-baseline-132900-20250619T000000",
+   "cluster": "group 1671034716:45466",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "cad0ffe8a8c16c73f3009be9d1bc962da47c3eca6d9fdaeea9368a42ea6c9f44",
+   "phase_probabilities": [
+    1.0,
+    0.007987220447284345
+   ],
+   "seed": 1671034716,
+   "stratum": "legitimate:new_customer_first_order",
+   "weight": 125.2
+  },
+  {
+   "account": "1671034716:45806",
+   "axis": "review",
+   "case_id": "1671034716-baseline-134927-20250626T072354",
+   "cluster": "group 1671034716:45806",
+   "episode": "1671034716:528",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-NEVERPAY"
+   },
+   "packet_sha256": "2f50eb16547d84a55d69e3aa6f4f87382dd6bf4e663a4a58a379f8c7c8593473",
+   "phase_probabilities": [
+    0.5,
+    0.1935483870967742
+   ],
+   "seed": 1671034716,
+   "stratum": "P-NEVERPAY",
+   "weight": 10.333333333333334
+  },
+  {
+   "account": "1671034716:45806",
+   "axis": "check_completed",
+   "case_id": "1671034716-baseline-135079-20250627T103858",
+   "cluster": "group 1671034716:45806",
+   "episode": "1671034716:528",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-NEVERPAY"
+   },
+   "packet_sha256": "c2cc05134f0acc5508ad27dcf2a4250858f2f3af05a1bced1260b278e7406e6f",
+   "phase_probabilities": [
+    0.5,
+    0.75
+   ],
+   "seed": 1671034716,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 2.6666666666666665
+  },
+  {
+   "account": "1671034716:45940",
+   "axis": "check_completed",
+   "case_id": "1671034716-baseline-135803-20250630T140720",
+   "cluster": "group 1671034716:45940",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "57e42cf51a37a8c4d1a67315f5495995108c590d0469a63121a259bf37053de3",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 1671034716,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "1671034716:46642",
+   "axis": "review",
+   "case_id": "1671034716-baseline-140352-20250716T000000",
+   "cluster": "group 1671034716:46642",
+   "episode": "1671034716:549",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "eeaa81662c9250e41735db6ae111df0113bf378ce08e713b43e09e2cb317a2e8",
+   "phase_probabilities": [
+    1.0,
+    0.2608695652173913
+   ],
+   "seed": 1671034716,
+   "stratum": "P-PROMO",
+   "weight": 3.8333333333333335
+  },
+  {
+   "account": "1671034716:46696",
+   "axis": "review",
+   "case_id": "1671034716-baseline-140742-20250717T102349",
+   "cluster": "group 1671034716:46543",
+   "episode": "1671034716:542",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "dc1847145d3a03aae071de9ad92b25e0d24a12a7751dac4328c98c52afb7ac56",
+   "phase_probabilities": [
+    0.3333333333333333,
+    0.2608695652173913
+   ],
+   "seed": 1671034716,
+   "stratum": "P-PROMO",
+   "weight": 11.5
+  },
+  {
+   "account": "1671034716:42411",
+   "axis": "review",
+   "case_id": "1671034716-baseline-140819-20250718T000000",
+   "cluster": "group 1671034716:42411",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "f31250695d4edad33837f0980b38d03c59cb68a062dbb7977da3045d908c94ed",
+   "phase_probabilities": [
+    1.0,
+    0.07352941176470588
+   ],
+   "seed": 1671034716,
+   "stratum": "legitimate:traveller",
+   "weight": 13.6
+  },
+  {
+   "account": "1671034716:46776",
+   "axis": "check_completed",
+   "case_id": "1671034716-baseline-141185-20250719T150117",
+   "cluster": "group 1671034716:46543",
+   "episode": "1671034716:542",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "04b58948be5e758f60ab79d07d06285a328b243d38b5c67e144a9cd29363fccf",
+   "phase_probabilities": [
+    0.3333333333333333,
+    0.75
+   ],
+   "seed": 1671034716,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 4.0
+  },
+  {
+   "account": "1671034716:46950",
+   "axis": "check_completed",
+   "case_id": "1671034716-baseline-142294-20250723T173607",
+   "cluster": "group 1671034716:46950",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "b97fd271ed67c510b4befb69852fb4a1d6044ff077380ff59cfa40f0efdbc29e",
+   "phase_probabilities": [
+    0.5,
+    0.03804347826086957
+   ],
+   "seed": 1671034716,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 52.57142857142857
+  },
+  {
+   "account": "1671034716:41941",
+   "axis": "review",
+   "case_id": "1671034716-baseline-142578-20250724T000000",
+   "cluster": "group 1671034716:41941",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "a09d9ad5a2e771d696a4daaec6a65d561cd8eb29a81925ea9facd7cef0d7f692",
+   "phase_probabilities": [
+    1.0,
+    0.03225806451612903
+   ],
+   "seed": 1671034716,
+   "stratum": "legitimate:household",
+   "weight": 31.0
+  },
+  {
+   "account": "1671034716:762",
+   "axis": "review",
+   "case_id": "1671034716-baseline-143716-20250728T000000",
+   "cluster": "group 1671034716:762",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "d131666e2ab90b0525dc3f2970aef011f4e3ad3f895666d36e227e214afd5329",
+   "phase_probabilities": [
+    1.0,
+    0.05434782608695652
+   ],
+   "seed": 1671034716,
+   "stratum": "legitimate:travel",
+   "weight": 18.400000000000002
+  },
+  {
+   "account": "1671034716:47206",
+   "axis": "review",
+   "case_id": "1671034716-baseline-143954-20250729T000000",
+   "cluster": "group 1671034716:47206",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "6a49cd7c003099c899fff7258322c876848c5a1e5051ff98b2d90770b8f3cf9a",
+   "phase_probabilities": [
+    1.0,
+    0.007052186177715092
+   ],
+   "seed": 1671034716,
+   "stratum": "legitimate:large_first_order",
+   "weight": 141.79999999999998
+  },
+  {
+   "account": "1671034716:38472",
+   "axis": "review",
+   "case_id": "1671034716-baseline-145343-20250803T000000",
+   "cluster": "group 1671034716:38472",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "ad50bf601837f4d8cc1658f8fb04cd3d385ac84d45b818ca77c8955fa00270ba",
+   "phase_probabilities": [
+    1.0,
+    0.18181818181818182
+   ],
+   "seed": 1671034716,
+   "stratum": "legitimate:fragile",
+   "weight": 5.5
+  },
+  {
+   "account": "1671034716:12644",
+   "axis": "check_completed",
+   "case_id": "1671034716-baseline-145916-20250807T083749",
+   "cluster": "group 1671034716:12644",
+   "episode": "1671034716:566",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-ATO"
+   },
+   "packet_sha256": "5df465a117965e1151afff30b1bd98bf6a70810000d9b6623ed7d0de431f6c68",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 1671034716,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "1671034716:21665",
+   "axis": "review",
+   "case_id": "1671034716-baseline-147757-20250813T000000",
+   "cluster": "group 1671034716:21665",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "2cff53413a43e8f7827070606b8c34dfd921b3e8943bdcd0731f0a6ce77e16c4",
+   "phase_probabilities": [
+    1.0,
+    0.07352941176470588
+   ],
+   "seed": 1671034716,
+   "stratum": "legitimate:traveller",
+   "weight": 13.6
+  },
+  {
+   "account": "1671034716:34855",
+   "axis": "review",
+   "case_id": "1671034716-baseline-148131-20250813T000000",
+   "cluster": "group 1671034716:34855",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "ff97f06fc7b0942ca65871e6412cbbb275355df8d301af6945df5a3b0ba0b706",
+   "phase_probabilities": [
+    1.0,
+    0.04716981132075472
+   ],
+   "seed": 1671034716,
+   "stratum": "legitimate:shared_device",
+   "weight": 21.2
+  },
+  {
+   "account": "1671034716:47934",
+   "axis": "review",
+   "case_id": "1671034716-baseline-148596-20250814T155015",
+   "cluster": "group 1671034716:47933",
+   "episode": "1671034716:530",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-MERCH"
+   },
+   "packet_sha256": "bbda5a29671cfdfb00f1e6a99f3744e798cc4158de142d072e1be44ac5ad8376",
+   "phase_probabilities": [
+    1.0,
+    0.5454545454545454
+   ],
+   "seed": 1671034716,
+   "stratum": "P-MERCH",
+   "weight": 1.8333333333333335
+  },
+  {
+   "account": "1671034716:20016",
+   "axis": "review",
+   "case_id": "1671034716-baseline-150207-20250820T124907",
+   "cluster": "group 1671034716:20016",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "4320fb3636823df27092def0cf9f4e82a2669901292e7eaf1b07b12f5e548580",
+   "phase_probabilities": [
+    1.0,
+    0.8333333333333334
+   ],
+   "seed": 1671034716,
+   "stratum": "legitimate:takeover_victim",
+   "weight": 1.2
+  },
+  {
+   "account": "1671034716:33808",
+   "axis": "review",
+   "case_id": "1671034716-baseline-151595-20250827T000000",
+   "cluster": "group 1671034716:33808",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "6289e11b3e921d9adaf91a5d1e93ce1ad4c9b13bd68e12972c82e9686c827ff0",
+   "phase_probabilities": [
+    0.5,
+    0.06578947368421052
+   ],
+   "seed": 1671034716,
+   "stratum": "legitimate:new_customer",
+   "weight": 30.400000000000002
+  },
+  {
+   "account": "1671034716:23526",
+   "axis": "check_completed",
+   "case_id": "1671034716-baseline-152579-20250830T121610",
+   "cluster": "group 1671034716:23526",
+   "episode": "1671034716:583",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-ATO"
+   },
+   "packet_sha256": "d6a73c2d510cf2fb446db4181a155caf7fc9c02de9902aef20a0cc6c1d9ad46a",
+   "phase_probabilities": [
+    0.5,
+    0.8076923076923077
+   ],
+   "seed": 1671034716,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 2.4761904761904763
+  },
+  {
+   "account": "1891170948:32953",
+   "axis": "check_completed",
+   "case_id": "1891170948-baseline-128505-20250603T153354",
+   "cluster": "group 1891170948:32953",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "99a6bfc2cd633b183aac8b3cf2f9b7c3c1286a4402f576f8996e70dd5f96a6ff",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 1891170948,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "1891170948:30767",
+   "axis": "review",
+   "case_id": "1891170948-baseline-129476-20250606T000000",
+   "cluster": "group 1891170948:30767",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "7ac66bcd3055661ee789e01da530e20fc22573895bffffa09e0b6ceecdfc8cc5",
+   "phase_probabilities": [
+    1.0,
+    0.11627906976744186
+   ],
+   "seed": 1891170948,
+   "stratum": "legitimate:new_phone_reset",
+   "weight": 8.6
+  },
+  {
+   "account": "1891170948:11288",
+   "axis": "check_completed",
+   "case_id": "1891170948-baseline-129970-20250609T063526",
+   "cluster": "group 1891170948:11288",
+   "episode": "1891170948:520",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-ATO"
+   },
+   "packet_sha256": "a311269ea310cf76b990eda4623acf7b938a92a504348287cbfeca06e636cb58",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 1891170948,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "1891170948:44819",
+   "axis": "review",
+   "case_id": "1891170948-baseline-130001-20250611T000000",
+   "cluster": "group 1891170948:44819",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "a7386c8bc3d26a5368a9cff428593249d759648a3c4a0d5e570140a218cd268b",
+   "phase_probabilities": [
+    1.0,
+    0.5555555555555556
+   ],
+   "seed": 1891170948,
+   "stratum": "legitimate:genuine_non_delivery",
+   "weight": 1.7999999999999998
+  },
+  {
+   "account": "1891170948:44308",
+   "axis": "review",
+   "case_id": "1891170948-baseline-130304-20250609T000000",
+   "cluster": "group 1891170948:44308",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "5536e38461b04ea6d4a16492cd8a0f89871f95173c07607d650dede6e93c7c19",
+   "phase_probabilities": [
+    1.0,
+    0.5555555555555556
+   ],
+   "seed": 1891170948,
+   "stratum": "legitimate:genuine_non_delivery",
+   "weight": 1.7999999999999998
+  },
+  {
+   "account": "1891170948:40145",
+   "axis": "review",
+   "case_id": "1891170948-baseline-131283-20250613T000000",
+   "cluster": "group 1891170948:40145",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "27871b68464849055e20a74ecc23d028ca204a36a03650d307b7be37dcc75b8f",
+   "phase_probabilities": [
+    1.0,
+    0.11904761904761904
+   ],
+   "seed": 1891170948,
+   "stratum": "legitimate:mover",
+   "weight": 8.4
+  },
+  {
+   "account": "1891170948:45048",
+   "axis": "review",
+   "case_id": "1891170948-baseline-131484-20250613T135002",
+   "cluster": "group 1891170948:45048",
+   "episode": "1891170948:517",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "8226abf05180271b135f52b02ed7aa1a379bcc6df7a7dded3ca545da282b733c",
+   "phase_probabilities": [
+    0.5,
+    0.2608695652173913
+   ],
+   "seed": 1891170948,
+   "stratum": "P-PROMO",
+   "weight": 7.666666666666667
+  },
+  {
+   "account": "1891170948:45043",
+   "axis": "check_completed",
+   "case_id": "1891170948-baseline-131808-20250614T201143",
+   "cluster": "group 1891170948:45043",
+   "episode": "1891170948:527",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "a0f5f6dc1578f9bf4004c4142509c7faa676ded17c14baa569fadc63b717f787",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 1891170948,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "1891170948:7967",
+   "axis": "review",
+   "case_id": "1891170948-baseline-131912-20250618T000000",
+   "cluster": "group 1891170948:7967",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "31f0ebc311b740bfd04d35eecbcfd218103c01a5abd0b736bb20cfddd9f8b58a",
+   "phase_probabilities": [
+    1.0,
+    0.09230769230769231
+   ],
+   "seed": 1891170948,
+   "stratum": "legitimate:existing",
+   "weight": 10.833333333333332
+  },
+  {
+   "account": "1891170948:45188",
+   "axis": "review",
+   "case_id": "1891170948-baseline-132410-20250616T125946",
+   "cluster": "group 1891170948:45188",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "4e725c6c7b10f01e0a71e97995336ba7956a802d629c8256ee91cc71ff56d92e",
+   "phase_probabilities": [
+    1.0,
+    0.5555555555555556
+   ],
+   "seed": 1891170948,
+   "stratum": "legitimate:genuine_non_delivery",
+   "weight": 1.7999999999999998
+  },
+  {
+   "account": "1891170948:33802",
+   "axis": "check_completed",
+   "case_id": "1891170948-baseline-133296-20250620T201223",
+   "cluster": "group 1891170948:33802",
+   "episode": "1891170948:298",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "fe0b0ce4f08ea923fcf6dfab94a016d73eb36277d371d2d29bc8b74925f893cf",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 1891170948,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "1891170948:44823",
+   "axis": "check_completed",
+   "case_id": "1891170948-baseline-135193-20250627T192358",
+   "cluster": "group 1891170948:44823",
+   "episode": "1891170948:536",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-ATO"
+   },
+   "packet_sha256": "48b49d07108bfae6def6de434c1cd59bed8750a532b099f4233396d4000f3afe",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 1891170948,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "1891170948:45768",
+   "axis": "review",
+   "case_id": "1891170948-baseline-135780-20250628T163113",
+   "cluster": "group 1891170948:45768",
+   "episode": "1891170948:525",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "cfadab8ca2d4d69ab7fc1f746588c710dbdbfa239d47cf72a7d55c6b407dda77",
+   "phase_probabilities": [
+    1.0,
+    0.2608695652173913
+   ],
+   "seed": 1891170948,
+   "stratum": "P-PROMO",
+   "weight": 3.8333333333333335
+  },
+  {
+   "account": "1891170948:20585",
+   "axis": "review",
+   "case_id": "1891170948-baseline-137639-20250705T103634",
+   "cluster": "group 1891170948:20585",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "2a85e29dc8322e20ba0d795cf659b454f11c127101ee75509ac393bc12afe605",
+   "phase_probabilities": [
+    1.0,
+    0.06578947368421052
+   ],
+   "seed": 1891170948,
+   "stratum": "legitimate:new_customer",
+   "weight": 15.200000000000001
+  },
+  {
+   "account": "1891170948:45689",
+   "axis": "check_completed",
+   "case_id": "1891170948-baseline-138313-20250708T180832",
+   "cluster": "group 1891170948:45689",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "3c4646c0125b620b4bdaa2960b337475a4cf7f36fc958b4ffd7fbb585c26e0a8",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 1891170948,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "1891170948:45268",
+   "axis": "check_completed",
+   "case_id": "1891170948-baseline-139842-20250713T175137",
+   "cluster": "group 1891170948:45268",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "85ea17adaafae772760d77430d19c35bdf1faff36ab62fdb0b5f948c53d6f611",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 1891170948,
+   "stratum": "after_check:id_check=failed:decline:legitimate",
+   "weight": 1.0
+  },
+  {
+   "account": "1891170948:39328",
+   "axis": "review",
+   "case_id": "1891170948-baseline-141182-20250718T000000",
+   "cluster": "group 1891170948:39328",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "f8827bcb2d41e16bcbcff6ee85671bb2afbf8ec3abbf096a28a3a4158f0238cd",
+   "phase_probabilities": [
+    1.0,
+    0.03225806451612903
+   ],
+   "seed": 1891170948,
+   "stratum": "legitimate:household",
+   "weight": 31.0
+  },
+  {
+   "account": "1891170948:43364",
+   "axis": "review",
+   "case_id": "1891170948-baseline-144065-20250729T000000",
+   "cluster": "group 1891170948:43364",
+   "episode": "1891170948:485",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-SYNTH"
+   },
+   "packet_sha256": "124839fc9c5688f7c93fcd6781d7efb78723965735fda568d0d67cd732dd0ea7",
+   "phase_probabilities": [
+    0.5,
+    1.0
+   ],
+   "seed": 1891170948,
+   "stratum": "P-SYNTH",
+   "weight": 2.0
+  },
+  {
+   "account": "1891170948:43364",
+   "axis": "check_completed",
+   "case_id": "1891170948-baseline-144065-20250729T210125",
+   "cluster": "group 1891170948:43364",
+   "episode": "1891170948:485",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-SYNTH"
+   },
+   "packet_sha256": "04d620f143bca8a5b494c6a428fe6d50a0291c37068138969b10d19a70ed645d",
+   "phase_probabilities": [
+    0.5,
+    1.0
+   ],
+   "seed": 1891170948,
+   "stratum": "after_check:id_check=failed:escalate:fraud",
+   "weight": 2.0
+  },
+  {
+   "account": "1891170948:25465",
+   "axis": "review",
+   "case_id": "1891170948-baseline-146079-20250804T135222",
+   "cluster": "group 1891170948:25465",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "e294c49288c33d12ee40334cc39d5b941c40bc959bd70f544ca5d87cc575418c",
+   "phase_probabilities": [
+    1.0,
+    0.8333333333333334
+   ],
+   "seed": 1891170948,
+   "stratum": "legitimate:takeover_victim",
+   "weight": 1.2
+  },
+  {
+   "account": "1891170948:47545",
+   "axis": "check_completed",
+   "case_id": "1891170948-baseline-147472-20250809T212252",
+   "cluster": "group 1891170948:47309",
+   "episode": "1891170948:564",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-NEVERPAY"
+   },
+   "packet_sha256": "7ae80f683cbc69e91797cfa9e407e597ea48e43fa6108c3b2ef86f2ec57fb35e",
+   "phase_probabilities": [
+    0.5,
+    0.75
+   ],
+   "seed": 1891170948,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 2.6666666666666665
+  },
+  {
+   "account": "1891170948:42825",
+   "axis": "check_completed",
+   "case_id": "1891170948-baseline-148273-20250813T195830",
+   "cluster": "group 1891170948:42825",
+   "episode": "1891170948:480",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "4788c3ccdfb90f499101a2a9abf9e0b4d29d091d41b064eaebde8ede557cc5b5",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 1891170948,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "1891170948:48046",
+   "axis": "review",
+   "case_id": "1891170948-baseline-150455-20250820T000000",
+   "cluster": "group 1891170948:48046",
+   "episode": "1891170948:528",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-MERCH"
+   },
+   "packet_sha256": "79c7570ffa0ec0442ad98e093ebc4f24b29ee632bbf7a990092a1d731330cf89",
+   "phase_probabilities": [
+    1.0,
+    0.5454545454545454
+   ],
+   "seed": 1891170948,
+   "stratum": "P-MERCH",
+   "weight": 1.8333333333333335
+  },
+  {
+   "account": "1891170948:48070",
+   "axis": "review",
+   "case_id": "1891170948-baseline-150604-20250820T140153",
+   "cluster": "group 1891170948:48070",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "784b1e5ec1739a0624a64cd1dc0c834d6c0e609385ca76b2aac9edaa18c3e002",
+   "phase_probabilities": [
+    1.0,
+    0.05154639175257732
+   ],
+   "seed": 1891170948,
+   "stratum": "legitimate:gift",
+   "weight": 19.400000000000002
+  },
+  {
+   "account": "200041300:21525",
+   "axis": "review",
+   "case_id": "200041300-baseline-134601-20250627T154617",
+   "cluster": "group 200041300:21525",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "ec3fba899816befdd5a435181d46942592aaae813152535895229813d183e790",
+   "phase_probabilities": [
+    1.0,
+    0.0641025641025641
+   ],
+   "seed": 200041300,
+   "stratum": "legitimate:late_payer",
+   "weight": 15.600000000000001
+  },
+  {
+   "account": "200041300:46799",
+   "axis": "check_completed",
+   "case_id": "200041300-baseline-140700-20250719T160915",
+   "cluster": "group 200041300:46799",
+   "episode": "200041300:554",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "0ac5a8d586462a5238a76c1b1f6c072d31b4d4f8443999c33731a9b4180622c9",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 200041300,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "200041300:46849",
+   "axis": "review",
+   "case_id": "200041300-baseline-141046-20250720T132245",
+   "cluster": "group 200041300:46849",
+   "episode": "200041300:551",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "f7b80184a0ed13b317b8b367fa4e5000965495b15b4eb430eba42482a122fcb8",
+   "phase_probabilities": [
+    0.5,
+    0.2608695652173913
+   ],
+   "seed": 200041300,
+   "stratum": "P-PROMO",
+   "weight": 7.666666666666667
+  },
+  {
+   "account": "200041300:46849",
+   "axis": "check_completed",
+   "case_id": "200041300-baseline-141046-20250720T205120",
+   "cluster": "group 200041300:46849",
+   "episode": "200041300:551",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "5dff8f9b6798a2d42548e6176488c1c6740b48924d63cbd72aeecd35e715c6eb",
+   "phase_probabilities": [
+    0.5,
+    0.75
+   ],
+   "seed": 200041300,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 2.6666666666666665
+  },
+  {
+   "account": "200041300:7320",
+   "axis": "review",
+   "case_id": "200041300-baseline-142489-20250726T000000",
+   "cluster": "group 200041300:7320",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "ab3bba37b605f5172f36edbd5a544bbe244a19663c587a700689638f57bb74de",
+   "phase_probabilities": [
+    1.0,
+    0.09230769230769231
+   ],
+   "seed": 200041300,
+   "stratum": "legitimate:existing",
+   "weight": 10.833333333333332
+  },
+  {
+   "account": "200041300:46082",
+   "axis": "check_completed",
+   "case_id": "200041300-baseline-143595-20250730T133352",
+   "cluster": "group 200041300:46082",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "f7d6dd7b50298ace98e8a8c116300165000d11134abdb9873078eb3f9c0c1ccc",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 200041300,
+   "stratum": "after_check:id_check=failed:escalate:legitimate",
+   "weight": 1.0
+  },
+  {
+   "account": "200041300:47465",
+   "axis": "check_completed",
+   "case_id": "200041300-baseline-145054-20250805T052432",
+   "cluster": "group 200041300:47444",
+   "episode": "200041300:556",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "504691ffefe2f25634b506768fd404c5487248de0b97e3345b6cc6cc059dc01c",
+   "phase_probabilities": [
+    0.5,
+    0.75
+   ],
+   "seed": 200041300,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 2.6666666666666665
+  },
+  {
+   "account": "200041300:12126",
+   "axis": "check_completed",
+   "case_id": "200041300-baseline-146464-20250809T211254",
+   "cluster": "group 200041300:12126",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "25430da1ed9c9176cf55f0e6ade4d7aea1b86bc7498b0125c879dbfc25b9a322",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 200041300,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "200041300:15194",
+   "axis": "review",
+   "case_id": "200041300-baseline-148475-20250816T120257",
+   "cluster": "group 200041300:15194",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "0050cac1971825dcca646b9de4897775b318546736954ec80ea2977c3d466c04",
+   "phase_probabilities": [
+    0.6666666666666666,
+    0.18518518518518517
+   ],
+   "seed": 200041300,
+   "stratum": "legitimate:hardship",
+   "weight": 8.1
+  },
+  {
+   "account": "200041300:42550",
+   "axis": "check_completed",
+   "case_id": "200041300-baseline-152154-20250829T192335",
+   "cluster": "group 200041300:42550",
+   "episode": "200041300:474",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "441adeed5a5de5a0e3e8d4cb019f0c456e4a4dccfa88f0f5cb0eaecd2b6da6d3",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 200041300,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "2066792625:30074",
+   "axis": "review",
+   "case_id": "2066792625-baseline-129770-20250610T000000",
+   "cluster": "group 2066792625:30074",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "68850a1ddfa704682cfbc313c82a9af82c0457f7092099f38dbc75ce62abd222",
+   "phase_probabilities": [
+    1.0,
+    0.06578947368421052
+   ],
+   "seed": 2066792625,
+   "stratum": "legitimate:new_customer",
+   "weight": 15.200000000000001
+  },
+  {
+   "account": "2066792625:45132",
+   "axis": "check_completed",
+   "case_id": "2066792625-baseline-129832-20250610T111113",
+   "cluster": "group 2066792625:45132",
+   "episode": "2066792625:524",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "22229c976fd18ad26f587348ff1eae8a174882f7d63e908950716933945fdb4c",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 2066792625,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "2066792625:21347",
+   "axis": "check_completed",
+   "case_id": "2066792625-baseline-130403-20250612T121208",
+   "cluster": "group 2066792625:21347",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "4e34ef48b6b7937773cbb8484887e1f2bb27f9323e03283ad09d72ff3e4a1bdd",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 2066792625,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "2066792625:45521",
+   "axis": "check_completed",
+   "case_id": "2066792625-baseline-132421-20250619T111258",
+   "cluster": "group 2066792625:45521",
+   "episode": "2066792625:522",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "e59ac8bbadeebf6ad52e05fd5b6855941bcb4dbbfb9739bfad877dab4edd9248",
+   "phase_probabilities": [
+    0.5,
+    0.75
+   ],
+   "seed": 2066792625,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 2.6666666666666665
+  },
+  {
+   "account": "2066792625:15338",
+   "axis": "review",
+   "case_id": "2066792625-baseline-135785-20250702T000000",
+   "cluster": "group 2066792625:15338",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "233e2bea1e40e858f966b4055edd625a4b42f54e814c0ad7714ffe3de681fe0d",
+   "phase_probabilities": [
+    1.0,
+    0.18181818181818182
+   ],
+   "seed": 2066792625,
+   "stratum": "legitimate:fragile",
+   "weight": 5.5
+  },
+  {
+   "account": "2066792625:46062",
+   "axis": "check_completed",
+   "case_id": "2066792625-baseline-135905-20250702T164252",
+   "cluster": "group 2066792625:45972",
+   "episode": "2066792625:530",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "1cbafd4180b28355df706a424ea56929afdd73136002d46aa48ba2aca300c760",
+   "phase_probabilities": [
+    0.6666666666666666,
+    0.75
+   ],
+   "seed": 2066792625,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 2.0
+  },
+  {
+   "account": "2066792625:17134",
+   "axis": "review",
+   "case_id": "2066792625-baseline-137502-20250708T000000",
+   "cluster": "group 2066792625:17134",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "79b86d65ad0508c0198733e16b7f4f15c6c6a42dcbfd174fc63b9d21e9c5f462",
+   "phase_probabilities": [
+    1.0,
+    0.05154639175257732
+   ],
+   "seed": 2066792625,
+   "stratum": "legitimate:gift",
+   "weight": 19.400000000000002
+  },
+  {
+   "account": "2066792625:46376",
+   "axis": "check_completed",
+   "case_id": "2066792625-baseline-138043-20250710T112359",
+   "cluster": "group 2066792625:46376",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "e36026f1c00200232ecc6d5372d6dd49d8aff4a3a60604442ee16c0a4d721cd1",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 2066792625,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "2066792625:12776",
+   "axis": "check_completed",
+   "case_id": "2066792625-baseline-139353-20250714T145911",
+   "cluster": "group 2066792625:12776",
+   "episode": "2066792625:552",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-ATO"
+   },
+   "packet_sha256": "9afa049cf6c3e02b0d5092d39400be03fae9c7e561f236ecf96b03b28c50dea5",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 2066792625,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "2066792625:46565",
+   "axis": "check_completed",
+   "case_id": "2066792625-baseline-139376-20250714T164432",
+   "cluster": "group 2066792625:46565",
+   "episode": "2066792625:553",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "4cd2be3f8769bd4955745425a55d44da65bca533d2cc3c4b11fca5c480073b1f",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 2066792625,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "2066792625:21296",
+   "axis": "check_completed",
+   "case_id": "2066792625-baseline-140523-20250719T193552",
+   "cluster": "group 2066792625:21296",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "c60e42cce0d59613caa460ffeb055be2675a67743dab474f9d9142df5762a2a5",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 2066792625,
+   "stratum": "after_check:id_check=failed:decline:legitimate",
+   "weight": 1.0
+  },
+  {
+   "account": "2066792625:47085",
+   "axis": "review",
+   "case_id": "2066792625-baseline-142942-20250727T084054",
+   "cluster": "group 2066792625:47085",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "d2db40301441343f299f29980b8cf01a42edc0d83600eadc232d9768c6c55abb",
+   "phase_probabilities": [
+    1.0,
+    0.03225806451612903
+   ],
+   "seed": 2066792625,
+   "stratum": "legitimate:household",
+   "weight": 31.0
+  },
+  {
+   "account": "2066792625:41213",
+   "axis": "review",
+   "case_id": "2066792625-baseline-143237-20250728T071539",
+   "cluster": "group 2066792625:41213",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "ddcfeffa4b4ac61a2163dbec96f68d93cc712db5c5df1079e5e38062b910d529",
+   "phase_probabilities": [
+    1.0,
+    0.18181818181818182
+   ],
+   "seed": 2066792625,
+   "stratum": "legitimate:fragile",
+   "weight": 5.5
+  },
+  {
+   "account": "2066792625:47353",
+   "axis": "check_completed",
+   "case_id": "2066792625-baseline-144485-20250803T013959",
+   "cluster": "group 2066792625:46899",
+   "episode": "2066792625:555",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-NEVERPAY"
+   },
+   "packet_sha256": "c3f71f917b0073cc423635e9dbb305df0465c668ec9fd790a820a5c2db3a6076",
+   "phase_probabilities": [
+    0.2,
+    0.75
+   ],
+   "seed": 2066792625,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 6.666666666666666
+  },
+  {
+   "account": "2066792625:33672",
+   "axis": "review",
+   "case_id": "2066792625-baseline-144850-20250803T000000",
+   "cluster": "group 2066792625:33672",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "e0cdcb99b48fc702ec60ca5b393102c67f6ae159ef0281875cce89d68285216d",
+   "phase_probabilities": [
+    1.0,
+    0.11904761904761904
+   ],
+   "seed": 2066792625,
+   "stratum": "legitimate:mover",
+   "weight": 8.4
+  },
+  {
+   "account": "2066792625:29022",
+   "axis": "review",
+   "case_id": "2066792625-baseline-145005-20250804T000000",
+   "cluster": "group 2066792625:29022",
+   "episode": "2066792625:566",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-ATO"
+   },
+   "packet_sha256": "f297288617f01ee68d490324ceffd1e1d8403c62d6911a22fd00296f1baf3c26",
+   "phase_probabilities": [
+    1.0,
+    0.42857142857142855
+   ],
+   "seed": 2066792625,
+   "stratum": "P-ATO",
+   "weight": 2.3333333333333335
+  },
+  {
+   "account": "2066792625:29022",
+   "axis": "check_completed",
+   "case_id": "2066792625-baseline-145005-20250804T122450",
+   "cluster": "group 2066792625:29022",
+   "episode": "2066792625:566",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-ATO"
+   },
+   "packet_sha256": "664deee59b1ed3225a2286d1af1a01a613fd0b8dc95ece6a916bb811cc8fd627",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 2066792625,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "2066792625:17973",
+   "axis": "review",
+   "case_id": "2066792625-baseline-145051-20250805T000000",
+   "cluster": "group 2066792625:17973",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "1e37cd3cea14137ffe2fd3568a0cb381dac0eacee98d5c8f91e43f71db2f8e43",
+   "phase_probabilities": [
+    1.0,
+    0.18181818181818182
+   ],
+   "seed": 2066792625,
+   "stratum": "legitimate:fragile",
+   "weight": 5.5
+  },
+  {
+   "account": "2066792625:47408",
+   "axis": "review",
+   "case_id": "2066792625-baseline-145371-20250805T000000",
+   "cluster": "group 2066792625:47408",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "63bc684977a1c2cf9db947bed6f17eda17ff7ab39b2dcfb01ce43bab7e50a457",
+   "phase_probabilities": [
+    1.0,
+    0.007987220447284345
+   ],
+   "seed": 2066792625,
+   "stratum": "legitimate:new_customer_first_order",
+   "weight": 125.2
+  },
+  {
+   "account": "35244829:40914",
+   "axis": "review",
+   "case_id": "35244829-baseline-128754-20250602T120648",
+   "cluster": "group 35244829:40914",
+   "episode": "35244829:517",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-ATO"
+   },
+   "packet_sha256": "7b65023ff098938199f25543ad67c3ba78825d3c592b86f7302e78892e89c075",
+   "phase_probabilities": [
+    1.0,
+    0.42857142857142855
+   ],
+   "seed": 35244829,
+   "stratum": "P-ATO",
+   "weight": 2.3333333333333335
+  },
+  {
+   "account": "35244829:40914",
+   "axis": "review",
+   "case_id": "35244829-baseline-128768-20250602T123459",
+   "cluster": "group 35244829:40914",
+   "episode": "35244829:517",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-ATO"
+   },
+   "packet_sha256": "63331d5b5dc07d60f03f094e5ddaee310356c1914adc47b6f04a9063d3f6d52c",
+   "phase_probabilities": [
+    1.0,
+    0.42857142857142855
+   ],
+   "seed": 35244829,
+   "stratum": "P-ATO",
+   "weight": 2.3333333333333335
+  },
+  {
+   "account": "35244829:44703",
+   "axis": "check_completed",
+   "case_id": "35244829-baseline-128796-20250602T170927",
+   "cluster": "group 35244829:44703",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "a46d6891101234e7fdf4413ffb33620eac7c570cbb261871efe9510783458316",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 35244829,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "35244829:44798",
+   "axis": "review",
+   "case_id": "35244829-baseline-129472-20250605T000000",
+   "cluster": "group 35244829:44798",
+   "episode": "35244829:521",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "c8472d9df806e38979e164105ece95f013de877ee9112612403773ef075bad91",
+   "phase_probabilities": [
+    1.0,
+    0.15
+   ],
+   "seed": 35244829,
+   "stratum": "P-STOLEN",
+   "weight": 6.666666666666667
+  },
+  {
+   "account": "35244829:40246",
+   "axis": "check_completed",
+   "case_id": "35244829-baseline-130880-20250610T150233",
+   "cluster": "group 35244829:40246",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "d1d3ae0314d4a0f32caa8a159b0208d25b936d0e8335334802a7e71503dde84e",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 35244829,
+   "stratum": "after_check:id_check=failed:decline:legitimate",
+   "weight": 1.0
+  },
+  {
+   "account": "35244829:45462",
+   "axis": "check_completed",
+   "case_id": "35244829-baseline-133652-20250621T002433",
+   "cluster": "group 35244829:45462",
+   "episode": "35244829:532",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "4008478d70a8b536c61afb5dbd68fa05974457403ed500c7bbcb7c80b62fd082",
+   "phase_probabilities": [
+    0.4,
+    0.8076923076923077
+   ],
+   "seed": 35244829,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 3.095238095238095
+  },
+  {
+   "account": "35244829:23543",
+   "axis": "review",
+   "case_id": "35244829-baseline-135925-20250628T110152",
+   "cluster": "group 35244829:23543",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "13a5cefb8e2869bf41dc6b1c50ab7d5252a2d50b54015e375b9636329f2d951f",
+   "phase_probabilities": [
+    1.0,
+    0.8333333333333334
+   ],
+   "seed": 35244829,
+   "stratum": "legitimate:takeover_victim",
+   "weight": 1.2
+  },
+  {
+   "account": "35244829:42477",
+   "axis": "check_completed",
+   "case_id": "35244829-baseline-136325-20250630T113507",
+   "cluster": "group 35244829:42477",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "7215e14e76e4d0e03d717913671380b7e17742a412498590e9622bcfc739247c",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 35244829,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "35244829:37109",
+   "axis": "review",
+   "case_id": "35244829-baseline-136680-20250701T000000",
+   "cluster": "group 35244829:37109",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "a81a950773b7cdf0de8fbd410a0599335cd3b2f98dab133de009554b4e0519b9",
+   "phase_probabilities": [
+    1.0,
+    0.0641025641025641
+   ],
+   "seed": 35244829,
+   "stratum": "legitimate:late_payer",
+   "weight": 15.600000000000001
+  },
+  {
+   "account": "35244829:45184",
+   "axis": "check_completed",
+   "case_id": "35244829-baseline-137714-20250704T213812",
+   "cluster": "group 35244829:45184",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "f04a60e3809fc2d921888486c7549bd3f15718b669c95372752059bd7675febd",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 35244829,
+   "stratum": "after_check:id_check=failed:decline:legitimate",
+   "weight": 1.0
+  },
+  {
+   "account": "35244829:40904",
+   "axis": "review",
+   "case_id": "35244829-baseline-141224-20250717T000000",
+   "cluster": "group 35244829:40904",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "8a6df548a1adeaad9aa3f2a8e2a9247b70610db1ed9cc2d4c9d82114fda8072b",
+   "phase_probabilities": [
+    1.0,
+    0.11904761904761904
+   ],
+   "seed": 35244829,
+   "stratum": "legitimate:mover",
+   "weight": 8.4
+  },
+  {
+   "account": "35244829:43260",
+   "axis": "review",
+   "case_id": "35244829-baseline-141662-20250721T000000",
+   "cluster": "group 35244829:43260",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "0306fc581af9e750dd826e990ccb8f5fc2378cff043f2c79858d5773d98e5e21",
+   "phase_probabilities": [
+    1.0,
+    0.05434782608695652
+   ],
+   "seed": 35244829,
+   "stratum": "legitimate:travel",
+   "weight": 18.400000000000002
+  },
+  {
+   "account": "35244829:47406",
+   "axis": "check_completed",
+   "case_id": "35244829-baseline-145856-20250802T130819",
+   "cluster": "group 35244829:47403",
+   "episode": "35244829:551",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-PROMO"
+   },
+   "packet_sha256": "2c51fc01f716c5443c209887891f2145b73953909bcd702662ca55c56a275713",
+   "phase_probabilities": [
+    0.25,
+    0.75
+   ],
+   "seed": 35244829,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 5.333333333333333
+  },
+  {
+   "account": "35244829:8031",
+   "axis": "check_completed",
+   "case_id": "35244829-baseline-147675-20250809T134806",
+   "cluster": "group 35244829:8031",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "0f025904c083f81c8d7569cfb0c7ef318016921adeaaacc0fc8df5bb43fb7ed0",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 35244829,
+   "stratum": "after_check:id_check=failed:escalate:legitimate",
+   "weight": 1.0
+  },
+  {
+   "account": "35244829:9800",
+   "axis": "check_completed",
+   "case_id": "35244829-baseline-149826-20250816T190025",
+   "cluster": "group 35244829:9800",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "3be1e7d3bf6fe0d533456a404410237d7f2e61bea0f6432b5d4943b0af7158f7",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 35244829,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "35244829:46802",
+   "axis": "review",
+   "case_id": "35244829-baseline-152245-20250825T000000",
+   "cluster": "group 35244829:46802",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "17c109671b3f5e3bb2d13a1d64027eef356390a12de3bbc472a085dbfc97c406",
+   "phase_probabilities": [
+    1.0,
+    0.18518518518518517
+   ],
+   "seed": 35244829,
+   "stratum": "legitimate:hardship",
+   "weight": 5.4
+  },
+  {
+   "account": "35244829:46802",
+   "axis": "check_completed",
+   "case_id": "35244829-baseline-152245-20250825T123523",
+   "cluster": "group 35244829:46802",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "1eb29d2192982031beb891174325f2c23e00ebf7fc216679f22ad38445734836",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 35244829,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "35244829:35507",
+   "axis": "review",
+   "case_id": "35244829-baseline-152269-20250825T000000",
+   "cluster": "group 35244829:35507",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "2aa1c67c5dd7e6c7cae5f8c6e150976fee40a6c3629a32b76f72232f57350030",
+   "phase_probabilities": [
+    1.0,
+    0.0641025641025641
+   ],
+   "seed": 35244829,
+   "stratum": "legitimate:late_payer",
+   "weight": 15.600000000000001
+  },
+  {
+   "account": "717729117:44667",
+   "axis": "review",
+   "case_id": "717729117-baseline-128885-20250602T000000",
+   "cluster": "group 717729117:44667",
+   "episode": "717729117:447",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-MERCH"
+   },
+   "packet_sha256": "3e1ac8a8617b80e47093092b4948b08b242ddda03065275c287bfb38f938ca2c",
+   "phase_probabilities": [
+    0.5,
+    0.5454545454545454
+   ],
+   "seed": 717729117,
+   "stratum": "P-MERCH",
+   "weight": 3.666666666666667
+  },
+  {
+   "account": "717729117:44071",
+   "axis": "check_completed",
+   "case_id": "717729117-baseline-129881-20250605T164615",
+   "cluster": "group 717729117:44071",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "b6f86656d3505d84654d4427e433c54d05d8d4dd388ba9f150109ad318811709",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 717729117,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "717729117:28431",
+   "axis": "review",
+   "case_id": "717729117-baseline-130103-20250606T111549",
+   "cluster": "group 717729117:28431",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "e140869d5103ce3d7e5ffabff105a4e5ce91d462c0ab4fd2f020ca72da9eeb19",
+   "phase_probabilities": [
+    1.0,
+    0.06578947368421052
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:new_customer",
+   "weight": 15.200000000000001
+  },
+  {
+   "account": "717729117:24166",
+   "axis": "review",
+   "case_id": "717729117-baseline-131637-20250612T000000",
+   "cluster": "group 717729117:24166",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "05320373c2d972b3ca92f469aad56ab2cb68b6add8ccf5976d163d47f1991aa3",
+   "phase_probabilities": [
+    1.0,
+    0.04716981132075472
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:shared_device",
+   "weight": 21.2
+  },
+  {
+   "account": "717729117:45229",
+   "axis": "review",
+   "case_id": "717729117-baseline-132134-20250614T000000",
+   "cluster": "group 717729117:45229",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "6a1125ce5a25418112e76aa2943641ad4aba63003b49b9dd884099503b502ddf",
+   "phase_probabilities": [
+    1.0,
+    0.007987220447284345
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:new_customer_first_order",
+   "weight": 125.2
+  },
+  {
+   "account": "717729117:45394",
+   "axis": "check_completed",
+   "case_id": "717729117-baseline-133795-20250620T144855",
+   "cluster": "group 717729117:45394",
+   "episode": "717729117:520",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-NEVERPAY"
+   },
+   "packet_sha256": "7dfdf00d8c73ec00d798c4c65d0c8651ea2330058d09d2b1b3f9e398b23cdd1c",
+   "phase_probabilities": [
+    0.4,
+    0.75
+   ],
+   "seed": 717729117,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 3.333333333333333
+  },
+  {
+   "account": "717729117:45316",
+   "axis": "review",
+   "case_id": "717729117-baseline-134142-20250621T085143",
+   "cluster": "group 717729117:45316",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "fef27c5f61331ed2648d5b72e3cf625bc90b0b95cf334c1ee47e35b277f03e0c",
+   "phase_probabilities": [
+    1.0,
+    0.0625
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:hardship_default",
+   "weight": 16.0
+  },
+  {
+   "account": "717729117:45834",
+   "axis": "review",
+   "case_id": "717729117-baseline-135780-20250627T000000",
+   "cluster": "group 717729117:45834",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "636276fb18e98b3847d93ff5cb1d65d440bd0033afad87b8a797cfbe1c98861f",
+   "phase_probabilities": [
+    1.0,
+    0.0625
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:hardship_default",
+   "weight": 16.0
+  },
+  {
+   "account": "717729117:42808",
+   "axis": "check_completed",
+   "case_id": "717729117-baseline-137831-20250704T142035",
+   "cluster": "group 717729117:42808",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "2e992bfcca69168a332299f4946b800d097ff8cc6bde60f619a723e1f896e4f6",
+   "phase_probabilities": [
+    0.6666666666666666,
+    1.0
+   ],
+   "seed": 717729117,
+   "stratum": "after_check:id_check=failed:escalate:legitimate",
+   "weight": 1.5
+  },
+  {
+   "account": "717729117:46247",
+   "axis": "review",
+   "case_id": "717729117-baseline-138380-20250706T073014",
+   "cluster": "group 717729117:46247",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "86c75f84b8acff66865443aebb21d0688e73e12d241d495443c3f6fe3c9363d8",
+   "phase_probabilities": [
+    1.0,
+    0.007987220447284345
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:new_customer_first_order",
+   "weight": 125.2
+  },
+  {
+   "account": "717729117:30582",
+   "axis": "review",
+   "case_id": "717729117-baseline-139240-20250709T074735",
+   "cluster": "group 717729117:30582",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "45352b0ccd5c47abf4c0faaec3c8d4e229cb636c501f6e8404710686bd667569",
+   "phase_probabilities": [
+    1.0,
+    0.18518518518518517
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:hardship",
+   "weight": 5.4
+  },
+  {
+   "account": "717729117:46591",
+   "axis": "review",
+   "case_id": "717729117-baseline-140737-20250715T000000",
+   "cluster": "group 717729117:46591",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "ed055092d2177aee3fcc8d0958261764044fb62ebd54b7139036883ff55b04a0",
+   "phase_probabilities": [
+    1.0,
+    0.007052186177715092
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:large_first_order",
+   "weight": 141.79999999999998
+  },
+  {
+   "account": "717729117:22138",
+   "axis": "review",
+   "case_id": "717729117-baseline-140988-20250715T132302",
+   "cluster": "group 717729117:22138",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "3c462c48d74f2c62b9a3eece64b7e7ea79377123fd24192b8c313563ed4ad2f4",
+   "phase_probabilities": [
+    1.0,
+    0.07352941176470588
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:traveller",
+   "weight": 13.6
+  },
+  {
+   "account": "717729117:44126",
+   "axis": "check_completed",
+   "case_id": "717729117-baseline-142926-20250722T153011",
+   "cluster": "group 717729117:44126",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "30375b597ad71aef0ee5645a04da264a5589c8bf5c380169a4c0db622ab4acbc",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 717729117,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "717729117:19409",
+   "axis": "review",
+   "case_id": "717729117-baseline-143073-20250723T000000",
+   "cluster": "group 717729117:19409",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "95c06ff56c89d293d24b0f6698a62aaeed64dbf8bb2098e7fe00445ee7007922",
+   "phase_probabilities": [
+    1.0,
+    0.11627906976744186
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:new_phone_reset",
+   "weight": 8.6
+  },
+  {
+   "account": "717729117:47240",
+   "axis": "review",
+   "case_id": "717729117-baseline-145000-20250730T000000",
+   "cluster": "group 717729117:47240",
+   "episode": "717729117:552",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-NEVERPAY"
+   },
+   "packet_sha256": "0d89a02f440f65a12afbf58f2a32544b12cb51ab5c9d6f41b967b5b55177c1cd",
+   "phase_probabilities": [
+    1.0,
+    0.1935483870967742
+   ],
+   "seed": 717729117,
+   "stratum": "P-NEVERPAY",
+   "weight": 5.166666666666667
+  },
+  {
+   "account": "717729117:47240",
+   "axis": "check_completed",
+   "case_id": "717729117-baseline-145000-20250730T161414",
+   "cluster": "group 717729117:47240",
+   "episode": "717729117:552",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-NEVERPAY"
+   },
+   "packet_sha256": "6195fdbad1a2abcdf78026c18749a3b7bce7792b4322ad1abf5300f00270ac47",
+   "phase_probabilities": [
+    1.0,
+    0.75
+   ],
+   "seed": 717729117,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 1.3333333333333333
+  },
+  {
+   "account": "717729117:34486",
+   "axis": "review",
+   "case_id": "717729117-baseline-145393-20250731T114423",
+   "cluster": "group 717729117:34486",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "382b75011d02ddc30b4054dd5234fd7f6a89ca24489e6db529d14de3a112af3c",
+   "phase_probabilities": [
+    1.0,
+    0.07352941176470588
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:traveller",
+   "weight": 13.6
+  },
+  {
+   "account": "717729117:29202",
+   "axis": "check_completed",
+   "case_id": "717729117-baseline-145691-20250802T082125",
+   "cluster": "group 717729117:29202",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "6aaff31cc6de475519c493f13f55499ad236c3be745080246a6bdcf4ac24f5d5",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 717729117,
+   "stratum": "after_check:id_check=failed:decline:legitimate",
+   "weight": 1.0
+  },
+  {
+   "account": "717729117:47367",
+   "axis": "review",
+   "case_id": "717729117-baseline-145717-20250801T154015",
+   "cluster": "group 717729117:47238",
+   "episode": "717729117:507",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-MERCH"
+   },
+   "packet_sha256": "c23d8169cf7e03c43f1244ed7b0afbfbf4dc21f9206f5d0c78b852a0febbe18b",
+   "phase_probabilities": [
+    0.4,
+    0.5454545454545454
+   ],
+   "seed": 717729117,
+   "stratum": "P-MERCH",
+   "weight": 4.583333333333334
+  },
+  {
+   "account": "717729117:30027",
+   "axis": "review",
+   "case_id": "717729117-baseline-146206-20250803T101416",
+   "cluster": "group 717729117:30027",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "e17c4e33cb0cccf2a825709185d40fe92430f8aed85de4720c2645d0f3fabcbd",
+   "phase_probabilities": [
+    1.0,
+    0.0641025641025641
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:late_payer",
+   "weight": 15.600000000000001
+  },
+  {
+   "account": "717729117:47540",
+   "axis": "review",
+   "case_id": "717729117-baseline-146723-20250805T053957",
+   "cluster": "group 717729117:47540",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "408d99b542c029843d75396cbbf536ce9b0419b68b75dab22c2a8bc5fffbb89f",
+   "phase_probabilities": [
+    1.0,
+    0.007987220447284345
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:new_customer_first_order",
+   "weight": 125.2
+  },
+  {
+   "account": "717729117:33812",
+   "axis": "check_completed",
+   "case_id": "717729117-baseline-148936-20250813T181856",
+   "cluster": "group 717729117:33812",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "1622f880ad0aeeb8011bb69b6aa53c60b0f2c8bae97516bbcddc136f68fd4964",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 717729117,
+   "stratum": "after_check:id_check=failed:decline:legitimate",
+   "weight": 1.0
+  },
+  {
+   "account": "717729117:48056",
+   "axis": "review",
+   "case_id": "717729117-baseline-150109-20250817T091154",
+   "cluster": "group 717729117:48056",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "ed6dc170ffdf8fa11d12cd1a9aa1ae0833114ad207bd7c84ce493169de12b625",
+   "phase_probabilities": [
+    1.0,
+    0.0625
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:hardship_default",
+   "weight": 16.0
+  },
+  {
+   "account": "717729117:38313",
+   "axis": "review",
+   "case_id": "717729117-baseline-150502-20250819T000000",
+   "cluster": "group 717729117:38313",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "eee06853cf012f3d26ff639beb705df9a5c79f83a75bb0b44eb8dbb0661671e3",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:merchant_acquired",
+   "weight": 1.0
+  },
+  {
+   "account": "717729117:38313",
+   "axis": "check_completed",
+   "case_id": "717729117-baseline-150502-20250819T094054",
+   "cluster": "group 717729117:38313",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "aef9f078c881b1576063ff68995fd9e56f3497bc39e93e680c147991f0b0dc3d",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 717729117,
+   "stratum": "after_check:id_check=failed:decline:legitimate",
+   "weight": 1.0
+  },
+  {
+   "account": "717729117:38624",
+   "axis": "review",
+   "case_id": "717729117-baseline-150842-20250820T000000",
+   "cluster": "group 717729117:38624",
+   "episode": "717729117:382",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "78fe12b26eac6ed1a0a07571014d5c7cfd56e30ad610f7023bfc0fb9f1e23ad7",
+   "phase_probabilities": [
+    1.0,
+    0.15
+   ],
+   "seed": 717729117,
+   "stratum": "P-STOLEN",
+   "weight": 6.666666666666667
+  },
+  {
+   "account": "717729117:47953",
+   "axis": "review",
+   "case_id": "717729117-baseline-150868-20250820T000000",
+   "cluster": "group 717729117:47953",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "ab4db8915224ac23e64adafc56d0b08a8342a5514ed25327cb3988f980db5951",
+   "phase_probabilities": [
+    1.0,
+    0.0641025641025641
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:late_payer",
+   "weight": 15.600000000000001
+  },
+  {
+   "account": "717729117:28931",
+   "axis": "review",
+   "case_id": "717729117-baseline-152781-20250827T000000",
+   "cluster": "group 717729117:28931",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "66e8eeb2d974a21abd0008848fa6e8838e4c3fa3a4f62449c5159a42c76d657a",
+   "phase_probabilities": [
+    1.0,
+    0.18518518518518517
+   ],
+   "seed": 717729117,
+   "stratum": "legitimate:hardship",
+   "weight": 5.4
+  },
+  {
+   "account": "931592514:44713",
+   "axis": "check_completed",
+   "case_id": "931592514-baseline-127804-20250604T111759",
+   "cluster": "group 931592514:44713",
+   "episode": "931592514:511",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-NEVERPAY"
+   },
+   "packet_sha256": "e520a3eb7f62ad23504875eff43dec60ab504b57f6351757eae2b5df7ee0f47f",
+   "phase_probabilities": [
+    0.3333333333333333,
+    0.75
+   ],
+   "seed": 931592514,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 4.0
+  },
+  {
+   "account": "931592514:35369",
+   "axis": "review",
+   "case_id": "931592514-baseline-128082-20250604T000000",
+   "cluster": "group 931592514:35369",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "29bb80fe4aa0aed20b1ab1e33a183483f75316d0d6ec5bdf7bf74d1efc54c58c",
+   "phase_probabilities": [
+    1.0,
+    0.0625
+   ],
+   "seed": 931592514,
+   "stratum": "legitimate:hardship_default",
+   "weight": 16.0
+  },
+  {
+   "account": "931592514:41680",
+   "axis": "review",
+   "case_id": "931592514-baseline-128527-20250605T093337",
+   "cluster": "group 931592514:41680",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "e24c406be6bae1ad7f77c276666ef55d762fbd0b1af5bd82c03d5d4905f4055c",
+   "phase_probabilities": [
+    1.0,
+    0.03225806451612903
+   ],
+   "seed": 931592514,
+   "stratum": "legitimate:household",
+   "weight": 31.0
+  },
+  {
+   "account": "931592514:44875",
+   "axis": "check_completed",
+   "case_id": "931592514-baseline-128998-20250607T152434",
+   "cluster": "group 931592514:44713",
+   "episode": "931592514:511",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-NEVERPAY"
+   },
+   "packet_sha256": "4b12e3e476566ca7275feb196549d9c533647cdffb8d04b7a162cf0fe3b3345f",
+   "phase_probabilities": [
+    0.3333333333333333,
+    0.75
+   ],
+   "seed": 931592514,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 4.0
+  },
+  {
+   "account": "931592514:45116",
+   "axis": "review",
+   "case_id": "931592514-baseline-130007-20250611T000000",
+   "cluster": "group 931592514:29392",
+   "episode": "931592514:455",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-MERCH"
+   },
+   "packet_sha256": "95802d643953f051ffe8adc4aab32e1d74a559f3f5c991a5686ebb415ed7f166",
+   "phase_probabilities": [
+    0.2857142857142857,
+    0.5454545454545454
+   ],
+   "seed": 931592514,
+   "stratum": "P-MERCH",
+   "weight": 6.416666666666668
+  },
+  {
+   "account": "931592514:41434",
+   "axis": "check_completed",
+   "case_id": "931592514-baseline-131268-20250618T125458",
+   "cluster": "group 931592514:41434",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "93c350a2e2e03068e49605e778a17d718fdd9b2439995ab745acadeb1c85ea06",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 931592514,
+   "stratum": "after_check:id_check=failed:decline:legitimate",
+   "weight": 1.0
+  },
+  {
+   "account": "931592514:31948",
+   "axis": "check_completed",
+   "case_id": "931592514-baseline-131305-20250616T164805",
+   "cluster": "group 931592514:31948",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "321d751966b79c48f0037b9b71b47391329f60b4c9939862007e0369acc159f4",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 931592514,
+   "stratum": "after_check:id_check=failed:decline:legitimate",
+   "weight": 1.0
+  },
+  {
+   "account": "931592514:45349",
+   "axis": "review",
+   "case_id": "931592514-baseline-131629-20250617T000000",
+   "cluster": "group 931592514:45349",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "bec48ae255d05d2be11699c4cbad24477b0f084e42d73f43fe69f7080d1718df",
+   "phase_probabilities": [
+    1.0,
+    0.5555555555555556
+   ],
+   "seed": 931592514,
+   "stratum": "legitimate:genuine_non_delivery",
+   "weight": 1.7999999999999998
+  },
+  {
+   "account": "931592514:4985",
+   "axis": "review",
+   "case_id": "931592514-baseline-132433-20250620T000000",
+   "cluster": "group 931592514:4985",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "4047a457af3be879459c90f4548bcb2cab532c8ae47a17025158bbb2ce39e2e9",
+   "phase_probabilities": [
+    0.6666666666666666,
+    0.8333333333333334
+   ],
+   "seed": 931592514,
+   "stratum": "legitimate:takeover_victim",
+   "weight": 1.7999999999999998
+  },
+  {
+   "account": "931592514:45447",
+   "axis": "check_completed",
+   "case_id": "931592514-baseline-134006-20250626T191849",
+   "cluster": "group 931592514:45447",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "746a9f718576fdb5e347a2d547eb8d18e92d007c118342a296547597b5cc2e78",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 931592514,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "931592514:46239",
+   "axis": "check_completed",
+   "case_id": "931592514-baseline-137188-20250708T133729",
+   "cluster": "group 931592514:46239",
+   "episode": "931592514:545",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "a6c12e190bf269b4a64eca0f81d36cb4adc77a444d7eeb56098c445aee824979",
+   "phase_probabilities": [
+    1.0,
+    0.75
+   ],
+   "seed": 931592514,
+   "stratum": "after_check:id_check=passed:clear:fraud",
+   "weight": 1.3333333333333333
+  },
+  {
+   "account": "931592514:35644",
+   "axis": "check_completed",
+   "case_id": "931592514-baseline-139071-20250715T020027",
+   "cluster": "group 931592514:35644",
+   "episode": "931592514:551",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-ATO"
+   },
+   "packet_sha256": "6c766f79a37232e46949e03ef8faff5a94c6ce12dbaf6fbd6943d413d51a6a51",
+   "phase_probabilities": [
+    1.0,
+    0.8076923076923077
+   ],
+   "seed": 931592514,
+   "stratum": "after_check:id_check=failed:decline:fraud",
+   "weight": 1.2380952380952381
+  },
+  {
+   "account": "931592514:46764",
+   "axis": "review",
+   "case_id": "931592514-baseline-140468-20250720T000000",
+   "cluster": "group 931592514:46764",
+   "episode": "931592514:555",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "a1f934b32d63cbfb20eed42eaf06fb7ca4daa3142e6fff944a6412cf03a5d48f",
+   "phase_probabilities": [
+    1.0,
+    0.15
+   ],
+   "seed": 931592514,
+   "stratum": "P-STOLEN",
+   "weight": 6.666666666666667
+  },
+  {
+   "account": "931592514:44125",
+   "axis": "review",
+   "case_id": "931592514-baseline-140771-20250721T000000",
+   "cluster": "group 931592514:44125",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "8c7abddb14b475d019cf2cba45b5cb012de3ef8670cba7c4900d6630fbf0fcc8",
+   "phase_probabilities": [
+    1.0,
+    0.11904761904761904
+   ],
+   "seed": 931592514,
+   "stratum": "legitimate:mover",
+   "weight": 8.4
+  },
+  {
+   "account": "931592514:47003",
+   "axis": "review",
+   "case_id": "931592514-baseline-142073-20250725T123116",
+   "cluster": "group 931592514:46638",
+   "episode": "931592514:515",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-MERCH"
+   },
+   "packet_sha256": "61f1606e4d977c879c18228776f85a2e554c161ed27589ed7fc3255860db641d",
+   "phase_probabilities": [
+    0.5,
+    0.5454545454545454
+   ],
+   "seed": 931592514,
+   "stratum": "P-MERCH",
+   "weight": 3.666666666666667
+  },
+  {
+   "account": "931592514:37410",
+   "axis": "review",
+   "case_id": "931592514-baseline-142803-20250728T000000",
+   "cluster": "group 931592514:37410",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "3c5f7caeebb444e610e2b90f56f0a1ec6183ad0f593e126349614023544436ac",
+   "phase_probabilities": [
+    1.0,
+    0.11627906976744186
+   ],
+   "seed": 931592514,
+   "stratum": "legitimate:new_phone_reset",
+   "weight": 8.6
+  },
+  {
+   "account": "931592514:20396",
+   "axis": "review",
+   "case_id": "931592514-baseline-143645-20250731T000000",
+   "cluster": "group 931592514:20396",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "88e248006747a8fd278ab9abe3722fb1ec47361e8a8bbfbde9d4e3a74cbe536a",
+   "phase_probabilities": [
+    1.0,
+    0.09230769230769231
+   ],
+   "seed": 931592514,
+   "stratum": "legitimate:existing",
+   "weight": 10.833333333333332
+  },
+  {
+   "account": "931592514:47275",
+   "axis": "review",
+   "case_id": "931592514-baseline-143923-20250801T010113",
+   "cluster": "group 931592514:47275",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "ccabbaa9af6ae65a491b6e39fc752fce32c0db58fb4b966bb53dc870af2e2353",
+   "phase_probabilities": [
+    1.0,
+    0.007052186177715092
+   ],
+   "seed": 931592514,
+   "stratum": "legitimate:large_first_order",
+   "weight": 141.79999999999998
+  },
+  {
+   "account": "931592514:44303",
+   "axis": "check_completed",
+   "case_id": "931592514-baseline-143995-20250801T134937",
+   "cluster": "group 931592514:44303",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "2b8b3fc7a04bfb2bef5ed4e4da1a4691c2bede5c6cd6c656c89bbe2fb9865bed",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 931592514,
+   "stratum": "after_check:id_check=failed:escalate:legitimate",
+   "weight": 1.0
+  },
+  {
+   "account": "931592514:4985",
+   "axis": "review",
+   "case_id": "931592514-baseline-144112-20250803T000000",
+   "cluster": "group 931592514:4985",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "f043932cb7dc30d5416d00b9d12cb51a2f86a7c4626c6d2e9dae23b4be89e9d5",
+   "phase_probabilities": [
+    0.6666666666666666,
+    0.8333333333333334
+   ],
+   "seed": 931592514,
+   "stratum": "legitimate:takeover_victim",
+   "weight": 1.7999999999999998
+  },
+  {
+   "account": "931592514:42619",
+   "axis": "review",
+   "case_id": "931592514-baseline-147841-20250815T153012",
+   "cluster": "group 931592514:42619",
+   "episode": "931592514:475",
+   "family": "baseline",
+   "latent": {
+    "class": "fraud",
+    "pattern": "P-STOLEN"
+   },
+   "packet_sha256": "b68207e3e5d144a9ce9324a6830144e21c0a9fb3573f766af7cde2bd4fde00d8",
+   "phase_probabilities": [
+    1.0,
+    0.15
+   ],
+   "seed": 931592514,
+   "stratum": "P-STOLEN",
+   "weight": 6.666666666666667
+  },
+  {
+   "account": "931592514:37196",
+   "axis": "check_completed",
+   "case_id": "931592514-baseline-148107-20250816T180037",
+   "cluster": "group 931592514:37196",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "7ec8c3183bdf3d6034695dfd7bdfaab2fa073d502cfdcda2186ffb46ac379f16",
+   "phase_probabilities": [
+    1.0,
+    1.0
+   ],
+   "seed": 931592514,
+   "stratum": "after_check:id_check=failed:decline:legitimate",
+   "weight": 1.0
+  },
+  {
+   "account": "931592514:47960",
+   "axis": "review",
+   "case_id": "931592514-baseline-148550-20250818T000000",
+   "cluster": "group 931592514:47960",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "6b3caa8f98c0ad0b711d63cd2e4075fd5db195d8e7ddf39cf9c3cb41cabafc22",
+   "phase_probabilities": [
+    1.0,
+    0.007052186177715092
+   ],
+   "seed": 931592514,
+   "stratum": "legitimate:large_first_order",
+   "weight": 141.79999999999998
+  },
+  {
+   "account": "931592514:48328",
+   "axis": "check_completed",
+   "case_id": "931592514-baseline-150759-20250827T105633",
+   "cluster": "group 931592514:48328",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "5fe95e0db3803f9f85cd92c0085a72e44be9b3886f7b6b2cbdba23949997ed6e",
+   "phase_probabilities": [
+    1.0,
+    0.03804347826086957
+   ],
+   "seed": 931592514,
+   "stratum": "after_check:id_check=passed:clear:legitimate",
+   "weight": 26.285714285714285
+  },
+  {
+   "account": "931592514:38539",
+   "axis": "review",
+   "case_id": "931592514-baseline-151701-20250829T070337",
+   "cluster": "group 931592514:38539",
+   "episode": null,
+   "family": "baseline",
+   "latent": {
+    "class": "legitimate",
+    "pattern": null
+   },
+   "packet_sha256": "0c4ea496741328b74f629e0391c86d005585cc97036a177f350966b08f8a8ae3",
+   "phase_probabilities": [
+    1.0,
+    0.04716981132075472
+   ],
+   "seed": 931592514,
+   "stratum": "legitimate:shared_device",
+   "weight": 21.2
+  }
+ ],
+ "code_sha256": {
+  "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+  "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+  "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+  "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+  "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+  "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+  "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+  "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+  "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+  "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+ },
+ "id": "2026-10-final",
+ "phase": "final",
+ "policy": {
+  "id": "FP-2",
+  "sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75"
+ },
+ "probes": {
+  "renamed": [
+   "1260106251-baseline-128961-20250604T000000",
+   "1260106251-baseline-133656-20250620T160031",
+   "1260106251-baseline-141863-20250720T150615",
+   "1260106251-baseline-150927-20250821T104035",
+   "1629189384-baseline-130466-20250612T072502",
+   "1629189384-baseline-133011-20250621T000000",
+   "1671034716-baseline-132900-20250619T000000",
+   "1671034716-baseline-140352-20250716T000000",
+   "1671034716-baseline-140742-20250717T102349",
+   "1671034716-baseline-142578-20250724T000000",
+   "1671034716-baseline-143716-20250728T000000",
+   "1671034716-baseline-147757-20250813T000000",
+   "1671034716-baseline-148596-20250814T155015",
+   "1891170948-baseline-129476-20250606T000000",
+   "1891170948-baseline-129970-20250609T063526",
+   "1891170948-baseline-144065-20250729T000000",
+   "1891170948-baseline-144065-20250729T210125",
+   "1891170948-baseline-146079-20250804T135222",
+   "1891170948-baseline-147472-20250809T212252",
+   "1891170948-baseline-150604-20250820T140153",
+   "200041300-baseline-148475-20250816T120257",
+   "2066792625-baseline-145005-20250804T122450",
+   "2066792625-baseline-145051-20250805T000000",
+   "35244829-baseline-128754-20250602T120648",
+   "35244829-baseline-130880-20250610T150233",
+   "35244829-baseline-141224-20250717T000000",
+   "717729117-baseline-130103-20250606T111549",
+   "717729117-baseline-131637-20250612T000000",
+   "717729117-baseline-137831-20250704T142035",
+   "717729117-baseline-150502-20250819T000000",
+   "717729117-baseline-150868-20250820T000000",
+   "931592514-baseline-128082-20250604T000000",
+   "931592514-baseline-131268-20250618T125458",
+   "931592514-baseline-131629-20250617T000000",
+   "931592514-baseline-134006-20250626T191849",
+   "931592514-baseline-140468-20250720T000000",
+   "931592514-baseline-142073-20250725T123116",
+   "931592514-baseline-143923-20250801T010113",
+   "931592514-baseline-143995-20250801T134937",
+   "931592514-baseline-147841-20250815T153012"
+  ],
+  "shuffled": [
+   "1260106251-baseline-128961-20250604T000000",
+   "1260106251-baseline-133656-20250620T160031",
+   "1260106251-baseline-141863-20250720T150615",
+   "1260106251-baseline-150927-20250821T104035",
+   "1629189384-baseline-130466-20250612T072502",
+   "1629189384-baseline-133011-20250621T000000",
+   "1671034716-baseline-132900-20250619T000000",
+   "1671034716-baseline-140352-20250716T000000",
+   "1671034716-baseline-140742-20250717T102349",
+   "1671034716-baseline-142578-20250724T000000",
+   "1671034716-baseline-143716-20250728T000000",
+   "1671034716-baseline-147757-20250813T000000",
+   "1671034716-baseline-148596-20250814T155015",
+   "1891170948-baseline-129476-20250606T000000",
+   "1891170948-baseline-129970-20250609T063526",
+   "1891170948-baseline-144065-20250729T000000",
+   "1891170948-baseline-144065-20250729T210125",
+   "1891170948-baseline-146079-20250804T135222",
+   "1891170948-baseline-147472-20250809T212252",
+   "1891170948-baseline-150604-20250820T140153",
+   "200041300-baseline-148475-20250816T120257",
+   "2066792625-baseline-145005-20250804T122450",
+   "2066792625-baseline-145051-20250805T000000",
+   "35244829-baseline-128754-20250602T120648",
+   "35244829-baseline-130880-20250610T150233",
+   "35244829-baseline-141224-20250717T000000",
+   "717729117-baseline-130103-20250606T111549",
+   "717729117-baseline-131637-20250612T000000",
+   "717729117-baseline-137831-20250704T142035",
+   "717729117-baseline-150502-20250819T000000",
+   "717729117-baseline-150868-20250820T000000",
+   "931592514-baseline-128082-20250604T000000",
+   "931592514-baseline-131268-20250618T125458",
+   "931592514-baseline-131629-20250617T000000",
+   "931592514-baseline-134006-20250626T191849",
+   "931592514-baseline-140468-20250720T000000",
+   "931592514-baseline-142073-20250725T123116",
+   "931592514-baseline-143923-20250801T010113",
+   "931592514-baseline-143995-20250801T134937",
+   "931592514-baseline-147841-20250815T153012"
+  ]
+ },
+ "prompt": {
+  "sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "version": "memo_fp2_v2"
+ },
+ "referee_sha256": "0db5d725d1b8f3bf5e84cae9941120b921c256727959339acc76658d95be39a4"
+}
