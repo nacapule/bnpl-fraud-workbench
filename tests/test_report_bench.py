@@ -58,7 +58,7 @@ RESULTS = {
     "case_memos": [
         {"file": "never_pay_vs_hardship", "slot": "never_pay", "disposition": "decline",
          "claims": [{"field": "context.account_age_days", "value": 0.0243},
-                    {"field": "context.amount_over_category_p95", "value": 1.7}]},
+                    {"field": "context.claimed_days", "value": 12}]},
         {"file": "never_pay_vs_hardship", "slot": "hardship", "disposition": "clear"},
         {"file": "ring", "slot": "ring", "disposition": "escalate"},
         {"file": "a/b", "slot": "x", "disposition": "hold"},
@@ -67,7 +67,8 @@ RESULTS = {
             "counts": {"denominator": 2.5, "numerator": 1, "value": 0.4},
             "natural": 1.5, "difference": 1.5, "wilson": [0.2, 1.5],
             "cluster_bootstrap": [0.9, 0.1], "difference_cluster_bootstrap": [2.0, 3.0],
-            "pass_share_interval": [0.1, 0.2, 0.3], "pair": [0.1, 0.2]},
+            "pass_share_interval": [0.1, 0.2, 0.3], "pair": [0.1, 0.2], "speed": 0.25,
+            "cluster_sign_test_p": 1.5},
 }
 
 
@@ -105,11 +106,9 @@ def bench(pointer: str, sources: Sources, form: str = "") -> str:
     ("/arms/opus/disagreement/hold -> needs_check", "", "61"),
     ("/pins/opus/model", "", "a-model"),
     ("/statistics/arms/sol/complete_pass/degenerate", "", "every case passed"),
-    # a number whose unit the file does not state prints only as a number
-    ("/case_memos/[slot=never_pay]/claims/[field=context.account_age_days]/value", "num:4",
-     "0.0243"),
-    ("/case_memos/[slot=never_pay]/claims/[field=context.amount_over_category_p95]/value",
-     "num:1", "1.7"),
+    # a claim's field is text
+    ("/case_memos/[slot=never_pay]/claims/[field=context.account_age_days]/field", "",
+     "context.account_age_days"),
     # keys holding / and ~ are escaped as ~1 and ~0, in selectors too
     ("/arms/opus/cases/case-1~1primary/outcome", "", "scored"),
     ("/arms/opus/cases/case-1~1primary/complete_pass", "", "yes"),
@@ -169,8 +168,13 @@ def test_a_benchmark_value_prints_in_its_kind(sources, pointer, form, text):
     ("/statistics/arms/opus/complete_pass/natural", "num", "a benchmark share prints with pct"),
     ("/statistics/paired/opus vs sol/complete_pass/cluster_sign_test_p", "pct",
      "a benchmark number prints with count, num, not pct"),
-    ("/case_memos/[slot=never_pay]/claims/[field=context.account_age_days]/value", "pct",
-     "a benchmark number prints with count, num, not pct"),
+    # a number whose unit the results do not state, and any claim's value
+    ("/case_memos/[slot=never_pay]/claims/[field=context.account_age_days]/value", "num",
+     "a claim's value has no unit the results state"),
+    ("/case_memos/[slot=never_pay]/claims/[field=context.claimed_days]/value", "",
+     "a claim's value has no unit the results state"),
+    ("/bad/speed", "num", "0.25 has no unit the results state"),
+    ("/bad/cluster_sign_test_p", "num", "1.5 is not a p-value between 0 and 1"),
     ("/statistics/arms/opus/complete_pass/natural", "bounds", "prints with pct, not bounds"),
     ("/statistics/arms/opus/complete_pass/cluster_bootstrap", "pct",
      "a benchmark interval prints with bounds, not pct"),

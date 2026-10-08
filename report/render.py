@@ -183,13 +183,16 @@ SELECTOR = re.compile(r"^\[([^\[\]]+)\]$")
 # unit suffix). Shares of cases: a rate's counts, the natural-mix, weighted and reweighted
 # rates, the axes' shares, a bound's level and the clusters' failure-share bound. Paired
 # differences of shares print in percentage points. Intervals are pairs under these keys,
-# of shares or (with "difference" in the key) of differences. Any other number, such as a
-# claim's value in a case memo (days, hours, ratios), is plain: it prints only as a number.
+# of shares or (with "difference" in the key) of differences. A sign test's p-value and a
+# whole number (a count of cases, calls or tokens) print as plain numbers. Any other number
+# has no known unit and is refused, as is every number in a case memo's claims (days,
+# hours, ratios): templates print the memo's statements, not its claim values.
 BENCH_SHARES = frozenset({
     "rate", "natural", "acceptable_natural", "complete_pass_natural", "acceptable_weighted",
     "complete_pass_weighted", "acceptable_reweighted", "check_completed", "review", "level",
     "failure_share_upper_one_sided"})
 BENCH_DIFFERENCES = frozenset({"difference", "natural_difference"})
+BENCH_PLAIN = frozenset({"cluster_sign_test_p"})
 BENCH_INTERVALS = frozenset({
     "cluster_bootstrap", "natural_cluster_bootstrap", "wilson", "pass_share_interval",
     "difference_cluster_bootstrap", "natural_difference_cluster_bootstrap"})
@@ -298,10 +301,11 @@ def bench_value(expression: str, sources: Sources) -> tuple[Value, str]:
     ``value``, is read at its source, which must hold the same value. A rate
     (``{"denominator", "numerator", "value"}``) is a share of whole counts and prints
     whole. A pair under an interval key is an interval of shares, or of differences of
-    shares. A number is a share, a difference of shares, or plain, by its key (see
-    :data:`BENCH_SHARES`). Text and flags print as they are. Anything else fails: a null
-    (a degenerate interval), a share outside 0 to 1, a difference outside -1 to 1, an
-    interval out of order, another list or object."""
+    shares. A number is a share, a difference of shares or a sign test's p-value by its
+    key (see :data:`BENCH_SHARES`), or else a whole count. Text and flags print as they
+    are. Anything else fails: a null (a degenerate interval), a share outside 0 to 1, a
+    difference outside -1 to 1, an interval out of order, another fraction, any number in
+    a case memo's claims, another list or object."""
     match = BENCH.fullmatch(expression)
     if not match:
         raise KeyError(f"{expression!r} is not <benchmark id>:<JSON pointer>")
@@ -311,6 +315,9 @@ def bench_value(expression: str, sources: Sources) -> tuple[Value, str]:
                        "results.json)")
     node, parent, key = _walk(sources.benchmarks[name], pointer, name)
     where = f"benchmark {name!r} {pointer}"
+    if _is_number(node) and "claims" in _pointer(pointer):
+        raise KeyError(f"{where}: a claim's value has no unit the results state; print the "
+                       "claim's statement instead")
     if node is None:
         reason = parent.get("degenerate") if isinstance(parent, Mapping) else None
         raise KeyError(f"{where} is null" + (f" ({reason}; print its degenerate reason)"
@@ -340,8 +347,12 @@ def bench_value(expression: str, sources: Sources) -> tuple[Value, str]:
             "difference"
     if key in BENCH_SHARES:
         return Value(plain=_bounded(node, where, False), unit="share"), "share"
-    if isinstance(node, float) and not math.isfinite(node):
-        raise KeyError(f"{where}: {node!r} is not a finite number")
+    if key in BENCH_PLAIN:
+        if not math.isfinite(node) or not 0 <= node <= 1:
+            raise KeyError(f"{where}: {node!r} is not a p-value between 0 and 1")
+    elif isinstance(node, float):
+        raise KeyError(f"{where}: {node!r} has no unit the results state (not a share, a "
+                       "difference of shares, a p-value or a count)")
     return Value(plain=node), "number"
 
 
