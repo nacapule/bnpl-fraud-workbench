@@ -18,10 +18,11 @@ A template is Markdown whose numbers come only from placeholders:
     words, from ``wording.labels`` in ``report/claims.yaml``);
 ``{{ table:name where col=value ... sum col,col by col,col [across col] | ... }}``
     the same from selected rows of a result table (:func:`select`): ``where``
-    keeps the rows whose cell reads ``value``; ``sum`` adds up counts or money
-    over the rows of each ``by`` group, and ``mean`` averages levels such as
-    a median wait, each aggregated row with ``rows_count``, the rows it covers;
-    ``across`` spreads one column's values into columns holding the sum;
+    keeps the rows whose cell reads ``value``; in the per-world tables of
+    :data:`AGGREGABLE`, ``sum`` adds up counts or money over the rows of each
+    ``by`` group and ``mean`` averages levels such as a world's median wait,
+    each aggregated row with ``rows_count``, the rows it covers; ``across``
+    spreads one column's values into columns holding the sum;
 ``{{ claim:<id> }}``
     a directional claim from ``report/claims.yaml``, written from its record and
     the results with its evidence (:mod:`report.claims`); it fails to render
@@ -283,16 +284,44 @@ def render_table(body: str, sources: Sources) -> str:
 # ---------------------------------------------------------------- selecting rows of a table
 LABEL = "label"
 ROWS_COUNT = "rows_count"
+NAME = re.compile(r"^[a-z0-9_]+$")
 CLAUSES = ("where", "sum", "mean", "by", "across")
 CLAUSE_ORDER = {"where": 0, "sum": 1, "mean": 1, "by": 2, "across": 3}
-# Units that are quotients (rates, shares and their differences in basis points): a
-# pooled figure comes from its numerator and denominator, never by adding or averaging
-# per-seed values.
-QUOTIENT_UNITS = ("rate", "share", "bps")
-QUOTIENT_WORDS = frozenset({"rate", "share", "ratio", "per", "bps", "mean", "avg", "average"})
-# Quantiles and extremes: averaged over seeds (a stated mean of each world's value),
-# never added up.
-LEVEL_WORDS = frozenset({"p50", "p75", "p90", "p95", "p99", "median", "max", "min"})
+# The result tables whose rows are per-world values that may be aggregated over worlds,
+# and which columns: counts and cents add up (sum); a per-world level with no pooled
+# result key, such as a world's median wait, is averaged (mean). Every other table holds
+# figures already pooled or averaged over seeds (use their result keys), and every other
+# column is refused, so a rate, a share or a mean is never added up or averaged again.
+OUTCOME_LEVELS = ("wait_p50_minutes", "wait_p90_minutes", "max_backlog")
+OUTCOME_TOTALS = (  # queue_sim.outcomes.OUTCOME_COLUMNS but the levels
+    "orders", "gmv_cents", "approved_orders", "approved_gmv_cents",
+    "net_cents", "approve_all_net_cents", "net_vs_approve_all_cents",
+    "fraud_orders", "fraud_net_cents", "approve_all_fraud_net_cents", "loss_cents",
+    "prevented_loss_cents", "credit_loss_orders", "credit_loss_net_cents",
+    "legitimate_orders", "legitimate_held", "legitimate_cancelled",
+    "legitimate_declined_checkout", "legitimate_blocked_checkout",
+    "legitimate_declined_review", "legitimate_declined", "friction_cost_cents",
+    "unknown_orders",
+    "legitimate_truth_orders", "legitimate_truth_held", "legitimate_truth_cancelled",
+    "legitimate_truth_declined_checkout", "legitimate_truth_blocked_checkout",
+    "legitimate_truth_declined_review", "legitimate_truth_declined",
+    "fraud_declined_checkout", "fraud_stopped_before_shipping", "fraud_declined_after_shipping",
+    "review_band", "scored_to_review",
+    "reviews", "reviews_decided", "review_minutes_offered", "review_minutes_used",
+    "available_minutes", "coverage_minutes", "senior_minutes", "decided_after_shipping",
+    "holds", "holds_before_shipping", "checks_run", "escalations", "accounts_blocked",
+    "reviews_p0", "reviews_p1", "reviews_p2", "reviews_p3",
+    "sla_met_p0", "sla_met_p1", "sla_met_p2", "sla_met_p3",
+)
+AGGREGABLE: dict[str, dict[str, frozenset[str]]] = {
+    "replay.outcomes": {"sum": frozenset(OUTCOME_TOTALS), "mean": frozenset(OUTCOME_LEVELS)},
+    "replay.confusion": {"sum": frozenset({"orders"}), "mean": frozenset()},
+    "replay.confusion_latent": {"sum": frozenset({"orders"}), "mean": frozenset()},
+    "replay.prevented_by_pattern": {
+        "sum": frozenset({"orders", "policy_net_cents", "approve_all_net_cents",
+                          "prevented_cents"}),
+        "mean": frozenset()},
+}
 
 
 @dataclass(frozen=True)
@@ -364,15 +393,22 @@ def _text(cell: Any) -> str:
     return "null" if cell is None else str(cell)
 
 
-def aggregation_refused(column: str, how: str) -> str | None:
-    """Why ``column`` cannot be summed or averaged over rows, or ``None``."""
-    parts = set(column.split("_"))
-    if formats.unit_from_name(column) in QUOTIENT_UNITS or parts & QUOTIENT_WORDS:
-        return (f"{column!r} is a rate, share or mean: pool it from its numerator and "
-                "denominator (its result key), never add up or average the rows")
-    if how == "sum" and parts & LEVEL_WORDS:
-        return f"{column!r} is a quantile or an extreme: it does not add up (use mean)"
-    return None
+def aggregation_refused(table_name: str, column: str, how: str) -> str | None:
+    """Why ``column`` of the result table ``table_name`` cannot be summed or averaged over
+    its rows, or ``None`` (see :data:`AGGREGABLE`)."""
+    allowed = AGGREGABLE.get(table_name)
+    if allowed is None:
+        return (f"{table_name!r} holds figures already pooled or averaged over seeds, or no "
+                "per-world values: use its result keys, not a sum or mean of its rows")
+    if column in allowed[how]:
+        return None
+    if how == "sum" and column in allowed["mean"]:
+        return f"{column!r} is a per-world level, which does not add up: use mean"
+    if how == "mean" and column in allowed["sum"]:
+        return (f"{column!r} adds up over worlds: use sum, or its pooled result key for an "
+                "average")
+    return (f"{column!r} is not a count or money column of {table_name!r} that adds up "
+            "over worlds, nor a per-world level")
 
 
 def _number(cell: Any, column: str) -> int | float | None:
@@ -404,7 +440,7 @@ def select(rows: list[dict[str, Any]], selection: Selection,
                  if column not in columns]
     if selection.aggregate:
         problems += [reason for column in selection.columns
-                     if (reason := aggregation_refused(column, selection.aggregate))]
+                     if (reason := aggregation_refused(name, column, selection.aggregate))]
         if overlap := set(selection.columns) & set(selection.by):
             problems.append(f"{sorted(overlap)} both group and are aggregated")
     if problems:
@@ -425,14 +461,22 @@ def select(rows: list[dict[str, Any]], selection: Selection,
             [summed] = selection.columns
             spread = list(dict.fromkeys(row.get(selection.across) for row in kept))
             titles = [_text(value) for value in spread]
-            if clash := set(titles) & set(selection.by):
-                raise ValueError(f"spread columns {sorted(clash)} clash with the groups")
+            if unnamed := sorted({title for title in titles if not NAME.fullmatch(title)}):
+                raise ValueError(f"across {selection.across}: the values {unnamed} cannot "
+                                 "name a column (lower-case letters, digits and _)")
+            if len(set(titles)) != len(titles):
+                raise ValueError(f"across {selection.across}: values that differ print as "
+                                 "the same column name")
+            if clash := set(titles) & {*selection.by, ROWS_COUNT}:
+                raise ValueError(f"spread columns {sorted(clash)} clash with the groups or "
+                                 f"{ROWS_COUNT}")
             for key, members in groups.items():
                 record = dict(zip(selection.by, key, strict=True))
                 for value, title in zip(spread, titles, strict=True):
                     cells = [row.get(summed) for row in members
                              if row.get(selection.across) == value]
                     record[title] = _aggregate(cells, "sum", summed) if cells else 0
+                record[ROWS_COUNT] = len(members)
                 out.append(record)
             unit = formats.unit_from_name(summed)
             return out, {title: unit for title in titles}, (
@@ -600,15 +644,21 @@ def render_all(sources: Sources, out_root: Path, templates: Path = TEMPLATES,
                root: Path = REPO, *, strict: bool = False) -> list[Path]:
     """Render every template into ``out_root``; returns the paths written.
 
-    Into the repository (``out_root`` is ``root``), or with ``strict``, a document
-    that cannot be rendered fails the render and nothing is written. Anywhere else
-    (a development or small run's ``docs`` folder) the documents whose result keys or
-    case facts the run has are written, the others are skipped: they and their
+    Into the repository (``out_root`` is ``root`` or :data:`REPO`), or with ``strict``,
+    a document that cannot be rendered fails the render and nothing is written.
+    Anywhere else (a development or small run's ``docs`` folder) the documents whose
+    result keys or case facts the run has are written, the others are skipped: they and their
     problems are listed in ``out_root/NOT_RENDERED.txt``, a copy of a skipped
     document left there by an earlier render is removed, and a one-line notice is
-    printed. A render that skips nothing removes an old list.
+    printed. A render that skips nothing removes an old list. A destination that a
+    link would carry outside ``out_root`` fails the render before anything is written.
     """
-    strict = strict or Path(out_root).resolve() == Path(root).resolve()
+    out_root = Path(out_root)
+    strict = strict or out_root.resolve() in {Path(root).resolve(), REPO.resolve()}
+    targets = [doc.output for doc in documents(templates)] + [Path(NOT_RENDERED)]
+    if escaping := [path.as_posix() for path in targets if not _inside(out_root, path)]:
+        raise ValueError(f"{escaping} would be written outside {out_root} through a link; "
+                         "nothing was written")
     rendered: dict[Document, str] = {}
     skipped: dict[Document, RenderError] = {}
     for doc in documents(templates):
@@ -624,11 +674,11 @@ def render_all(sources: Sources, out_root: Path, templates: Path = TEMPLATES,
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(text)
         written.append(target)
-    notice = Path(out_root) / NOT_RENDERED
+    notice = out_root / NOT_RENDERED
     if skipped:
         lines = []
         for doc, error in skipped.items():
-            (Path(out_root) / doc.output).unlink(missing_ok=True)
+            (out_root / doc.output).unlink(missing_ok=True)
             lines += [f"{doc.name}:", *(f"  {problem}" for problem in error.problems)]
         notice.parent.mkdir(parents=True, exist_ok=True)
         notice.write_text("Documents not rendered from this summary, and why:\n"
@@ -639,6 +689,12 @@ def render_all(sources: Sources, out_root: Path, templates: Path = TEMPLATES,
     else:
         notice.unlink(missing_ok=True)
     return written
+
+
+def _inside(out_root: Path, relative: Path) -> bool:
+    """Whether ``out_root / relative`` stays under ``out_root`` once links are resolved
+    (a folder on the way that links elsewhere would carry writes and removals there)."""
+    return (out_root / relative).resolve() == out_root.resolve() / relative
 
 
 def out_of_sync(sources: Sources, out_root: Path, templates: Path = TEMPLATES,

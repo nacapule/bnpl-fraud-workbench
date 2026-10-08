@@ -7,7 +7,15 @@ from __future__ import annotations
 
 import pytest
 
-from report.render import RenderError, Sources, label, parse_selection, render
+from report.render import (
+    OUTCOME_LEVELS,
+    OUTCOME_TOTALS,
+    RenderError,
+    Sources,
+    label,
+    parse_selection,
+    render,
+)
 
 # Per-seed rows of one replay table, as the pipeline writes them: two seeds, two
 # policies, two families; seed 2 of the hybrid policy was not evaluated (no values).
@@ -89,14 +97,38 @@ def test_mean_averages_levels_with_the_rows_it_covers(sources):
 
 
 @pytest.mark.parametrize("clause, refused", [
-    ("sum held_share", "is a rate, share or mean"),
-    ("mean held_share", "is a rate, share or mean"),
-    ("sum wait_p50_minutes", "is a quantile or an extreme"),
-    ("sum max_backlog", "is a quantile or an extreme"),
+    ("sum held_share", "is not a count or money column"),
+    ("mean held_share", "is not a count or money column"),
+    ("sum wait_p50_minutes", "is a per-world level, which does not add up"),
+    ("sum max_backlog", "is a per-world level, which does not add up"),
+    ("mean reviews", "adds up over worlds: use sum"),
+    ("mean net_cents", "adds up over worlds: use sum"),
 ])
 def test_rates_shares_and_quantiles_are_never_added_up_or_averaged(sources, clause, refused):
     with pytest.raises(RenderError, match=refused):
         table(f"replay.outcomes {PRIMARY} {clause} by policy | policy", sources)
+
+
+def test_tables_already_pooled_over_seeds_are_never_aggregated(sources):
+    # per-cell figures (a mean over seeds, a pooled rate) look like money and counts but
+    # adding them up again would count each world's cash a second time
+    cells = [{"policy": "hybrid", "capacity": "base", "net_contribution_cents": 2_500,
+              "decided_after_shipping_count": 3.5},
+             {"policy": "hybrid", "capacity": "high", "net_contribution_cents": 2_500,
+              "decided_after_shipping_count": 2.5}]
+    pooled = Sources(summary={"metrics": {}, "tables": {"evaluate.policies": cells}})
+    for clause in ("sum net_contribution_cents", "mean decided_after_shipping_count"):
+        with pytest.raises(RenderError, match="already pooled or averaged over seeds"):
+            table(f"evaluate.policies {clause} by policy | policy", pooled)
+    assert table("evaluate.policies where capacity=high | policy, net_contribution_cents usd",
+                 pooled)[2:] == ["| hybrid | $25 |"]
+
+
+def test_the_aggregable_columns_are_the_replay_rows_columns():
+    from queue_sim.outcomes import OUTCOME_COLUMNS
+
+    assert set(OUTCOME_TOTALS) | set(OUTCOME_LEVELS) == set(OUTCOME_COLUMNS)
+    assert not set(OUTCOME_TOTALS) & set(OUTCOME_LEVELS)
 
 
 def test_across_spreads_one_column_into_columns_holding_its_sum(sources):
@@ -110,6 +142,24 @@ def test_across_spreads_one_column_into_columns_holding_its_sum(sources):
     with pytest.raises(RenderError, match="no column 'escalate'"):  # not among the kept rows
         table("replay.confusion where policy=incumbent_rules sum orders by truth across final "
               "| truth, escalate", sources)
+    # each spread row says how many rows it covers
+    assert table("replay.confusion sum orders by policy across final | policy, decline count, "
+                 "escalate count, rows_count count", sources)[2:] == [
+        "| incumbent_rules | 5 | 0 | 4 |", "| hybrid | 0 | 8 | 1 |"]
+
+
+@pytest.mark.parametrize("rows, message", [
+    # two values that print alike would put two totals in one column
+    ([{"k": "a", "strength": 1, "orders": 3}, {"k": "a", "strength": "1", "orders": 5}],
+     "print as the same column name"),
+    ([{"k": "a", "strength": "2+", "orders": 3}], r"\['2\+'\] cannot name a column"),
+    ([{"k": "a", "strength": "rows_count", "orders": 3}], "clash with the groups"),
+    ([{"k": "a", "strength": "k", "orders": 3}], "clash with the groups"),
+])
+def test_spread_columns_must_be_distinct_names(rows, message):
+    spread = Sources(summary={"metrics": {}, "tables": {"replay.confusion": rows}})
+    with pytest.raises(RenderError, match=message):
+        table("replay.confusion sum orders by k across strength | k", spread)
 
 
 @pytest.mark.parametrize("spec, message", [
@@ -124,7 +174,7 @@ def test_across_spreads_one_column_into_columns_holding_its_sum(sources):
     ("replay.outcomes mean reviews by policy across seed | policy", "across spreads a sum"),
     ("replay.outcomes sum reviews, net_cents by policy across seed | policy",
      "sums one column"),
-    ("replay.outcomes sum policy by seed | seed", "holds 'incumbent_rules', not a number"),
+    ("replay.outcomes sum policy by seed | seed", "'policy' is not a count or money column"),
     ("replay.outcomes sum reviews by reviews | reviews", "both group and are aggregated"),
     ("replay.outcomes sum reviews by policy | policy, seed", "no column 'seed'"),
     ("replay.outcomes filter family=baseline | policy", "is not a clause"),
@@ -147,3 +197,10 @@ def test_a_table_without_clauses_is_unchanged(sources):
     assert parse_selection(["where", "a=b"]).where == (("a", "b"),)
     assert table("replay.outcomes | policy", sources) == [
         "| policy |", "|---|", *[f"| {row['policy']} |" for row in ROWS]]
+
+
+def test_a_cell_that_is_not_a_number_fails_the_sum():
+    rows = [{"policy": "hybrid", "reviews": "many"}]
+    odd = Sources(summary={"metrics": {}, "tables": {"replay.outcomes": rows}})
+    with pytest.raises(RenderError, match="holds 'many', not a number"):
+        table("replay.outcomes sum reviews by policy | policy", odd)

@@ -84,3 +84,26 @@ def test_the_command_takes_strict(tmp_path: Path, monkeypatch) -> None:
     with pytest.raises(RenderError):
         main(["render", "--summary", str(summary), "--out", str(tmp_path / "strict"),
               "--strict"])
+
+
+def test_the_repository_stays_strict_whatever_root_is_given(tmp_path: Path,
+                                                            monkeypatch) -> None:
+    repo = tmp_path / "repo"
+    templates = _templates(repo)
+    monkeypatch.setattr(render, "REPO", repo)
+    with pytest.raises(RenderError, match="evaluate.gain.hybrid"):
+        render_all(_sources(), repo, templates, root=tmp_path / "elsewhere")
+    assert not (repo / "README.md").exists() and not (repo / NOT_RENDERED).exists()
+
+
+def test_nothing_is_written_or_removed_through_a_link_out_of_the_folder(tmp_path: Path) -> None:
+    root, out, published = tmp_path / "repo", tmp_path / "docs", tmp_path / "published"
+    templates = _templates(root)
+    (published / "memo.md").parent.mkdir(parents=True)
+    (published / "memo.md").write_text("a published document\n")
+    out.mkdir()
+    (out / "reports").symlink_to(published, target_is_directory=True)
+    with pytest.raises(ValueError, match="outside .* through a link"):
+        render_all(_sources(), out, templates, root)
+    assert (published / "memo.md").read_text() == "a published document\n"
+    assert not (out / "README.md").exists()
