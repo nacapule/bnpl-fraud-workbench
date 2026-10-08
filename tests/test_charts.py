@@ -48,7 +48,6 @@ INELIGIBLE = {"logistic": "lost_mean", "boosting": "service_p1"}
 RECOMMENDED = {"high": "expected_loss"}
 PROTOCOL = {
     "policies": {p: p for p in POLICIES},
-    "capacity": {"levels": {"low": 17, "base": 33, "high": 50}},
     "reporting": {"recommendation_rule": {
         "eligibility": {"lost_legitimate_per_10000": {"mean_at_most": 100}},
         "hurdle": {"mean_improvement_usd_per_1000_orders": 100},
@@ -251,21 +250,6 @@ def test_held_customers_are_written_into_the_frontier_labels(summary: dict,
         assert any(t.startswith(policy["label"]) and f"{held:,.0f} held" in t for t in texts)
 
 
-def test_the_staffing_chart_draws_each_point_in_its_cell_column(summary: dict,
-                                                                 monkeypatch) -> None:
-    pairs = _plotted(monkeypatch)
-    data = charts.collect_staffing(summary, PROTOCOL)
-    charts.draw_staffing(data)
-    columns = {cell["name"]: index for index, cell in enumerate(data["cells"])}
-    drawn = 0
-    for item in data["policies"]:
-        for point in item["points"]:
-            if point.get("value") is not None:
-                assert (columns[point["cell"]], point["value"]) in pairs, (item["policy"], point)
-                drawn += 1
-    assert drawn >= 20
-
-
 def test_the_seed_spread_draws_each_policy_on_one_row(summary: dict, monkeypatch) -> None:
     pairs = _plotted(monkeypatch)
     data = charts.collect_seed_spread(summary, PROTOCOL)
@@ -300,19 +284,17 @@ def test_the_operating_cells_chart_draws_each_cell_on_one_row(summary: dict,
 def test_a_policy_the_rule_did_not_evaluate_is_left_out_and_recorded(summary: dict,
                                                                      monkeypatch) -> None:
     pairs = _plotted(monkeypatch)
-    data = charts.collect_staffing(summary, PROTOCOL)
-    hybrid = next(p for p in data["policies"] if p["policy"] == "hybrid")
-    low = next(p for p in hybrid["points"] if p["cell"] == "low")
-    assert low["evaluated"] is False and low["seeds_count"]["value"] == 0
-    assert "key" not in low and "value" not in low
-    charts.draw_staffing(data)
-    low_column = [cell["name"] for cell in data["cells"]].index("low")
-    assert any(x == low_column for x, _ in pairs)  # the other policies are still drawn there
-    surge = charts.collect_operating_cells(summary, PROTOCOL)
-    cell = next(c for c in surge["cells"] if c["name"] == "acquisition_surge")
+    data = charts.collect_operating_cells(summary, PROTOCOL)
+    low = next(c for c in data["cells"] if c["name"] == "low")
+    hybrid = next(p for p in low["policies"] if p["policy"] == "hybrid")
+    assert hybrid["evaluated"] is False and hybrid["seeds_count"]["value"] == 0
+    assert "key" not in hybrid and "value" not in hybrid
+    cell = next(c for c in data["cells"] if c["name"] == "acquisition_surge")
     logistic = next(p for p in cell["policies"] if p["policy"] == "logistic")
     assert logistic["value"] is None and "feasible operating point" in logistic["note"]
-    charts.draw_operating_cells(surge)
+    charts.draw_operating_cells(data)
+    others = [p["value"] for p in low["policies"] if p.get("value") is not None]
+    assert others and len({y for x, y in pairs if x in others}) == 1  # the row is still drawn
 
 
 def _outcome_row(seed: int, policy: str, net: int, *, where: dict, declined: int = 0) -> dict:
@@ -361,14 +343,12 @@ def test_a_cell_the_rule_could_not_assess_is_left_out_and_recorded(tmp_path: Pat
                                             inputs={}, metrics=metrics, tables=tables)])
     assert not any(".low." in key for key in metrics if "rule_net" in key)
     render_all(summary, PROTOCOL, tmp_path)
-    staffing = json.loads((tmp_path / "staffing.json").read_text())
-    low = next(cell for cell in staffing["cells"] if cell["name"] == "low")
-    assert low["outcome"]["value"] == rec.NOT_ASSESSED and "incumbent" in low["note"]["value"]
-    for item in staffing["policies"]:
-        point = next(p for p in item["points"] if p["cell"] == "low")
-        assert "key" not in point and "value" not in point
     operating = json.loads((tmp_path / "operating_cells.json").read_text())
     assert [c["outcome"]["assessed"] for c in operating["cells"]] == [True, False, True, True]
+    low = next(cell for cell in operating["cells"] if cell["name"] == "low")
+    assert low["outcome"]["value"] == rec.NOT_ASSESSED
+    for point in low["policies"]:
+        assert "key" not in point and "value" not in point
     frontier = json.loads((tmp_path / "frontier.json").read_text())
     assert [p["policy"] for p in frontier["policies"] if p["evaluated"]] == [
         "incumbent_rules", "tree_depth3", "hybrid"]
@@ -433,10 +413,10 @@ def test_check_reports_a_figure_that_differs_from_the_results(tmp_path: Path, su
     assert main(["--summary", str(path), "--out", str(out)]) == 0
     assert main(["--summary", str(path), "--out", str(out), "--check"]) == 0
     (out / "frontier.svg").write_bytes(b"<svg/>")
-    (out / "staffing.json").unlink()
+    (out / "operating_cells.json").unlink()
     assert main(["--summary", str(path), "--out", str(out), "--check"]) == 1
     err = capsys.readouterr().err
-    assert "frontier.svg: differs" in err and "staffing.json: not rendered" in err
+    assert "frontier.svg: differs" in err and "operating_cells.json: not rendered" in err
 
 
 def test_committed_figures_match_the_committed_results(tmp_path: Path) -> None:

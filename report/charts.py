@@ -24,10 +24,6 @@ ledger net after the friction cost, less the analyst allotment):
     against the legitimate customers it loses per 10,000 legitimate orders, with
     the rule's customer cap, and hollow markers where a policy fails one of the
     rule's eligibility criteria.
-``staffing``
-    Each challenger's paired improvement over the incumbent, per 1,000 orders (the
-    orders a policy decides), at each allotment level and on the evening layout, with
-    the hurdle.
 ``seed_spread``
     The per-seed paired differences behind the primary cell's means.
 ``operating_cells``
@@ -231,53 +227,6 @@ def collect_frontier(summary: Mapping[str, Any], protocol: Mapping[str, Any]
             "lost_cap": _setting(protocol, LOST_CAP)}
 
 
-def collect_staffing(summary: Mapping[str, Any], protocol: Mapping[str, Any]
-                     ) -> dict[str, Any]:
-    primary = _primary(summary)
-    levels = protocol["capacity"]["levels"]
-    cells = []
-    for level in levels:
-        where = {"family": primary["family"], "capacity": level,
-                 "ltv_cents": primary["ltv_cents"]}
-        rows = [row for row in _rows(summary, FLIPS, where)
-                if row["varies"] in ("primary", "allotment")]
-        if len(rows) != 1:
-            raise KeyError(f"result table {FLIPS!r} has {len(rows)} allotment cells for "
-                           f"{level!r}, not one")
-        cells.append({"name": rows[0]["cell"], "capacity": level,
-                      "label": f"{level} allotment",
-                      "minutes_per_shift": _setting(protocol, f"capacity.levels.{level}"),
-                      "outcome": _outcome(summary, rows[0]["cell"]),
-                      "note": _cell_of(summary, FLIPS, {"cell": rows[0]["cell"]}, "note"),
-                      "incumbent_misses": _cell_of(summary, FLIPS, {"cell": rows[0]["cell"]},
-                                                   "incumbent_misses")})
-    [layout] = _rows(summary, FLIPS, {"family": primary["family"], "varies": "layout",
-                                      "ltv_cents": primary["ltv_cents"]}) or [None]
-    if layout is None:
-        raise KeyError(f"result table {FLIPS!r} has no shift-layout cell")
-    cells.append({"name": layout["cell"], "capacity": layout["capacity"],
-                  "label": "evening layout", "minutes_per_shift": None,
-                  "outcome": _outcome(summary, layout["cell"]),
-                  "note": _cell_of(summary, FLIPS, {"cell": layout["cell"]}, "note"),
-                  "incumbent_misses": _cell_of(summary, FLIPS, {"cell": layout["cell"]},
-                                               "incumbent_misses")})
-    policies = []
-    for policy in _policies(protocol):
-        if policy == INCUMBENT:
-            continue
-        points = []
-        for cell in cells:
-            point: dict[str, Any] = {"cell": cell["name"],
-                                     **_standing(summary, cell["name"], policy)}
-            if point["evaluated"] and cell["outcome"]["assessed"]:
-                point.update(_value(summary, _improvement_key(
-                    primary, primary["family"], cell["capacity"], primary["ltv_cents"], policy)))
-            points.append(point)
-        policies.append({"policy": policy, "label": _label(policy), "points": points})
-    return {"chart": "staffing", "primary": primary, "cells": cells, "policies": policies,
-            "hurdle_usd": _setting(protocol, HURDLE)}
-
-
 def collect_seed_spread(summary: Mapping[str, Any], protocol: Mapping[str, Any]
                         ) -> dict[str, Any]:
     cell = _primary(summary)
@@ -396,10 +345,10 @@ def _ring(axes, x: float, y: float) -> None:
               markeredgecolor=INK, markeredgewidth=1.0, zorder=5)
 
 
-def _legend(axes, policies: list[str], *, lines: bool, y: float) -> None:
+def _legend(axes, policies: list[str], *, y: float) -> None:
     handles = [Line2D([], [], marker=MARKERS.get(p, "o"), color=HUES.get(p, ACCENT),
-                      linestyle="-" if lines else "none", linewidth=2, markersize=7,
-                      markeredgecolor=SURFACE, markeredgewidth=1.0) for p in policies]
+                      linestyle="none", markersize=7, markeredgecolor=SURFACE,
+                      markeredgewidth=1.0) for p in policies]
     legend = axes.legend(handles, [_label(p) for p in policies], loc="upper center",
                          bbox_to_anchor=(0.5, y), ncol=len(policies), frameon=False,
                          fontsize=FONT - 1.5, handlelength=1.8, columnspacing=1.4,
@@ -410,11 +359,11 @@ def _legend(axes, policies: list[str], *, lines: bool, y: float) -> None:
 
 def _place_labels(axes, items: list[tuple[float, float, str]], *,
                   obstacles: list[tuple[float, float]] = (), gap: float = 12.5,
-                  size: float = FONT - 0.5, colour: str = INK, flip: bool = True) -> None:
-    """Label each point beside it: to its right; to its left when ``flip`` allows it and
-    the right is taken; else pushed up until it overlaps neither another label nor a
-    marker (``obstacles``, data coordinates), a thin leader then joining it to its point.
-    A second line of text (after a newline) is written smaller and muted."""
+                  size: float = FONT - 0.5, colour: str = INK) -> None:
+    """Label each point beside it: to its right; to its left when the right is taken;
+    else pushed up or down until it overlaps neither another label nor a marker
+    (``obstacles``, data coordinates), a thin leader then joining it to its point. A
+    second line of text (after a newline) is written smaller and muted."""
     figure = axes.figure
     scale = 72 / figure.dpi  # display pixels -> points
     position = axes.get_position()
@@ -438,7 +387,7 @@ def _place_labels(axes, items: list[tuple[float, float, str]], *,
         width = 0.56 * size * max(len(line) for line in lines)
         half = gap * len(lines) / 2
         sides = [1] if px + 9 + width <= x_max else []
-        if flip and px - 9 - width >= x_min:
+        if px - 9 - width >= x_min:
             sides.append(-1)
         sides = sides or [1]
         starts = {1: px + 9, -1: px - 9 - width}
@@ -470,23 +419,14 @@ def _place_labels(axes, items: list[tuple[float, float, str]], *,
                                 shrinkB=5) if displaced and n == 0 else None)
 
 
-def _reference_lines(axes, hurdle: float, *, vertical: bool) -> None:
-    """The incumbent (zero) and the hurdle, tagged at the top of the plot."""
-    line = axes.axvline if vertical else axes.axhline
-    line(0, color=INK, linewidth=0.9, zorder=1)
-    line(hurdle, color=AXIS, linewidth=1.0, zorder=1)
-    if vertical:
-        top = axes.get_ylim()[1]
-        axes.text(0, top, "incumbent rules ", ha="right", va="top", fontsize=FONT - 1,
-                  color=INK2)
-        axes.text(hurdle, top, f" hurdle +{_dollars(hurdle)}", ha="left", va="top",
-                  fontsize=FONT - 1, color=INK2)
-    else:
-        left = axes.get_xlim()[0]
-        axes.text(left, 0, " incumbent rules", ha="left", va="top", fontsize=FONT - 1,
-                  color=INK2)
-        axes.text(left, hurdle, f" hurdle +{_dollars(hurdle)}", ha="left", va="bottom",
-                  fontsize=FONT - 1, color=INK2)
+def _reference_lines(axes, hurdle: float) -> None:
+    """The incumbent (zero) and the hurdle as vertical lines, tagged at the top."""
+    axes.axvline(0, color=INK, linewidth=0.9, zorder=1)
+    axes.axvline(hurdle, color=AXIS, linewidth=1.0, zorder=1)
+    top = axes.get_ylim()[1]
+    axes.text(0, top, "incumbent rules ", ha="right", va="top", fontsize=FONT - 1, color=INK2)
+    axes.text(hurdle, top, f" hurdle +{_dollars(hurdle)}", ha="left", va="top",
+              fontsize=FONT - 1, color=INK2)
 
 
 def draw_frontier(data: Mapping[str, Any]):
@@ -532,72 +472,6 @@ def draw_frontier(data: Mapping[str, Any]):
     return figure
 
 
-def draw_staffing(data: Mapping[str, Any]):
-    figure, axes = _figure(
-        8.4, 6.0, "Net contribution against today's rules, by analyst allotment",
-        "Baseline family, test window: each challenger's rule net contribution (ledger net "
-        "after the friction cost, less the analyst allotment) minus the incumbent's, per 1,000 "
-        "orders decided, with thresholds tuned at the base allotment and held fixed. The "
-        "evening layout runs the base minutes at different hours. Hollow: fails an "
-        "eligibility criterion in that cell; ringed: the rule's recommendation there.",
-        left=0.125, right=0.86, bottom=0.2)
-    cells = data["cells"]
-    positions = list(range(len(cells)))
-    line_end = max(i for i, cell in enumerate(cells) if cell["minutes_per_shift"] is not None)
-    hurdle = data["hurdle_usd"]["value"] * 100
-    labels, ends = [], []
-    for item in data["policies"]:
-        colour = HUES.get(item["policy"], ACCENT)
-        points = [(i, p) for i, p in enumerate(item["points"])
-                  if p["evaluated"] and p.get("value") is not None]
-        on_line = [(i, p["value"]) for i, p in points if i <= line_end]
-        axes.plot([i for i, _ in on_line], [v for _, v in on_line], color=colour,
-                  linewidth=2, solid_capstyle="round", zorder=3)
-        for i, p in points:
-            _marker(axes, i, p["value"], item["policy"], p["eligible"]["value"], colour=colour)
-            if p["recommended"]["value"]:
-                _ring(axes, i, p["value"])
-        if points:
-            labels.append((points[-1][0], points[-1][1]["value"], item["label"]))
-            ends.append((points[-1][0], points[-1][1]["value"]))
-    ticks = []
-    for cell in cells:
-        minutes = cell["minutes_per_shift"]
-        ticks.append(f"{cell['label']}\n" + ("base minutes, evening hours" if minutes is None
-                                             else f"{minutes['value']:g} min per shift"))
-    axes.set_xticks(positions, ticks)
-    axes.set_xlim(positions[0] - 0.45, positions[-1] + 0.45)
-    if line_end < positions[-1]:
-        axes.axvline(line_end + 0.5, color=AXIS, linewidth=0.8, zorder=1)
-    low, high = axes.get_ylim()
-    axes.set_ylim(min(low, -hurdle), max(high, hurdle * 2.2))
-    _reference_lines(axes, hurdle, vertical=False)
-    _place_labels(axes, labels, obstacles=ends, flip=False)
-    axes.yaxis.set_major_formatter(FuncFormatter(_dollars))
-    axes.set_ylabel("Net contribution vs today's rules,\n$ per 1,000 orders")
-    _style(axes)
-    width_pt = (figure.subplotpars.right - figure.subplotpars.left) * figure.get_figwidth() * 72
-    columns = max(1, int(width_pt / len(cells) / (0.56 * (FONT - 2))) - 1)
-    captions = []
-    for cell in cells:
-        misses = cell["incumbent_misses"]["value"]
-        note = cell["note"]["value"] if not cell["outcome"]["assessed"] else None
-        text = f"incumbent {_misses(misses)}" if misses else note or ""
-        captions.append(textwrap.wrap(text, width=columns) if text else [])
-    lines = max((len(caption) for caption in captions), default=0)
-    caption_pt = lines * (FONT - 2) * 1.3
-    figure.subplots_adjust(bottom=(32 + caption_pt + 44) / (figure.get_figheight() * 72))
-    for i, caption in enumerate(captions):
-        if caption:
-            axes.annotate("\n".join(caption), xy=(i, 0), xycoords=("data", "axes fraction"),
-                          xytext=(0, -32), textcoords="offset points", ha="center", va="top",
-                          fontsize=FONT - 2, color=MUTED, linespacing=1.3)
-    axes_pt = (figure.subplotpars.top - figure.subplotpars.bottom) * figure.get_figheight() * 72
-    _legend(axes, [item["policy"] for item in data["policies"]], lines=True,
-            y=-(32 + caption_pt + 10) / axes_pt)
-    return figure
-
-
 def draw_seed_spread(data: Mapping[str, Any]):
     figure, axes = _figure(
         8.4, 4.6, "Paired difference from the incumbent, seed by seed",
@@ -634,7 +508,7 @@ def draw_seed_spread(data: Mapping[str, Any]):
     axes.xaxis.set_major_formatter(FuncFormatter(_dollars))
     low, high = axes.get_xlim()
     axes.set_xlim(min(low, -hurdle), max(high, hurdle * 2))
-    _reference_lines(axes, hurdle, vertical=True)
+    _reference_lines(axes, hurdle)
     axes.set_xlabel("Net contribution vs today's rules, $ per 1,000 orders")
     _style(axes, grid="x")
     axes.tick_params(axis="y", length=0)
@@ -681,7 +555,7 @@ def draw_operating_cells(data: Mapping[str, Any]):
     axes.xaxis.set_major_formatter(FuncFormatter(_dollars))
     low, high = axes.get_xlim()
     axes.set_xlim(min(low, -hurdle), max(high, hurdle * 2))
-    _reference_lines(axes, hurdle, vertical=True)
+    _reference_lines(axes, hurdle)
     axes.set_xlabel("Net contribution vs today's rules, $ per 1,000 orders")
     _style(axes, grid="x")
     axes.tick_params(axis="y", length=0)
@@ -690,7 +564,7 @@ def draw_operating_cells(data: Mapping[str, Any]):
         label.set_color(INK)
         if label.get_text() in primary:
             label.set_fontweight("bold")
-    _legend(axes, [p["policy"] for p in cells[0]["policies"]], lines=False, y=-0.11)
+    _legend(axes, [p["policy"] for p in cells[0]["policies"]], y=-0.11)
     return figure
 
 
@@ -699,7 +573,6 @@ Collector = Callable[[Mapping[str, Any], Mapping[str, Any]], dict[str, Any]]
 Drawer = Callable[[Mapping[str, Any]], Any]
 CHARTS: dict[str, tuple[Collector, Drawer]] = {
     "frontier": (collect_frontier, draw_frontier),
-    "staffing": (collect_staffing, draw_staffing),
     "seed_spread": (collect_seed_spread, draw_seed_spread),
     "operating_cells": (collect_operating_cells, draw_operating_cells),
 }
