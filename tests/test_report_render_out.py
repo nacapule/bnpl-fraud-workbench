@@ -133,3 +133,27 @@ def test_a_hard_link_in_the_folder_is_replaced_not_written_through(tmp_path: Pat
     assert (root / "README.md").read_text() == "the published README\n"
     assert (out / "README.md").read_text().endswith("Things: 7.\n")
     assert (out / NOT_RENDERED).exists()
+
+
+@pytest.mark.parametrize("value", [
+    "replay.outcomes where family=nowhere | reviews",  # no row
+    "replay.outcomes where family=baseline | reviews",  # two rows
+    "replay.outcomes where family=baseline seed=1 | revews",  # an unknown column
+    "replay.outcomes where family=baseline sum held_share by family | held_share",  # refused
+])
+def test_the_repository_render_fails_on_a_cell_that_is_not_one_value(tmp_path: Path,
+                                                                     value: str) -> None:
+    templates = tmp_path / "report" / "templates"
+    templates.mkdir(parents=True)
+    (templates / "README.md").write_text("Reviews: {{ cell:" + value + " }}.\n")
+    rows = [{"seed": seed, "family": "baseline", "policy": "hybrid", "evaluated": True,
+             "reviews": 3 * seed, "held_share": 0.5} for seed in (1, 2)]
+    sources = Sources(summary={"metrics": {}, "tables": {"replay.outcomes": rows}})
+    with pytest.raises(RenderError, match=r"line 1: \{\{cell:replay\.outcomes "):
+        render_all(sources, tmp_path, templates, tmp_path)
+    assert not (tmp_path / "README.md").exists()
+    # the same document with one value meant renders
+    (templates / "README.md").write_text(
+        "Reviews: {{ cell:replay.outcomes where seed=2 | reviews count }}.\n")
+    render_all(sources, tmp_path, templates, tmp_path)
+    assert (tmp_path / "README.md").read_text().endswith("Reviews: 6.\n")

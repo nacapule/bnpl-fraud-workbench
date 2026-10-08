@@ -8,7 +8,9 @@ from __future__ import annotations
 import pytest
 
 from report.render import (
+    AGGREGABLE,
     OUTCOME_LEVELS,
+    OUTCOME_PER_WORLD,
     OUTCOME_TOTALS,
     RenderError,
     Sources,
@@ -118,7 +120,7 @@ def test_mean_averages_levels_with_the_rows_it_covers(sources):
     ("mean held_share", "is not a count or money column"),
     ("sum wait_p50_minutes", "is a per-world level, which does not add up"),
     ("sum max_backlog", "is a per-world level, which does not add up"),
-    ("mean reviews", "adds up over worlds: use sum"),
+    ("mean net_vs_approve_all_cents", "adds up over worlds: use sum"),
     ("mean net_cents", "adds up over worlds: use sum"),
 ])
 def test_rates_shares_and_quantiles_are_never_added_up_or_averaged(sources, clause, refused):
@@ -242,3 +244,71 @@ def test_groups_keep_one_order_across_selections_from_a_table():
         lines = table(f"replay.confusion where policy={policy} sum orders by truth "
                       "| truth, orders count", ordered)
         assert lines[2:] == [f"| x | {first} |", f"| y | {second} |"]
+
+
+def test_a_worlds_size_is_averaged_over_the_worlds(sources):
+    # (10 + 14) / 2 reviews in each of the incumbent's two baseline worlds
+    assert table(f"replay.outcomes {PRIMARY} policy=incumbent_rules mean reviews by policy | "
+                 "policy, reviews num:0, rows_count count", sources)[2:] == [
+        "| incumbent_rules | 12 | 2 |"]
+    assert set(OUTCOME_PER_WORLD) == {"orders", "reviews", "review_minutes_used",
+                                      "available_minutes"} <= set(OUTCOME_TOTALS)
+    assert AGGREGABLE["replay.outcomes"]["mean"] == {*OUTCOME_LEVELS, *OUTCOME_PER_WORLD}
+
+
+def cell(spec: str, sources: Sources, text: str = "{}") -> str:
+    return render(text.format("{{ cell:" + spec + " }}"), sources)
+
+
+def test_a_cell_prints_the_one_value_a_selection_leaves(sources):
+    # oracle by hand: the incumbent's baseline reviews, 10 + 14, and their mean, 12
+    assert cell(f"replay.outcomes {PRIMARY} policy=incumbent_rules sum reviews by policy | "
+                "reviews count", sources, "Reviewed {} orders.") == "Reviewed 24 orders."
+    assert cell(f"replay.outcomes {PRIMARY} policy=incumbent_rules mean reviews by policy | "
+                "reviews num:0", sources) == "12"
+    assert cell("replay.outcomes where family=surge | net_cents usd", sources) == "$100"
+    assert cell("replay.outcomes where family=surge | policy label", sources) == \
+        "incumbent rules"
+
+
+@pytest.mark.parametrize("spec, message", [
+    # no row, or more than one
+    ("replay.outcomes where family=nowhere | reviews", "no rows match where family=nowhere"),
+    (f"replay.outcomes {PRIMARY} policy=incumbent_rules | reviews",
+     "the selection leaves 2 rows; a cell needs exactly one"),
+    ("replay.outcomes where seed=1 sum reviews by policy | reviews",
+     "the selection leaves 2 rows"),
+    # a column that does not exist, in the selection or the value
+    ("replay.outcomes where familly=surge | reviews", "no column 'familly'"),
+    ("replay.outcomes where family=surge | revews", "no column 'revews'"),
+    # an aggregate the column does not allow, a table that is already pooled, a world the
+    # replay did not evaluate
+    (f"replay.outcomes {PRIMARY} policy=incumbent_rules sum held_share by policy | held_share",
+     "is not a count or money column"),
+    (f"replay.outcomes {PRIMARY} policy=incumbent_rules mean net_cents by policy | net_cents",
+     "adds up over worlds: use sum"),
+    (f"replay.outcomes {PRIMARY} policy=incumbent_rules sum wait_p50_minutes by policy | "
+     "wait_p50_minutes", "is a per-world level, which does not add up"),
+    (f"replay.outcomes {PRIMARY} policy=hybrid sum reviews by policy | reviews",
+     "'hybrid' was not evaluated on seed 2"),
+    # one column with its format, nothing else
+    ("replay.outcomes where family=surge | reviews count, net_cents usd", "name one column"),
+    ('replay.outcomes where family=surge | reviews "Reviews" count', "name one column"),
+    ("replay.outcomes where family=surge |", "name one column"),
+    ("replay.outcomes where family=surge | reviews dollars", "unknown format 'dollars'"),
+    ("replay.outcomes where family=surge | policy count", "column 'policy'"),
+    ("fact:ring:alerts.ring | selected", "a cell comes from a result table"),
+])
+def test_a_cell_fails_unless_one_value_is_meant(sources, spec, message):
+    with pytest.raises(RenderError, match=message):
+        cell(spec, sources)
+
+
+def test_a_cell_never_comes_from_a_table_already_pooled_over_seeds():
+    cells = [{"policy": "hybrid", "capacity": "base", "net_contribution_cents": 2_500}]
+    pooled = Sources(summary={"metrics": {}, "tables": {"evaluate.policies": cells}})
+    with pytest.raises(RenderError, match="already pooled or averaged over seeds"):
+        cell("evaluate.policies sum net_contribution_cents by policy | "
+             "net_contribution_cents usd", pooled)
+    assert cell("evaluate.policies where capacity=base | net_contribution_cents usd",
+                pooled) == "$25"

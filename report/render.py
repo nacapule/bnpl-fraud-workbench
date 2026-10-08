@@ -21,9 +21,13 @@ A template is Markdown whose numbers come only from placeholders:
     the same from selected rows of a result table (:func:`select`): ``where``
     keeps the rows whose cell reads ``value``; in the per-world tables of
     :data:`AGGREGABLE`, ``sum`` adds up counts or money over the rows of each
-    ``by`` group and ``mean`` averages levels such as a world's median wait,
-    each aggregated row with ``rows_count``, the rows it covers; ``across``
-    spreads one column's values into columns holding the sum;
+    ``by`` group and ``mean`` averages levels such as a world's median wait, or
+    a world's orders, reviews and review minutes (per world, averaged over the
+    worlds), each aggregated row with ``rows_count``, the rows it covers;
+    ``across`` spreads one column's values into columns holding the sum;
+``{{ cell:name [selection] | column format }}``
+    inline: the one value of a result table that a selection leaves, with every
+    refusal of a table's selection; it fails unless exactly one row remains;
 ``{{ claim:<id> }}``
     a directional claim from ``report/claims.yaml``, written from its record and
     the results with its evidence (:mod:`report.claims`); it fails to render
@@ -205,6 +209,8 @@ def _split(body: str) -> tuple[str, str, list[str]]:
 
 def render_value(body: str, sources: Sources) -> str:
     """Render one inline placeholder body (the text between the braces)."""
+    if body.strip().startswith("cell:"):
+        return render_cell(body, sources)
     if body.strip().startswith("claim:"):
         claim_id = body.strip()[len("claim:"):].strip()
         if claim_id not in sources.claims or sources.wording is None:
@@ -258,40 +264,76 @@ def render_table(body: str, sources: Sources) -> str:
     for index, row in enumerate(rows):
         cells = []
         for column, _, format_name, args in columns:
-            cell = row[column]
-            if cell is None:
-                cells.append("n/a")
-            elif isinstance(cell, bool):
-                cells.append("yes" if cell else "no")
-            elif format_name == IDENTIFIER:
-                if isinstance(cell, int | str) and not args and \
-                        formats.unit_from_name(column) is None:
-                    cells.append(str(cell))
-                else:
-                    problems.append(f"row {index} column {column!r}: the id format prints "
-                                    "an identifier (a seed, an order id) as it is, not a "
-                                    "quantity, and takes no arguments")
-                    cells.append("")
-            elif format_name == LABEL:
-                if not isinstance(cell, str) or args:
-                    problems.append(f"row {index} column {column!r}: the label format "
-                                    "takes no arguments and prints identifiers, not numbers")
-                    cells.append("")
-                else:
-                    cells.append(label(cell, sources.labels))
-            else:
-                unit = units[column] if column in units else formats.unit_from_name(column)
-                resolved = Value(plain=cell, unit=unit,
-                                 contrast="_vs_" in column or column in contrasts)
-                try:
-                    cells.append(formats.apply(format_name, resolved, args))
-                except FormatError as error:
-                    problems.append(f"row {index} column {column!r}: {error}")
-                    cells.append("")
+            try:
+                cells.append(_cell(row, column, format_name, args, units, contrasts, sources))
+            except FormatError as error:
+                problems.append(f"row {index} column {column!r}: {error}")
+                cells.append("")
         lines.append("| " + " | ".join(cells) + " |")
     if problems:
         raise RenderError(f"table {name!r}", problems)
     return "\n".join(lines)
+
+
+def _cell(row: Mapping[str, Any], column: str, format_name: str, args: list[str],
+          units: Mapping[str, str | None], contrasts: set[str], sources: Sources) -> str:
+    """One value of a result table's row as text; raises :class:`FormatError`."""
+    cell = row[column]
+    if cell is None:
+        return "n/a"
+    if isinstance(cell, bool):
+        return "yes" if cell else "no"
+    if format_name == IDENTIFIER:
+        if isinstance(cell, int | str) and not args and formats.unit_from_name(column) is None:
+            return str(cell)
+        raise FormatError("the id format prints an identifier (a seed, an order id) as it "
+                          "is, not a quantity, and takes no arguments")
+    if format_name == LABEL:
+        if not isinstance(cell, str) or args:
+            raise FormatError("the label format takes no arguments and prints identifiers, "
+                              "not numbers")
+        return label(cell, sources.labels)
+    unit = units[column] if column in units else formats.unit_from_name(column)
+    return formats.apply(format_name, Value(plain=cell, unit=unit,
+                                            contrast="_vs_" in column or column in contrasts),
+                         args)
+
+
+def render_cell(body: str, sources: Sources) -> str:
+    """Render ``cell:name [selection] | column format`` inline: the value in ``column`` of
+    the one row of the result table ``name`` that the selection leaves (:func:`select`,
+    with every refusal it makes for a table); raises :class:`RenderError` unless exactly
+    one row remains and one column is named, without a header."""
+    head, _, spec = body.partition("|")
+    name, *clauses = head.strip()[len("cell:"):].split() or [""]
+    where = f"cell {name!r}"
+    if name.startswith("fact:"):
+        raise RenderError(where, ["a cell comes from a result table; a case fact is fact:"])
+    rows = table(sources.summary, name)
+    units: dict[str, str | None] = {}
+    contrasts: set[str] = set()
+    if clauses:
+        rows, units, contrasts = select(rows, parse_selection(clauses), name,
+                                        unevaluated=unevaluated_worlds(sources.summary))
+    match = COLUMN.match(spec) if "," not in spec else None
+    if not match or not match.group(1) or match.group(2) is not None:
+        raise RenderError(where, ["name one column and its format, without a header: "
+                                  "| column format"])
+    column, _, form = match.groups()
+    format_name, *args = (form or "value").split(":")
+    problems = []
+    if format_name not in formats.FORMATS and format_name not in (LABEL, IDENTIFIER):
+        problems.append(f"unknown format {format_name!r} for column {column!r}")
+    if len(rows) != 1:
+        problems.append(f"the selection leaves {len(rows)} rows; a cell needs exactly one")
+    elif column not in rows[0]:
+        problems.append(f"no column {column!r}")
+    if problems:
+        raise RenderError(where, problems)
+    try:
+        return _cell(rows[0], column, format_name, args, units, contrasts, sources)
+    except FormatError as error:
+        raise RenderError(where, [f"column {column!r}: {error}"]) from error
 
 
 # ---------------------------------------------------------------- selecting rows of a table
@@ -303,10 +345,13 @@ CLAUSES = ("where", "sum", "mean", "by", "across")
 CLAUSE_ORDER = {"where": 0, "sum": 1, "mean": 1, "by": 2, "across": 3}
 # The result tables whose rows are per-world values that may be aggregated over worlds,
 # and which columns: counts and cents add up (sum); a per-world level with no pooled
-# result key, such as a world's median wait, is averaged (mean). Every other table holds
+# result key, such as a world's median wait, is averaged (mean), and so are a world's
+# orders, reviews and review minutes, which have no pooled key either, to give the size
+# of one world (per world, averaged over the worlds). Every other table holds
 # figures already pooled or averaged over seeds (use their result keys), and every other
 # column is refused, so a rate, a share or a mean is never added up or averaged again.
 OUTCOME_LEVELS = ("wait_p50_minutes", "wait_p90_minutes", "max_backlog")
+OUTCOME_PER_WORLD = ("orders", "reviews", "review_minutes_used", "available_minutes")
 OUTCOME_TOTALS = (  # queue_sim.outcomes.OUTCOME_COLUMNS but the levels
     "orders", "gmv_cents", "approved_orders", "approved_gmv_cents",
     "net_cents", "approve_all_net_cents", "net_vs_approve_all_cents",
@@ -328,7 +373,8 @@ OUTCOME_TOTALS = (  # queue_sim.outcomes.OUTCOME_COLUMNS but the levels
     "sla_met_p0", "sla_met_p1", "sla_met_p2", "sla_met_p3",
 )
 AGGREGABLE: dict[str, dict[str, frozenset[str]]] = {
-    "replay.outcomes": {"sum": frozenset(OUTCOME_TOTALS), "mean": frozenset(OUTCOME_LEVELS)},
+    "replay.outcomes": {"sum": frozenset(OUTCOME_TOTALS),
+                        "mean": frozenset(OUTCOME_LEVELS + OUTCOME_PER_WORLD)},
     "replay.confusion": {"sum": frozenset({"orders"}), "mean": frozenset()},
     "replay.confusion_latent": {"sum": frozenset({"orders"}), "mean": frozenset()},
     "replay.prevented_by_pattern": {
