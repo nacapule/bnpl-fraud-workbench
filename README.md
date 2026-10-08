@@ -24,11 +24,11 @@ is the decision memo; the appendices hold the tables behind it.
 
 ## The answer
 
-**Replace today's rules with the gradient-boosting policy, after a pilot.** The recommendation rule, set before the final results existed, selects it in the primary cell (the baseline world at the base review allotment). Its mean gain in rule net contribution against today's rules is +$889 per 1,000 orders decided, clearing the hurdle of $100. The gain is positive on 10/10 seeds.
+**Replace today's rules with the gradient-boosting policy, after a pilot.** The recommendation rule, set before the final results existed, selects it in the primary cell (the baseline world at the base review allotment). Its mean gain against today's rules in rule net contribution, the ledger's net cash minus the cost of lost customers and of the analyst allotment, is +$889 per 1,000 orders decided, clearing the hurdle of $100 the rule sets for a change. The gain is positive on 10/10 seeds. Each simulated world's test window holds 25,266 orders decided (per world, averaged over the 10 worlds); today's rules send about 256 of them to review, and gradient boosting about 130.
 
-Gradient boosting acts mainly through score-based declines at checkout. It loses 85.0 legitimate customers per 10,000 legitimate orders, inside the mean guardrail of 100, against 35.0 under today's rules. The cost of those customers is already deducted from its gain. Today's rules miss the service target at P1 and P2; gradient boosting still misses it at P1.
+Gradient boosting acts mainly through score-based declines at checkout. It loses 85.0 legitimate customers per 10,000 legitimate orders, inside the mean guardrail of 100, against 35.0 under today's rules. The cost of those customers is already deducted from its gain. Logistic regression shows the highest mean gain in the table below, but it loses 111.5 legitimate customers per 10,000, over the guardrail, so the rule cannot choose it. Today's rules miss the service targets of the review queue's P1 and P2 priorities (4 and 8 service hours), so the rule holds challengers to today's level there; gradient boosting meets that level at both.
 
-The answer holds in 9 of the 10 other operating cells, covering world families, staffing levels, the evening shift layout, weak verification and two other values for a lost customer. When an acquisition campaign brings a surge of new customers, gradient boosting misses the guardrail on lost legitimate customers, so today's rules stay. In the acquisition surge, the gradient-boosting policy declined a larger share of legitimate orders than the incumbent rules on 10 of 10 seeds (exact sign test, p = 0.002). The [operating review](reports/operating-review.md) gives the decision, the alternatives, the staffing comparison and a pilot plan.
+The answer holds in 9 of the 10 other operating cells, each the primary cell with one condition changed: the world (an acquisition surge, a fraud-mix shift, goods shipping in half or twice the time), the allotment, the shift layout, the verification rates, or the value put on a lost customer. When an acquisition campaign doubles the inflow of new customers, gradient boosting loses 128.4 legitimate customers per 10,000 legitimate orders, over the guardrail, so today's rules stay. The [operating review](reports/operating-review.md) gives the decision, the alternatives, the staffing comparison and a pilot plan.
 
 All results come from synthetic worlds, not from a real portfolio: they show how these policies behave under the stated assumptions, not real fraud rates. The table covers the primary cell (the baseline world at the base review allotment) on the test window, from 1 June 2025 until 1 September 2025, one simulated world per seed: gains and customer rates are means over the final seeds, and fraud loss pools loss and GMV over them.
 
@@ -42,7 +42,7 @@ All results come from synthetic worlds, not from a real portfolio: they show how
 | hybrid | +$104 | positive on 9/10 seeds | 35.1 | 3.3 | 72.3 |
 | expected loss | +$814 | positive on 10/10 seeds | 28.6 | 1.8 | 39.8 |
 
-- **Mean gain over the incumbent:** rule net contribution minus the incumbent rules' in the same world, per 1,000 orders decided (processor-approved checkouts in the test window). Rule net contribution is the ledger's net cash for those orders minus $15 for each lost legitimate customer and minus the analyst allotment at $35 an hour.
+- **Mean gain over the incumbent:** rule net contribution minus the incumbent rules' in the same world, per 1,000 orders decided (processor-approved checkouts in the test window). Rule net contribution is the ledger's net cash for those orders minus $15 for each lost legitimate customer and minus the analyst allotment at $35 an hour, charged in each world where the policy's thresholds send orders to review (gradient boosting's do in 5 of the 10 worlds).
 - **Across seeds:** how many worlds the gain was positive or negative in.
 - **Lost legitimate customers:** legitimate orders declined at checkout, refused because the account was blocked, declined or escalated after review, or cancelled after an unanswered verification request. **Held:** legitimate orders asked to verify. Both per 10,000 legitimate orders, mean over seeds; "legitimate" means no fraud finding by the end of observation.
 - **Fraud loss:** cash lost on orders labelled fraud, in basis points of gross merchandise value, pooled over seeds.
@@ -65,8 +65,8 @@ assumption.
 On 3 July 2025, an account 512 days old placed a $263.87 order. The device had been linked to the account 0.24 hours earlier, the account had never shipped to the address, the IP was outside the customer's home country, and the card security code check failed. Today's rules sent the order to review on R03: the card's issuing country differed from the IP's, and a card check failed.
 
 The same evidence could fit an established customer travelling with a new phone and
-shipping away from home. The fraud policy calls for a check to resolve that
-explanation (FP-2 §6.5(b)). On the evidence available, it supports a hold for an
+shipping away from home. The platform's written fraud policy, FP-2, calls for a check
+to resolve that explanation (§6.5(b)). On the evidence available, it supports a hold for an
 identity check, not a decline (§6.6(b), §5.2).
 
 The analyst held the order before it shipped. The identity check failed on 4 July 2025, and the order was declined and voided. It was labelled an account takeover on 10 July 2025. The [case file](cases/account-takeover.md) has the evidence table, competing explanations, later outcomes and a change to the rules tested in the replay.
@@ -179,12 +179,7 @@ review decisions is running; the results will be in the
 
 [docs/methods.md](docs/methods.md) describes the world's assumptions and the reasons
 for them, the evaluation protocol, the ledger, the simulated reviewer and the limits.
-In short: the world is synthetic, and its fraud patterns, signals and rates are the
-generator's choices, so detection results measure how distinct the design makes each
-pattern; labels arrive late and some fraud never earns one (a never-pay customer's
-single default reads as credit loss); fraudsters do not adapt and customers do not
-leave; costs and guardrails are stated assumptions. The appendices give the tables
-behind each result:
+The appendices give the tables behind each result:
 
 - [Detection](reports/appendix-detection.md): each score's ranking and calibration,
   and every policy on the same replay.

@@ -6,22 +6,29 @@ policy should a small pay-in-4 fraud team run, with a fixed allotment of analyst
 time, evidence and labels that arrive late, goods that ship within hours, and a real
 cost to holding or declining good customers? And when does the answer change?
 
-**The evidence** is simulated, not a real portfolio: synthetic marketplaces generated from one set of stated assumptions ([methods](../docs/methods.md)). Every policy was tuned on an earlier window and frozen, then replayed on the orders placed in the test window, from 1 June 2025 until 1 September 2025, with outcomes observed until 30 December 2025. Each final seed is one simulated world; figures are means over those worlds unless a caption says they are pooled, and a paired difference is said to be "positive on k of n seeds" when it is above zero in k of the n worlds.
+**The evidence** is simulated, not a real portfolio: synthetic marketplaces generated from one set of stated assumptions ([methods](../docs/methods.md)). Every policy was tuned on an earlier window and frozen, then replayed on the orders placed in the test window, from 1 June 2025 until 1 September 2025, with payments, disputes, write-offs and recoveries observed until 30 December 2025. Each final seed, drawn before any final world existed, generates one simulated world; figures are means over those worlds unless a caption says they are pooled. A paired difference is "positive on k of n seeds" when it is above zero in k of the n worlds. A sentence that compares two policies on one measure adds an exact sign test over those paired seeds; like the rule's own seed count, it shows how consistent a difference is across simulated worlds that share one generator, not that it would hold in a real portfolio.
 
 Unless a table says otherwise, figures are for the **primary cell**: the baseline
 world, the base allotment on the current shift layout, each policy seeing the history
 its own decisions produced, and the evidence-based reviewer with standard
-verification rates.
+verification rates. Each other *operating cell* changes one of these: the world family
+(an acquisition surge, a fraud-mix shift, or goods shipping in half or twice the
+time, in place of the baseline world), the allotment, the shift layout, the
+verification rates, or the value put on a lost customer.
 
 ## Decision
 
-**Replace today's rules with the gradient-boosting policy, after a pilot.** In the primary cell, it is the eligible challenger with the highest mean gain in rule net contribution against today's rules: +$889 per 1,000 orders decided, clearing the hurdle of $100. The gain is positive on 10/10 seeds.
+**Replace today's rules with the gradient-boosting policy, after a pilot.** In the primary cell, it has the highest mean gain in rule net contribution against today's rules among the challengers the rule finds eligible: +$889 per 1,000 orders decided, clearing the hurdle of $100 the rule sets for a change. The gain is positive on 10/10 seeds. *Rule net contribution* is the ledger's net cash minus the cost of lost customers and of the analyst allotment; *eligible* means within the rule's caps on lost and held customers and its service criteria ([the rule](#the-options-and-the-rule-that-chooses)).
 
-The policy acts mainly through score-based declines at checkout ([operations appendix](appendix-operations.md#the-queue)). It loses 85.0 legitimate customers per 10,000 legitimate orders on average, inside the guardrail of 100, against 35.0 under today's rules. The cost of those customers, at the lifetime-value proxy, is already deducted from its gain.
+For scale, each world's test window holds 25,266 orders decided (per world, averaged over the 10 worlds). Today's rules send about 256 of them to review and use 1,828 of the 4,323 review minutes allotted; gradient boosting sends about 130 and uses 941.
 
-**Today's rules miss the service target.** At P1 and P2, their share of queue entries decided within the target does not meet the required share (table below), so the rule uses today's level as the service criterion for challengers at both priorities. Gradient boosting meets the P2 target and today's level at P1, where it still misses the target.
+The policy acts mainly through score-based declines at checkout ([operations appendix](appendix-operations.md#the-queue)). It loses 85.0 legitimate customers per 10,000 legitimate orders on average, inside the guardrail of 100, against 35.0 under today's rules. The cost of those customers, at the lifetime-value proxy of $15 each, is already deducted from its gain.
 
-**The answer holds in 9 of the 10 other operating cells.** In the acquisition surge of new customers, gradient boosting misses the guardrail on lost legitimate customers, so today's rules stay ([When the answer changes](#when-the-answer-changes)). The world is synthetic, so these are results about how the policies behave under stated assumptions, not estimates for a real book ([Limits](#limits-that-bear-on-this-decision)).
+The rule charges the analyst allotment only in the worlds where a policy's thresholds send orders to review, as it was written down to do. Gradient boosting's thresholds send orders to review in 5 of the 10 worlds, so in the others its gain carries no allotment cost; the pilot keeps the allotment anyway ([piloting it](#piloting-it)).
+
+**Today's rules miss the service target.** An order enters the review queue at a priority the fraud policy sets (FP-2 §7.1): P1 for large orders and those on R02, R08 or R10, to be decided within 4 service hours, and P2 for the rest, within 8; P0, for orders close to shipping or on R05 or R07, has too few entries to assess. At P1 and P2, today's rules' share of entries decided within the target does not meet the required share (table below), so the rule holds challengers to today's level at both priorities. Gradient boosting meets the P2 target and today's level at P1, where it still misses the target.
+
+**The answer holds in 9 of the 10 other operating cells.** When an acquisition campaign doubles the inflow of new customers, gradient boosting misses the guardrail on lost legitimate customers, so today's rules stay ([When the answer changes](#when-the-answer-changes)). The world is synthetic, so these are results about how the policies behave under stated assumptions, not estimates for a real book ([Limits](#limits-that-bear-on-this-decision)).
 
 ## The options and the rule that chooses
 
@@ -58,7 +65,7 @@ A rule written down before any final world existed then chooses among them:
 | hybrid | +$104 | -$38 | +$232 | 9 | 9 | yes | none | no |
 | expected loss | +$814 | +$501 | +$1,196 | 10 | 9 | no | P1 service, P2 service | no |
 
-*Mean gain:* the policy's rule net contribution minus the incumbent's in the same world, per 1,000 orders decided, mean over seeds. These are processor-approved checkouts in the test window. *Rule net contribution* is the ledger's net cash for the window's orders, minus $15 (the lifetime-value proxy) for each lost legitimate customer and minus the analyst allotment at $35 an hour, unused minutes included; a policy that sends nothing to review is charged no allotment. *Misses:* the criteria a policy fails; for the incumbent, which is the reference and has no gain of its own, the criteria today's rules miss.
+*Mean gain:* the policy's rule net contribution minus the incumbent's in the same world, per 1,000 orders decided, mean over seeds. These are processor-approved checkouts in the test window. *Rule net contribution* is the ledger's net cash for the window's orders, minus $15 (the lifetime-value proxy) for each lost legitimate customer and minus the analyst allotment at $35 an hour, unused minutes included, in each world where the policy's thresholds send orders to review and in no other. *Misses:* the criteria a policy fails; for the incumbent, which is the reference and has no gain of its own, the criteria today's rules miss.
 
 ## Customers, service and loss
 
@@ -85,8 +92,8 @@ A rule written down before any final world existed then chooses among them:
 | expected loss | +$39,519 | 39.8 | 28.5 | 52.5% | 137.4 |
 
 *Ledger net against approve-all:* the policy's net cash for the window's orders minus
-approve-all's in the same world, mean over seeds, before any friction or staffing
-cost. *Fraud loss:* cash lost on orders labelled fraud, in basis points of the
+approve-all's in the same world, mean over seeds, before the lost-customer and
+allotment costs. *Fraud loss:* cash lost on orders labelled fraud, in basis points of the
 window's gross merchandise value, pooled over seeds. *Legitimate declined:* as lost customers, without
 the cancelled holds, pooled over seeds. *Review minutes used:* minutes of review work
 begun on the window's orders (including work finished after it ended) over the
@@ -106,7 +113,7 @@ The expected-loss policy uses 52.5% of the allotted review minutes and misses to
 
 ## Review capacity and staffing
 
-Capacity here is analyst time allotted to the fraud queue: one analyst on each covered shift, with 33 minutes per shift for review and escalation work at the base level. At this world's volume, the review work a day brings is a small part of one analyst's productive hours on a shift, so headcount cannot be the binding limit; the allotment is. The base was sized on today's queue before any policy comparison was read ([methods](../docs/methods.md#capacity)).
+Capacity here is analyst time allotted to the fraud queue: one analyst on each covered shift, with 33 minutes per shift for review and escalation work at the base level. At this world's volume, the review work a day brings is a small part of one analyst's productive hours on a shift, so headcount cannot be the binding limit; the allotment is. On the current layout an early shift starts at 08:00 on weekdays and a late shift at 11:00 from Wednesday to Sunday, each with 6.5 productive hours; the evening layout starts them at 12:00 and 15:00. The base was sized on today's queue before any policy comparison was read ([methods](../docs/methods.md#capacity)).
 
 The table varies the staffing with each policy's thresholds held as tuned at the base
 allotment. Each cell is the policy's mean gain over the incumbent in rule net
@@ -126,7 +133,7 @@ The evening layout moves the same two shifts later in the day to cover the eveni
 peak of orders, with the same minutes. Whether a challenger is eligible in each column
 is in the flip table below and in the [operations appendix](appendix-operations.md).
 
-![Gain over the incumbent per 1,000 orders at each staffing level](figures/staffing.svg)
+Each column compares the challengers with today's rules at the same staffing. Today's rules themselves, moved from the base to the high allotment, change their rule net contribution by -$36 per 1,000 orders decided: the cost of the extra minutes, net of what faster review saves.
 
 Gradient boosting remains recommended at the low and high allotments and on the
 evening layout. Service depends on the allotment and shift coverage: today's rules
@@ -155,7 +162,10 @@ intend. Credit loss appears for scale.
 | third-party fraud | 224 | -$86,938 |
 
 *Orders and net cash* are summed over the final seeds' baseline worlds for the test
-window's orders, by the label each order earned; a negative figure is a loss.
+window's orders, by the label each order earned; a negative figure is a loss. The
+item-not-received row is small because those customers pay their plans: a rejected
+claim's amount is credited back and an upheld one falls on the merchant, so the
+platform keeps its fee and pays the dispute fees ([methods](../docs/methods.md#ledger)).
 
 Review settles few of these orders: the analyst usually clears a reviewed never-pay
 order and cleared every reviewed bust-out order
@@ -188,15 +198,15 @@ The primary cell's outcome holds in 9 of the 10 other cells. *Leading challenger
 
 ![The rule's outcome in each operating cell](figures/operating_cells.svg)
 
-The acquisition surge is the only cell where the answer changes, because gradient boosting misses the lost-customer guardrail. In the acquisition surge, the gradient-boosting policy kept more net cash than the incumbent rules on 10 of 10 seeds (exact sign test, p = 0.002). In the acquisition surge, the gradient-boosting policy declined a larger share of legitimate orders than the incumbent rules on 10 of 10 seeds (exact sign test, p = 0.002). It loses 128.4 legitimate customers per 10,000 legitimate orders on average, over the guardrail; it also goes over the per-seed cap on some seeds.
+The acquisition surge is the only cell where the answer changes. From the start of the test window it doubles the inflow of new legitimate customers, who are offered a first-purchase promotion ([methods](../docs/methods.md#families)), while every policy keeps the thresholds tuned before the window began. Gradient boosting still gains +$761 per 1,000 orders decided there, positive on 10/10 seeds. In the acquisition surge, the gradient-boosting policy declined a larger share of legitimate orders than the incumbent rules on 10 of 10 seeds (exact sign test, p = 0.002). It loses 128.4 legitimate customers per 10,000 legitimate orders on average, over the guardrail, and goes over the per-seed cap on some seeds.
 
 The hybrid policy is eligible in the surge, but its mean gain of +$83 per 1,000 orders decided is short of the hurdle, so today's rules stay. Reassess the recommendation before using it during a growth campaign.
 
 ## Piloting it
 
-1. **Shadow.** Score live orders with the gradient-boosting policy beside today's rules for a full label horizon (60 days), without acting on the candidate's scores. Compare their proposed routes on the same orders: which orders each would decline or review. Estimate the candidate's lost-customer rate from its proposed routes as the labels mature; the traffic pilot then checks that estimate against what happens.
-2. **A randomized share of traffic.** Route a fixed share of checkouts through the candidate. Use the rule's guardrails as stop criteria, reviewed each week: lost legitimate customers within 100 per 10,000 legitimate orders, legitimate orders held within 300, and service at each priority held to today's level. Assess the customer guardrails and fraud loss on cohorts with mature labels. Check service from queue records.
-3. **Keep the queue's minutes.** Gradient boosting uses 21.8% of the allotted review minutes, against 42.3% under today's rules, and sends nothing to review on some seeds ([operations appendix](appendix-operations.md#the-queue)). Keep the allotment through the pilot: the candidate's P1 service still misses the target at the base allotment, and only the high allotment meets it ([operations appendix](appendix-operations.md#operating-sensitivities)). Plan staffing from the workload the shadow period projects, then check it against the candidate's queue in the traffic pilot.
+1. **Shadow.** Score live orders with the gradient-boosting policy beside today's rules for a full label horizon (60 days, after which an order with no fraud determination counts as legitimate), acting on today's rules only. Compare their routes on the same orders: which orders each would decline or send to review. The orders the candidate would decline but today's rules approve earn labels as they mature, and those labels give an estimate of the candidate's lost-customer rate.
+2. **A randomized share of traffic.** Route a randomly chosen share of checkouts through the candidate, large enough for its weekly counts to be read and small enough that a breach stays contained. Each week, check what is known at once: service at each priority against today's level, from queue records, and the share's decline and hold rates against the shadow estimates. As each week's cohort passes the label horizon, check fraud loss and the rule's guardrails: legitimate orders held within 300 per 10,000 legitimate orders, and lost legitimate customers within 100, read from the shadow comparison, since an order declined at checkout shows no outcome of its own. Stop the share if either set of checks fails.
+3. **Keep the queue's minutes.** Gradient boosting uses 21.8% of the allotted review minutes, against 42.3% under today's rules, and sends orders to review in 5 of the 10 worlds ([operations appendix](appendix-operations.md#the-queue)). The rule counts the allotment as released in the other worlds, so part of the candidate's gain is minutes this step keeps. Keep the allotment through the pilot anyway: the candidate's P1 service still misses the target at the base allotment, and only the high allotment meets it ([operations appendix](appendix-operations.md#operating-sensitivities)). Plan staffing from the workload the shadow period projects, then check it against the candidate's queue in the traffic pilot.
 4. **Pause it for a growth campaign.** The acquisition surge is the only cell where the candidate misses its guardrail. Use today's rules, or reassess the candidate's lost-customer rate, before a campaign brings in new customers.
 5. **Check what the replay cannot.** Use the pilot to check attacker adaptation, customers leaving after a decline or hold, verification pass rates and the review allotment against live data. These are assumptions the replay cannot verify.
 
