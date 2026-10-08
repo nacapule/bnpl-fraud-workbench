@@ -493,6 +493,14 @@ def test_a_development_subset_draws_from_both_sets(tmp_path, mini_phases, monkey
     assert subset["drawn_from"]["counts"] == {"t-dev": 4, "t-dev-checks": 3}
     assert {axis: item["cases"] for axis, item in subset["axes"].items()} == {
         "review": 4, "check_completed": 3}
+    reviews = json.loads((tmp_path / "benchmarks" / "t-dev" / "benchmark.json").read_text())[
+        "axes"]["review"]["eligible"]
+    assert subset["axes"]["check_completed"]["share"] == 10 / (reviews + 10)  # both recorded
+    old = tmp_path / "benchmarks" / "t-dev" / "benchmark.json"  # a set from before the axes
+    old.write_text(json.dumps({key: value for key, value in json.loads(old.read_text())
+                               .items() if key != "axes"}))
+    shares = select_cases.combine("t-dev-old", ["t-dev", "t-dev-checks"], arms=["opus"])
+    assert shares["axes"]["review"] == {"cases": 4, "eligible": None, "share": 4 / 7}
     root = tmp_path / "benchmarks"
     for case in subset["cases"]:
         source = "t-dev-checks" if case["axis"] == "check_completed" else "t-dev"

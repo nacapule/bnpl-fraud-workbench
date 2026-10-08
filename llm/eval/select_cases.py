@@ -663,7 +663,9 @@ def combine(benchmark_id: str, sources: Sequence[str], *, arms: Sequence[str]
     :data:`SUBSET_RULE` (``development_combined`` of ``config/llm.yaml``: so many review
     decisions and so many decisions at check completions), for the arms named. Packets
     are copied as they are; the subset is not a probability sample, so its reweighted
-    rates estimate nothing and its clusters are its own linked groups."""
+    rates estimate nothing (its axes' shares are the sources' eligible decisions when every
+    source recorded them, else its own case shares) and its clusters are its own linked
+    groups."""
     wanted = {str(axis): int(n) for axis, n in harness.SIZES["development_combined"].items()}
     definitions = {source: json.loads((BENCHMARKS / source / "benchmark.json").read_text())
                    for source in sources}
@@ -697,15 +699,18 @@ def combine(benchmark_id: str, sources: Sequence[str], *, arms: Sequence[str]
     configured = load("llm")["arms"]
     if unknown := set(arms) - set(configured):
         raise ValueError(f"unknown arms {sorted(unknown)}")
+    # each axis's eligible decisions as its source recorded them; the shares are the
+    # natural mix's when every source recorded them, else the subset's own case shares
     axes = {}
     for source, definition in definitions.items():
         (axis,) = {case.get("axis", "review") for case in definition["cases"]}
-        eligible = (definition.get("axes") or {}).get(axis, {}).get(
-            "eligible", len(definition["cases"]))
-        axes[axis] = {"cases": counts[source], "eligible": int(eligible)}
-    whole = sum(item["eligible"] for item in axes.values())
+        eligible = (definition.get("axes") or {}).get(axis, {}).get("eligible")
+        axes[axis] = {"cases": counts[source],
+                      "eligible": None if eligible is None else int(eligible)}
+    known = all(item["eligible"] for item in axes.values())
+    whole = sum(item["eligible" if known else "cases"] for item in axes.values())
     for item in axes.values():
-        item["share"] = item["eligible"] / whole
+        item["share"] = item["eligible" if known else "cases"] / whole
     prompts = {definition["prompt"]["version"] for definition in definitions.values()}
     if len(prompts) != 1:
         raise ValueError(f"the sources use different prompts {sorted(prompts)}")
