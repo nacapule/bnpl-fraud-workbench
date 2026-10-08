@@ -33,7 +33,8 @@ final cohort's versions are the ones it pins, reported beside these.
 A case is one analyst decision, on one of two axes.
 
 - **Review** (`review`): the first decision, when an analyst takes the order up. No check
-  has run yet.
+  has run yet. (Corrected under Corrections after pre-registration: the decision is made
+  when the review is completed.)
 - **After a check** (`check_completed`): the decision when the checks a hold started have
   answered. The case sits at the last completion and carries every completed check. These
   cases hold the policy's §5.3 rows: once every required check has passed, every hold is
@@ -342,3 +343,14 @@ it holds each case's file, slot, memo and score.
   development sets rebuild byte-identical; the final cohort was first built with it,
   before any call, and rebuilds byte-identical from a clean copy. That world contributes
   no case.
+- **The review decision point, a description only.** Decision points says a review case
+  is the first decision when an analyst takes the order up. The replay's simulated
+  reviewer makes that first decision when the review is completed, before any
+  verification check; the saved review decisions record when the review was taken up
+  (`taken_up_at`) and when it was decided (`decided_at`). The packet's `decision_at`
+  marks neither event: it is the time the evidence was assembled (the checkout when the
+  review is completed on the day the order was placed, otherwise the start of the day it
+  is completed), and the packet's facts are those as of that time. For a case after a check,
+  `decision_at` is the last check's completion, as Decision points says. The selection,
+  the packets and the scores always used these times, so the correction changes no case,
+  packet or score; only the description was wrong.
