@@ -1,0 +1,349 @@
+{
+ "arms": {
+  "sol": {
+   "by_benchmark": {
+    "2026-10-dev": {
+     "calls": 41,
+     "charged_tokens": 342856
+    }
+   },
+   "calls": 41,
+   "charged_tokens": 342856,
+   "input_tokens": 287919,
+   "interrupted_calls": 0,
+   "output_tokens": 54937,
+   "pending": {},
+   "receipts": {
+    "2026-10-dev:22690:039c5679c440": {
+     "calls": 1,
+     "case": "d346b77a6aea6992df79cb9abdbeab44",
+     "charged_tokens": 8533,
+     "input_tokens": 7193,
+     "output_tokens": 1340,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:05fdcb03a149": {
+     "calls": 1,
+     "case": "a0547467ffbf13666ce67a4c4ea7d644",
+     "charged_tokens": 8335,
+     "input_tokens": 7192,
+     "output_tokens": 1143,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:07139ed17947": {
+     "calls": 1,
+     "case": "c810a0f2a1b32461cb327534afffb687",
+     "charged_tokens": 8646,
+     "input_tokens": 7188,
+     "output_tokens": 1458,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:0a4ce9b86fea": {
+     "calls": 1,
+     "case": "669ccabed2f9513e288ed15da6ad5f48",
+     "charged_tokens": 8726,
+     "input_tokens": 7188,
+     "output_tokens": 1538,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:0fdc80e18ef6": {
+     "calls": 1,
+     "case": "af3773b37741ae3cf86bb872ad93fdad",
+     "charged_tokens": 8600,
+     "input_tokens": 7180,
+     "output_tokens": 1420,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:1d8d8aa8b602": {
+     "calls": 1,
+     "case": "428511e421f609f7a36bf6a422253e8f",
+     "charged_tokens": 8583,
+     "input_tokens": 7186,
+     "output_tokens": 1397,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:3516c33a4b85": {
+     "calls": 1,
+     "case": "830bf2baffbd6ce0f78a445d94c6bd1e",
+     "charged_tokens": 8727,
+     "input_tokens": 7189,
+     "output_tokens": 1538,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:3c5f2ab0e349": {
+     "calls": 1,
+     "case": "c0fefe7f0cda9add796ab7a855f0d210",
+     "charged_tokens": 8778,
+     "input_tokens": 7180,
+     "output_tokens": 1598,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:4e398a80cd33": {
+     "calls": 1,
+     "case": "a539adad13289fcfc025527fba3b99f9",
+     "charged_tokens": 8450,
+     "input_tokens": 7186,
+     "output_tokens": 1264,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:517fdf91cb87": {
+     "calls": 1,
+     "case": "041d91c0ceec220b007d7fd73df1e3f8",
+     "charged_tokens": 8778,
+     "input_tokens": 7190,
+     "output_tokens": 1588,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:5e7cfc098475": {
+     "calls": 1,
+     "case": "6576a715b6b207b4954ed6c5972d6fc2",
+     "charged_tokens": 8488,
+     "input_tokens": 7185,
+     "output_tokens": 1303,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:6e9979aa215d": {
+     "calls": 1,
+     "case": "963ee42b54e33218a7081cae156421f0",
+     "charged_tokens": 8641,
+     "input_tokens": 7173,
+     "output_tokens": 1468,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:762900c52b4a": {
+     "calls": 1,
+     "case": "40b7965eb75727db74a1a71ea0798ce7",
+     "charged_tokens": 8347,
+     "input_tokens": 7190,
+     "output_tokens": 1157,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:77091fb29bcc": {
+     "calls": 1,
+     "case": "3f795adf8065c01c4d0b12bdebf262ff",
+     "charged_tokens": 8528,
+     "input_tokens": 7176,
+     "output_tokens": 1352,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:7724a382f16f": {
+     "calls": 1,
+     "case": "6dbb8d21ae45e01eb13464a1f9c25cab",
+     "charged_tokens": 8443,
+     "input_tokens": 7163,
+     "output_tokens": 1280,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:7f023ac5fd8e": {
+     "calls": 1,
+     "case": "b9245710b1d882d1b578af03d3ad4a99",
+     "charged_tokens": 8606,
+     "input_tokens": 7177,
+     "output_tokens": 1429,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:8eda0620d161": {
+     "calls": 1,
+     "case": "0c692ba6ca4917fa6f166a3dfe8292c6",
+     "charged_tokens": 8541,
+     "input_tokens": 7186,
+     "output_tokens": 1355,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:921b8d53e072": {
+     "calls": 1,
+     "case": "2db7dbccadb38092c2598ea4488ceb96",
+     "charged_tokens": 8610,
+     "input_tokens": 7176,
+     "output_tokens": 1434,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:926ab8469eb6": {
+     "calls": 1,
+     "case": "8763d7a53f5a94edd6941a797e31ce69",
+     "charged_tokens": 8625,
+     "input_tokens": 7191,
+     "output_tokens": 1434,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:9ff23a8e3d37": {
+     "calls": 1,
+     "case": "39734ec2ae40d52062dc8a6a38017308",
+     "charged_tokens": 8384,
+     "input_tokens": 7178,
+     "output_tokens": 1206,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:a195d7f0c4dc": {
+     "calls": 1,
+     "case": "5a664df13cc18cad57255d190dc33d08",
+     "charged_tokens": 8522,
+     "input_tokens": 7189,
+     "output_tokens": 1333,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:a24c768bac87": {
+     "calls": 1,
+     "case": "437465e059c8d6b3c75447ee95ef0d23",
+     "charged_tokens": 8830,
+     "input_tokens": 7184,
+     "output_tokens": 1646,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:a78953408bc1": {
+     "calls": 1,
+     "case": "cfb751c085efa5b55eda06218f9e88af",
+     "charged_tokens": 8829,
+     "input_tokens": 7190,
+     "output_tokens": 1639,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:ace7404435ff": {
+     "calls": 1,
+     "case": "isolation-check:2026-10-dev:canary-22690-8d3833",
+     "charged_tokens": 546,
+     "input_tokens": 512,
+     "output_tokens": 34,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:b76c96f8db09": {
+     "calls": 1,
+     "case": "b77ecb25e0eecda4501d71aa72617c61",
+     "charged_tokens": 8526,
+     "input_tokens": 7191,
+     "output_tokens": 1335,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:c2993b274e7d": {
+     "calls": 1,
+     "case": "5dde846c8b590d0a23410472410971ff",
+     "charged_tokens": 8597,
+     "input_tokens": 7189,
+     "output_tokens": 1408,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:c5259e3801a6": {
+     "calls": 1,
+     "case": "33672daa39cea65ff6fbdb35c37fd02a",
+     "charged_tokens": 8504,
+     "input_tokens": 7184,
+     "output_tokens": 1320,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:c8bc687f8562": {
+     "calls": 1,
+     "case": "8ff7b81af2d22e4f232f8959d1ef624c",
+     "charged_tokens": 8465,
+     "input_tokens": 7184,
+     "output_tokens": 1281,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:cb8538be57f4": {
+     "calls": 1,
+     "case": "0c317d992885263bd27e658d35f5fddb",
+     "charged_tokens": 8546,
+     "input_tokens": 7185,
+     "output_tokens": 1361,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:cea923d8ea75": {
+     "calls": 1,
+     "case": "764fc13bee20bf0508336beb7f673483",
+     "charged_tokens": 8401,
+     "input_tokens": 7184,
+     "output_tokens": 1217,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:ceab4a459da1": {
+     "calls": 1,
+     "case": "1d6b7b03d72632a162498cd1167dda23",
+     "charged_tokens": 8663,
+     "input_tokens": 7183,
+     "output_tokens": 1480,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:d279b68c14c5": {
+     "calls": 1,
+     "case": "e1b180a03538eb97bd9c5f7e779e483b",
+     "charged_tokens": 8552,
+     "input_tokens": 7193,
+     "output_tokens": 1359,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:d40d02076fe1": {
+     "calls": 1,
+     "case": "3b6226ccdc2ea231304f993d43a44f62",
+     "charged_tokens": 8494,
+     "input_tokens": 7193,
+     "output_tokens": 1301,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:dbc84a8b25ce": {
+     "calls": 1,
+     "case": "a24075bace29cf54be93a4496fec56db",
+     "charged_tokens": 8402,
+     "input_tokens": 7197,
+     "output_tokens": 1205,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:ddabae3aac26": {
+     "calls": 1,
+     "case": "e840ef0c0e893186297ec67971f5de04",
+     "charged_tokens": 8617,
+     "input_tokens": 7183,
+     "output_tokens": 1434,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:e0c188893265": {
+     "calls": 1,
+     "case": "b5c22df0685b9f07a9257c5f3a6be282",
+     "charged_tokens": 8508,
+     "input_tokens": 7186,
+     "output_tokens": 1322,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:f17b54df10dc": {
+     "calls": 1,
+     "case": "307b42ca368173c6ddf9b54603e8e6bd",
+     "charged_tokens": 8417,
+     "input_tokens": 7183,
+     "output_tokens": 1234,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:f52024ece30f": {
+     "calls": 1,
+     "case": "af02847314b249fd1502e77c63893fe0",
+     "charged_tokens": 8410,
+     "input_tokens": 7187,
+     "output_tokens": 1223,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:f58a887bfd50": {
+     "calls": 1,
+     "case": "f81f10c8a605dcaac018e430abbfa1e1",
+     "charged_tokens": 8453,
+     "input_tokens": 7182,
+     "output_tokens": 1271,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:f7802da0a693": {
+     "calls": 1,
+     "case": "138728d3b390d0d4daee1b63b7e8580a",
+     "charged_tokens": 8580,
+     "input_tokens": 7188,
+     "output_tokens": 1392,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-dev:22690:fabd419c831b": {
+     "calls": 1,
+     "case": "cd838d2472caef0fb921114bc729fc91",
+     "charged_tokens": 8625,
+     "input_tokens": 7185,
+     "output_tokens": 1440,
+     "unknown_usage_calls": 0
+    }
+   },
+   "unknown_usage_calls": 0
+  }
+ }
+}
