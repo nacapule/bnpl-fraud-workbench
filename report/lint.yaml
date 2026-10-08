@@ -10,11 +10,6 @@ documents:
 # Hand-written documents not yet rewritten as templates. This list only shrinks.
 not_yet_templated:
   - "README.md"
-  - "cases/CASE-01-account-takeover.md"
-  - "cases/CASE-02-card-testing-stolen-card.md"
-  - "cases/CASE-03-synthetic-ring-bustout.md"
-  - "cases/CASE-04-neverpay-vs-hardship.md"
-  - "cases/CASE-05-traveler-cleared.md"
 
 # Phrases with digits that are names, not results.
 allowed_phrases:
