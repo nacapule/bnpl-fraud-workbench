@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 25427,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-final",
+  "case": "35244829-baseline-141662-20250721T000000",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "238014d30d1d4a35579345961ee5c3c3440af9991bc80f8d4f35e815691c4b23",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10669,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 2716,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"decision.point\", \"value\": \"review\", \"statement\": \"The order is at analyst review.\", \"derived\": null},\n    {\"field\": \"decision.checks\", \"value\": \"[]\", \"statement\": \"No verification check has run yet.\", \"derived\": null},\n    {\"field\": \"order.ip_country\", \"value\": \"CA\", \"statement\": \"The order was placed from a Canadian IP.\", \"derived\": null},\n    {\"field\": \"order.card_bin_country\", \"value\": \"US\", \"statement\": \"The card was issued in the US.\", \"derived\": null},\n    {\"field\": \"order.account_home_country\", \"value\": \"US\", \"statement\": \"The account's home country is the US.\", \"derived\": null},\n    {\"field\": \"context.bin_ip_country_mismatch\", \"value\": \"1\", \"statement\": \"The card's issuing country differs from the IP country.\", \"derived\": null},\n    {\"field\": \"order.avs_result\", \"value\": \"N\", \"statement\": \"The AVS check failed.\", \"derived\": null},\n    {\"field\": \"order.cvv_result\", \"value\": \"M\", \"statement\": \"The CVV check matched.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_card_24h\", \"value\": \"0\", \"statement\": \"There were no processor declines on the card in the prior 24 hours.\", \"derived\": null},\n    {\"field\": \"context.attempts_user_24h\", \"value\": \"1\", \"statement\": \"This is the account's only order attempt in the 24 hours up to and including this one.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"1\", \"statement\": \"Only this account was active on the device in the past 30 days.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"2\", \"statement\": \"Two accounts, this one included, ordered to the shipping address in the past 30 days, which is below R08's threshold.\", \"derived\": null},\n    {\"field\": \"context.email_root_other_accounts\", \"value\": \"0\", \"statement\": \"No other account shares the normalized email.\", \"derived\": null},\n    {\"field\": \"context.hours_since_password_change\", \"value\": \"10000.0\", \"statement\": \"The account has never had a password change.\", \"derived\": null},\n    {\"field\": \"context.geo_kmh_from_previous_attempt\", \"value\": \"0.0\", \"statement\": \"No impossible travel is implied from the previous attempt.\", \"derived\": null},\n    {\"field\": \"context.device_link_age_hours\", \"value\": \"1928.0594444444444\", \"statement\": \"The device was first used on the account about 1928 hours before the order.\", \"derived\": null},\n    {\"field\": \"context.card_link_age_hours\", \"value\": \"1928.0497222222223\", \"statement\": \"The card was added to the account about 1928 hours before the order.\", \"derived\": null},\n    {\"field\": \"context.ship_to_home\", \"value\": \"1\", \"statement\": \"The order ships to the account's home address.\", \"derived\": null},\n    {\"field\": \"context.approved_orders_user_ever\", \"value\": \"5\", \"statement\": \"The account has 5 earlier approved orders.\", \"derived\": null},\n    {\"field\": \"context.installments_paid_user\", \"value\": \"12\", \"statement\": \"The account has paid 12 installments.\", \"derived\": null},\n    {\"field\": \"context.installments_due_user\", \"value\": \"12\", \"statement\": \"12 installments were due before the decision.\", \"derived\": null},\n    {\"field\": \"context.unauthorized_disputes_lost_user\", \"value\": \"0\", \"statement\": \"No unauthorized disputes have been lost on the account.\", \"derived\": null},\n    {\"field\": \"context.never_pay_determined_user\", \"value\": \"0\", \"statement\": \"No never-pay determination exists on the account.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"1\", \"statement\": \"The order had shipped by the decision time.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"traveller\", \"likelihood\": \"high\", \"reasoning\": \"A US account holder ordering from Canada to their own home address with their long-linked card and device fits travel. The AVS failure alone occurs on 4.0% of legitimate orders.\"},\n    {\"explanation\": \"stolen_card\", \"likelihood\": \"low\", \"reasoning\": \"R03 holds because a US card was used from a Canadian IP with failed AVS. However, the card has been on the account since near opening, there are no processor declines, and there is no velocity.\"},\n    {\"explanation\": \"account_takeover\", \"likelihood\": \"low\", \"reasoning\": \"There have been no password, email or phone changes. The device is long-established, and goods ship to the home address.\"}\n  ],\n  \"disposition\": \"needs_check\",\n  \"citations\": [\"FP-2 \u00a76.2\", \"R03\", \"FP-2 \u00a76.6(b)\", \"FP-2 \u00a75.2\", \"FP-2 \u00a74.3\", \"FP-2 \u00a76.5(a)\", \"FP-2 \u00a76.5(b)\", \"FP-2 \u00a76.4\"],\n  \"next_check\": \"id_check\",\n  \"memo\": \"R03 holds: the card is US-issued, the IP is CA, and AVS returned N. This puts the Card family present, so \u00a76.6(b) applies. No other rule holds. The address has 2 accounts in 30 days, below R08's threshold, and there is no access change, velocity or \u00a76.3 settling outcome. With one family, decline is not permitted. \u00a75.2 requires id_check, which has not run, so needs_check is permitted. The most plausible explanation is a traveller. The order ships to home using the account's long-linked card and device. The account has 5 approved orders and 12 of 12 installments paid, though \u00a76.4 says history alone does not establish who ordered. The order has already shipped, so a hold pauses nothing. If id_check fails, \u00a75.3(b) gives decline and the loss stands. If it passes, clear.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 13385,
+  "input_tokens": 10669,
+  "output_tokens": 2716,
+  "unknown_usage_calls": 0
+ }
+}

@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 22094,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-final",
+  "case": "931592514-baseline-147841-20250815T153012",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "b41a0ef896bf57634d93a1134e4727cb3fb600beb54278c8285d3922256511a9",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "renamed",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10676,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 2295,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"order.card_bin_country\", \"value\": \"ES\", \"statement\": \"The card was issued in Spain.\", \"derived\": null},\n    {\"field\": \"order.ip_country\", \"value\": \"CA\", \"statement\": \"The order came from a Canadian IP address.\", \"derived\": null},\n    {\"field\": \"context.bin_ip_country_mismatch\", \"value\": \"1\", \"statement\": \"The card's issuing country differs from the IP country.\", \"derived\": null},\n    {\"field\": \"order.avs_result\", \"value\": \"N\", \"statement\": \"The address verification check failed.\", \"derived\": null},\n    {\"field\": \"order.cvv_result\", \"value\": \"M\", \"statement\": \"The CVV matched.\", \"derived\": null},\n    {\"field\": \"order.account_home_country\", \"value\": \"CA\", \"statement\": \"The account's home country is Canada, the same as the IP country.\", \"derived\": null},\n    {\"field\": \"context.card_link_age_hours\", \"value\": \"44.38805555555555\", \"statement\": \"The card was added to the account about 44 hours before the order.\", \"derived\": null},\n    {\"field\": \"context.device_link_age_hours\", \"value\": \"2902.4375\", \"statement\": \"The device has been on this account for about 2,902 hours.\", \"derived\": null},\n    {\"field\": \"context.hours_since_password_change\", \"value\": \"10000.0\", \"statement\": \"The account has never had a password change.\", \"derived\": null},\n    {\"field\": \"context.hours_since_email_change\", \"value\": \"10000.0\", \"statement\": \"The account has never had an email change.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_card_24h\", \"value\": \"0\", \"statement\": \"The card had no processor declines in the prior 24 hours.\", \"derived\": null},\n    {\"field\": \"context.attempts_user_24h\", \"value\": \"2\", \"statement\": \"The account made 2 order attempts in the 24 hours up to and including this one.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"1\", \"statement\": \"Only this account was active on the device in the past 30 days.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"1\", \"statement\": \"Only this account ordered to the shipping address in the past 30 days.\", \"derived\": null},\n    {\"field\": \"context.amount_cents\", \"value\": \"31174\", \"statement\": \"The order amount is 31,174 cents.\", \"derived\": null},\n    {\"field\": \"context.amount_over_category_p95\", \"value\": \"0.5518093466314654\", \"statement\": \"The amount is below the gaming category's 95th percentile.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"0\", \"statement\": \"The order had not shipped at the decision.\", \"derived\": null},\n    {\"field\": \"context.merchant_fulfilment_median_hours\", \"value\": \"7.9\", \"statement\": \"The merchant usually ships within 7.9 hours.\", \"derived\": null},\n    {\"field\": \"context.unauthorized_disputes_lost_user\", \"value\": \"0\", \"statement\": \"No earlier unauthorized-use dispute was lost on the account.\", \"derived\": null},\n    {\"field\": \"context.never_pay_determined_user\", \"value\": \"0\", \"statement\": \"No earlier plan on the account met the never-pay determination.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"stolen_card\", \"likelihood\": \"medium\", \"reasoning\": \"A Spanish-issued card was added about 44 hours before the order and failed AVS from a Canadian IP, which matches R03's pattern of stolen card details used on an established account.\"},\n    {\"explanation\": \"legitimate_customer\", \"likelihood\": \"medium\", \"reasoning\": \"The account holder may hold a Spanish-issued card while living in Canada, in which case the billing address on file would not match. The long-standing device, the absence of credential changes and the clean card-decline history fit this. An id_check would settle which explanation holds.\"},\n    {\"explanation\": \"account_takeover\", \"likelihood\": \"low\", \"reasoning\": \"There have been no password, email or phone changes, and the device has been linked for about 2,902 hours, so there is no access trail.\"}\n  ],\n  \"disposition\": \"needs_check\",\n  \"citations\": [\"FP-2 \u00a76.2\", \"R03\", \"FP-2 \u00a75.2\", \"FP-2 \u00a76.6(b)\", \"FP-2 \u00a74.3\", \"FP-2 \u00a76.5(b)\"],\n  \"next_check\": \"id_check\",\n  \"memo\": \"R03 holds: the card was issued in ES, the IP is in CA, and AVS returned N. The CVV matched. Card is the only adverse family. R01, R11, R07, R05, R02, R08, R06(b) and R10 do not hold, and no \u00a76.3 outcome settles the order. Under \u00a76.6(b), the standard action is a hold with an id_check (\u00a75.2). With one family, decline is not permitted. The order has not shipped, and the merchant's median fulfilment is 7.9 hours, so the check can run before shipment. The card was added about 44 hours before the order. The most plausible benign explanation is a Canadian-resident account holder using a Spanish-issued card. The device has been linked for about 2,902 hours and there have been no credential changes, which argues against takeover. Recommendation: hold the order and run an id_check. If it passes, clear the order. If it fails, decline it.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 12971,
+  "input_tokens": 10676,
+  "output_tokens": 2295,
+  "unknown_usage_calls": 0
+ }
+}

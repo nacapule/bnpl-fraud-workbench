@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 17253,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-final",
+  "case": "1260106251-baseline-145789-20250803T140322",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "70b7c7680ba34d94510bc73009fbd5d7cfc3d2a92a8e7755285293e7fd9cd90a",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10713,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 1766,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"decision.checks[0].check\", \"value\": \"id_check\", \"statement\": \"The completed verification check was an id_check.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].outcome\", \"value\": \"passed\", \"statement\": \"The id_check passed.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"4\", \"statement\": \"Four accounts, this one included, ordered to shipping address A1 in the past 30 days, so R08 holds.\", \"derived\": null},\n    {\"field\": \"context.ship_to_home\", \"value\": \"1\", \"statement\": \"The order ships to the account's home address.\", \"derived\": null},\n    {\"field\": \"context.home_address_age_days\", \"value\": \"0.008032407407407408\", \"statement\": \"The home address was registered about 0.008 days before the order, well short of the 90 days the household exception needs.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"1\", \"statement\": \"Only this account was active on device D1 in the past 30 days, so R02 does not hold.\", \"derived\": null},\n    {\"field\": \"context.promo_uses_linked_accounts\", \"value\": \"1\", \"statement\": \"Only this account among linked accounts used the promotion, so R10 does not hold.\", \"derived\": null},\n    {\"field\": \"context.amount_over_category_p95\", \"value\": \"0.3896408429801128\", \"statement\": \"The amount is below the category's 95th percentile, so R04 does not hold.\", \"derived\": null},\n    {\"field\": \"context.bin_ip_country_mismatch\", \"value\": \"0\", \"statement\": \"The card's issuing country matches the IP country, so R03 does not hold.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"0\", \"statement\": \"The order had not shipped at the decision.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"mover\", \"likelihood\": \"high\", \"reasoning\": \"A brand-new account at a newly registered home address that other accounts also ship to fits someone moving into a shared or multi-unit residence. The passed id_check confirms the orderer holds the card and the identity.\"},\n    {\"explanation\": \"household\", \"likelihood\": \"medium\", \"reasoning\": \"Several accounts shipping to one address is typical of a household. The household exception does not apply only because the address is new to this account.\"},\n    {\"explanation\": \"synthetic_identity\", \"likelihood\": \"low\", \"reasoning\": \"Address linkage on a minutes-old account can signal a ring. However, the passed identity and issuer verification undercuts this, and no device, email or promotion linkage is present.\"},\n    {\"explanation\": \"promo_abuse\", \"likelihood\": \"low\", \"reasoning\": \"A promotion was used, but no linked account used the same promotion, so R10 does not hold.\"}\n  ],\n  \"disposition\": \"clear\",\n  \"citations\": [\"FP-2 \u00a75.3(a)\", \"FP-2 \u00a76.6(b)\", \"FP-2 \u00a75.2\", \"FP-2 \u00a76.4(b)\", \"R08\"],\n  \"next_check\": \"none\",\n  \"memo\": \"R08 holds: 4 accounts ordered to address A1 in the past 30 days. The \u00a76.4(b) household exception does not apply. The order ships home, but the home address was registered about 0.008 days before the order, not at least 90 days. Linkage is therefore the only adverse family present. No R02 (1 account on the device), no R10 (1 promotion use among linked accounts), no R03, and no R04 (amount below the category's 95th percentile). \u00a75.2 required an id_check for Linkage, and it passed. Under \u00a75.3(a) with \u00a76.6(b), every required check has passed, so the standard disposition is clear. Hold, decline, escalate and needs_check are prohibited. The most plausible explanation is a mover or household at a shared address. The order had not shipped, so clearing now releases it before fulfilment.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 12479,
+  "input_tokens": 10713,
+  "output_tokens": 1766,
+  "unknown_usage_calls": 0
+ }
+}

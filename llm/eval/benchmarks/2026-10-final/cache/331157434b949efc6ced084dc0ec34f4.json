@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 24745,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-final",
+  "case": "1629189384-baseline-143622-20250728T141520",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "4900881b06ef6d46f6a39622955cf098172b7a9c6e18a66d51f6edb0fd9470ec",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10646,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 2709,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"3\", \"statement\": \"Three accounts, this one included, placed order attempts to shipping address A1 in the past 30 days, so R08 holds.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_ever\", \"value\": \"3\", \"statement\": \"Three accounts have ever placed orders to address A1.\", \"derived\": null},\n    {\"field\": \"context.ship_to_home\", \"value\": \"1\", \"statement\": \"The order ships to the account's home address.\", \"derived\": null},\n    {\"field\": \"context.home_address_age_days\", \"value\": \"0.002395833333333333\", \"statement\": \"The home address was registered on this account well under 90 days before the order, so the \u00a76.4(b) household exception does not apply.\", \"derived\": null},\n    {\"field\": \"context.account_age_days\", \"value\": \"0.002395833333333333\", \"statement\": \"The account was opened minutes before the order.\", \"derived\": null},\n    {\"field\": \"context.is_first_attempt_user\", \"value\": \"1\", \"statement\": \"This is the account's first order attempt.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"1\", \"statement\": \"Only this account was active on device D1 in the past 30 days, so R02 does not hold.\", \"derived\": null},\n    {\"field\": \"context.email_root_other_accounts\", \"value\": \"0\", \"statement\": \"No other account holds a matching normalized email, so R06(b) does not hold.\", \"derived\": null},\n    {\"field\": \"order.promotion_used\", \"value\": \"true\", \"statement\": \"The order uses a promotion.\", \"derived\": null},\n    {\"field\": \"context.promo_uses_linked_accounts\", \"value\": \"1\", \"statement\": \"Only this account, among accounts linked by device or email, used the promotion, so R10 does not hold.\", \"derived\": null},\n    {\"field\": \"context.amount_cents\", \"value\": \"7811\", \"statement\": \"The order amount is 7811 cents.\", \"derived\": null},\n    {\"field\": \"context.amount_over_category_p95\", \"value\": \"0.3748908108315656\", \"statement\": \"The amount is below the category's 95th percentile, so R04 does not hold.\", \"derived\": null},\n    {\"field\": \"context.bin_ip_country_mismatch\", \"value\": \"0\", \"statement\": \"The card's issuing country matches the IP country.\", \"derived\": null},\n    {\"field\": \"order.avs_result\", \"value\": \"Y\", \"statement\": \"AVS passed.\", \"derived\": null},\n    {\"field\": \"order.cvv_result\", \"value\": \"M\", \"statement\": \"CVV matched.\", \"derived\": null},\n    {\"field\": \"context.attempts_user_24h\", \"value\": \"1\", \"statement\": \"The account made one order attempt in the past 24 hours.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_card_24h\", \"value\": \"0\", \"statement\": \"The card had no processor declines in the past 24 hours.\", \"derived\": null},\n    {\"field\": \"context.installments_due_user\", \"value\": \"0\", \"statement\": \"No installment was due on the account before the decision, so non-payment cannot be cited.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"0\", \"statement\": \"The order had not shipped at the decision.\", \"derived\": null},\n    {\"field\": \"context.merchant_fulfilment_median_hours\", \"value\": \"12.5\", \"statement\": \"The merchant usually ships in 12.5 hours.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"household\", \"likelihood\": \"medium\", \"reasoning\": \"A newly opened account shipping to its own home address, which two other accounts also use, fits a family member or housemate joining. The address is too new on this account for the \u00a76.4(b) exception.\"},\n    {\"explanation\": \"new_customer\", \"likelihood\": \"medium\", \"reasoning\": \"This is a first, modest order with clean AVS/CVV, matching countries and no velocity, as a genuine new sign-up would look.\"},\n    {\"explanation\": \"synthetic_identity\", \"likelihood\": \"medium\", \"reasoning\": \"Several accounts converging on one address, together with a minutes-old account, is consistent with a ring of fabricated identities.\"},\n    {\"explanation\": \"promo_abuse\", \"likelihood\": \"low\", \"reasoning\": \"A promotion was used, but no account linked by device or email used it, so R10 does not hold.\"},\n    {\"explanation\": \"never_pay\", \"likelihood\": \"low\", \"reasoning\": \"No repayment history exists yet (\u00a78.1). The hypothesis is noted only and cannot be cited.\"}\n  ],\n  \"disposition\": \"needs_check\",\n  \"citations\": [\"FP-2 \u00a76.6(b)\", \"R08\", \"FP-2 \u00a76.4(b)\", \"FP-2 \u00a75.2\", \"FP-2 \u00a74.3\", \"FP-2 \u00a78.1\"],\n  \"next_check\": \"id_check\",\n  \"memo\": \"R08 holds: 3 accounts placed orders to A1 in the past 30 days. The order ships home, but the home address was registered 0.002395833333333333 days ago, so the \u00a76.4(b) household exception does not apply. Linkage is the only adverse family present. R02, R06(b) and R10 do not hold: there is 1 account on the device, 0 email matches and 1 linked promo use. No Card, Velocity or Account-access rule holds: AVS is Y, CVV is M, there are no country mismatches, 1 attempt and 0 declines. R04 fails on amount, since the order is at 0.3748908108315656 of the category p95. Nothing settles the order under \u00a76.3. No installments are due, so \u00a78.1 bars citing non-payment. The most plausible benign reading is a new household member. Under \u00a76.6(b) and \u00a75.2, run id_check. Decline is not permitted with one family. The order has not shipped and the merchant's median fulfilment is 12.5 hours, so the check can run before shipment.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 13355,
+  "input_tokens": 10646,
+  "output_tokens": 2709,
+  "unknown_usage_calls": 0
+ }
+}

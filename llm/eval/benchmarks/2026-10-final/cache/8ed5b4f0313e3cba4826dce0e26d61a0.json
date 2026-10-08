@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 19247,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-final",
+  "case": "35244829-baseline-149826-20250816T190025",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "cebc83866d37bae4bc072b0be6f7e69e91bb42e1ea1a8f8d8803198f75bb37c2",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10711,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 1897,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"decision.point\", \"value\": \"check_completed\", \"statement\": \"The memo is drafted after a verification check completed.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].check\", \"value\": \"id_check\", \"statement\": \"The completed check was an id_check.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].outcome\", \"value\": \"passed\", \"statement\": \"The id_check passed, so the customer authenticated the card with its issuer and verified the account identity.\", \"derived\": null},\n    {\"field\": \"order.card_bin_country\", \"value\": \"GB\", \"statement\": \"The card was issued in GB.\", \"derived\": null},\n    {\"field\": \"order.ip_country\", \"value\": \"US\", \"statement\": \"The order came from a US IP address.\", \"derived\": null},\n    {\"field\": \"order.avs_result\", \"value\": \"N\", \"statement\": \"AVS failed on this order.\", \"derived\": null},\n    {\"field\": \"order.cvv_result\", \"value\": \"M\", \"statement\": \"CVV matched on this order.\", \"derived\": null},\n    {\"field\": \"context.bin_ip_country_mismatch\", \"value\": \"1\", \"statement\": \"The card's issuing country differs from the IP country, so with the AVS failure R03 holds.\", \"derived\": null},\n    {\"field\": \"order.account_home_country\", \"value\": \"US\", \"statement\": \"The account's home country is the US, matching the IP country.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_card_24h\", \"value\": \"0\", \"statement\": \"The card had no processor declines in the prior 24 hours, so R07 does not hold.\", \"derived\": null},\n    {\"field\": \"context.attempts_user_24h\", \"value\": \"1\", \"statement\": \"The account made one order attempt in 24 hours, so R05 does not hold.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"1\", \"statement\": \"Only this account was active on the device in 30 days, so R02 does not hold.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"1\", \"statement\": \"Only this account ordered to the shipping address in 30 days, so R08 does not hold.\", \"derived\": null},\n    {\"field\": \"context.email_root_other_accounts\", \"value\": \"0\", \"statement\": \"No other account shares the normalized email, so R06(b) does not hold.\", \"derived\": null},\n    {\"field\": \"context.hours_since_password_change\", \"value\": \"10000.0\", \"statement\": \"The password has never been changed, and there was no reset or email change either, so R01 does not hold.\", \"derived\": null},\n    {\"field\": \"context.card_link_age_hours\", \"value\": \"20764.682777777776\", \"statement\": \"The card has been on the account for about 20,765 hours.\", \"derived\": null},\n    {\"field\": \"context.unauthorized_disputes_lost_user\", \"value\": \"0\", \"statement\": \"There are no lost unauthorized disputes, and with no never-pay determination \u00a76.3 does not settle the order.\", \"derived\": null},\n    {\"field\": \"context.amount_cents\", \"value\": \"11806\", \"statement\": \"The order amount is 11806 cents.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"0\", \"statement\": \"The order had not shipped at the decision.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"legitimate_customer\", \"likelihood\": \"high\", \"reasoning\": \"This is a long-standing US account using a GB-issued card it has held for a long time, and it shows no access, velocity or linkage signals. The id_check confirmed that the customer holds both the card and the account identity.\"},\n    {\"explanation\": \"traveller\", \"likelihood\": \"medium\", \"reasoning\": \"A holder of a UK card living in or visiting the US explains the BIN/IP mismatch. An AVS failure alone is common for legitimate orders (\u00a76.5(a)).\"},\n    {\"explanation\": \"stolen_card\", \"likelihood\": \"low\", \"reasoning\": \"R03's pattern fits stolen card details. However, the passed issuer authentication and identity verification rule this out.\"}\n  ],\n  \"disposition\": \"clear\",\n  \"citations\": [\"FP-2 \u00a76.6(b)\", \"FP-2 \u00a75.3(a)\", \"FP-2 \u00a75.2\", \"R03\", \"FP-2 \u00a76.5(a)\"],\n  \"next_check\": \"none\",\n  \"memo\": \"R03 holds because the card was issued in GB, the order came from a US IP, and AVS failed. That places the Card family under \u00a76.6(b) and requires an id_check (\u00a75.2). No other family is present: R01, R11, R05, R07, R02, R08, R06(b) and R10 all fail on the packet facts, and \u00a76.3 does not settle the order. The required id_check has passed. Under \u00a75.3(a) the standard disposition is clear, and hold, decline, escalate and needs_check are prohibited. The most plausible explanation is a legitimate customer using a GB card held on the account for about 20,765 hours. The order has not shipped and can proceed. No further check is needed.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 12608,
+  "input_tokens": 10711,
+  "output_tokens": 1897,
+  "unknown_usage_calls": 0
+ }
+}

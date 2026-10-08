@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 20767,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-final",
+  "case": "2066792625-baseline-130403-20250612T121208",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "ad5ce45b9c8ce3e52630cfd284c633e013e8c1c1603f810b044863376fd9e12d",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10704,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 2179,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"decision.checks[0].check\", \"value\": \"id_check\", \"statement\": \"The completed verification check is an id_check.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].outcome\", \"value\": \"passed\", \"statement\": \"The id_check passed.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"3\", \"statement\": \"Three accounts, this one included, ordered to shipping address A1 in the 30 days before the decision, so R08 holds.\", \"derived\": null},\n    {\"field\": \"context.ship_to_home\", \"value\": \"0\", \"statement\": \"The shipping address is not the account's home address, so the \u00a76.4(b) household exception does not apply.\", \"derived\": null},\n    {\"field\": \"context.ship_address_link_age_hours\", \"value\": \"0.0\", \"statement\": \"Shipping address A1 was added to the account at this order.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"1\", \"statement\": \"Only this account was active on device D1 in the past 30 days, so R02 does not hold.\", \"derived\": null},\n    {\"field\": \"context.email_root_other_accounts\", \"value\": \"0\", \"statement\": \"No other account shares the normalized email, so R06(b) does not hold.\", \"derived\": null},\n    {\"field\": \"order.promotion_used\", \"value\": \"false\", \"statement\": \"No promotion was used, so R10 does not hold.\", \"derived\": null},\n    {\"field\": \"context.bin_ip_country_mismatch\", \"value\": \"0\", \"statement\": \"The card's issuing country matches the IP country, so R03 does not hold.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_card_24h\", \"value\": \"0\", \"statement\": \"The card had no processor declines in the prior 24 hours.\", \"derived\": null},\n    {\"field\": \"context.attempts_user_24h\", \"value\": \"1\", \"statement\": \"This is the account's only order attempt in 24 hours, so R05 does not hold on the account.\", \"derived\": null},\n    {\"field\": \"context.hours_since_password_change\", \"value\": \"10000.0\", \"statement\": \"The account has never had a password change, so R01 does not hold.\", \"derived\": null},\n    {\"field\": \"context.unauthorized_disputes_lost_user\", \"value\": \"0\", \"statement\": \"The account has no lost unauthorized disputes.\", \"derived\": null},\n    {\"field\": \"context.never_pay_determined_user\", \"value\": \"0\", \"statement\": \"No never-pay determination exists on the account.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"0\", \"statement\": \"The order had not shipped at the decision.\", \"derived\": null},\n    {\"field\": \"context.amount_cents\", \"value\": \"3906\", \"statement\": \"The order amount is 3906 cents.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"gift_buyer\", \"likelihood\": \"high\", \"reasoning\": \"A long-standing account shipping to a newly added, non-home address that other accounts also ship to fits sending a gift to a friend or relative. The passed id_check confirms the account holder holds the card and identity.\"},\n    {\"explanation\": \"legitimate_customer\", \"likelihood\": \"high\", \"reasoning\": \"Every Card, Velocity and Account-access signal is clean and the identity check passed. The only flag is the shared shipping address.\"},\n    {\"explanation\": \"stolen_card\", \"likelihood\": \"low\", \"reasoning\": \"The issuer authentication and identity verification in the passed id_check rule out a third party holding stolen card details.\"},\n    {\"explanation\": \"account_takeover\", \"likelihood\": \"low\", \"reasoning\": \"There are no credential changes and only one device, and the identity check passed.\"}\n  ],\n  \"disposition\": \"clear\",\n  \"citations\": [\"FP-2 \u00a76.6(b)\", \"FP-2 \u00a75.3(a)\", \"FP-2 \u00a75.2\", \"FP-2 \u00a76.4(b)\", \"R08\"],\n  \"next_check\": \"none\",\n  \"memo\": \"R08 holds: 3 accounts ordered to shipping address A1 in 30 days. The \u00a76.4(b) exception does not apply because A1 is not the home address; it was added at this order. Linkage is therefore the only adverse family present. R02, R06(b) and R10 do not hold, and no Card, Velocity or Account-access condition holds. Under FP-2 \u00a75.2, Linkage requires an id_check. That check has now passed. With every required check passed, FP-2 \u00a75.3(a) makes clear the standard disposition and prohibits hold, decline, escalate and needs_check. No \u00a76.3 outcome settles the order. The most plausible explanation is a gift or delivery to a shared address. The order (3906 cents) has not shipped. Recommend clear; no further check is needed.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 12883,
+  "input_tokens": 10704,
+  "output_tokens": 2179,
+  "unknown_usage_calls": 0
+ }
+}

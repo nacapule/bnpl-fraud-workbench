@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 22195,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-final",
+  "case": "717729117-baseline-131637-20250612T000000",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "ce9c86ee90ba01723e4f8c5f8717bc027b2b749795c4a52ddd43298bae15f37c",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "renamed",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10682,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 2332,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"3\", \"statement\": \"Three accounts, this one included, had order attempts to shipping address A-JD9 in the 30 days before the decision.\", \"derived\": null},\n    {\"field\": \"context.ship_to_home\", \"value\": \"1\", \"statement\": \"The order ships to the account's home address.\", \"derived\": null},\n    {\"field\": \"context.home_address_age_days\", \"value\": \"443.0710300925926\", \"statement\": \"The home address was registered on the account about 443 days before the order.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"1\", \"statement\": \"Only this account was active on device D-U85 in the past 30 days.\", \"derived\": null},\n    {\"field\": \"context.device_link_age_hours\", \"value\": \"10633.704722222223\", \"statement\": \"Device D-U85 was first used on this account about 10,634 hours before the order.\", \"derived\": null},\n    {\"field\": \"context.hours_since_password_change\", \"value\": \"10000.0\", \"statement\": \"The account has never had a password change.\", \"derived\": null},\n    {\"field\": \"context.hours_since_email_change\", \"value\": \"10000.0\", \"statement\": \"The account has never had an email change.\", \"derived\": null},\n    {\"field\": \"context.bin_ip_country_mismatch\", \"value\": \"0\", \"statement\": \"The card's issuing country matches the IP country.\", \"derived\": null},\n    {\"field\": \"context.avs_mismatch\", \"value\": \"0\", \"statement\": \"AVS verification passed.\", \"derived\": null},\n    {\"field\": \"context.cvv_mismatch\", \"value\": \"0\", \"statement\": \"CVV verification passed.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_card_24h\", \"value\": \"0\", \"statement\": \"The card had no processor declines in the 24 hours before the order.\", \"derived\": null},\n    {\"field\": \"context.attempts_user_24h\", \"value\": \"1\", \"statement\": \"The account made one order attempt in the 24 hours up to and including this order.\", \"derived\": null},\n    {\"field\": \"context.email_root_other_accounts\", \"value\": \"0\", \"statement\": \"No other account shares the normalized email.\", \"derived\": null},\n    {\"field\": \"order.promotion_used\", \"value\": \"false\", \"statement\": \"The order used no promotion.\", \"derived\": null},\n    {\"field\": \"context.unauthorized_disputes_lost_user\", \"value\": \"0\", \"statement\": \"The account has no lost unauthorized-use disputes.\", \"derived\": null},\n    {\"field\": \"context.never_pay_determined_user\", \"value\": \"0\", \"statement\": \"No earlier plan on the account met the never-pay determination.\", \"derived\": null},\n    {\"field\": \"context.inr_disputes_opened_user\", \"value\": \"0\", \"statement\": \"The account has opened no item-not-received disputes.\", \"derived\": null},\n    {\"field\": \"context.amount_cents\", \"value\": \"6103\", \"statement\": \"The order amount is 6103 cents.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"0\", \"statement\": \"The order had not shipped at the decision time.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"household\", \"likelihood\": \"high\", \"reasoning\": \"Three accounts ordering to a long-registered home address is typical of a shared household, which \u00a76.4(b) exempts.\"},\n    {\"explanation\": \"legitimate_customer\", \"likelihood\": \"high\", \"reasoning\": \"There are no access changes, no card or velocity signals, and the order uses the account's long-standing device and card.\"},\n    {\"explanation\": \"account_takeover\", \"likelihood\": \"low\", \"reasoning\": \"There are no password or email changes and no new device, so nothing suggests someone other than the holder is ordering.\"}\n  ],\n  \"disposition\": \"clear\",\n  \"citations\": [\"FP-2 \u00a76.6(c)\", \"FP-2 \u00a76.4(b)\", \"R08\", \"FP-2 \u00a76.3\"],\n  \"next_check\": \"none\",\n  \"memo\": \"R08 holds: 3 accounts ordered to address A-JD9 in the past 30 days. The \u00a76.4(b) household exception applies, so R08 does not count as an adverse family. The order ships home (ship_to_home 1), the home address was registered about 443 days before the order, and R08 counts no more than 4 accounts.\\n\\nNo other condition holds:\\n- Only 1 account is on the device.\\n- There are no password or email changes.\\n- BIN and IP countries match, and AVS and CVV passed.\\n- The card had 0 declines, and the account made 1 attempt in 24 hours.\\n- No email is shared and no promotion was used.\\n\\nNo \u00a76.3 outcome settles the order: there are 0 lost unauthorized disputes, no never-pay determination and 0 INR disputes. With no adverse family present, \u00a76.6(c) makes clear the standard disposition and prohibits the others. The order has not shipped. No check is needed.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 13014,
+  "input_tokens": 10682,
+  "output_tokens": 2332,
+  "unknown_usage_calls": 0
+ }
+}

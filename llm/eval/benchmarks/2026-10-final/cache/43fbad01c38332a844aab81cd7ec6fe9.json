@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 19746,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-final",
+  "case": "717729117-baseline-133795-20250620T144855",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "83c8b4076f7f7a980e4eb1325e617f840a94babe364cf7fbc3eb6028b5207195",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10726,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 2083,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"decision.checks[0].check\", \"value\": \"id_check\", \"statement\": \"An id_check has been completed on this order.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].outcome\", \"value\": \"passed\", \"statement\": \"The id_check passed, so the customer authenticated the card with its issuer and verified the account identity.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"4\", \"statement\": \"Four accounts, this one included, had activity on device D1 in the 30 days before the decision.\", \"derived\": null},\n    {\"field\": \"context.device_link_age_hours\", \"value\": \"70.7936111111111\", \"statement\": \"Device D1 was first used on this account about 70.8 hours before the order, well under 90 days.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"1\", \"statement\": \"Only this account ordered to shipping address A1 in the past 30 days.\", \"derived\": null},\n    {\"field\": \"context.email_root_other_accounts\", \"value\": \"0\", \"statement\": \"No other account holds a matching normalized email.\", \"derived\": null},\n    {\"field\": \"context.attempts_device_24h\", \"value\": \"2\", \"statement\": \"Device D1 had 2 order attempts in the 24 hours up to and including this one.\", \"derived\": null},\n    {\"field\": \"context.attempts_user_24h\", \"value\": \"1\", \"statement\": \"The account had 1 order attempt in the 24 hours up to and including this one.\", \"derived\": null},\n    {\"field\": \"context.bin_ip_country_mismatch\", \"value\": \"0\", \"statement\": \"The card issuing country matches the IP country.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_card_24h\", \"value\": \"0\", \"statement\": \"The card had no processor declines in the 24 hours before the order.\", \"derived\": null},\n    {\"field\": \"context.hours_since_password_change\", \"value\": \"10000.0\", \"statement\": \"The account has never had a password change.\", \"derived\": null},\n    {\"field\": \"context.account_age_days\", \"value\": \"2.949733796296296\", \"statement\": \"The account was about 2.9 days old at the order.\", \"derived\": null},\n    {\"field\": \"context.amount_over_category_p95\", \"value\": \"0.18008233499882817\", \"statement\": \"The amount is about 0.18 times the jewelry category's 95th percentile.\", \"derived\": null},\n    {\"field\": \"context.installments_due_user\", \"value\": \"0\", \"statement\": \"No installment on the account was due before the decision.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"0\", \"statement\": \"The order had not shipped by the decision.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"household\", \"likelihood\": \"medium\", \"reasoning\": \"Four accounts on one device suggests a shared family device. Only this account ships to A1, and the id_check confirmed the card and identity holder.\"},\n    {\"explanation\": \"new_customer\", \"likelihood\": \"high\", \"reasoning\": \"The account is under 3 days old, on its second order, with a modest amount, clean card verification and a passed id_check.\"},\n    {\"explanation\": \"synthetic_identity\", \"likelihood\": \"low\", \"reasoning\": \"A device shared by 4 accounts can tie rings together. However, the passed id_check verified the identity on the account and the card.\"},\n    {\"explanation\": \"never_pay\", \"likelihood\": \"low\", \"reasoning\": \"No installment has been due, so repayment intent cannot be judged (\u00a78.1). Verification does not establish it either way.\"}\n  ],\n  \"disposition\": \"clear\",\n  \"citations\": [\"FP-2 \u00a76.6(b)\", \"FP-2 \u00a75.3(a)\", \"FP-2 \u00a75.2\", \"FP-2 \u00a76.4(a)\", \"R02\", \"FP-2 \u00a78.1\"],\n  \"next_check\": \"none\",\n  \"memo\": \"R02 holds: 4 accounts used device D1 in 30 days. The \u00a76.4(a) household exception does not apply because D1 was first used on this account only about 70.8 hours before the order. That makes Linkage the only adverse family present. No R01, R03, R05, R07, R08 or R06(b) condition holds, and no \u00a76.3 outcome settles the order.\\n\\nUnder \u00a75.2, Linkage requires an id_check. It has now passed, so every required check has passed and \u00a75.3(a) applies: standard clear, with hold, decline, escalate and needs_check prohibited.\\n\\nA shared household device is the most plausible benign reading. The account is about 2.9 days old, but that alone explains nothing (\u00a76.4). No installment has been due, so non-payment cannot be cited (\u00a78.1).\\n\\nThe order has not shipped. Recommend clear; no further check needed.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 12809,
+  "input_tokens": 10726,
+  "output_tokens": 2083,
+  "unknown_usage_calls": 0
+ }
+}

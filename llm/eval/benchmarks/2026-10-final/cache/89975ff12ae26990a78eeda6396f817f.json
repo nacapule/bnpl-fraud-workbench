@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 21844,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-final",
+  "case": "1891170948-baseline-144065-20250729T210125",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "170a87db31f067935f179bb31fb8a9c652403cb314a6357e8f1bdf19a89ec387",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10719,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 2133,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"decision.checks[0].check\", \"value\": \"id_check\", \"statement\": \"The completed verification check was an id_check.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].outcome\", \"value\": \"failed\", \"statement\": \"The id_check failed at the decision time.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"3\", \"statement\": \"Three accounts, this one included, ordered to shipping address A1 in the 30 days before the decision.\", \"derived\": null},\n    {\"field\": \"context.ship_to_home\", \"value\": \"1\", \"statement\": \"The shipping address is the account's home address.\", \"derived\": null},\n    {\"field\": \"context.home_address_age_days\", \"value\": \"84.37436342592592\", \"statement\": \"The home address was registered 84.37 days before the order, under the 90 days the household exception requires.\", \"derived\": null},\n    {\"field\": \"context.account_age_days\", \"value\": \"84.37436342592592\", \"statement\": \"The account was 84.37 days old at the order, the same age as its home address.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"1\", \"statement\": \"Only this account used device D1 in the past 30 days.\", \"derived\": null},\n    {\"field\": \"context.bin_ip_country_mismatch\", \"value\": \"0\", \"statement\": \"The card's issuing country matches the IP country.\", \"derived\": null},\n    {\"field\": \"context.attempts_user_24h\", \"value\": \"2\", \"statement\": \"The account made two order attempts in the 24 hours up to this order.\", \"derived\": null},\n    {\"field\": \"context.hours_since_password_change\", \"value\": \"10000.0\", \"statement\": \"The account's password has never been changed.\", \"derived\": null},\n    {\"field\": \"context.installments_paid_share_user\", \"value\": \"1.0\", \"statement\": \"The account has paid every installment due so far.\", \"derived\": null},\n    {\"field\": \"context.amount_cents\", \"value\": \"47635\", \"statement\": \"The order amount is $476.35.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"1\", \"statement\": \"The order had shipped by the decision time.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"synthetic_identity\", \"likelihood\": \"high\", \"reasoning\": \"Three accounts order to an address registered with this 84-day-old account, and identity or issuer verification failed. This fits a ring of fabricated identities sharing a drop address.\"},\n    {\"explanation\": \"stolen_card\", \"likelihood\": \"medium\", \"reasoning\": \"A failed issuer authentication suggests the orderer may not hold card C1. However, there is no country mismatch, AVS/CVV failure or processor-decline evidence.\"},\n    {\"explanation\": \"household\", \"likelihood\": \"low\", \"reasoning\": \"Three accounts at one home address could be family members. A failed id_check, as opposed to no_response, means the holder could not verify, which a household does not explain.\"}\n  ],\n  \"disposition\": \"escalate\",\n  \"citations\": [\"FP-2 \u00a75.3(b)\", \"FP-2 \u00a76.6(b)\", \"FP-2 \u00a75.2\", \"FP-2 \u00a76.4(b)\", \"R08\", \"FP-2 \u00a74.2\"],\n  \"next_check\": \"none\",\n  \"memo\": \"R08 holds because 3 accounts ordered to address A1 in the past 30 days. The \u00a76.4(b) household exception does not apply. A1 is the home address but was registered only 84.37 days before the order, under the 90 days required. Linkage is therefore present, and \u00a75.2 required an id_check. That id_check failed. Under \u00a75.3(b), a failure decides the order at once. Linkage is present, so the standard is escalate, with decline also permitted. No other rule holds: the device is used by 1 account, card and IP countries match, there were 2 attempts in 24 hours, and the password has never been changed. The full repayment record explains nothing about who ordered (\u00a76.4). The order had already shipped, so the loss stands. Escalation blocks this account and the accounts linked through A1. No further check is needed.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 12852,
+  "input_tokens": 10719,
+  "output_tokens": 2133,
+  "unknown_usage_calls": 0
+ }
+}

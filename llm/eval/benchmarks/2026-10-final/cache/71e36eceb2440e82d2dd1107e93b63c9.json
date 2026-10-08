@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 26803,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-final",
+  "case": "931592514-baseline-134006-20250626T191849",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "11e12860036db8d305b8438a57dd43483fcc425c90aa672c6563384a169d27c8",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "renamed",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10727,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 2881,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"decision.point\", \"value\": \"check_completed\", \"statement\": \"The memo is drafted at a check-completed decision point.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].check\", \"value\": \"id_check\", \"statement\": \"The completed check is an id_check.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].outcome\", \"value\": \"passed\", \"statement\": \"The id_check passed, so the orderer holds both the card and the account identity.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"3\", \"statement\": \"Three accounts, this one included, ordered to shipping address A-LGB in the past 30 days, so R08 holds.\", \"derived\": null},\n    {\"field\": \"context.ship_to_home\", \"value\": \"1\", \"statement\": \"The order ships to the account's home address.\", \"derived\": null},\n    {\"field\": \"context.home_address_age_days\", \"value\": \"6.7503472222222225\", \"statement\": \"The home address was registered about 6.75 days before the order, under 90 days, so the \u00a76.4(b) household exception does not apply.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"1\", \"statement\": \"Only this account used device D-DWI in the past 30 days, so R02 does not hold.\", \"derived\": null},\n    {\"field\": \"context.email_root_other_accounts\", \"value\": \"0\", \"statement\": \"No other account shares the normalized email, so R06(b) does not hold.\", \"derived\": null},\n    {\"field\": \"order.promotion_used\", \"value\": \"false\", \"statement\": \"No promotion was used, so R10 does not hold.\", \"derived\": null},\n    {\"field\": \"context.bin_ip_country_mismatch\", \"value\": \"0\", \"statement\": \"The card's issuing country matches the IP country, so R03 does not hold.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_card_24h\", \"value\": \"0\", \"statement\": \"The card had no processor declines in the prior 24 hours.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_device_24h\", \"value\": \"0\", \"statement\": \"The device had no processor declines in the prior 24 hours, so R07 does not hold.\", \"derived\": null},\n    {\"field\": \"context.attempts_user_24h\", \"value\": \"1\", \"statement\": \"The account made one order attempt in 24 hours.\", \"derived\": null},\n    {\"field\": \"context.attempts_device_24h\", \"value\": \"1\", \"statement\": \"The device saw one order attempt in 24 hours, so R05 does not hold.\", \"derived\": null},\n    {\"field\": \"context.hours_since_password_change\", \"value\": \"10000.0\", \"statement\": \"The password was never changed, so R01 does not hold.\", \"derived\": null},\n    {\"field\": \"context.is_first_attempt_user\", \"value\": \"1\", \"statement\": \"This is the account's first order attempt.\", \"derived\": null},\n    {\"field\": \"context.account_age_days\", \"value\": \"6.7503472222222225\", \"statement\": \"The account was about 6.75 days old at the order.\", \"derived\": null},\n    {\"field\": \"context.amount_over_category_p95\", \"value\": \"0.6405050369247574\", \"statement\": \"The amount is below the category's 95th percentile, so R04 does not hold.\", \"derived\": null},\n    {\"field\": \"context.amount_cents\", \"value\": \"26917\", \"statement\": \"The order amount is $269.17.\", \"derived\": null},\n    {\"field\": \"context.installments_due_user\", \"value\": \"0\", \"statement\": \"No installment was due on the account before the decision, so non-payment cannot be cited.\", \"derived\": null},\n    {\"field\": \"context.never_pay_determined_user\", \"value\": \"0\", \"statement\": \"No never-pay determination exists on the account.\", \"derived\": null},\n    {\"field\": \"context.unauthorized_disputes_lost_user\", \"value\": \"0\", \"statement\": \"No unauthorized dispute was lost on the account, so \u00a76.3 does not settle the order.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"0\", \"statement\": \"The order had not shipped at the decision.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"household\", \"likelihood\": \"high\", \"reasoning\": \"Three accounts shipping to one home address fits roommates or family members who each opened accounts. The passed id_check confirms that this orderer holds the card and the account identity.\"},\n    {\"explanation\": \"new_customer\", \"likelihood\": \"medium\", \"reasoning\": \"This is a young account placing its first order. The amount is below the category's 95th percentile and the order is consistent on geography, card checks and velocity.\"},\n    {\"explanation\": \"synthetic_identity\", \"likelihood\": \"low\", \"reasoning\": \"Several accounts on a recently registered address can point to a ring of fabricated identities. The passed issuer authentication and identity verification weigh strongly against that here.\"},\n    {\"explanation\": \"never_pay\", \"likelihood\": \"low\", \"reasoning\": \"A new account linked to other accounts by address could plan not to repay. No installment has come due, so \u00a78.1 bars citing it.\"}\n  ],\n  \"disposition\": \"clear\",\n  \"citations\": [\"FP-2 \u00a75.3(a)\", \"FP-2 \u00a76.6(b)\", \"FP-2 \u00a75.2\", \"FP-2 \u00a76.4(b)\", \"R08\", \"FP-2 \u00a78.1\"],\n  \"next_check\": \"none\",\n  \"memo\": \"O-8N7: Linkage is the only adverse family present. R08 holds because 3 accounts ordered to address A-LGB in the past 30 days. The \u00a76.4(b) household exception does not apply: the address is the account's home, but it was registered under 90 days ago. No other rule holds. R02, R03, R05, R07, R01 and R10 are all negative, and R04 fails because the amount is below the category's 95th percentile. No earlier outcome settles the order under \u00a76.3. The id_check required by \u00a75.2 has passed, so \u00a75.3(a) makes clear the standard disposition. Hold, decline, escalate and needs_check are prohibited. The most plausible explanation is a household of new accounts at a shared home. No installments are due yet, so never-pay cannot be cited (\u00a78.1). The order has not shipped. No further check is required.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 13608,
+  "input_tokens": 10727,
+  "output_tokens": 2881,
+  "unknown_usage_calls": 0
+ }
+}

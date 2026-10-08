@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 21445,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-final",
+  "case": "931592514-baseline-143923-20250801T010113",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "7ed660bdff05c8c61cc20232074c96c51684b4de0c13203ca7f7b8e5d99725fd",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10647,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 2361,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"context.is_first_attempt_user\", \"value\": \"1\", \"statement\": \"This is the account's first order attempt.\", \"derived\": null},\n    {\"field\": \"context.account_age_days\", \"value\": \"0.006053240740740741\", \"statement\": \"The account was opened less than a day before the order.\", \"derived\": null},\n    {\"field\": \"context.amount_cents\", \"value\": \"46958\", \"statement\": \"The order amount is 46958 cents.\", \"derived\": null},\n    {\"field\": \"context.amount_over_category_p95\", \"value\": \"1.1197058500922796\", \"statement\": \"The amount is above the 95th percentile of earlier processor-approved amounts in the home category.\", \"derived\": null},\n    {\"field\": \"order.promotion_used\", \"value\": \"true\", \"statement\": \"The order uses a promotion.\", \"derived\": null},\n    {\"field\": \"context.promo_uses_linked_accounts\", \"value\": \"1\", \"statement\": \"Only this account, among accounts linked by device or normalized email, has used the promotion.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"1\", \"statement\": \"Only this account has activity on the device in the past 30 days.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"1\", \"statement\": \"Only this account has ordered to the shipping address in the past 30 days.\", \"derived\": null},\n    {\"field\": \"context.email_root_other_accounts\", \"value\": \"0\", \"statement\": \"No other account holds a matching normalized email.\", \"derived\": null},\n    {\"field\": \"context.email_domain_class\", \"value\": \"0\", \"statement\": \"The email is on a common provider, not a disposable domain.\", \"derived\": null},\n    {\"field\": \"context.bin_ip_country_mismatch\", \"value\": \"0\", \"statement\": \"The card's issuing country matches the IP country.\", \"derived\": null},\n    {\"field\": \"order.avs_result\", \"value\": \"Y\", \"statement\": \"AVS passed.\", \"derived\": null},\n    {\"field\": \"order.cvv_result\", \"value\": \"M\", \"statement\": \"CVV matched.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_card_24h\", \"value\": \"0\", \"statement\": \"The card had no processor declines in the prior 24 hours.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_device_24h\", \"value\": \"0\", \"statement\": \"The device had no processor declines in the prior 24 hours.\", \"derived\": null},\n    {\"field\": \"context.attempts_user_24h\", \"value\": \"1\", \"statement\": \"The account made one order attempt in the past 24 hours.\", \"derived\": null},\n    {\"field\": \"context.attempts_device_24h\", \"value\": \"1\", \"statement\": \"The device saw one order attempt in the past 24 hours.\", \"derived\": null},\n    {\"field\": \"context.hours_since_password_change\", \"value\": \"10000.0\", \"statement\": \"The account has never changed its password.\", \"derived\": null},\n    {\"field\": \"context.geo_kmh_from_previous_attempt\", \"value\": \"0.0\", \"statement\": \"There is no implied impossible travel from a previous attempt.\", \"derived\": null},\n    {\"field\": \"context.installments_due_user\", \"value\": \"0\", \"statement\": \"No installment was due on the account before the decision.\", \"derived\": null},\n    {\"field\": \"context.never_pay_determined_user\", \"value\": \"0\", \"statement\": \"There is no never-pay determination on the account.\", \"derived\": null},\n    {\"field\": \"context.unauthorized_disputes_lost_user\", \"value\": \"0\", \"statement\": \"The account has no lost unauthorized disputes.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"0\", \"statement\": \"The order had not shipped by the decision.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"new_customer\", \"likelihood\": \"high\", \"reasoning\": \"This is a new account placing its first order, with a matching card, AVS and CVV passes, a common email provider and no shared device, address or email. A larger first order from a new shopper is an ordinary pattern.\"},\n    {\"explanation\": \"never_pay\", \"likelihood\": \"low\", \"reasoning\": \"A large first order on a brand-new account adds front-loaded exposure. No installment has been due yet, so \u00a78.1 bars citing non-payment.\"},\n    {\"explanation\": \"synthetic_identity\", \"likelihood\": \"low\", \"reasoning\": \"The account is fresh, but there is no linkage, disposable email or verification failure to suggest a fabricated identity.\"},\n    {\"explanation\": \"promo_abuse\", \"likelihood\": \"low\", \"reasoning\": \"The promotion was used, but no other linked account has used it, so R10 does not hold.\"}\n  ],\n  \"disposition\": \"clear\",\n  \"citations\": [\"FP-2 \u00a76.6(c)\", \"FP-2 \u00a76.2\", \"R04\", \"FP-2 \u00a76.5(c)\", \"FP-2 \u00a78.1\", \"FP-2 \u00a76.3\"],\n  \"next_check\": \"none\",\n  \"memo\": \"R04 (Context) holds. This is the account's first attempt, the account is under a day old, and the amount is 1.12x the category 95th percentile. Context conditions cannot support a hold or decline under \u00a76.2, and no check resolves them.\\n\\nNo adverse family is present:\\n- Card: the BIN country matches the IP country, AVS is Y, CVV is M, and there are no processor declines.\\n- Velocity: there is one attempt on the account and one on the device.\\n- Account access: there are no credential changes and no impossible travel.\\n- Linkage: the device, address and email are each tied to this account only, and the promotion's linked use count is 1.\\n\\nNo earlier outcome settles the order (\u00a76.3). No installment has been due, so never-pay cannot be cited (\u00a78.1).\\n\\nThe most plausible explanation is a new customer making a large first purchase. Row \u00a76.6(c) applies, so the standard disposition is clear, with no check needed.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 13008,
+  "input_tokens": 10647,
+  "output_tokens": 2361,
+  "unknown_usage_calls": 0
+ }
+}

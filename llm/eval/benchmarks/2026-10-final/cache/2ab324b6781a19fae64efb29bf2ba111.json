@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 19191,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-final",
+  "case": "1671034716-baseline-132900-20250619T000000",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "da3c0846db94b397a64229dfeb45859bb00921b6502d70e2f8337ea7b55b5cc1",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10657,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 2024,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"context.is_first_attempt_user\", \"value\": \"1\", \"statement\": \"This order is the account's first order attempt.\", \"derived\": null},\n    {\"field\": \"context.amount_over_category_p95\", \"value\": \"1.3473349503996026\", \"statement\": \"The amount is above the 95th percentile of earlier processor-approved apparel amounts.\", \"derived\": null},\n    {\"field\": \"context.account_age_days\", \"value\": \"0.0008796296296296296\", \"statement\": \"The account was opened moments before the order, well under 7 days earlier.\", \"derived\": null},\n    {\"field\": \"context.amount_cents\", \"value\": \"34661\", \"statement\": \"The order amount is 34661 cents.\", \"derived\": null},\n    {\"field\": \"order.card_bin_country\", \"value\": \"US\", \"statement\": \"The card's issuing country is US, matching the US IP and home country.\", \"derived\": null},\n    {\"field\": \"context.avs_mismatch\", \"value\": \"0\", \"statement\": \"AVS verification did not fail.\", \"derived\": null},\n    {\"field\": \"context.cvv_mismatch\", \"value\": \"0\", \"statement\": \"CVV verification did not fail.\", \"derived\": null},\n    {\"field\": \"context.attempts_user_24h\", \"value\": \"1\", \"statement\": \"The account made one order attempt in the past 24 hours.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_card_24h\", \"value\": \"0\", \"statement\": \"The card had no processor declines in the 24 hours before the order.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"1\", \"statement\": \"Only this account was active on the device in the past 30 days.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"1\", \"statement\": \"Only this account ordered to the shipping address in the past 30 days.\", \"derived\": null},\n    {\"field\": \"context.email_root_other_accounts\", \"value\": \"0\", \"statement\": \"No other account holds a matching normalized email.\", \"derived\": null},\n    {\"field\": \"context.email_domain_class\", \"value\": \"0\", \"statement\": \"The email is on a common provider, not a disposable domain.\", \"derived\": null},\n    {\"field\": \"order.promotion_used\", \"value\": \"false\", \"statement\": \"No promotion was used.\", \"derived\": null},\n    {\"field\": \"context.hours_since_password_change\", \"value\": \"10000.0\", \"statement\": \"The password has never been changed.\", \"derived\": null},\n    {\"field\": \"context.installments_due_user\", \"value\": \"0\", \"statement\": \"No installment was due on the account before the decision.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"0\", \"statement\": \"The order had not shipped at the decision.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"new_customer\", \"likelihood\": \"high\", \"reasoning\": \"A brand-new account placing a first, somewhat larger apparel order with matching US geography and passing AVS and CVV fits an ordinary new customer.\"},\n    {\"explanation\": \"never_pay\", \"likelihood\": \"low\", \"reasoning\": \"Front-loaded exposure on a first order is the pattern R04 describes, but no installment has been due, so repayment cannot be judged or cited (\u00a78.1).\"},\n    {\"explanation\": \"synthetic_identity\", \"likelihood\": \"low\", \"reasoning\": \"There is no shared device, address or email linkage and the email is a common provider, so nothing points to a fabricated or duplicated identity.\"},\n    {\"explanation\": \"stolen_card\", \"likelihood\": \"low\", \"reasoning\": \"Card, IP and home countries all match, AVS and CVV passed, and there are no processor declines.\"}\n  ],\n  \"disposition\": \"clear\",\n  \"citations\": [\"FP-2 \u00a76.6(c)\", \"FP-2 \u00a76.2\", \"R04\", \"FP-2 \u00a76.5(c)\", \"FP-2 \u00a78.1\"],\n  \"next_check\": \"none\",\n  \"memo\": \"Clear under FP-2 \u00a76.6(c). The only rule that holds is R04, a Context condition. This is the account's first attempt, the account was opened moments before ordering, and the amount (34661 cents) is above the apparel 95th percentile. Context rules cannot support hold or decline (\u00a76.2), so no adverse family is present. The other rules do not hold. The card, IP and home countries are all US, and AVS and CVV passed. There was one attempt and no card declines. Only this account appears on the device and address, there is no duplicate email, and no promotion was used. The password has never been changed. No installment has been due, so never-pay cannot be cited (\u00a78.1). The most plausible explanation is a new customer. The order has not shipped. No check is warranted, because \u00a76.6(c) prohibits hold and needs_check.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 12681,
+  "input_tokens": 10657,
+  "output_tokens": 2024,
+  "unknown_usage_calls": 0
+ }
+}

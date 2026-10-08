@@ -1,0 +1,68 @@
+{
+ "attempts": 1,
+ "duration_ms": 23283,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "opus",
+  "backend": "claude",
+  "benchmark": "2026-10-final",
+  "case": "2066792625-baseline-139353-20250714T145911",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "packet_sha256": "09b2d90ea0317db20f65082089ed570cb065e205a88377d16044ed358cdd5e28",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "claude",
+  "cli_version": "2.1.293 (Claude Code); launcher efe5a10a6b83",
+  "effort": "high",
+  "event_counts": {
+   "assistant": 2,
+   "ping": 1,
+   "result:success": 1,
+   "system:init": 1,
+   "system:post_turn_summary": 1,
+   "system:session_state_changed": 3,
+   "system:status": 3
+  },
+  "input_tokens": 10711,
+  "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
+  "model": "claude-opus-5-5",
+  "n_error_events": 0,
+  "n_events": 12,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 2449,
+  "protocol_ok": true,
+  "tools_offered": 0
+ },
+ "text": "```json\n{\n  \"claims\": [\n    {\"field\": \"decision.point\", \"value\": \"check_completed\", \"statement\": \"The packet is evaluated at the completion of a verification check.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].check\", \"value\": \"id_check\", \"statement\": \"The completed check was an id_check.\", \"derived\": null},\n    {\"field\": \"decision.checks[0].outcome\", \"value\": \"failed\", \"statement\": \"The id_check failed.\", \"derived\": null},\n    {\"field\": \"order.ip_country\", \"value\": \"BR\", \"statement\": \"The order was placed from a Brazilian IP.\", \"derived\": null},\n    {\"field\": \"order.card_bin_country\", \"value\": \"US\", \"statement\": \"The card was issued in the US.\", \"derived\": null},\n    {\"field\": \"order.account_home_country\", \"value\": \"US\", \"statement\": \"The account's home country is the US.\", \"derived\": null},\n    {\"field\": \"order.avs_result\", \"value\": \"N\", \"statement\": \"AVS failed on this order.\", \"derived\": null},\n    {\"field\": \"order.cvv_result\", \"value\": \"M\", \"statement\": \"CVV matched on this order.\", \"derived\": null},\n    {\"field\": \"context.bin_ip_country_mismatch\", \"value\": \"1\", \"statement\": \"The card's issuing country differs from the IP country.\", \"derived\": null},\n    {\"field\": \"context.amount_cents\", \"value\": \"31823\", \"statement\": \"The order amount is 31823 cents.\", \"derived\": null},\n    {\"field\": \"order.merchant_category\", \"value\": \"electronics\", \"statement\": \"The merchant category is electronics.\", \"derived\": null},\n    {\"field\": \"context.device_link_age_hours\", \"value\": \"0.12361111111111112\", \"statement\": \"The device was first used on this account about 0.12 hours before the order.\", \"derived\": null},\n    {\"field\": \"context.card_link_age_hours\", \"value\": \"2498.0569444444445\", \"statement\": \"The card was added to the account about 2498 hours before the order.\", \"derived\": null},\n    {\"field\": \"context.card_first_use_age_hours\", \"value\": \"0.0\", \"statement\": \"This is the card's first use on the account.\", \"derived\": null},\n    {\"field\": \"context.ship_address_first_use_age_hours\", \"value\": \"0.0\", \"statement\": \"This is the shipping address's first use on the account.\", \"derived\": null},\n    {\"field\": \"context.ship_to_home\", \"value\": \"0\", \"statement\": \"The order does not ship to the account's home address.\", \"derived\": null},\n    {\"field\": \"context.hours_since_password_change\", \"value\": \"10000.0\", \"statement\": \"The account has never had a password change.\", \"derived\": null},\n    {\"field\": \"context.hours_since_email_change\", \"value\": \"10000.0\", \"statement\": \"The account has never had an email change.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_device_30d\", \"value\": \"1\", \"statement\": \"Only this account was active on the device in the past 30 days.\", \"derived\": null},\n    {\"field\": \"context.accounts_on_address_30d\", \"value\": \"1\", \"statement\": \"Only this account ordered to the shipping address in the past 30 days.\", \"derived\": null},\n    {\"field\": \"context.email_root_other_accounts\", \"value\": \"0\", \"statement\": \"No other account shares the normalized email.\", \"derived\": null},\n    {\"field\": \"context.attempts_user_24h\", \"value\": \"1\", \"statement\": \"The account made 1 order attempt in the past 24 hours.\", \"derived\": null},\n    {\"field\": \"context.processor_declines_card_24h\", \"value\": \"0\", \"statement\": \"The card had no processor declines in the 24 hours before the order.\", \"derived\": null},\n    {\"field\": \"context.unauthorized_disputes_lost_user\", \"value\": \"0\", \"statement\": \"No unauthorized dispute has been resolved lost on the account.\", \"derived\": null},\n    {\"field\": \"context.never_pay_determined_user\", \"value\": \"0\", \"statement\": \"No never-pay determination exists on the account.\", \"derived\": null},\n    {\"field\": \"context.shipped_at_decision\", \"value\": \"0\", \"statement\": \"The order had not shipped at the decision.\", \"derived\": null}\n  ],\n  \"hypotheses\": [\n    {\"explanation\": \"stolen_card\", \"likelihood\": \"high\", \"reasoning\": \"A US card was used from a Brazilian IP with a failed AVS result. It was a first use on a new device to a new address, and the issuer authentication and identity check failed.\"},\n    {\"explanation\": \"account_takeover\", \"likelihood\": \"medium\", \"reasoning\": \"A device first seen minutes before the order used a card already stored on the account and shipped to a new address. However, there were no password or email changes.\"},\n    {\"explanation\": \"traveller\", \"likelihood\": \"low\", \"reasoning\": \"A US account holder travelling in Brazil on a new phone could explain the IP, the device and the address. The failed id_check undercuts this explanation.\"}\n  ],\n  \"disposition\": \"decline\",\n  \"citations\": [\"FP-2 \u00a75.3(b)\", \"FP-2 \u00a76.6(b)\", \"FP-2 \u00a75.2\", \"FP-2 \u00a76.2\", \"R03\"],\n  \"next_check\": \"none\",\n  \"memo\": \"R03 holds. The card's issuing country (US) differs from the IP country (BR), and AVS failed. Card is therefore present under FP-2 \u00a76.2, and \u00a75.2 requires id_check. That id_check has now failed, which decides the order under \u00a75.3(b). No Linkage rule holds: only this account used the device and the shipping address, and no other account shares the email. The standard outcome is therefore decline, and escalate is prohibited. No earlier outcome settles the account. The order had not shipped, so decline voids and refunds it. The device was first used on the account about 0.12 hours before the order. The card was stored about 2498 hours earlier but used here for the first time, shipping to a new non-home address. The best benign explanation is a traveller on a new phone, but the failed check undercuts it. Stolen card is the leading explanation and account takeover is possible. No further check is needed.\"\n}\n```",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 13160,
+  "input_tokens": 10711,
+  "output_tokens": 2449,
+  "unknown_usage_calls": 0
+ }
+}
