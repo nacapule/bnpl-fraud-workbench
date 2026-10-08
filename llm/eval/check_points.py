@@ -177,8 +177,12 @@ def completion_decisions(world_dir: Path, kept: pd.DataFrame, *, seed: int,
     world_dir = Path(world_dir)
     default_tune, default_fit = run_paths(world_dir)
     tune_path = tune_path or default_tune
-    tables, policy_cfg = check_inputs(world_dir, read_world(world_dir) if tables is None
-                                      else tables, tune_path)
+    if tables is None:
+        try:
+            tables = read_world(world_dir)
+        except (SchemaError, ValueError, KeyError) as error:
+            raise ReplayMismatch(f"{world_dir.name}: {error}") from error
+    tables, policy_cfg = check_inputs(world_dir, tables, tune_path)
     protocol = load_protocol()
     policy = incumbent_policy(tune_path, fit_dir or default_fit, seed)
     versions = set(kept["policy_version"])

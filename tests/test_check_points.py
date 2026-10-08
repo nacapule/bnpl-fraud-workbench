@@ -115,6 +115,14 @@ def test_the_replay_reads_only_the_runs_own_inputs(run, tmp_path, monkeypatch) -
     broken = {**tables, "account_events": tables["account_events"].drop(columns="event_id")}
     with pytest.raises(check_points.ReplayMismatch):
         check_points.completion_decisions(world_dir, kept, seed=SEED, tables=broken)
+    import shutil
+
+    copy = tmp_path / "run" / "worlds" / world_dir.name  # a world whose file lost a column
+    shutil.copytree(world_dir, copy)
+    accounts = pd.read_csv(copy / "accounts.csv")
+    accounts.drop(columns="user_id").to_csv(copy / "accounts.csv", index=False)
+    with pytest.raises(check_points.ReplayMismatch):
+        check_points.completion_decisions(copy, kept, seed=SEED)
     with monkeypatch.context() as patch:  # the configuration the modules read is the file's
         loaded = check_points.config.load("policy")
         patch.setattr(check_points.config, "load",

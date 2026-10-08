@@ -998,6 +998,7 @@ def test_the_headline_and_its_components_per_case(bench: Path, tmp_path: Path) -
     assert summary["components"] == {name: {"numerator": 3, "denominator": 3, "value": 1.0}
                                      for name in harness.COMPONENTS}
     assert summary["standard_action"]["numerator"] == 3
+    assert summary["per_axis"]["review"]["complete_pass_weighted"] == 1.0
     rows = summary["per_referee_row"]
     assert list(rows) == list(harness.REFEREE_ROWS)
     assert rows["§6.6(c)"]["complete_pass"]["denominator"] == 1
@@ -1081,3 +1082,4 @@ def test_the_paired_natural_mix_difference_and_equal_rates_as_a_tie() -> None:
         "paired"]["a vs b"]["complete_pass"]
     assert gap["difference"] == 0 and gap["natural_difference"] == round(
         (1 + 1) / 12 - (1 + 9) / 12, 4)
+    assert "unweighted" in gap["tie"]  # the tie is the unweighted rates'

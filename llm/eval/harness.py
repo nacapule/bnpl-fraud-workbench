@@ -1058,10 +1058,11 @@ def summarize_arm(definition: Mapping[str, Any], rows: Mapping[tuple[str, str], 
     complete-memo pass rate (the headline) beside its components and the acceptable
     rate; each also as the natural-mix rate (:func:`natural_rate`); the standard action
     (``needs_check`` counted as the hold only as :func:`canonical_action` allows) beside
-    the raw standard disposition; per stratum, per decision-point axis and, with
-    ``views``, per policy row (:data:`REFEREE_ROWS`); cluster counts; and invariance
-    under each probe (raw disposition, canonical action, next check, complete-memo
-    pass, and all three functional measures together)."""
+    the raw standard disposition; per stratum, per decision-point axis (raw, and the
+    axis's weighted Hájek rate) and, with ``views``, per policy row
+    (:data:`REFEREE_ROWS`); cluster counts; and invariance under each probe (raw
+    disposition, canonical action, next check, complete-memo pass, and all three
+    functional measures together)."""
     cases = definition["cases"]
     primary = [rows[(case["case_id"], "primary")] for case in cases]
     n = len(cases)
@@ -1082,6 +1083,12 @@ def summarize_arm(definition: Mapping[str, Any], rows: Mapping[tuple[str, str], 
     def group(positions: Sequence[int]) -> dict[str, Any]:
         return {"acceptable": _rate(sum(acceptable[i] for i in positions), len(positions)),
                 "complete_pass": _rate(sum(passed[i] for i in positions), len(positions))}
+
+    def axis_group(positions: Sequence[int]) -> dict[str, Any]:
+        # the axis's two-phase Hájek rates (the natural mix restricted to one axis)
+        return {**group(positions),
+                "acceptable_weighted": _round(natural_rate(definition, acceptable, positions)),
+                "complete_pass_weighted": _round(natural_rate(definition, passed, positions))}
 
     invariance = {}
     for probe, case_ids in sorted(definition.get("probes", {}).items()):
@@ -1134,7 +1141,7 @@ def summarize_arm(definition: Mapping[str, Any], rows: Mapping[tuple[str, str], 
             sum(row["verification"]["has_unmatched_token"] for row in scored), len(scored)),
         "per_stratum": {stratum: _rate(sum(acceptable[i] for i in positions), len(positions))
                         for stratum, positions in sorted(strata.items())},
-        "per_axis": {axis: group(positions) for axis, positions in sorted(axes.items())},
+        "per_axis": {axis: axis_group(positions) for axis, positions in sorted(axes.items())},
         "clusters": len({case["cluster"] for case in cases}),
         "invariance": invariance,
     }
@@ -1194,8 +1201,8 @@ def latent_diagnostic(definition: Mapping[str, Any],
     }
 
 
-TIE_NOTE = ("the arms did equally well on these cases; a tie is not evidence that they are "
-            "equivalent")
+TIE_NOTE = ("the arms' unweighted rates are equal on these cases (the natural-mix difference "
+            "is reported beside); a tie is not evidence that they are equivalent")
 
 
 def cluster_bound(values: Sequence[float], clusters: Sequence[str],
