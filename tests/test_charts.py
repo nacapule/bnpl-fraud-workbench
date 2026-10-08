@@ -283,13 +283,18 @@ def test_the_operating_cells_chart_draws_each_cell_on_one_row(summary: dict,
                                                                monkeypatch) -> None:
     pairs = _plotted(monkeypatch)
     data = charts.collect_operating_cells(summary, PROTOCOL)
-    charts.draw_operating_cells(data)
+    figure = charts.draw_operating_cells(data)
     rows = {}
     for cell in data["cells"]:
         values = [p["value"] for p in cell["policies"] if p.get("value") is not None]
         rows[cell["name"]] = _row_of(pairs, values)
     assert len(set(rows.values())) == len(CELLS)
     assert rows["primary"] == max(rows.values())  # the first row is the primary cell
+    axes = figure.axes[0]
+    ticks = dict(zip(axes.get_yticks(), (t.get_text() for t in axes.get_yticklabels()),
+                     strict=True))
+    for cell in data["cells"]:  # each row is named by its own cell
+        assert ticks[rows[cell["name"]]] == cell["label"], cell["name"]
 
 
 def test_a_policy_the_rule_did_not_evaluate_is_left_out_and_recorded(summary: dict,

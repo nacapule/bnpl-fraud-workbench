@@ -436,16 +436,16 @@ def _place_labels(axes, items: list[tuple[float, float, str]], *,
             sides.append(-1)
         sides = sides or [1]
         starts = {1: px + 9, -1: px - 9 - width}
-        side, ly = sides[0], py
+        side, ly = sides[0], min(max(py, y_min + half), y_max - half)  # inside the plot
         for candidate in sides:
-            if free(starts[candidate], starts[candidate] + width, py - half, py + half):
+            if free(starts[candidate], starts[candidate] + width, ly - half, ly + half):
                 side = candidate
                 break
         else:  # pushed up or down inside the axes; when nothing is free, left where it is
             steps = (gap / 2 * (k // 2 + 1) * (1 if k % 2 == 0 else -1)
                      for k in range(2 * int((y_max - y_min) / gap) + 2))
             for step in steps:
-                candidate = py + step
+                candidate = ly + step
                 if not y_min + half <= candidate <= y_max - half:
                     continue
                 if free(starts[side], starts[side] + width, candidate - half, candidate + half):
@@ -568,7 +568,7 @@ def draw_staffing(data: Mapping[str, Any]):
     _reference_lines(axes, hurdle, vertical=False)
     _place_labels(axes, labels, obstacles=ends, flip=False)
     axes.yaxis.set_major_formatter(FuncFormatter(_dollars))
-    axes.set_ylabel("Net contribution vs today's rules, $ per 1,000 orders")
+    axes.set_ylabel("Net contribution vs today's rules,\n$ per 1,000 orders")
     _style(axes)
     width_pt = (figure.subplotpars.right - figure.subplotpars.left) * figure.get_figwidth() * 72
     columns = max(1, int(width_pt / len(cells) / (0.56 * (FONT - 2))) - 1)
