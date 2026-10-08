@@ -390,6 +390,12 @@ def _marker(axes, x: float, y: float, policy: str, eligible: bool | None, *,
               markeredgewidth=1.6 if hollow else 1.2, zorder=zorder)
 
 
+def _ring(axes, x: float, y: float) -> None:
+    """The ring that marks the rule's recommendation in a cell."""
+    axes.plot([x], [y], marker="o", linestyle="none", markersize=17, markerfacecolor="none",
+              markeredgecolor=INK, markeredgewidth=1.0, zorder=5)
+
+
 def _legend(axes, policies: list[str], *, lines: bool, y: float) -> None:
     handles = [Line2D([], [], marker=MARKERS.get(p, "o"), color=HUES.get(p, ACCENT),
                       linestyle="-" if lines else "none", linewidth=2, markersize=7,
@@ -491,7 +497,7 @@ def draw_frontier(data: Mapping[str, Any]):
         "an unanswered hold), with the legitimate orders it holds for verification, both per "
         "10,000 legitimate orders. Hollow: fails an eligibility criterion of the "
         "recommendation rule, named in the label (the customer caps, or the queue's service "
-        "target at a priority).",
+        "target at a priority); ringed: the rule's recommendation.",
         left=0.08, right=0.97, bottom=0.11)
     cap = data["lost_cap"]["value"]
     shown = [p for p in data["policies"] if p["evaluated"]
@@ -512,6 +518,8 @@ def draw_frontier(data: Mapping[str, Any]):
             REFERENCE if p["policy"] == "approve_all" else ACCENT
         _marker(axes, p["lost"]["value"], p["loss"]["value"], p["policy"],
                 p["eligible"]["value"], colour=colour, size=9)
+        if p["recommended"]["value"]:
+            _ring(axes, p["lost"]["value"], p["loss"]["value"])
         held = p["held"]["value"]
         text = p["label"] if not held else f"{p['label']}, {held:,.0f} held"
         if p["eligible"]["value"] is False:
@@ -548,9 +556,7 @@ def draw_staffing(data: Mapping[str, Any]):
         for i, p in points:
             _marker(axes, i, p["value"], item["policy"], p["eligible"]["value"], colour=colour)
             if p["recommended"]["value"]:
-                axes.plot([i], [p["value"]], marker="o", linestyle="none", markersize=17,
-                          markerfacecolor="none", markeredgecolor=INK, markeredgewidth=1.0,
-                          zorder=5)
+                _ring(axes, i, p["value"])
         if points:
             labels.append((points[-1][0], points[-1][1]["value"], item["label"]))
             ends.append((points[-1][0], points[-1][1]["value"]))
@@ -598,7 +604,9 @@ def draw_seed_spread(data: Mapping[str, Any]):
         "Baseline family, base allotment, test window: each dot is one seed's rule net "
         "contribution (ledger net after the friction cost, less the analyst allotment) minus "
         "the incumbent's on the same world, per 1,000 orders decided; the bar is the mean "
-        "over seeds, the count at the right how many seeds come out above the incumbent.",
+        "over seeds, the count at the right how many seeds come out above the incumbent. The "
+        "row labels say which policy the rule recommends and which fail an eligibility "
+        "criterion.",
         left=0.16, right=0.80, bottom=0.14)
     shown = [p for p in data["policies"] if p.get("mean", {}).get("value") is not None]
     shown.sort(key=lambda p: p["mean"]["value"], reverse=True)
@@ -619,7 +627,9 @@ def draw_seed_spread(data: Mapping[str, Any]):
                       xycoords=("axes fraction", "data"), xytext=(6, 0),
                       textcoords="offset points", ha="left", va="center", fontsize=FONT - 1,
                       color=INK2)
-    axes.set_yticks(rows, [p["label"] for p in shown])
+    axes.set_yticks(rows, [p["label"] + ("\n(recommended)" if p["recommended"]["value"] else
+                                        "\n(ineligible)" if p["eligible"]["value"] is False
+                                        else "") for p in shown])
     axes.set_ylim(-0.7, max(len(shown), 1) - 0.3)
     axes.xaxis.set_major_formatter(FuncFormatter(_dollars))
     low, high = axes.get_xlim()
@@ -640,9 +650,9 @@ def draw_operating_cells(data: Mapping[str, Any]):
         "Each challenger's mean rule net contribution (ledger net after the friction cost, "
         "less the analyst allotment) minus the incumbent's, per 1,000 orders decided, with the "
         "recommendation rule applied in every operating cell on its own (the first row is the "
-        "primary cell). Hollow: fails an eligibility criterion in that cell. At the right, the "
-        "cell's outcome and the best eligible challenger, or the best of all when none is "
-        "eligible.",
+        "primary cell). Hollow: fails an eligibility criterion in that cell; ringed: the "
+        "rule's recommendation there. At the right, the cell's outcome and the best eligible "
+        "challenger, or the best of all when none is eligible.",
         left=0.235, right=0.77, bottom=0.13)
     hurdle = data["hurdle_usd"]["value"] * 100
     rows = list(range(len(cells)))[::-1]
@@ -650,6 +660,8 @@ def draw_operating_cells(data: Mapping[str, Any]):
         for p in cell["policies"]:
             if p["evaluated"] and p.get("value") is not None:
                 _marker(axes, p["value"], y, p["policy"], p["eligible"]["value"], size=7.5)
+                if p["recommended"]["value"]:
+                    _ring(axes, p["value"], y)
         recommended = cell["recommended"]["value"]
         best = cell["best_challenger"]["value"]
         if not cell["outcome"]["assessed"]:
