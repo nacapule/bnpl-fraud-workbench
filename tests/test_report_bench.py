@@ -1,18 +1,29 @@
 """Values from a memo benchmark's results file: a pointer into
 ``llm/eval/benchmarks/<id>/results.json`` prints a rate with its counts, an interval, a
-difference in percentage points or a plain value, and fails loudly on a missing file or
-key, a value that is not one number, a null, or a list item named by its position."""
+difference in percentage points or a plain value, each only in the formats its kind
+takes, and fails loudly on a missing file or key, a value that is not one number, a
+null, a part of a rate, a stale copy of an endpoint, or a list item named by its
+position."""
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
 
-from report.render import BENCHMARKS, RenderError, Sources, render, render_all
+from report.render import (
+    BENCHMARKS,
+    RenderError,
+    Sources,
+    load_benchmark,
+    render,
+    render_all,
+)
 
 RESULTS = {
     "benchmark": "test",
+    "axes": {"check_completed": 0.2151, "review": 0.7849},
     "pins": {"opus": {"model": "a-model", "cli_version": "1.2.3"}},
     "statistics": {
         "arms": {"opus": {"complete_pass": {
@@ -31,22 +42,32 @@ RESULTS = {
                       "disagreement": {"hold -> needs_check": 61},
                       "cases": {"case-1/primary": {"outcome": "scored", "complete_pass": True},
                                 "a~b": {"outcome": "format_failure"}}}},
-    "endpoints": {"primary": {"arms": {"opus": {
-        "natural_mix": {"source": "/statistics/arms/opus/complete_pass/natural",
-                        "value": 0.9993},
-        "unweighted": {"source": "/arms/opus/summary/complete_pass",
-                       "value": {"denominator": 200, "numerator": 198, "value": 0.99}},
-        "interval": {"source": "/statistics/arms/opus/complete_pass/cluster_bootstrap",
-                     "value": [0.9747, 1.0]},
-        "stale": {"source": "/statistics/arms/opus/complete_pass/natural", "value": 0.5}}}}},
+    "endpoints": {
+        "primary": {"arms": {"opus": {
+            "natural_mix": {"source": "/statistics/arms/opus/complete_pass/natural",
+                            "value": 0.9993},
+            "unweighted": {"source": "/arms/opus/summary/complete_pass",
+                           "value": {"denominator": 200, "numerator": 198, "value": 0.99}},
+            "interval": {"source": "/statistics/arms/opus/complete_pass/cluster_bootstrap",
+                         "value": [0.9747, 1.0]},
+            "stale": {"source": "/statistics/arms/opus/complete_pass/natural",
+                      "value": 0.5}}}},
+        "paired": {"source": "/statistics/paired", "value": {"opus vs sol": {
+            "complete_pass": {"difference": 0.5}}}},
+        "loop": {"source": "/endpoints/loop/value", "value": 1}},
     "case_memos": [
-        {"file": "never_pay_vs_hardship", "slot": "never_pay", "disposition": "decline"},
+        {"file": "never_pay_vs_hardship", "slot": "never_pay", "disposition": "decline",
+         "claims": [{"field": "context.account_age_days", "value": 0.0243},
+                    {"field": "context.amount_over_category_p95", "value": 1.7}]},
         {"file": "never_pay_vs_hardship", "slot": "hardship", "disposition": "clear"},
         {"file": "ring", "slot": "ring", "disposition": "escalate"},
+        {"file": "a/b", "slot": "x", "disposition": "hold"},
     ],
     "bad": {"rate": {"denominator": 200, "numerator": 198, "value": 0.95},
             "counts": {"denominator": 2.5, "numerator": 1, "value": 0.4},
-            "share": 1.5, "interval": [0.2, 1.5], "triple": [0.1, 0.2, 0.3]},
+            "natural": 1.5, "difference": 1.5, "wilson": [0.2, 1.5],
+            "cluster_bootstrap": [0.9, 0.1], "difference_cluster_bootstrap": [2.0, 3.0],
+            "pass_share_interval": [0.1, 0.2, 0.3], "pair": [0.1, 0.2]},
 }
 
 
@@ -61,28 +82,39 @@ def bench(pointer: str, sources: Sources, form: str = "") -> str:
 
 @pytest.mark.parametrize("pointer, form, text", [
     # a rate prints as a share and with its counts, from its whole counts
-    ("/arms/opus/summary/complete_pass", "pct", "99.0%"),
+    ("/arms/opus/summary/complete_pass", "", "99.0%"),
     ("/arms/opus/summary/complete_pass", "of", "198 of 200"),
     ("/arms/opus/summary/complete_pass", "n", "198/200"),
+    ("/arms/opus/summary/complete_pass", "numerator", "198"),
     ("/arms/opus/summary/claim_errors", "pct:3", "0.026%"),
-    # an endpoint entry is read at its source
+    # an endpoint entry, or a path through its value, is read at its source
     ("/endpoints/primary/arms/opus/natural_mix", "pct:2", "99.93%"),
+    ("/endpoints/primary/arms/opus/natural_mix/value", "pct:2", "99.93%"),
     ("/endpoints/primary/arms/opus/unweighted", "of", "198 of 200"),
     ("/endpoints/primary/arms/opus/interval", "bounds:2", "97.47% to 100.00%"),
-    # an interval of shares, of differences, a difference, a p-value, counts and text
+    ("/endpoints/primary/arms/opus/natural_mix/source", "", "/statistics/arms/opus/"
+     "complete_pass/natural"),
+    # shares, intervals of shares and of differences, a difference, a p-value, counts, text
+    ("/axes/check_completed", "pct", "21.5%"),
     ("/statistics/arms/opus/complete_pass/cluster_bootstrap", "bounds", "97.5% to 100.0%"),
     ("/statistics/paired/opus vs sol/complete_pass/difference_cluster_bootstrap", "bounds",
      "-0.5 pp to +4.6 pp"),
-    ("/statistics/paired/opus vs sol/complete_pass/difference", "pp", "+2.0 pp"),
+    ("/statistics/paired/opus vs sol/complete_pass/difference", "", "+2.0 pp"),
     ("/statistics/paired/opus vs sol/complete_pass/cluster_sign_test_p", "num:2", "0.29"),
-    ("/statistics/paired/opus vs sol/complete_pass/only_first", "count", "6"),
+    ("/statistics/paired/opus vs sol/complete_pass/only_first", "", "6"),
     ("/arms/opus/disagreement/hold -> needs_check", "", "61"),
     ("/pins/opus/model", "", "a-model"),
     ("/statistics/arms/sol/complete_pass/degenerate", "", "every case passed"),
-    # keys holding / and ~ are escaped as ~1 and ~0
+    # a number whose unit the file does not state prints only as a number
+    ("/case_memos/[slot=never_pay]/claims/[field=context.account_age_days]/value", "num:4",
+     "0.0243"),
+    ("/case_memos/[slot=never_pay]/claims/[field=context.amount_over_category_p95]/value",
+     "num:1", "1.7"),
+    # keys holding / and ~ are escaped as ~1 and ~0, in selectors too
     ("/arms/opus/cases/case-1~1primary/outcome", "", "scored"),
-    ("/arms/opus/cases/case-1~1primary/complete_pass", "yesno", "yes"),
+    ("/arms/opus/cases/case-1~1primary/complete_pass", "", "yes"),
     ("/arms/opus/cases/a~0b/outcome", "", "format_failure"),
+    ("/case_memos/[file=a~1b]/disposition", "", "hold"),
     # a list item by its fields
     ("/case_memos/[file=never_pay_vs_hardship,slot=hardship]/disposition", "", "clear"),
     ("/case_memos/[slot=ring]/disposition", "", "escalate"),
@@ -95,6 +127,7 @@ def test_a_benchmark_value_prints_in_its_kind(sources, pointer, form, text):
     # the file, the key, the pointer
     ("/statistics/arms/nobody/complete_pass/rate", "", "has no /statistics/arms/nobody"),
     ("statistics/arms", "", "is not <benchmark id>:<JSON pointer>"),
+    ("", "", "is not <benchmark id>:<JSON pointer>"),
     ("/arms/opus/cases/a~2b/outcome", "", "~ is escaped as ~0 and / as ~1"),
     ("/arms/opus/cases/case-1/primary/outcome", "", "has no /arms/opus/cases/case-1"),
     ("/pins/opus/model/name", "", "is a single value, not a container"),
@@ -106,27 +139,45 @@ def test_a_benchmark_value_prints_in_its_kind(sources, pointer, form, text):
     # not one value
     ("/statistics/arms/opus", "", "is not a single value; point at one of"),
     ("/case_memos", "", "is a list, not a single value"),
-    ("/bad/triple", "bounds", "is a list, not a single value"),
-    ("", "", "is not <benchmark id>:<JSON pointer>"),
+    ("/bad/pair", "", "is a list, not a single value"),
+    ("/bad/pass_share_interval", "bounds", "is not an interval: a pair of numbers"),
     # a null, with the reason beside it
     ("/statistics/arms/sol/complete_pass/cluster_bootstrap", "bounds",
      r"is null \(every case passed; print its degenerate reason\)"),
-    # values that are not what their kind requires
+    # a rate is whole: its parts cannot be printed on their own
+    ("/arms/opus/summary/claim_errors/value", "", "is a rate; it prints whole"),
+    ("/endpoints/primary/arms/opus/unweighted/value/value", "", "is a rate; it prints whole"),
     ("/bad/rate", "pct", "value 0.95 is not 198/200 to four places"),
     ("/bad/counts", "pct", "is not a rate of whole counts"),
-    ("/bad/share", "pct", "1.5 is not a share between 0 and 1"),
-    ("/bad/interval", "bounds", "1.5 is not a share between 0 and 1"),
+    # an endpoint's copy that is not its source's value, however it is reached
     ("/endpoints/primary/arms/opus/stale", "pct", "does not hold the value at its source"),
+    ("/endpoints/primary/arms/opus/stale/value", "pct", "does not hold the value"),
+    ("/endpoints/paired/value/opus vs sol/complete_pass/difference", "",
+     "does not hold the value at its source /statistics/paired"),
+    ("/endpoints/loop", "", "form a loop"),
+    # values out of their range, intervals out of order
+    ("/bad/natural", "pct", "1.5 is not a share between 0 and 1"),
+    ("/bad/difference", "pp", "1.5 is not a difference of shares between -1 and 1"),
+    ("/bad/wilson", "bounds", "1.5 is not a share between 0 and 1"),
+    ("/bad/cluster_bootstrap", "bounds", "bounds are out of order"),
+    ("/bad/difference_cluster_bootstrap", "bounds", "2.0 is not a difference of shares"),
     # formats that do not fit the kind
     ("/statistics/paired/opus vs sol/complete_pass/difference", "pct",
-     "a difference of rates is in percentage points"),
+     "a benchmark difference prints with pp, not pct"),
+    ("/statistics/paired/opus vs sol/complete_pass/difference", "num",
+     "a benchmark difference prints with pp, not num"),
+    ("/statistics/arms/opus/complete_pass/natural", "num", "a benchmark share prints with pct"),
     ("/statistics/paired/opus vs sol/complete_pass/cluster_sign_test_p", "pct",
-     "does not fit a number with no declared unit"),
-    ("/statistics/paired/opus vs sol/complete_pass/only_first", "pct",
-     "does not fit a number with no declared unit"),
-    ("/statistics/arms/opus/complete_pass/natural", "bounds", "needs an interval"),
-    ("/statistics/arms/opus/complete_pass/cluster_bootstrap", "pct", "is not a number"),
-    ("/statistics/arms/opus/complete_pass/natural", "of", "needs a result metric"),
+     "a benchmark number prints with count, num, not pct"),
+    ("/case_memos/[slot=never_pay]/claims/[field=context.account_age_days]/value", "pct",
+     "a benchmark number prints with count, num, not pct"),
+    ("/statistics/arms/opus/complete_pass/natural", "bounds", "prints with pct, not bounds"),
+    ("/statistics/arms/opus/complete_pass/cluster_bootstrap", "pct",
+     "a benchmark interval prints with bounds, not pct"),
+    ("/arms/opus/summary/complete_pass", "num", "a benchmark rate prints with pct, of"),
+    ("/pins/opus/model", "count", "a benchmark text prints with value, not count"),
+    ("/arms/opus/cases/case-1~1primary/complete_pass", "count",
+     "a benchmark flag prints with yesno, not count"),
 ])
 def test_a_benchmark_value_that_cannot_mean_what_it_says_fails(sources, pointer, form,
                                                                 message):
@@ -134,9 +185,27 @@ def test_a_benchmark_value_that_cannot_mean_what_it_says_fails(sources, pointer,
         bench(pointer, sources, form)
 
 
+@pytest.mark.parametrize("placeholder", [
+    "bench:test:/statistics/arms/opus/complete_pass/natural|pct",
+    "bench:test:/statistics/arms/opus/complete_pass/natural | pct | num",
+])
+def test_a_pipe_belongs_to_the_format_alone(sources, placeholder):
+    with pytest.raises(RenderError, match="a benchmark pointer cannot hold |"):
+        render("{{ " + placeholder + " }}", sources)
+
+
 def test_a_benchmark_without_results_fails(sources):
     with pytest.raises(RenderError, match="no benchmark results 'elsewhere'"):
         render("{{ bench:elsewhere:/benchmark }}", sources)
+
+
+def test_a_results_file_with_a_number_json_does_not_allow_fails(tmp_path: Path) -> None:
+    path = tmp_path / "results.json"
+    path.write_text('{"rate": {"denominator": 200, "numerator": 198, "value": NaN}}')
+    with pytest.raises(ValueError, match="NaN is not a JSON number"):
+        load_benchmark(path)
+    path.write_text(json.dumps({"rate": 0.5}))
+    assert load_benchmark(path) == {"rate": 0.5}
 
 
 @pytest.mark.parametrize("placeholder", [
@@ -145,6 +214,10 @@ def test_a_benchmark_without_results_fails(sources):
     "bench:test:/case_memos/1/slot",
     "bench:test:/statistics/arms/sol/complete_pass/cluster_bootstrap | bounds",
     "bench:test:/statistics/arms/opus | pct",
+    "bench:test:/arms/opus/summary/claim_errors/value | pct",
+    "bench:test:/endpoints/primary/arms/opus/stale/value | pct",
+    "bench:test:/statistics/paired/opus vs sol/complete_pass/difference | num",
+    "bench:test:/bad/cluster_bootstrap | bounds",
 ])
 def test_the_repository_render_fails_on_a_benchmark_value_it_cannot_print(
         tmp_path: Path, sources: Sources, placeholder: str) -> None:
