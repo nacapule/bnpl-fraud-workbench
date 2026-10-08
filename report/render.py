@@ -14,7 +14,14 @@ A template is Markdown whose numbers come only from placeholders:
     a fixed definition from ``config/<name>.yaml``;
 ``{{ table:name | column "Header" format, column "Header", ... }}``
     on a line of its own: a generated Markdown table from a result table, with
-    the columns named (``format`` optional);
+    the columns named (``format`` optional; ``label`` prints an identifier in
+    words, from ``wording.labels`` in ``report/claims.yaml``);
+``{{ table:name where col=value ... sum col,col by col,col [across col] | ... }}``
+    the same from selected rows of a result table (:func:`select`): ``where``
+    keeps the rows whose cell reads ``value``; ``sum`` adds up counts or money
+    over the rows of each ``by`` group, and ``mean`` averages levels such as
+    a median wait, each aggregated row with ``rows_count``, the rows it covers;
+    ``across`` spreads one column's values into columns holding the sum;
 ``{{ claim:<id> }}``
     a directional claim from ``report/claims.yaml``, written from its record and
     the results with its evidence (:mod:`report.claims`); it fails to render
@@ -87,6 +94,7 @@ class Sources:
     claims: Mapping[str, claims_module.Claim] = field(default_factory=dict)
     wording: claims_module.Wording | None = None
     facts: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)  # by case file
+    labels: Mapping[str, str] = field(default_factory=dict)  # identifier -> words, in tables
 
     @classmethod
     def from_repo(cls, summary: Mapping[str, Any], root: Path = REPO) -> Sources:
@@ -95,11 +103,15 @@ class Sources:
             path.stem: yaml.safe_load(path.read_text())
             for path in sorted((root / "config").glob("*.yaml"))
         }
-        claims, wording = claims_module.load_claims(root / "report" / "claims.yaml")
+        claims_file = root / "report" / "claims.yaml"
+        claims, wording = claims_module.load_claims(claims_file)
+        labels = ((yaml.safe_load(claims_file.read_text()) or {}).get("wording") or {}).get(
+            "labels") or {}
         facts = {path.stem: json.loads(path.read_text())
                  for path in sorted((root / "cases" / "facts").glob("*.json"))}
         return cls(summary=summary, protocol=protocol, configs=configs,
-                   claims={claim.id: claim for claim in claims}, wording=wording, facts=facts)
+                   claims={claim.id: claim for claim in claims}, wording=wording, facts=facts,
+                   labels=_labels(labels))
 
 
 def _path(data: Any, dotted: str, what: str) -> Any:
@@ -200,16 +212,21 @@ def render_value(body: str, sources: Sources) -> str:
 
 
 def render_table(body: str, sources: Sources) -> str:
-    """Render ``table:name | column "Header" format, ...`` as a Markdown table.
+    """Render ``table:name [selection] | column "Header" format, ...`` as a Markdown table.
 
     A cell's unit comes from its column name's suffix (``net_cents``,
     ``held_share``, ...), and a column with ``_vs_`` in its name holds paired
-    differences; raises :class:`RenderError` listing every problem.
+    differences (a column spread by ``across`` takes the unit of the column it
+    sums); raises :class:`RenderError` listing every problem.
     """
     head, _, spec = body.partition("|")
-    name = head.strip()[len("table:"):].strip()
+    name, *clauses = head.strip()[len("table:"):].split() or [""]
     rows = _fact_rows(name[len("fact:"):], sources) if name.startswith("fact:") else \
         table(sources.summary, name)
+    units: dict[str, str | None] = {}
+    contrasts: set[str] = set()
+    if clauses:
+        rows, units, contrasts = select(rows, parse_selection(clauses), name)
     problems: list[str] = []
     columns = []
     for item in spec.split(",") if spec.strip() else []:
@@ -219,7 +236,7 @@ def render_table(body: str, sources: Sources) -> str:
             continue
         column, header, form = match.groups()
         format_name, *args = (form or "value").split(":")
-        if format_name not in formats.FORMATS:
+        if format_name not in formats.FORMATS and format_name != LABEL:
             problems.append(f"unknown format {format_name!r} for column {column!r}")
         elif rows and column not in rows[0]:
             problems.append(f"no column {column!r}")
@@ -229,7 +246,8 @@ def render_table(body: str, sources: Sources) -> str:
         problems.append("no columns named")
     lines = [
         "| " + " | ".join(header for _, header, _, _ in columns) + " |",
-        "|" + "|".join("---" if form == "value" else "---:" for _, _, form, _ in columns) + "|",
+        "|" + "|".join("---" if form in ("value", LABEL) else "---:"
+                       for _, _, form, _ in columns) + "|",
     ]
     for index, row in enumerate(rows):
         cells = []
@@ -239,9 +257,17 @@ def render_table(body: str, sources: Sources) -> str:
                 cells.append("n/a")
             elif isinstance(cell, bool):
                 cells.append("yes" if cell else "no")
+            elif format_name == LABEL:
+                if not isinstance(cell, str) or args:
+                    problems.append(f"row {index} column {column!r}: the label format "
+                                    "takes no arguments and prints identifiers, not numbers")
+                    cells.append("")
+                else:
+                    cells.append(label(cell, sources.labels))
             else:
-                resolved = Value(plain=cell, unit=formats.unit_from_name(column),
-                                 contrast="_vs_" in column)
+                unit = units[column] if column in units else formats.unit_from_name(column)
+                resolved = Value(plain=cell, unit=unit,
+                                 contrast="_vs_" in column or column in contrasts)
                 try:
                     cells.append(formats.apply(format_name, resolved, args))
                 except FormatError as error:
@@ -251,6 +277,192 @@ def render_table(body: str, sources: Sources) -> str:
     if problems:
         raise RenderError(f"table {name!r}", problems)
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------- selecting rows of a table
+LABEL = "label"
+ROWS_COUNT = "rows_count"
+CLAUSES = ("where", "sum", "mean", "by", "across")
+CLAUSE_ORDER = {"where": 0, "sum": 1, "mean": 1, "by": 2, "across": 3}
+# Units that are quotients (rates, shares and their differences in basis points): a
+# pooled figure comes from its numerator and denominator, never by adding or averaging
+# per-seed values.
+QUOTIENT_UNITS = ("rate", "share", "bps")
+QUOTIENT_WORDS = frozenset({"rate", "share", "ratio", "per", "bps", "mean", "avg", "average"})
+# Quantiles and extremes: averaged over seeds (a stated mean of each world's value),
+# never added up.
+LEVEL_WORDS = frozenset({"p50", "p75", "p90", "p95", "p99", "median", "max", "min"})
+
+
+@dataclass(frozen=True)
+class Selection:
+    """The clauses after a table's name: rows kept, then grouped and aggregated."""
+
+    where: tuple[tuple[str, str], ...] = ()
+    aggregate: str | None = None  # "sum" or "mean"
+    columns: tuple[str, ...] = ()  # the aggregated columns
+    by: tuple[str, ...] = ()
+    across: str | None = None
+
+
+def parse_selection(words: list[str]) -> Selection:
+    """``where col=value ... [sum|mean col,col by col,col [across col]]``, in that order."""
+    found: dict[str, list[str]] = {}
+    current = None
+    for word in words:
+        if word in CLAUSES:
+            if current is not None and CLAUSE_ORDER[word] <= CLAUSE_ORDER[current]:
+                raise ValueError(f"the {word!r} clause cannot follow {current!r} (the order "
+                                 "is where, sum or mean, by, across; each once)")
+            current = word
+            found[word] = []
+        elif current is None:
+            raise ValueError(f"{word!r} is not a clause; use where, sum, mean, by or across")
+        else:
+            found[current].append(word)
+
+    def names(clause: str) -> tuple[str, ...]:
+        items = tuple(item.strip() for item in " ".join(found[clause]).split(","))
+        if not all(KEY.fullmatch(item) and "." not in item for item in items):
+            raise ValueError(f"{clause}: name columns separated by commas, got "
+                             f"{' '.join(found[clause])!r}")
+        return items
+
+    where = []
+    for item in found.get("where", []):
+        column, equals, wanted = item.partition("=")
+        if not equals or not column or not wanted:
+            raise ValueError(f"where: {item!r} is not column=value")
+        where.append((column, wanted))
+    if "where" in found and not where:
+        raise ValueError("where: name at least one column=value")
+    aggregate = "sum" if "sum" in found else "mean" if "mean" in found else None
+    if aggregate is None and ("by" in found or "across" in found):
+        raise ValueError("by and across follow sum or mean")
+    if aggregate is not None and "by" not in found:
+        raise ValueError(f"{aggregate} needs by: the columns that make a group")
+    selection = Selection(
+        where=tuple(where), aggregate=aggregate,
+        columns=names(aggregate) if aggregate else (),
+        by=names("by") if aggregate else (),
+        across=None)
+    if "across" in found:
+        if aggregate != "sum":
+            raise ValueError("across spreads a sum, not a mean")
+        if len(found["across"]) != 1 or len(selection.columns) != 1:
+            raise ValueError("across takes one column, and sums one column")
+        selection = Selection(selection.where, aggregate, selection.columns, selection.by,
+                              found["across"][0])
+    return selection
+
+
+def _text(cell: Any) -> str:
+    """A cell as a where clause reads it."""
+    if isinstance(cell, bool):
+        return "true" if cell else "false"
+    return "null" if cell is None else str(cell)
+
+
+def aggregation_refused(column: str, how: str) -> str | None:
+    """Why ``column`` cannot be summed or averaged over rows, or ``None``."""
+    parts = set(column.split("_"))
+    if formats.unit_from_name(column) in QUOTIENT_UNITS or parts & QUOTIENT_WORDS:
+        return (f"{column!r} is a rate, share or mean: pool it from its numerator and "
+                "denominator (its result key), never add up or average the rows")
+    if how == "sum" and parts & LEVEL_WORDS:
+        return f"{column!r} is a quantile or an extreme: it does not add up (use mean)"
+    return None
+
+
+def _number(cell: Any, column: str) -> int | float | None:
+    if cell is None:
+        return None
+    if isinstance(cell, bool) or not isinstance(cell, int | float):
+        raise ValueError(f"column {column!r} holds {cell!r}, not a number")
+    return cell
+
+
+def _aggregate(cells: list[Any], how: str, column: str) -> int | float | None:
+    numbers = [_number(cell, column) for cell in cells]
+    if any(number is None for number in numbers):
+        return None  # a row with nothing measured leaves its group's figure unknown
+    total = sum(numbers)
+    return total if how == "sum" else total / len(numbers)
+
+
+def select(rows: list[dict[str, Any]], selection: Selection,
+           name: str) -> tuple[list[dict[str, Any]], dict[str, str | None], set[str]]:
+    """The rows ``selection`` keeps and aggregates, the units of spread columns, and
+    which of them hold paired differences; raises :class:`RenderError` listing every
+    problem."""
+    problems = []
+    columns = set(rows[0]) if rows else set()
+    named = [column for column, _ in selection.where] + list(selection.by) + \
+        list(selection.columns) + ([selection.across] if selection.across else [])
+    problems += [f"no column {column!r}" for column in dict.fromkeys(named)
+                 if column not in columns]
+    if selection.aggregate:
+        problems += [reason for column in selection.columns
+                     if (reason := aggregation_refused(column, selection.aggregate))]
+        if overlap := set(selection.columns) & set(selection.by):
+            problems.append(f"{sorted(overlap)} both group and are aggregated")
+    if problems:
+        raise RenderError(f"table {name!r}", problems)
+    kept = [row for row in rows
+            if all(_text(row.get(column)) == wanted for column, wanted in selection.where)]
+    if not kept:
+        wanted = " ".join(f"{column}={value}" for column, value in selection.where)
+        raise RenderError(f"table {name!r}", [f"no rows match where {wanted}"])
+    if not selection.aggregate:
+        return kept, {}, set()
+    groups: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
+    for row in kept:
+        groups.setdefault(tuple(row.get(column) for column in selection.by), []).append(row)
+    out = []
+    try:
+        if selection.across:
+            [summed] = selection.columns
+            spread = list(dict.fromkeys(row.get(selection.across) for row in kept))
+            titles = [_text(value) for value in spread]
+            if clash := set(titles) & set(selection.by):
+                raise ValueError(f"spread columns {sorted(clash)} clash with the groups")
+            for key, members in groups.items():
+                record = dict(zip(selection.by, key, strict=True))
+                for value, title in zip(spread, titles, strict=True):
+                    cells = [row.get(summed) for row in members
+                             if row.get(selection.across) == value]
+                    record[title] = _aggregate(cells, "sum", summed) if cells else 0
+                out.append(record)
+            unit = formats.unit_from_name(summed)
+            return out, {title: unit for title in titles}, (
+                set(titles) if "_vs_" in summed else set())
+        for key, members in groups.items():
+            record = dict(zip(selection.by, key, strict=True))
+            for column in selection.columns:
+                record[column] = _aggregate([row.get(column) for row in members],
+                                            selection.aggregate, column)
+            record[ROWS_COUNT] = len(members)
+            out.append(record)
+    except ValueError as error:
+        raise RenderError(f"table {name!r}", [str(error)]) from error
+    return out, {}, set()
+
+
+def _labels(data: Any) -> dict[str, str]:
+    labels = dict(data or {})
+    for key, text in labels.items():
+        if not isinstance(key, str) or not isinstance(text, str) or not text:
+            raise ValueError(f"wording.labels.{key}: give the words as text")
+    return labels
+
+
+def label(identifier: str, labels: Mapping[str, str]) -> str:
+    """An identifier, or a comma-separated list of them, in words: its entry in
+    ``wording.labels``, else its words split at underscores; an empty list is "none"."""
+    if not identifier.strip():
+        return "none"
+    return ", ".join(labels.get(item, item.replace("_", " "))
+                     for item in (part.strip() for part in identifier.split(",")))
 
 
 def _fact_rows(expression: str, sources: Sources) -> list[dict[str, Any]]:
