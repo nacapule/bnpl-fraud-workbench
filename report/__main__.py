@@ -9,8 +9,9 @@ document that cannot be rendered fails the render; a summary from another run
 renders into ``--out`` elsewhere, where a document it cannot render is skipped and
 listed in ``NOT_RENDERED.txt`` (``--strict`` fails instead). ``check`` changes
 nothing: it fails when a committed document differs from a fresh render, a
-claim no longer holds or no template places it, or the lint finds a number or
-a comparative word typed into a template.
+claim no longer holds or no template places it, the lint finds a number or
+a comparative word typed into a template, or a relative link in a published
+document reaches no file or heading.
 """
 
 from __future__ import annotations
@@ -21,6 +22,7 @@ from pathlib import Path
 
 from core.results import read_summary
 from report import claims as claims_module
+from report import links as links_module
 from report import lint as lint_module
 from report.render import (
     REPO,
@@ -43,6 +45,7 @@ def check(summary_path: Path = SUMMARY, root: Path = REPO) -> list[str]:
     """Every problem with the committed documents, claims and templates."""
     claims, wording = claims_module.load_claims(root / "report" / "claims.yaml")
     problems = lint_module.lint(lint_module.load_config(), root)
+    problems += links_module.broken(root)
     if not documents() and not claims:
         return problems
     sources = _sources(summary_path)

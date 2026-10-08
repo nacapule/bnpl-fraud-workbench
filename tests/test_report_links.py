@@ -198,3 +198,11 @@ def test_anchors_follow_githubs_rendered_text_and_repeat_numbers() -> None:
             "```\n# not a heading\n```\n")
     assert links.anchors(text) == {"x", "x-1", "x-1-1", "italics-and-snake_case",
                                    "the-foo-tag", "café--more"}
+
+
+def test_the_documents_check_reports_a_broken_link(monkeypatch) -> None:
+    from report import __main__ as cli
+
+    problem = "README.md:1: link 'missing.md': no such file"
+    monkeypatch.setattr(cli.links_module, "broken", lambda root: [problem])
+    assert problem in cli.check()
