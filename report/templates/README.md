@@ -166,11 +166,9 @@ cached, so the benchmarks replay offline with no calls.
 
 ## The memo drafter
 
-The memo drafter writes an advisory investigation memo from a case packet: the
-evidence, competing explanations including the benign one, the fraud-policy clauses
-and a recommended next step; the analyst decides.
+The memo drafter produces an advisory investigation memo from a case packet, with evidence, competing explanations including a benign explanation, supporting fraud-policy clauses and a recommended next step. The analyst makes the decision.
 
-Its benchmark, fixed before any final case existed, scores memos on {{ bench:2026-10-final:/arms/opus/summary/n_cases | count }} analyst decisions from the final seeds' worlds. A memo passes only if its format, disposition, next check, citations and every structured claim pass. The natural-mix pass rate was {{ bench:2026-10-final:/endpoints/primary/arms/opus/natural_mix | pct }} (cluster-bootstrap interval {{ bench:2026-10-final:/endpoints/primary/arms/opus/natural_mix_cluster_bootstrap | bounds }}) for `opus`, {{ bench:2026-10-final:/pins/opus/model }} through the Claude Code CLI, and {{ bench:2026-10-final:/endpoints/primary/arms/sol/natural_mix | pct }} ({{ bench:2026-10-final:/endpoints/primary/arms/sol/natural_mix_cluster_bootstrap | bounds }}) for `sol`, {{ bench:2026-10-final:/pins/sol/model }} through the Codex CLI. The paired comparison of the two is inconclusive. The [LLM appendix](reports/appendix-llm.md) has every endpoint, what failed and the limits.
+The benchmark protocol was fixed before any final case existed. It scores memos for {{ bench:2026-10-final:/arms/opus/summary/n_cases | count }} analyst decisions from the final seeds' worlds. A memo passes only if its format, disposition, next check, citations and all structured claims pass. The primary endpoint is the natural-mix pass rate. The `opus` arm used {{ bench:2026-10-final:/pins/opus/model }} through the Claude Code CLI and had a pass rate of {{ bench:2026-10-final:/endpoints/primary/arms/opus/natural_mix | pct }} (cluster-bootstrap interval {{ bench:2026-10-final:/endpoints/primary/arms/opus/natural_mix_cluster_bootstrap | bounds }}). The `sol` arm used {{ bench:2026-10-final:/pins/sol/model }} through the Codex CLI and had a pass rate of {{ bench:2026-10-final:/endpoints/primary/arms/sol/natural_mix | pct }} (cluster-bootstrap interval {{ bench:2026-10-final:/endpoints/primary/arms/sol/natural_mix_cluster_bootstrap | bounds }}). The paired comparison is inconclusive. The [LLM appendix](reports/appendix-llm.md) reports all endpoints, the failures and the limits.
 
 ## Methods and limits
 
@@ -184,8 +182,7 @@ The appendices give the tables behind each result:
   the analyst's decisions by label, and the operating sensitivities.
 - [Economics](reports/appendix-economics.md): the ledger's reconciliation, the
   economic assumptions and the lifetime-value sensitivity.
-- [LLM](reports/appendix-llm.md): the memo benchmark's endpoints, the paired
-  comparison of its arms, what failed and how development led to the final prompt.
+- [LLM](reports/appendix-llm.md): memo benchmark endpoints, the paired comparison, failure details and the development findings behind the final prompt.
 
 ## Repository map
 
