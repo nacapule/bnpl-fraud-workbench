@@ -14,6 +14,11 @@ not_yet_templated:
 # Phrases with digits that are names, not results.
 allowed_phrases:
   - "pay-in-4"
+  - "depth-3"
+  - "Depth-3"
+  - "per 1,000"
+  - "per 10,000"
+  - "90th percentile"
 
 # Documents whose templates may state a comparison only through a claim,
 # {{ claim:<id> }} (report/claims.yaml).
