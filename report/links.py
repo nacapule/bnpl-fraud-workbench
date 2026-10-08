@@ -32,7 +32,11 @@ PUBLISHED = ("README.md", "docs/*.md", "reports/**/*.md", "cases/*.md")
 FENCE_OPEN = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
 DEFINITION = re.compile(r"^ {0,3}\[(?:[^\[\]\\]|\\.)+\]:[ \t]*\n?[ \t]*(<[^<>\n]*>|\S+)",
                         re.MULTILINE)
-HTML_ATTRIBUTE = re.compile(r"""<[A-Za-z][^<>]*?\b(?:src|href)\s*=\s*(?:"([^"]*)"|'([^']*)')""")
+HTML_TAG = re.compile(r"<[A-Za-z][^<>]*>")
+HTML_ATTRIBUTE = re.compile(r"""([^\s=/>"']+)(?:\s*=\s*("[^"]*"|'[^']*'|[^\s"'=<>`]+))?""")
+ESCAPE = re.compile(r"\\([!-/:-@\[-`{-~])")  # a backslash before ASCII punctuation
+# A line that starts a block of its own: a heading, a list item, a table row, a quote.
+BLOCK_START = re.compile(r"^ {0,3}(#{1,6}([ \t]|$)|[-*+][ \t]|\d{1,9}[.)][ \t]|\||>)")
 SCHEME = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*:")
 HEADING = re.compile(r"^ {0,3}(#{1,6})(?:[ \t]+(.*?))?(?:[ \t]+#+)?[ \t]*$")
 ANCHOR = re.compile(r"""<a\s[^<>]*?\b(?:name|id)\s*=\s*["']([^"']+)["']""")
@@ -72,11 +76,12 @@ def _blocks(text: str) -> list[tuple[int, str]]:
     separated by blank lines, each with its code spans blanked."""
     blocks, current, start = [], [], 1
     for number, line in enumerate(_outside_fences(text), start=1):
-        if not line.strip():
+        if not line.strip() or BLOCK_START.match(line):
             if current:
                 blocks.append((start, _blank_code("\n".join(current))))
             current = []
-            continue
+            if not line.strip():
+                continue
         if not current:
             start = number
         current.append(line)
@@ -88,7 +93,9 @@ def _blocks(text: str) -> list[tuple[int, str]]:
 def _blank_code(block: str) -> str:
     """``block`` with every code span (a run of backticks closed by a run of the same
     length) blanked, newlines kept; an unmatched run is literal text."""
-    runs = [(match.start(), match.end()) for match in re.finditer(r"`+", block)]
+    runs = [(match.start() + (1 if _escaped(block, match.start()) else 0), match.end())
+            for match in re.finditer(r"`+", block)]
+    runs = [(start, end) for start, end in runs if end > start]
     out, index = list(block), 0
     while index < len(runs):
         start, end = runs[index]
@@ -105,12 +112,20 @@ def _blank_code(block: str) -> str:
     return "".join(out)
 
 
+def _escaped(block: str, position: int) -> bool:
+    """Whether the character at ``position`` follows an odd run of backslashes."""
+    count = 0
+    while position - count - 1 >= 0 and block[position - count - 1] == "\\":
+        count += 1
+    return count % 2 == 1
+
+
 def _opening_bracket(block: str, close: int) -> int | None:
     """The ``[`` that the ``]`` at ``close`` closes, if any."""
     depth = 0
     for position in range(close, -1, -1):
         char = block[position]
-        if position and block[position - 1] == "\\":
+        if _escaped(block, position):
             continue
         if char == "]":
             depth += 1
@@ -151,8 +166,10 @@ def _destination(block: str, start: int) -> str | None:
     while position < len(block) and block[position] in " \t\n":
         position += 1
     if position < len(block) and block[position] in TITLE_CLOSE and position > gap:
-        close = block.find(TITLE_CLOSE[block[position]], position + 1)
-        if close < 0:
+        closer, close = TITLE_CLOSE[block[position]], position + 1
+        while close < len(block) and (block[close] != closer or _escaped(block, close)):
+            close += 1
+        if close >= len(block):
             return None
         position = close + 1
         while position < len(block) and block[position] in " \t\n":
@@ -178,21 +195,30 @@ def targets(text: str) -> list[tuple[int, str]]:
             target = match.group(1)
             found.append((line(match.start()), match.start(),
                           target[1:-1] if target.startswith("<") else target))
-        for match in HTML_ATTRIBUTE.finditer(block):
-            found.append((line(match.start()), match.start(),
-                          match.group(1) or match.group(2) or ""))
+        for tag in HTML_TAG.finditer(block):
+            inside = tag.group(0)[1:-1]
+            for attribute in list(HTML_ATTRIBUTE.finditer(inside))[1:]:  # after the name
+                name, value = attribute.group(1).lower(), attribute.group(2)
+                if name in ("src", "href") and value is not None:
+                    found.append((line(tag.start()), tag.start() + attribute.start(),
+                                  value[1:-1] if value[0] in "\"'" else value))
     return [(number, target) for number, _, target in sorted(found)]
 
 
+LABEL = r"\[((?:[^\[\]]|\[[^\[\]]*\])*)\]"
+TARGET = r"\((?:[^()]|\([^()]*\))*\)"
+
+
 def _heading_text(raw: str) -> str:
-    """A heading's text as it renders: code spans kept literally, tags, link and image
-    markup and emphasis markers dropped, entities decoded."""
+    """A heading's text as it renders: link and image markup dropped (a link keeps its
+    label), code spans kept literally, tags and emphasis markers dropped, entities
+    decoded."""
+    raw = re.sub("!" + LABEL + "(?:" + TARGET + r"|\[[^\]]*\])", "", raw)  # images: no text
+    raw = re.sub(LABEL + "(?:" + TARGET + r"|\[[^\]]*\])", r"\1", raw)  # links: their label
     parts = re.split(r"(`+)(.+?)\1", raw)
     text = []
     for index in range(0, len(parts), 3):
         prose = parts[index]
-        prose = re.sub(r"!\[([^\]]*)\]\([^)]*\)", "", prose)  # an image adds no text
-        prose = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", prose)  # a link keeps its text
         prose = TAG.sub("", prose).replace("*", "")
         prose = re.sub(r"(?<![^\W_])_+|_+(?![^\W_])", "", prose)  # emphasis, not snake_case
         text.append(html.unescape(prose))
@@ -235,6 +261,7 @@ def broken(root: Path = REPO, documents: list[Path] | None = None) -> list[str]:
         for number, target in targets(text):
             if SCHEME.match(target) or target.startswith("//"):
                 continue
+            target = html.unescape(ESCAPE.sub(r"\1", target))
             path_part, _, fragment = target.partition("#")
             path_part = unquote(path_part)
             if path_part.startswith("/"):

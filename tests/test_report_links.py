@@ -136,3 +136,36 @@ def test_anchors_follow_githubs_rendered_text_and_repeat_numbers() -> None:
             "```\n# not a heading\n```\n")
     assert links.anchors(text) == {"x", "x-1", "x-1-1", "italics-and-snake_case",
                                    "the-foo-tag", "café--more"}
+
+
+@pytest.mark.parametrize("text, found", [
+    # headings, list items and table rows are blocks of their own for code spans
+    ("# `\n## [out](a.md) `", ["a.md"]),
+    ("- `a\n- [b](b.md) `", ["b.md"]),
+    # an escaped backtick or bracket is text; an escaped backslash is not an escape
+    ("\\`[a](a.md)` [b](b.md)", ["a.md", "b.md"]),
+    ("\\\\[x](x.md)", ["x.md"]),
+    # a title with escaped delimiters
+    ('[a](a.md "a \\"title\\"") [b](b.md \'it\\\'s\') [c](c.md (one \\) two))',
+     ["a.md", "b.md", "c.md"]),
+    # the exact src and href attributes of a tag, whatever else it holds
+    ('<a data-href="x.md" href="a.md">a</a>', ["a.md"]),
+    ("<img title=\"href='x.md'\" src='b.svg'>", ["b.svg"]),
+])
+def test_blocks_escapes_titles_and_attributes(text: str, found: list[str]) -> None:
+    assert [target for _, target in links.targets(text)] == found
+
+
+def test_a_destination_is_resolved_after_its_escapes_and_entities(tmp_path: Path) -> None:
+    root = _repo(tmp_path, {**BASE, "README.md": "[a](docs/methods\\.md) [b](docs&#47;methods.md)"
+                                                 " [c](docs/methods.md#upper&#45;bound)\n"})
+    assert links.broken(root) == []
+
+
+@pytest.mark.parametrize("heading, anchor", [
+    ("[`code`](README.md)", "code"),
+    ("[foo](a(b)c.md) bar", "foo-bar"),
+    ("[foo][ref] and ![logo](logo.svg) more", "foo-and--more"),
+])
+def test_a_linked_heading_takes_its_label(heading: str, anchor: str) -> None:
+    assert links.slug(heading) == anchor
