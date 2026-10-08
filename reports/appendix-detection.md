@@ -94,7 +94,8 @@ so each row's prevented figure can be read against what was at stake.
 ## The policy's own history (a diagnostic)
 
 Each policy decides with a context built from the history its own decisions produced:
-an account it declined has no approved order or repaid installment afterwards. The
+an order it declined at checkout adds no approval and no installments to the account's
+history. The
 diagnostic replays every policy with the outcome-derived columns frozen at their
 approve-all values, so the difference shows how much each policy's results depend on
 its own history. It is not part of the recommendation rule.
@@ -114,9 +115,11 @@ orders; the differences are own history minus approve-all history.
 
 ## Tuned thresholds
 
-Each policy's review and decline thresholds were chosen per seed on the validation
-window through the replay, from cut-points its scores attain at preset review and
-decline rates ([methods](../docs/methods.md#threshold-tuning)). The chosen points,
+Each policy's tunable thresholds were chosen per seed on the validation window through
+the replay, from cut-points its scores attain at preset review and decline rates
+([methods](../docs/methods.md#threshold-tuning)). The expected-loss policy tunes its
+review threshold only; its decline rule is fixed (an order is declined when its expected
+loss exceeds the expected cost of declining a good customer). The chosen points,
 whether either sits at the edge of the searched grid, and every replayed point are in
 `results/tune.json` (`tune.chosen` and `tune.frontier`).
 

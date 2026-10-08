@@ -16,9 +16,9 @@ How each policy routed the window's orders at checkout, totals over the final se
 
 *Fraud declined at checkout* counts fraud orders declined there, including those refused because review had already blocked the account; *legitimate refused for a blocked account* counts legitimate orders refused that way. An order whose label is not yet known is in none of these columns. Every other order went through; one sent to review shipped unless the analyst decided or held it first.
 
-{{ table:replay.outcomes where family=baseline capacity_level=base layout=current history=policy reviewer=evidence verification=verification sum reviews, holds, checks_run, escalations, accounts_blocked, decided_after_shipping by policy | policy "Policy" label, reviews "Reviews" count, holds "Holds" count, checks_run "Checks" count, escalations "Escalations" count, accounts_blocked "Accounts blocked" count, decided_after_shipping "Decided after shipping" count, rows_count "Worlds" count }}
+{{ table:replay.outcomes where family=baseline capacity_level=base layout=current history=policy reviewer=evidence verification=verification sum reviews, holds, holds_before_shipping, checks_run, escalations, accounts_blocked, decided_after_shipping by policy | policy "Policy" label, reviews "Reviews" count, holds "Holds" count, holds_before_shipping "Of which before shipping" count, checks_run "Checks" count, escalations "Escalations" count, accounts_blocked "Accounts blocked" count, decided_after_shipping "Decided after shipping" count, rows_count "Worlds" count }}
 
-*Reviews:* orders that entered the queue. *Holds:* orders paused for verification (at most {{ config:policy:actions.hold_max_hours }} hours; an order the checks have not cleared by then is cancelled before it ships). *Checks:* verification checks started. *Escalations:* declines that also blocked linked accounts and added {{ config:policy:actions.senior_review_minutes }} minutes of senior review. *Accounts blocked:* distinct accounts whose later orders were refused. *Decided after shipping:* reviews first decided after the goods shipped. All are totals over the final seeds' worlds (the last column counts them).
+*Reviews:* orders that entered the queue. *Holds:* orders asked to verify, before or after they shipped. A hold before shipping pauses the shipment for at most {{ config:policy:actions.hold_max_hours }} hours, and an order the checks have not cleared by then is cancelled; after shipping, an unanswered request changes nothing. *Checks:* verification checks started. *Escalations:* declines that also blocked linked accounts and added {{ config:policy:actions.senior_review_minutes }} minutes of senior review. *Accounts blocked:* distinct accounts blocked by a review decline or escalation; their later orders are refused at checkout. *Decided after shipping:* reviews first decided after the goods shipped. All are totals over the final seeds' worlds (the last column counts them).
 
 {{ table:replay.outcomes where family=baseline capacity_level=base layout=current history=policy reviewer=evidence verification=verification sum review_minutes_offered, review_minutes_used, senior_minutes, available_minutes by policy | policy "Policy" label, review_minutes_offered "Minutes of work offered" count, review_minutes_used "Minutes used" count, senior_minutes "Of which senior review" count, available_minutes "Minutes allotted" count, rows_count "Worlds" count }}
 
@@ -62,8 +62,7 @@ the [operating review](operating-review.md#review-capacity-and-staffing) and bel
 {{ table:replay.outcomes where capacity_level=base layout=current history=policy reviewer=evidence verification=verification policy=incumbent_rules sum orders, available_minutes, review_minutes_offered by family | family "World family" label, orders "Orders" count, available_minutes "Minutes allotted" count, review_minutes_offered "Minutes the incumbent's queue offered" count, rows_count "Worlds" count }}
 
 The allotment per shift is the same in every family, so the acquisition surge brings
-its extra orders to the same minutes. Orders and minutes are totals over the worlds;
-dividing one by the other gives the realized minutes per order.
+its extra orders to the same minutes. Orders and minutes are totals over the worlds.
 
 ## The analyst's decisions by label
 
@@ -77,18 +76,18 @@ orders summed over the final seeds' baseline worlds.
 
 *Cleared:* cleared by the analyst, at once or once the checks passed; a held order then ships. *Declined* and *escalated:* declined after a failed check or an earlier outcome that settles the order; an order not yet shipped is voided, a shipped one's loss stands, and the account is blocked (an escalation also blocks linked accounts and adds senior review). *Cancelled:* held before shipment with no answer to the checks within {{ config:policy:actions.hold_max_hours }} hours, then cancelled and refunded. *Unchanged:* held after shipment with no answer, which changes nothing. The analyst reads only the evidence known at the decision, so a fraud order cleared here showed no adverse evidence or passed its checks, with nothing yet known that settled it ([methods](../docs/methods.md#procedure)).
 
-The same for gradient boosting's queue. Its chosen point has a review route on some seeds only ([detection appendix](appendix-detection.md#tuned-thresholds)), so these counts come from those seeds' worlds:
-
-{{ table:replay.confusion where family=baseline policy=boosting decision_point=before_shipping sum orders by truth across final | truth "Decided before shipping" label, clear "Cleared" count, decline "Declined" count, escalate "Escalated" count, cancelled "Cancelled" count }}
-
-{{ table:replay.confusion where family=baseline policy=boosting decision_point=after_shipping sum orders by truth across final | truth "Decided after shipping" label, clear "Cleared" count, decline "Declined" count, escalate "Escalated" count, unchanged "Unchanged" count }}
-
-The same decisions by the order's latent pattern, a diagnostic the analyst never
-sees ("legitimate" is no pattern; a bust-out merchant's customers are genuine):
+The same decisions on the incumbent's queue by the order's latent pattern, a
+diagnostic the analyst never sees ("legitimate" is no pattern; a bust-out merchant's customers are genuine):
 
 {{ table:replay.confusion_latent where family=baseline policy=incumbent_rules decision_point=before_shipping sum orders by truth across final | truth "Latent pattern (before shipping)" label, clear "Cleared" count, decline "Declined" count, escalate "Escalated" count, cancelled "Cancelled" count }}
 
 {{ table:replay.confusion_latent where family=baseline policy=incumbent_rules decision_point=after_shipping sum orders by truth across final | truth "Latent pattern (after shipping)" label, clear "Cleared" count, decline "Declined" count, escalate "Escalated" count, unchanged "Unchanged" count }}
+
+The analyst's decisions on gradient boosting's queue, by label. Its chosen point has a review route on some seeds only ([detection appendix](appendix-detection.md#tuned-thresholds)), so these counts come from those seeds' worlds:
+
+{{ table:replay.confusion where family=baseline policy=boosting decision_point=before_shipping sum orders by truth across final | truth "Decided before shipping" label, clear "Cleared" count, decline "Declined" count, escalate "Escalated" count, cancelled "Cancelled" count }}
+
+{{ table:replay.confusion where family=baseline policy=boosting decision_point=after_shipping sum orders by truth across final | truth "Decided after shipping" label, clear "Cleared" count, decline "Declined" count, escalate "Escalated" count, unchanged "Unchanged" count }}
 
 ## Operating sensitivities
 
@@ -136,11 +135,12 @@ assessed, whatever its share in time. P0 entries are too few to assess in any ce
 
 ## A reviewer who always knows the truth (a diagnostic)
 
-The same queue, timing and allotment with an analyst who declines every order
-generated as fraud or abuse and clears the rest at review completion, without checks.
-It shows how much of each policy's result is limited by what review can learn, as
-opposed to which orders reach review and when; it is not part of the recommendation
-rule. Its declines include the genuine customers of a bust-out merchant
+The same thresholds, shifts, allotment and review times with an analyst who declines
+every order generated as fraud or abuse and clears the rest at review completion,
+without checks. The analyst's decisions still feed back through the replay: the
+accounts it blocks and the history later orders are scored on change, and with them
+the queue and its timing. The difference is therefore the whole effect of a reviewer
+who knows the truth. It is not part of the recommendation rule. Its declines include the genuine customers of a bust-out merchant
 ([methods](../docs/methods.md#upper-bound)).
 
 | Policy | Ledger net, evidence-based reviewer | Ledger net, all-knowing reviewer | Difference | Fraud loss difference | Legitimate declined difference per 10,000 |

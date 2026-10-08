@@ -5,7 +5,7 @@ policy should a small pay-in-4 fraud team run, with a fixed allotment of analyst
 time, evidence and labels that arrive late, goods that ship within hours, and a real
 cost to holding or declining good customers? And when does the answer change?
 
-**The evidence** is simulated, not a real portfolio: synthetic marketplaces generated from one set of stated assumptions ([methods](../docs/methods.md)). Every policy was tuned on an earlier window and frozen, then replayed on the orders placed in the test window, from {{ protocol:windows.test.start | date }} until {{ protocol:windows.test.end | date }}, with outcomes observed until {{ protocol:windows.follow_up.end | date }}. Each final seed is one simulated world; figures are means over those worlds, and a paired difference is said to be "positive on k of n seeds" when it is above zero in k of the n worlds.
+**The evidence** is simulated, not a real portfolio: synthetic marketplaces generated from one set of stated assumptions ([methods](../docs/methods.md)). Every policy was tuned on an earlier window and frozen, then replayed on the orders placed in the test window, from {{ protocol:windows.test.start | date }} until {{ protocol:windows.test.end | date }}, with outcomes observed until {{ protocol:windows.follow_up.end | date }}. Each final seed is one simulated world; figures are means over those worlds unless a caption says they are pooled, and a paired difference is said to be "positive on k of n seeds" when it is above zero in k of the n worlds.
 
 Unless a table says otherwise, figures are for the **primary cell**: the baseline
 world, the base allotment on the current shift layout, each policy seeing the history
@@ -38,8 +38,9 @@ decline it, send it to review, or approve it.
 | hybrid | the gradient-boosting score | the rule score |
 | expected loss | calibrated fraud probability times the cash at risk | orders where the expected loss avoided covers the expected cost of declining a good customer |
 
-Every policy's thresholds were chosen on the validation window through the same
-replay, before the test window was seen ([methods](../docs/methods.md#threshold-tuning)).
+Every policy's tunable thresholds (all but the expected-loss policy's decline rule,
+which is fixed) were chosen on the validation window through the same replay, before
+the test window was seen ([methods](../docs/methods.md#threshold-tuning)).
 A rule written down before any final world existed then chooses among them:
 
 - **Eligibility.** Lost legitimate customers (below) within {{ protocol:reporting.recommendation_rule.eligibility.lost_legitimate_per_10000.mean_at_most }} per 10,000 legitimate orders on the mean over seeds and within {{ protocol:reporting.recommendation_rule.eligibility.lost_legitimate_per_10000.any_seed_at_most }} on every seed; legitimate orders held within {{ protocol:reporting.recommendation_rule.eligibility.held_legitimate_per_10000.mean_at_most }} and {{ protocol:reporting.recommendation_rule.eligibility.held_legitimate_per_10000.any_seed_at_most }}; and at each queue priority, a minimum share of {{ protocol:reporting.recommendation_rule.eligibility.service_share_at_least | num:2 }} of the entries decided within the service target (a priority without enough entries is reported, not assessed). Where today's rules miss a criterion, challengers are held only to today's level on it.
@@ -69,7 +70,7 @@ A rule written down before any final world existed then chooses among them:
 *Ledger net against approve-all:* the policy's net cash for the window's orders minus
 approve-all's in the same world, mean over seeds, before any friction or staffing
 cost. *Fraud loss:* cash lost on orders labelled fraud, in basis points of the
-window's gross merchandise value. *Legitimate declined:* as lost customers, without
+window's gross merchandise value, pooled over seeds. *Legitimate declined:* as lost customers, without
 the cancelled holds, pooled over seeds. *Review minutes used:* minutes of review work
 begun on the window's orders (including work finished after it ended) over the
 minutes allotted to the queue during the window. *Decided after shipping:* reviews
@@ -88,7 +89,7 @@ The expected-loss policy uses {{ evaluate.review_minutes_used_share.baseline.bas
 
 ## Review capacity and staffing
 
-Capacity here is analyst time allotted to the fraud queue: one analyst on each covered shift, with {{ config:policy:capacity.levels.base.review_minutes_per_shift.early }} minutes per shift for review and escalation work at the base level. At this world's volume a single analyst's shift could clear the whole queue many times over, so headcount cannot be the binding limit; the allotment is. The base was sized on today's queue before any policy comparison was read ([methods](../docs/methods.md#capacity)).
+Capacity here is analyst time allotted to the fraud queue: one analyst on each covered shift, with {{ config:policy:capacity.levels.base.review_minutes_per_shift.early }} minutes per shift for review and escalation work at the base level. At this world's volume, the review work a day brings is a small part of one analyst's productive hours on a shift, so headcount cannot be the binding limit; the allotment is. The base was sized on today's queue before any policy comparison was read ([methods](../docs/methods.md#capacity)).
 
 The table varies the staffing with each policy's thresholds held as tuned at the base
 allotment. Each cell is the policy's mean gain over the incumbent in rule net

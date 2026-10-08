@@ -29,7 +29,7 @@ Gradient boosting acts mainly through score-based declines at checkout. It loses
 
 The answer holds in {{ evaluate.recommendation.holds | numerator }} of the {{ evaluate.recommendation.holds | denominator }} other operating cells, covering world families, staffing levels, the evening shift layout, weak verification and two other values for a lost customer. When an acquisition campaign brings a surge of new customers, gradient boosting misses the guardrail on lost legitimate customers, so today's rules stay. {{ claim:surge-boosting-declines }} The [operating review](reports/operating-review.md) gives the decision, the alternatives, the staffing comparison and a pilot plan.
 
-All results come from synthetic worlds, not from a real portfolio: they show how these policies behave under the stated assumptions, not real fraud rates. The table covers the primary cell (the baseline world at the base review allotment) on the test window, from {{ protocol:windows.test.start | date }} until {{ protocol:windows.test.end | date }}, each figure a mean over the final seeds, one simulated world per seed.
+All results come from synthetic worlds, not from a real portfolio: they show how these policies behave under the stated assumptions, not real fraud rates. The table covers the primary cell (the baseline world at the base review allotment) on the test window, from {{ protocol:windows.test.start | date }} until {{ protocol:windows.test.end | date }}, one simulated world per seed: gains and customer rates are means over the final seeds, and fraud loss pools loss and GMV over them.
 
 | Policy | Mean gain over the incumbent per 1,000 orders | Across seeds | Lost legitimate customers per 10,000 | Legitimate orders held per 10,000 | Fraud loss (bps of GMV) |
 | --- | ---: | --- | ---: | ---: | ---: |
@@ -44,7 +44,7 @@ All results come from synthetic worlds, not from a real portfolio: they show how
 - **Mean gain over the incumbent:** rule net contribution minus the incumbent rules' in the same world, per 1,000 orders decided (processor-approved checkouts in the test window). Rule net contribution is the ledger's net cash for those orders minus ${{ config:policy:costs.false_decline_ltv_usd | num:0 }} for each lost legitimate customer and minus the analyst allotment at ${{ config:policy:costs.analyst_loaded_hourly_usd | num:0 }} an hour.
 - **Across seeds:** how many worlds the gain was positive or negative in.
 - **Lost legitimate customers:** legitimate orders declined at checkout, refused because the account was blocked, declined or escalated after review, or cancelled after an unanswered verification request. **Held:** legitimate orders asked to verify. Both per 10,000 legitimate orders, mean over seeds; "legitimate" means no fraud finding by the end of observation.
-- **Fraud loss:** cash lost on orders labelled fraud, in basis points of gross merchandise value.
+- **Fraud loss:** cash lost on orders labelled fraud, in basis points of gross merchandise value, pooled over seeds.
 
 What qualifies these figures: the seeds show variation between worlds
 that share one generator, not whether its parameters are right; fraudsters in the

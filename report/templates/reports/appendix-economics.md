@@ -17,7 +17,7 @@ view (`core/ledger.py`).
 | Installments | {{ config:world:product.n_installments }} more, every {{ config:world:product.installment_interval_days }} days, the first {{ config:world:product.installment_interval_days }} days after approval |
 | Merchant fee | {{ config:world:product.merchant_discount_bps | bps_pct }} of the price, netted from the merchant's settlement when it ships; the platform's income on a repaid order |
 | Promotions | funded by the platform, paid to the merchant as a separate event |
-| Disputes | the disputed payments debited and a {{ config:world:product.dispute_fee_cents | usd }} fee charged when the platform learns of a dispute; credited back if it is won |
+| Disputes | the disputed payments debited and a {{ config:world:product.dispute_fee_cents | usd }} fee charged when the platform learns of a dispute; the disputed amount is credited back if it is won, and the fee stays |
 | Who bears a lost dispute | the platform for unauthorized use; the merchant for item-not-received and not-as-described claims, unless it has closed |
 | Write-off | {{ config:world:product.writeoff_after_days }} days after the last installment is due, if a balance remains; a status, not cash |
 | Recovery | {{ config:world:product.recovery_rate_bps | bps_pct }} of the written-off balance, {{ config:world:product.recovery_lag_days }} days after the write-off |

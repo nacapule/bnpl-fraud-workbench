@@ -18,7 +18,7 @@ view (`core/ledger.py`).
 | Installments | 3 more, every 14 days, the first 14 days after approval |
 | Merchant fee | 5% of the price, netted from the merchant's settlement when it ships; the platform's income on a repaid order |
 | Promotions | funded by the platform, paid to the merchant as a separate event |
-| Disputes | the disputed payments debited and a $15 fee charged when the platform learns of a dispute; credited back if it is won |
+| Disputes | the disputed payments debited and a $15 fee charged when the platform learns of a dispute; the disputed amount is credited back if it is won, and the fee stays |
 | Who bears a lost dispute | the platform for unauthorized use; the merchant for item-not-received and not-as-described claims, unless it has closed |
 | Write-off | 14 days after the last installment is due, if a balance remains; a status, not cash |
 | Recovery | 20% of the written-off balance, 30 days after the write-off |
