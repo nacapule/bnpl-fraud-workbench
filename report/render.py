@@ -254,14 +254,15 @@ def _select_item(items: list[Any], token: str, where: str) -> Any:
 
 
 def _walk(document: Any, pointer: str, name: str,
-          seen: frozenset[str] = frozenset()) -> tuple[Any, Any, str]:
-    """The node at ``pointer``, its parent and the key it sits under. An endpoint entry's
-    ``value`` is read at its source, which must hold the same value; a rate is a whole
-    and is not entered."""
+          seen: frozenset[str] = frozenset()) -> tuple[Any, Any, str, frozenset[str]]:
+    """The node at ``pointer``, its parent, the key it sits under and every key on the
+    way to it, sources included. An endpoint entry's ``value`` is read at its source,
+    which must hold the same value; a rate is a whole and is not entered."""
     if pointer in seen:
         raise KeyError(f"benchmark {name!r}: the sources of {pointer} form a loop")
     node, parent, key, where = document, None, "", ""
     tokens = _pointer(pointer)
+    trail = frozenset(tokens)
     for token in tokens:
         if isinstance(node, Mapping) and set(node) == RATE_KEYS:
             raise KeyError(f"benchmark {name!r}: {where} is a rate; it prints whole (pct, of, "
@@ -271,11 +272,11 @@ def _walk(document: Any, pointer: str, name: str,
             if not isinstance(source, str):
                 raise KeyError(f"benchmark {name!r}: {where} has a source that is not a "
                                "pointer")
-            found, parent, key = _walk(document, source, name, seen | {pointer})
+            found, parent, key, through = _walk(document, source, name, seen | {pointer})
             if found != node["value"]:
                 raise KeyError(f"benchmark {name!r}: {where}/value does not hold the value "
                                f"at its source {source}")
-            node, where = found, source
+            node, where, trail = found, source, trail | through
             continue
         parent = node
         if isinstance(node, list):
@@ -289,8 +290,9 @@ def _walk(document: Any, pointer: str, name: str,
         key = token
         where = f"{where}/{_escape(token)}"
     if isinstance(node, Mapping) and set(node) == ENTRY_KEYS:
-        return _walk(document, f"{pointer}/value", name, seen)
-    return node, parent, key
+        found, parent, key, through = _walk(document, f"{pointer}/value", name, seen)
+        return found, parent, key, trail | through
+    return node, parent, key, trail
 
 
 def bench_value(expression: str, sources: Sources) -> tuple[Value, str]:
@@ -304,8 +306,8 @@ def bench_value(expression: str, sources: Sources) -> tuple[Value, str]:
     shares. A number is a share, a difference of shares or a sign test's p-value by its
     key (see :data:`BENCH_SHARES`), or else a whole count. Text and flags print as they
     are. Anything else fails: a null (a degenerate interval), a share outside 0 to 1, a
-    difference outside -1 to 1, an interval out of order, another fraction, any number in
-    a case memo's claims, another list or object."""
+    difference outside -1 to 1, an interval out of order, another fraction, anything but
+    text or a flag in a case memo's claims, however reached, another list or object."""
     match = BENCH.fullmatch(expression)
     if not match:
         raise KeyError(f"{expression!r} is not <benchmark id>:<JSON pointer>")
@@ -313,9 +315,9 @@ def bench_value(expression: str, sources: Sources) -> tuple[Value, str]:
     if name not in sources.benchmarks:
         raise KeyError(f"no benchmark results {name!r} ({BENCHMARKS.as_posix()}/{name}/"
                        "results.json)")
-    node, parent, key = _walk(sources.benchmarks[name], pointer, name)
+    node, parent, key, trail = _walk(sources.benchmarks[name], pointer, name)
     where = f"benchmark {name!r} {pointer}"
-    if _is_number(node) and "claims" in _pointer(pointer):
+    if "claims" in trail and not isinstance(node, str | bool):
         raise KeyError(f"{where}: a claim's value has no unit the results state; print the "
                        "claim's statement instead")
     if node is None:

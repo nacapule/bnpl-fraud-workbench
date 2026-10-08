@@ -68,7 +68,9 @@ RESULTS = {
             "natural": 1.5, "difference": 1.5, "wilson": [0.2, 1.5],
             "cluster_bootstrap": [0.9, 0.1], "difference_cluster_bootstrap": [2.0, 3.0],
             "pass_share_interval": [0.1, 0.2, 0.3], "pair": [0.1, 0.2], "speed": 0.25,
-            "cluster_sign_test_p": 1.5},
+            "cluster_sign_test_p": 1.5,
+            "claims": {"value": 12, "wilson": [0.1, 0.2]},
+            "alias": {"source": "/bad/claims/value", "value": 12}},
 }
 
 
@@ -175,6 +177,8 @@ def test_a_benchmark_value_prints_in_its_kind(sources, pointer, form, text):
      "a claim's value has no unit the results state"),
     ("/bad/speed", "num", "0.25 has no unit the results state"),
     ("/bad/cluster_sign_test_p", "num", "1.5 is not a p-value between 0 and 1"),
+    ("/bad/alias", "", "a claim's value has no unit the results state"),
+    ("/bad/claims/wilson", "bounds", "a claim's value has no unit the results state"),
     ("/statistics/arms/opus/complete_pass/natural", "bounds", "prints with pct, not bounds"),
     ("/statistics/arms/opus/complete_pass/cluster_bootstrap", "pct",
      "a benchmark interval prints with bounds, not pct"),
