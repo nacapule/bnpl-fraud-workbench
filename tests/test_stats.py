@@ -46,7 +46,9 @@ def test_wilson_matches_an_independent_implementation(
 def test_wilson_hand_computed_case() -> None:
     # 0 of 10: upper bound z^2 / (n + z^2) = 3.8415 / 13.8415
     interval = wilson_interval(0, 10)
-    assert interval.low == 0.0
+    # the centre and the half-width are equal in exact arithmetic; their difference can
+    # round to a few times 1e-17 on some platforms
+    assert interval.low == pytest.approx(0.0, abs=1e-12)
     assert interval.high == pytest.approx(z_score() ** 2 / (10 + z_score() ** 2), abs=1e-12)
     assert interval.high == pytest.approx(0.27753, abs=1e-5)
 
