@@ -64,6 +64,10 @@ def make_run(tmp: Path, tables, review: float, decline: float) -> Path:
                             ("checkout_rows", "checkout_rows.pkl"),
                             ("fates", "incumbent_fates.pkl")):
         frames[name].to_pickle(world_dir / file_name)
+    (tmp / "fit" / "416").mkdir(parents=True)
+    (tmp / "fit" / "416" / "model_rules.json").write_text(json.dumps({
+        "version": "mini", "columns": list(definitions.COLUMNS),
+        "calibration": {"thresholds": [0.0, 100.0], "probabilities": [0.0, 1.0]}}))
     (tmp / "results").mkdir()
     (tmp / "results" / "tune.json").write_text(json.dumps({"tables": {"tune.chosen": [
         {"seed": 416, "policy": "incumbent_rules", "chosen_version": policy.version,
@@ -285,7 +289,8 @@ def test_latent_truth_is_a_separate_block(declined_facts):
 
 def test_a_rebuild_writes_the_same_bytes(declines, declined_facts, tmp_path):
     first = facts_module.write(declined_facts, tmp_path / "a")
-    assert select_module.main(["--run", str(declines), "--out", str(tmp_path / "b")]) == 0
+    assert select_module.main(["--run", str(declines), "--out", str(tmp_path / "b"),
+                               "--no-changes"]) == 0
     for path in first:
         again = tmp_path / "b" / path.name
         assert path.read_bytes() == again.read_bytes()
