@@ -239,9 +239,10 @@ policy uses calibrated probabilities for decisions.
 The replay (`queue_sim/replay.py`) processes the window's processor-approved
 checkouts in time order. Each policy starts acting at the window's start;
 earlier orders retain their approve-all history. Reviewed orders enter one
-queue, ordered by FP-2 §7.1 priority, then by review score, highest first.
-The simulated reviewer decides at review completion and whenever a
-verification check answers. Actions follow FP-2 §4 and `core/actions.py`:
+queue, ordered by FP-2 §7.1 priority, then by review score, highest first,
+then by earlier checkout and lower order id. The simulated reviewer decides at
+review completion and whenever a verification check answers. Actions follow
+FP-2 §4 and `core/actions.py`:
 
 - An order proceeds while waiting for review. The merchant ships at the
   world's time unless a hold or decline comes first.
@@ -420,8 +421,11 @@ orders); money is the mean over seeds. Per-seed values are retained as the
 spread. Paired differences against approve-all and the incumbent are reported
 with their mean, minimum, maximum and sign count ("positive on 9 of 10 seeds").
 Rate differences are recorded in basis points and printed as percentage
-points. A policy without a feasible point has no value on that seed, which
-the result names.
+points. When a policy has no feasible point on some seed, its pooled metrics
+and its paired comparisons in that family carry no value and name the seeds
+(pooled counts are still shown). The recommendation rule instead judges each
+policy on the seeds where it was evaluated, and its hurdle on the seeds it
+shares with the incumbent.
 
 Replay outcomes have no within-world confidence intervals. Seed variation
 shows differences between simulated worlds sharing one generator and its
@@ -430,7 +434,9 @@ and operating review are generated from their supporting results. Rendering
 requires an exact two-sided sign test over seeds, excluding zeros, at or below
 the claim's level (0.05 unless it states another) in the stated direction; at
 0.05, ten seeds without zeros need at least 9 of 10. No test is published for
-the recommended policy, selected among six challengers. The LLM benchmark uses
+a comparison with a policy the recommendation rule selected in that operating
+cell, as either side, since it was chosen among six challengers. The LLM
+benchmark uses
 within-world intervals instead (Wilson intervals, and cluster bootstrap
 intervals that resample linked cases together) and exact McNemar tests on
 paired cases ([LLM appendix](../reports/appendix-llm.md)).
@@ -493,8 +499,10 @@ significance test.
 highest mean improvement is recommended. Exact ties go to fewer lost
 legitimate customers, then fewer review minutes used, then the simpler policy,
 in the order approve-all, incumbent rules, tree, logistic, boosting, hybrid,
-expected loss. Otherwise the incumbent stays, and the best challenger's mean,
-range and sign count are printed. Approve-all is a challenger too.
+expected loss. Otherwise the incumbent stays, and the best eligible
+challenger's mean, range and sign count are printed (the best of all when none
+is eligible). Approve-all is a challenger too. A cell where the incumbent has no
+evaluated row is not assessed.
 
 **Flip table.** The whole rule (eligibility, hurdle, choice) is applied again
 in each cell that differs from the primary cell in one respect:
@@ -510,7 +518,8 @@ For the recommendation rule and flip table, sensitivities are never combined.
 For each cell the flip table states whether the primary outcome holds and, if
 not, why: a different policy cleared the bar, the primary winner fails an
 eligibility criterion there, or no challenger cleared the bar. The verdict reads
-"holds in N of M cells".
+"holds in N of M cells", counting only the assessed cells besides the primary
+one.
 
 ### Sensitivities and diagnostics
 
@@ -737,10 +746,12 @@ measures variation between worlds, not whether the parameters are right.
 World size, capacity base and tuning procedure were set with the development
 worlds open; final worlds were generated after the freeze. Adjudicated labels
 miss fraud without a determinable trace: a never-pay customer's single default
-reads as credit loss, and an address-only promotion farm is never identified
-as promotion abuse. Once their negative labels mature, friction counts treat
-these orders as legitimate; simulation-truth counts appear alongside. Case
-files illustrate a development-world replay, not final evidence.
+reads as credit loss, and an address-only promotion farm earns no
+promotion-abuse determination (its members who never pay can still meet the
+never-pay marker through the shared address). Orders whose label ends negative
+count as legitimate in the friction measures; simulation-truth counts appear
+alongside. Case files illustrate a development-world replay, not final
+evidence.
 
 ### Assumptions of the replay
 
