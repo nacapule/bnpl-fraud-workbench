@@ -1,0 +1,9 @@
+{
+ "sol": {
+  "backend": "codex",
+  "cli_version": "codex-cli 0.159.2",
+  "effort": "high",
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol"
+ }
+}

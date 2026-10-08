@@ -1,0 +1,65 @@
+{
+ "attempts": 1,
+ "duration_ms": 35933,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "sol",
+  "backend": "codex",
+  "benchmark": "2026-10-dev",
+  "case": "2718-baseline-153263-20250828T151853",
+  "cli_version": "codex-cli 0.159.2",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "d3f404612f1bc04bb74fa14afadda375b4bb9b4cd2715aba1675f912f4d401f7",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "7aa2fb96a78e7695a91b9dd5e7b44e3a97c36ed7b1802768b2750119a909b963",
+   "llm/memo.py": "5ce3d380cb85eec55d7121283d6f8101dda2d587201a42314dd29175d0b3d264",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol",
+  "packet_sha256": "e9b718aeb2491b909108672d6d7064122f6d78d3bd1e364a8b064f8d6ae3b2a5",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "4683d17a1fc24e26b409931a93f228f41a1718f2afd05ecb704193fd334fcbba",
+  "prompt_version": "memo_fp2_v1"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "codex",
+  "cli_version": "codex-cli 0.159.2",
+  "effort": "high",
+  "event_counts": {
+   "item.completed:agent_message": 1,
+   "thread.started": 1,
+   "turn.completed": 1,
+   "turn.started": 1
+  },
+  "input_tokens": 7189,
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol",
+  "n_error_events": 0,
+  "n_events": 4,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 1333,
+  "protocol_ok": true,
+  "tools_offered": null
+ },
+ "text": "{\n  \"claims\": [\n    {\"field\":\"order.ip_country\",\"value\":\"US\",\"statement\":\"The order IP country is US.\",\"derived\":null},\n    {\"field\":\"order.card_bin_country\",\"value\":\"ES\",\"statement\":\"The card issuing country is ES.\",\"derived\":null},\n    {\"field\":\"order.avs_result\",\"value\":\"N\",\"statement\":\"Address verification failed.\",\"derived\":null},\n    {\"field\":\"order.cvv_result\",\"value\":\"M\",\"statement\":\"Card security-code verification matched.\",\"derived\":null},\n    {\"field\":\"context.card_first_use_age_hours\",\"value\":12740.234166666667,\"statement\":\"The card was first used on this account 12740.234166666667 hours before the order.\",\"derived\":null},\n    {\"field\":\"context.device_link_age_hours\",\"value\":13723.789722222222,\"statement\":\"The device was first used on this account 13723.789722222222 hours before the order.\",\"derived\":null},\n    {\"field\":\"context.geo_kmh_from_previous_attempt\",\"value\":0.0,\"statement\":\"The recorded implied speed from the previous attempt is 0.0 km/h.\",\"derived\":null},\n    {\"field\":\"context.attempts_user_24h\",\"value\":1,\"statement\":\"The account made 1 order attempt in the applicable window.\",\"derived\":null},\n    {\"field\":\"context.attempts_device_24h\",\"value\":1,\"statement\":\"The device had 1 order attempt in the applicable window.\",\"derived\":null},\n    {\"field\":\"context.processor_declines_card_24h\",\"value\":0,\"statement\":\"The card had 0 processor declines in the applicable window.\",\"derived\":null},\n    {\"field\":\"context.processor_declines_device_24h\",\"value\":0,\"statement\":\"The device had 0 processor declines in the applicable window.\",\"derived\":null},\n    {\"field\":\"context.accounts_on_device_30d\",\"value\":1,\"statement\":\"The device has activity from 1 account in the applicable window.\",\"derived\":null},\n    {\"field\":\"context.accounts_on_address_30d\",\"value\":1,\"statement\":\"The shipping address has orders from 1 account in the applicable window.\",\"derived\":null},\n    {\"field\":\"context.email_root_other_accounts\",\"value\":0,\"statement\":\"There are 0 other accounts with the matching normalized email.\",\"derived\":null},\n    {\"field\":\"context.email_domain_class\",\"value\":0,\"statement\":\"The email uses a common provider.\",\"derived\":null},\n    {\"field\":\"order.promotion_used\",\"value\":false,\"statement\":\"The order does not use a promotion.\",\"derived\":null},\n    {\"field\":\"context.is_first_attempt_user\",\"value\":0,\"statement\":\"This is not the account's first order attempt.\",\"derived\":null},\n    {\"field\":\"context.inr_disputes_opened_user\",\"value\":0,\"statement\":\"The account opened 0 earlier item-not-received disputes.\",\"derived\":null},\n    {\"field\":\"context.inr_claims_rejected_user\",\"value\":0,\"statement\":\"The account has 0 rejected item-not-received claims.\",\"derived\":null},\n    {\"field\":\"context.unauthorized_disputes_lost_user\",\"value\":0,\"statement\":\"The account has 0 earlier unauthorized-use disputes resolved against the platform.\",\"derived\":null},\n    {\"field\":\"context.never_pay_determined_user\",\"value\":0,\"statement\":\"The account has no earlier never-pay determination.\",\"derived\":null},\n    {\"field\":\"decision.checks\",\"value\":[],\"statement\":\"No verification checks have been completed.\",\"derived\":null}\n  ],\n  \"hypotheses\": [\n    {\n      \"explanation\":\"stolen_card\",\n      \"likelihood\":\"medium\",\n      \"reasoning\":\"The issuing country differs from the IP country and AVS failed, satisfying R03. The matched CVV does not establish that the purchaser holds the card.\"\n    },\n    {\n      \"explanation\":\"legitimate_customer\",\n      \"likelihood\":\"medium\",\n      \"reasoning\":\"A legitimate customer could be using a longstanding foreign-issued card with an address-verification mismatch. The established card and device make this plausible but do not establish who placed this order.\"\n    }\n  ],\n  \"disposition\":\"needs_check\",\n  \"citations\":[\"FP-2 \u00a74.3\",\"FP-2 \u00a75.1(b)\",\"FP-2 \u00a75.2\",\"FP-2 \u00a76.3\",\"FP-2 \u00a76.4\",\"FP-2 \u00a76.5\",\"FP-2 \u00a76.6(b)\",\"R03\"],\n  \"next_check\":\"id_check\",\n  \"memo\":\"R03 holds because the ES-issued card was used from a US IP and AVS failed. Card is the sole adverse family; no other rule holds, and no household exception is needed. No earlier outcome settles the order. A legitimate customer using a longstanding foreign-issued card is plausible, but established card and device links do not verify the current purchaser. With no completed checks, recommend needs_check under \u00a76.6(b), implemented by the analyst as a hold with id_check. That check establishes account identity and cardholder authentication; contact alone would not resolve the Card family. Decline is not permitted on this evidence alone.\"\n}",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 8522,
+  "input_tokens": 7189,
+  "output_tokens": 1333,
+  "unknown_usage_calls": 0
+ }
+}
