@@ -157,7 +157,7 @@ cached, so the benchmarks replay offline with no calls.
 
 ## The memo drafter
 
-<!-- Phase B (with P6's final benchmark): the README's LLM paragraph. -->
+<!-- The benchmark's results paragraph goes here, from the final benchmark. -->
 
 The memo drafter writes an advisory investigation memo from a case packet: the
 evidence, competing explanations including the benign one, the fraud-policy clauses
