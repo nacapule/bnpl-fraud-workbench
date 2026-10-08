@@ -149,3 +149,33 @@ def test_extreme_exponents_and_precision_are_no_match_not_an_error(claimed) -> N
 def test_unresolvable_paths_are_claim_errors_not_exceptions(field, derived) -> None:
     check = check_claim(claim(field, "1", derived), PACKET)
     assert check.error and check.status in ("unknown_field", "derived_invalid", "unverifiable")
+
+
+TIMES = {"decision": {"decision_at": "2025-07-14 00:00:00", "checks": []},
+         "order": {"placed_at": "2025-07-13 18:47:55"}}
+SPAN = ["decision.decision_at", "order.placed_at"]
+
+
+@pytest.mark.parametrize("field,statement,value,status", [
+    ("hours from order placement to decision", "s", "5.2", "derived_ok"),
+    ("hours from order placement to decision", "s", "5.20", "derived_ok"),
+    ("hours from order placement to decision", "s", "5.3", "derived_wrong"),
+    ("minutes since placement", "s", "312", "derived_ok"),
+    ("time since placement", "About 5 hours have passed.", "5", "derived_ok"),
+    ("days since placement", "s", "0.22", "derived_ok"),
+    ("time since placement", "s", "5.2", "derived_invalid"),  # no unit named
+])
+def test_a_difference_of_two_times_is_a_duration_in_the_named_unit(field, statement, value,
+                                                                   status) -> None:
+    derived = {"operation": "difference", "inputs": SPAN}
+    check = check_claim({"field": field, "value": value, "statement": statement,
+                         "derived": derived}, TIMES)
+    assert check.status == status
+
+
+def test_only_differences_of_two_times_are_durations() -> None:
+    for operation, inputs in (("sum", SPAN), ("difference", [SPAN[0], "order.missing"]),
+                              ("difference", [SPAN[0], SPAN[0], SPAN[1]])):
+        derived = {"operation": operation, "inputs": inputs}
+        assert check_claim(claim("hours elapsed", "0", derived), TIMES).status == \
+            "derived_invalid"

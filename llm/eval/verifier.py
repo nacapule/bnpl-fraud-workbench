@@ -4,8 +4,11 @@ Each claim names a packet field by its path, gives the field's value and states 
 fact. A plain claim is verified when the field exists and the value matches it (a
 number may be rounded to the precision the claim writes). A derived claim declares
 its operation and input fields; the verifier recomputes it from the packet and
-compares. The factual-error rate is the share of claims that fail: an unknown field,
-a wrong value, or a derived value that does not recompute.
+compares. The difference of two packet times is a duration in the unit the claim's
+field names (or, failing that, its sentence): seconds, minutes, hours or days; a time
+difference that names no unit cannot be recomputed. The factual-error rate is the share
+of claims that fail: an unknown field, a wrong value, or a derived value that does not
+recompute.
 
 What this does not check: whether the claim's sentence says what its field means.
 The sentence, the hypotheses' reasoning and the memo text are covered only by the
@@ -20,6 +23,7 @@ import math
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from llm.eval import tokens
@@ -30,6 +34,9 @@ MAX_PLACES = 30  # finer than any float carries
 TRUE = {"1", "true", "yes"}
 FALSE = {"0", "false", "no"}
 MISSING = object()
+PACKET_TIME = "%Y-%m-%d %H:%M:%S"  # how a packet writes a time (llm.packet)
+UNIT_SECONDS = {"second": 1, "minute": 60, "hour": 3600, "day": 86400}
+UNIT = re.compile(r"\b(second|minute|hour|day)s?\b", re.IGNORECASE)
 
 
 def resolve(packet: Mapping[str, Any], path: str) -> Any:
@@ -133,6 +140,37 @@ def recompute(operation: str, values: Sequence[Any]) -> float | None:
     return None
 
 
+def _packet_time(value: Any) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        return datetime.strptime(value, PACKET_TIME)
+    except ValueError:
+        return None
+
+
+def duration_unit(claim: Mapping[str, Any]) -> int | None:
+    """The seconds in the unit a duration claim names: the first unit word of its field,
+    else of its sentence; None when neither names one."""
+    for text in (claim.get("field"), claim.get("statement")):
+        found = UNIT.search(text) if isinstance(text, str) else None
+        if found:
+            return UNIT_SECONDS[found.group(1).lower()]
+    return None
+
+
+def time_difference(claim: Mapping[str, Any], values: Sequence[Any]) -> float | None:
+    """A difference of two packet times in the claim's unit (:func:`duration_unit`), or
+    None when the inputs are not two times or no unit is named."""
+    times = [_packet_time(value) for value in values]
+    if len(times) != 2 or None in times:
+        return None
+    unit = duration_unit(claim)
+    if unit is None:
+        return None
+    return (times[0] - times[1]).total_seconds() / unit
+
+
 @dataclass(frozen=True)
 class ClaimCheck:
     field: str
@@ -161,6 +199,8 @@ def _check_claim(claim: Mapping[str, Any], packet: Mapping[str, Any]) -> ClaimCh
         if any(value is MISSING for value in values):
             return ClaimCheck(claim["field"], "derived_invalid")
         expected = recompute(derived["operation"], values)
+        if expected is None and derived["operation"] == "difference":
+            expected = time_difference(claim, values)
         if expected is None:
             return ClaimCheck(claim["field"], "derived_invalid")
         status = "derived_ok" if value_matches(claim["value"], expected) else "derived_wrong"
