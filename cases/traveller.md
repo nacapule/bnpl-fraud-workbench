@@ -3,7 +3,8 @@
 
 An established account placed an order from a long-used device, for delivery to its home
 address, with an IP in another country. The card's issuing country differed from the IP
-country and the AVS check failed, triggering review. The analyst held the order before
+country and the address verification check (AVS, which compares the billing address with the
+card issuer's record) failed, triggering review. The analyst held the order before
 shipment for an identity check, as the policy requires; the customer passed it the next day and
 the order shipped.
 
@@ -47,8 +48,8 @@ only information available then.
 | Age of the home address (days) | 224 |
 | IP country differs from the home country | yes |
 | Card country differs from the IP country | yes |
-| AVS check failed | yes |
-| CVV check failed | no |
+| Address verification (AVS) failed | yes |
+| Card security code (CVV) check failed | no |
 | Hours since the account first used this card | 5,369 |
 | Hours since a password change or reset or an email change (capped) | 10,000 |
 | Accounts on this device in the past thirty days | 1 |

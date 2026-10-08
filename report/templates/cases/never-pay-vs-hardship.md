@@ -1,8 +1,8 @@
 # Never-pay versus hardship: both cleared after a passed identity check; one plan was never paid, the other defaulted after two installments
 
 The never-pay order reached review because accounts shared its shipping address. The
-hardship order reached review because the card and IP countries differed and the CVV check
-failed. Both came from new accounts. The analyst held each order before shipment and started
+hardship order reached review because the card and IP countries differed and the card security
+code check (CVV, the code printed on the card) failed. Both came from new accounts. The analyst held each order before shipment and started
 an identity check. Neither account had an installment due, so repayment could not support
 the decision, and the check could not tell the two apart.
 
@@ -55,8 +55,8 @@ the evidence times above.
 | Age of the home address (days) | {{ fact:never_pay_vs_hardship:alerts.never_pay.evidence.row.home_address_age_days | num:2 }} | {{ fact:never_pay_vs_hardship:alerts.hardship.evidence.row.home_address_age_days | num:2 }} |
 | Hours since the device was first used on this account | {{ fact:never_pay_vs_hardship:alerts.never_pay.evidence.row.device_link_age_hours | num:2 }} | {{ fact:never_pay_vs_hardship:alerts.hardship.evidence.row.device_link_age_hours | num:2 }} |
 | Card country differs from the IP country | {{ fact:never_pay_vs_hardship:alerts.never_pay.evidence.row.bin_ip_country_mismatch | yesno }} | {{ fact:never_pay_vs_hardship:alerts.hardship.evidence.row.bin_ip_country_mismatch | yesno }} |
-| CVV check failed | {{ fact:never_pay_vs_hardship:alerts.never_pay.evidence.row.cvv_mismatch | yesno }} | {{ fact:never_pay_vs_hardship:alerts.hardship.evidence.row.cvv_mismatch | yesno }} |
-| AVS check failed | {{ fact:never_pay_vs_hardship:alerts.never_pay.evidence.row.avs_mismatch | yesno }} | {{ fact:never_pay_vs_hardship:alerts.hardship.evidence.row.avs_mismatch | yesno }} |
+| Card security code (CVV) check failed | {{ fact:never_pay_vs_hardship:alerts.never_pay.evidence.row.cvv_mismatch | yesno }} | {{ fact:never_pay_vs_hardship:alerts.hardship.evidence.row.cvv_mismatch | yesno }} |
+| Address verification (AVS) failed: billing address not the issuer's record | {{ fact:never_pay_vs_hardship:alerts.never_pay.evidence.row.avs_mismatch | yesno }} | {{ fact:never_pay_vs_hardship:alerts.hardship.evidence.row.avs_mismatch | yesno }} |
 | Rule condition that held | {{ fact:never_pay_vs_hardship:alerts.never_pay.evidence.rules_held.0 }} | {{ fact:never_pay_vs_hardship:alerts.hardship.evidence.rules_held.0 }} |
 | Its family | {{ fact:never_pay_vs_hardship:alerts.never_pay.policy_view.families.0 }} | {{ fact:never_pay_vs_hardship:alerts.hardship.policy_view.families.0 }} |
 | Rule score (review threshold {{ fact:never_pay_vs_hardship:source.replay.review_threshold | num:0 }}, decline threshold {{ fact:never_pay_vs_hardship:source.replay.decline_threshold | num:0 }}) | {{ fact:never_pay_vs_hardship:alerts.never_pay.routing.rule_score | num:0 }} | {{ fact:never_pay_vs_hardship:alerts.hardship.routing.rule_score | num:0 }} |

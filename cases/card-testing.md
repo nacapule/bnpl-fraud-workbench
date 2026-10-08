@@ -28,6 +28,8 @@ saved checkout row:
 | Processor declines on this card in the past day | 0 |
 | Hours since the device was first used on this account | 0.58 |
 | Card country differs from the IP country | yes |
+| Address verification (AVS) failed: billing address not the issuer's record | no |
+| Card security code (CVV) check failed | no |
 | Installments due on the account | 0 |
 | Orders approved on the account in the past day (see below) | 1 |
 | Open balance on earlier plans (see below) | $448.65 |
@@ -109,15 +111,18 @@ dispute was resolved at 2025-09-11 21:06:04
 
 ## Tested change: R07 at one device decline for new accounts
 
-Declared before it ran and replayed once against the unchanged incumbent. The motivation is
-printed as declared: its "order already approved" read the approve-all value in the row, which
-the note added after the run corrects.
-
-> **Change.** R07 also holds, at its weight of 40 (auto-decline), when the account is under 7 days old and the device had at least 1 processor decline in the 24 h before the order (otherwise 3).
->
-> **Motivation.** At decision time the account was 35 minutes old with 5 attempts in the hour, 3 processor declines on the device, and an order already approved within the 24 h; R07 held only at the third device decline.
->
-> **Noted after the run.** The row's approved_orders_user_24h = 1 and $448.65 open balance, which the motivation cites, were approve-all values: the incumbent had auto-declined the account's 09:33 order (R07 already held, at 3 device declines) 25 minutes earlier on the same replay day, and the row's outcome-derived columns reflect the policy's decisions up to the start of the day (the decision's same_day_orders). No order of this session was approved.
+At the decision the account had been open for less than an hour and had made
+5 order attempts in the
+past hour, and its device had
+3 processor
+declines in the past day. R07 holds only from the third. The change makes R07 hold, at its weight
+of 40 (the decline threshold), on an account
+under 7 days old as soon as
+its device has had 1
+processor decline in the past day. The aim is to stop a card-testing session at its first attempt
+after a decline; the risk is declining new customers after a single processor decline on their device. The
+change was declared before it ran and replayed once against the unchanged incumbent; the declared
+record, with a note added after the run, is in [the facts file](facts/card_testing.json).
 
 Both of the session's orders are declined at checkout either way. Across the test window,
 legitimate orders declined at checkout changed by

@@ -47,8 +47,8 @@ only information available then.
 | Age of the current home address (days) | 65 |
 | IP country differs from the home country | yes |
 | Card country differs from the IP country | yes |
-| CVV check failed | yes |
-| AVS check failed | no |
+| Card security code (CVV) check failed | yes |
+| Address verification (AVS) failed: billing address not the issuer's record | no |
 | Hours since the account first used this card | 12,288 |
 | Hours since a password change or reset or an email change (capped) | 10,000 |
 | Accounts on this device in the past thirty days | 1 |

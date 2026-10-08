@@ -2,7 +2,8 @@
 
 An established account placed an order from a long-used device, for delivery to its home
 address, with an IP in another country. The card's issuing country differed from the IP
-country and the AVS check failed, triggering review. The analyst held the order before
+country and the address verification check (AVS, which compares the billing address with the
+card issuer's record) failed, triggering review. The analyst held the order before
 shipment for an identity check, as the policy requires; the customer passed it the next day and
 the order shipped.
 
@@ -31,7 +32,7 @@ analyst. The case takes the first reviewed alert in hash order. Values come from
 The analyst used this saved context row, assembled at the evidence time above. It contains
 only information available then.
 
-{{ facts:traveller:alerts.traveller.evidence.row "Fact at the decision" "Value" | amount_cents "Order amount" usd:2, order_exposure_cents "Cash at risk if approved" usd:2, account_age_days "Account age (days)" num:0, device_link_age_hours "Hours since the device was first used on this account" num:0, ship_to_home "Ships to the account's home address" yesno, home_address_age_days "Age of the home address (days)" num:0, ip_country_not_home "IP country differs from the home country" yesno, bin_ip_country_mismatch "Card country differs from the IP country" yesno, avs_mismatch "AVS check failed" yesno, cvv_mismatch "CVV check failed" yesno, card_first_use_age_hours "Hours since the account first used this card" num:0, hours_since_credential_change "Hours since a password change or reset or an email change (capped)" num:0, accounts_on_device_30d "Accounts on this device in the past thirty days" count, accounts_on_address_30d "Accounts with an order attempt to this address in the past thirty days" count, approved_orders_user_ever "Earlier orders approved on the account" count, installments_due_user "Installments due on the account" count, installments_paid_user "Installments paid" count, merchant_fulfilment_median_hours "Merchant's median hours to shipment" num:1 }}
+{{ facts:traveller:alerts.traveller.evidence.row "Fact at the decision" "Value" | amount_cents "Order amount" usd:2, order_exposure_cents "Cash at risk if approved" usd:2, account_age_days "Account age (days)" num:0, device_link_age_hours "Hours since the device was first used on this account" num:0, ship_to_home "Ships to the account's home address" yesno, home_address_age_days "Age of the home address (days)" num:0, ip_country_not_home "IP country differs from the home country" yesno, bin_ip_country_mismatch "Card country differs from the IP country" yesno, avs_mismatch "Address verification (AVS) failed" yesno, cvv_mismatch "Card security code (CVV) check failed" yesno, card_first_use_age_hours "Hours since the account first used this card" num:0, hours_since_credential_change "Hours since a password change or reset or an email change (capped)" num:0, accounts_on_device_30d "Accounts on this device in the past thirty days" count, accounts_on_address_30d "Accounts with an order attempt to this address in the past thirty days" count, approved_orders_user_ever "Earlier orders approved on the account" count, installments_due_user "Installments due on the account" count, installments_paid_user "Installments paid" count, merchant_fulfilment_median_hours "Merchant's median hours to shipment" num:1 }}
 
 Only {{ fact:traveller:alerts.traveller.evidence.rules_held.0 }} held: the card's issuing
 country differed from the IP country and the AVS check failed. The score,

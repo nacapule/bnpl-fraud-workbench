@@ -2,8 +2,8 @@
 # Never-pay versus hardship: both cleared after a passed identity check; one plan was never paid, the other defaulted after two installments
 
 The never-pay order reached review because accounts shared its shipping address. The
-hardship order reached review because the card and IP countries differed and the CVV check
-failed. Both came from new accounts. The analyst held each order before shipment and started
+hardship order reached review because the card and IP countries differed and the card security
+code check (CVV, the code printed on the card) failed. Both came from new accounts. The analyst held each order before shipment and started
 an identity check. Neither account had an installment due, so repayment could not support
 the decision, and the check could not tell the two apart.
 
@@ -56,8 +56,8 @@ the evidence times above.
 | Age of the home address (days) | 2.47 | 0.03 |
 | Hours since the device was first used on this account | 59.19 | 0.68 |
 | Card country differs from the IP country | no | yes |
-| CVV check failed | no | yes |
-| AVS check failed | no | no |
+| Card security code (CVV) check failed | no | yes |
+| Address verification (AVS) failed: billing address not the issuer's record | no | no |
 | Rule condition that held | R08 | R03 |
 | Its family | Linkage | Card |
 | Rule score (review threshold 35, decline threshold 40) | 35 | 35 |

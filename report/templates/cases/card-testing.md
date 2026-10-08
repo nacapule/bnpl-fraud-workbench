@@ -19,7 +19,7 @@ Alert `{{ fact:card_testing:alerts.card_testing.publication.alert_id }}`, decide
 on {{ fact:card_testing:alerts.card_testing.decision.checkout_at }} by the score band, from the
 saved checkout row:
 
-{{ facts:card_testing:alerts.card_testing.evidence.row "Fact at checkout" "Value" | amount_cents "Order amount" usd:2, attempts_user_1h "Order attempts by the account in the past hour (this one included)" count, processor_declines_device_24h "Processor declines on this device in the past day" count, processor_declines_card_24h "Processor declines on this card in the past day" count, device_link_age_hours "Hours since the device was first used on this account" num:2, bin_ip_country_mismatch "Card country differs from the IP country" yesno, installments_due_user "Installments due on the account" count, approved_orders_user_24h "Orders approved on the account in the past day (see below)" count, open_balance_user_cents "Open balance on earlier plans (see below)" usd:2 }}
+{{ facts:card_testing:alerts.card_testing.evidence.row "Fact at checkout" "Value" | amount_cents "Order amount" usd:2, attempts_user_1h "Order attempts by the account in the past hour (this one included)" count, processor_declines_device_24h "Processor declines on this device in the past day" count, processor_declines_card_24h "Processor declines on this card in the past day" count, device_link_age_hours "Hours since the device was first used on this account" num:2, bin_ip_country_mismatch "Card country differs from the IP country" yesno, avs_mismatch "Address verification (AVS) failed: billing address not the issuer's record" yesno, cvv_mismatch "Card security code (CVV) check failed" yesno, installments_due_user "Installments due on the account" count, approved_orders_user_24h "Orders approved on the account in the past day (see below)" count, open_balance_user_cents "Open balance on earlier plans (see below)" usd:2 }}
 
 The last two rows are approve-all values. The replay refreshes outcome columns at the start of
 each day ([methods](../docs/methods.md#the-replay)), so they still count the account's earlier
@@ -96,15 +96,18 @@ dispute was resolved at {{ fact:card_testing:alerts.card_testing.later.label.lab
 
 ## Tested change: R07 at one device decline for new accounts
 
-Declared before it ran and replayed once against the unchanged incumbent. The motivation is
-printed as declared: its "order already approved" read the approve-all value in the row, which
-the note added after the run corrects.
-
-> **Change.** {{ fact:card_testing:tested_change.change }}
->
-> **Motivation.** {{ fact:card_testing:tested_change.motivation }}
->
-> **Noted after the run.** {{ fact:card_testing:tested_change.noted_after_run }}
+At the decision the account had been open for less than an hour and had made
+{{ fact:card_testing:alerts.card_testing.evidence.row.attempts_user_1h }} order attempts in the
+past hour, and its device had
+{{ fact:card_testing:alerts.card_testing.evidence.row.processor_declines_device_24h }} processor
+declines in the past day. R07 holds only from the third. The change makes R07 hold, at its weight
+of {{ fact:card_testing:tested_change.parameters.weight }} (the decline threshold), on an account
+under {{ fact:card_testing:tested_change.parameters.account_age_days_below }} days old as soon as
+its device has had {{ fact:card_testing:tested_change.parameters.processor_declines_device_24h_min }}
+processor decline in the past day. The aim is to stop a card-testing session at its first attempt
+after a decline; the risk is declining new customers after a single processor decline on their device. The
+change was declared before it ran and replayed once against the unchanged incumbent; the declared
+record, with a note added after the run, is in [the facts file](facts/card_testing.json).
 
 Both of the session's orders are declined at checkout either way. Across the test window,
 legitimate orders declined at checkout changed by
