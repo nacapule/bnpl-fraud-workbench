@@ -8,9 +8,9 @@ The world is synthetic, and the canonical world the cases come from (seed
 {{ fact:card_testing:source.world.seed }}, {{ fact:card_testing:source.world.family }} family)
 is a development seed, so this short case illustrates how the policy behaves rather than
 measuring it. It is the first in hash order of
-{{ fact:card_testing:alerts.card_testing.publication.candidates.eligible }} test-window alerts on
-stolen-card orders with an earlier processor decline on the device
-([selection](../docs/methods.md#case-selection)). The full record is in
+{{ fact:card_testing:alerts.card_testing.publication.candidates.eligible }} test-window alerts
+eligible for its slot ([selection](../docs/methods.md#case-selection); the slot is under the
+latent truth). The full record is in
 [the facts file](facts/card_testing.json).
 
 ## Decision and evidence
@@ -48,8 +48,8 @@ account. Reviewed, the same row would show two adverse families
 and `escalate` prohibited. So the automatic decline matches an action an analyst could have
 taken, except that an analyst's decline would also block the account (§4.2). No installment
 was due, so nothing could cite non-payment (§8.1). The competing readings are someone testing
-stolen card details, or a new customer retrying after declines (§6.5(b)), which the identity
-check would settle.
+stolen card details, or a new customer retrying after declines on a device new to the account
+(§6.5(b) covers the new device), which the identity check would settle.
 
 ## What happened later
 
@@ -65,7 +65,9 @@ dispute was resolved at {{ fact:card_testing:alerts.card_testing.later.label.lab
 
 ## Tested change: R07 at one device decline for new accounts
 
-Declared before it ran and replayed once against the unchanged incumbent.
+Declared before it ran and replayed once against the unchanged incumbent. The motivation is
+printed as declared: its "order already approved" read the approve-all value in the row, which
+the note added after the run corrects.
 
 > **Change.** {{ fact:card_testing:tested_change.change }}
 >
@@ -87,7 +89,8 @@ incumbent missed and turned away legitimate new customers.
 
 ## Latent truth (diagnostic)
 
-Unavailable to rules and analysts: the order belongs to a stolen-card episode
+Unavailable to rules and analysts. The slot is stolen-card orders with a processor decline on
+the device before checkout. This order belongs to a stolen-card episode
 (`{{ fact:card_testing:alerts.card_testing.latent.episode.pattern_id }}`) by a
 {{ fact:card_testing:alerts.card_testing.latent.account.actor }} on one account,
 {{ fact:card_testing:alerts.card_testing.latent.episode.orders }} order attempts in all, and

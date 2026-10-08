@@ -11,7 +11,7 @@ family) is a development seed, so the case illustrates how the policy behaves ra
 measuring it. The selection rule was fixed before evaluation
 ([methods](../docs/methods.md#case-selection)): of the
 {{ fact:account_takeover:alerts.account_takeover.publication.candidates.eligible }}
-test-window alerts on takeover orders,
+test-window alerts eligible for this case's slot (see the latent truth below),
 {{ fact:account_takeover:alerts.account_takeover.publication.candidates.reviewed }} were
 reviewed by an analyst. The case takes the first reviewed alert in hash order. Values come
 from [the facts file](facts/account_takeover.json).
@@ -30,7 +30,7 @@ from [the facts file](facts/account_takeover.json).
 The analyst used this saved context row, assembled at the evidence time above. It contains
 only information available then.
 
-{{ facts:account_takeover:alerts.account_takeover.evidence.row "Fact at the decision" "Value" | amount_cents "Order amount" usd:2, order_exposure_cents "Cash at risk if approved" usd:2, account_age_days "Account age (days)" num:0, device_link_age_hours "Hours since the device was first used on this account" num:2, ship_address_first_use_age_hours "Hours since the account first shipped to this address" num:2, ship_to_home "Ships to the account's home address" yesno, home_address_age_days "Age of the current home address (days)" num:0, ip_country_not_home "IP country differs from the home country" yesno, bin_ip_country_mismatch "Card country differs from the IP country" yesno, cvv_mismatch "CVV check failed" yesno, avs_mismatch "AVS check failed" yesno, card_first_use_age_hours "Hours since the account first used this card" num:0, hours_since_credential_change "Hours since a password change or reset or an email change (capped)" num:0, accounts_on_device_30d "Accounts on this device in the past thirty days" count, accounts_on_address_30d "Accounts shipping to this address in the past thirty days" count, approved_orders_user_ever "Earlier orders approved on the account" count, installments_due_user "Installments due on the account" count, installments_paid_user "Installments paid" count, merchant_fulfilment_median_hours "Merchant's median hours to shipment" num:1 }}
+{{ facts:account_takeover:alerts.account_takeover.evidence.row "Fact at the decision" "Value" | amount_cents "Order amount" usd:2, order_exposure_cents "Cash at risk if approved" usd:2, account_age_days "Account age (days)" num:0, device_link_age_hours "Hours since the device was first used on this account" num:2, ship_address_first_use_age_hours "Hours since the account's first order attempt to this address" num:2, ship_to_home "Ships to the account's home address" yesno, home_address_age_days "Age of the current home address (days)" num:0, ip_country_not_home "IP country differs from the home country" yesno, bin_ip_country_mismatch "Card country differs from the IP country" yesno, cvv_mismatch "CVV check failed" yesno, avs_mismatch "AVS check failed" yesno, card_first_use_age_hours "Hours since the account first used this card" num:0, hours_since_credential_change "Hours since a password change or reset or an email change (capped)" num:0, accounts_on_device_30d "Accounts on this device in the past thirty days" count, accounts_on_address_30d "Accounts with an order attempt to this address in the past thirty days" count, approved_orders_user_ever "Earlier orders approved on the account" count, installments_due_user "Installments due on the account" count, installments_paid_user "Installments paid" count, merchant_fulfilment_median_hours "Merchant's median hours to shipment" num:1 }}
 
 Only {{ fact:account_takeover:alerts.account_takeover.evidence.rules_held.0 }} held: the card's
 issuing country differed from the IP country and the CVV check failed. The score,
@@ -161,8 +161,9 @@ legitimate declines, holds and review time.
 
 ## Latent truth (diagnostic)
 
-These simulation records are unavailable to rules, analysts and the memo drafter. They define
-the takeover selection slot but do not rank its candidates.
+These simulation records are unavailable to rules, analysts and the memo drafter. The slot is
+defined by the simulated takeover pattern (`P-ATO`); that defines which alerts are eligible but
+does not rank them.
 
 {{ facts:account_takeover:alerts.account_takeover.latent.order "The order" "Truth" | pattern_id "Fraud pattern", intent "Intent" }}
 

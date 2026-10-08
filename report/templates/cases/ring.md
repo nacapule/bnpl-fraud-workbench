@@ -9,7 +9,8 @@ The world is synthetic, and the canonical world the cases come from (seed
 {{ fact:ring:source.world.seed }}, {{ fact:ring:source.world.family }} family) is a development
 seed, so this short case illustrates how the policy behaves rather than measuring it. It is the
 first in hash order of {{ fact:ring:alerts.ring.publication.candidates.eligible }} test-window
-alerts on synthetic-identity ring orders ([selection](../docs/methods.md#case-selection)). The
+alerts eligible for its slot ([selection](../docs/methods.md#case-selection); the slot is under
+the latent truth). The
 full record is in [the facts file](facts/ring.json).
 
 ## Decision and evidence
@@ -17,7 +18,7 @@ full record is in [the facts file](facts/ring.json).
 Alert `{{ fact:ring:alerts.ring.publication.alert_id }}`, decided at checkout on
 {{ fact:ring:alerts.ring.decision.checkout_at }} by the score band, from the saved checkout row:
 
-{{ facts:ring:alerts.ring.evidence.row "Fact at checkout" "Value" | amount_cents "Order amount" usd:2, accounts_on_device_30d "Accounts on this device in the past thirty days" count, device_link_age_hours "Hours since the device was first used on this account" num:0, accounts_on_address_30d "Accounts shipping to this address in the past thirty days" count, bin_ip_country_mismatch "Card country differs from the IP country" yesno, approved_orders_user_ever "Earlier orders approved on the account" count, installments_due_user "Installments due on the account" count, installments_paid_user "Installments paid" count }}
+{{ facts:ring:alerts.ring.evidence.row "Fact at checkout" "Value" | amount_cents "Order amount" usd:2, accounts_on_device_30d "Accounts on this device in the past thirty days" count, device_link_age_hours "Hours since the device was first used on this account" num:0, accounts_on_address_30d "Accounts with an order attempt to this address in the past thirty days" count, bin_ip_country_mismatch "Card country differs from the IP country" yesno, approved_orders_user_ever "Earlier orders approved on the account" count, installments_due_user "Installments due on the account" count, installments_paid_user "Installments paid" count }}
 
 Only {{ fact:ring:alerts.ring.evidence.rules_held.0 }} held (three or more accounts on the
 device within thirty days). Its weight alone gave a score of
@@ -84,7 +85,8 @@ review, and some shipped before an analyst reached them.
 
 ## Latent truth (diagnostic)
 
-Unavailable to rules and analysts: the account's holder is
+Unavailable to rules and analysts. The slot is synthetic-identity ring orders. The account's
+holder is
 `{{ fact:ring:alerts.ring.latent.account.actor }}`, one of
 {{ fact:ring:alerts.ring.latent.episode.accounts }} accounts in a ring
 (`{{ fact:ring:alerts.ring.latent.episode.pattern_id }}`) with
