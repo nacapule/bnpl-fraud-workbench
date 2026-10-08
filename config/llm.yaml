@@ -5,7 +5,7 @@
 
 tasks:
   memo:
-    prompt_version: memo_fp2_v1     # llm/prompts/<version>.md, followed by the policy
+    prompt_version: memo_fp2_v2     # llm/prompts/<version>.md, followed by the policy
 
 arms:                               # one name per model; effort is always explicit
   sol: {backend: codex, model: gpt-6.1-sol, effort: high}

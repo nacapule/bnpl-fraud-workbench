@@ -27,7 +27,7 @@ from core.actions import MEMO_DISPOSITIONS
 REPO = Path(__file__).resolve().parent.parent
 PROMPTS = REPO / "llm" / "prompts"
 POLICY_PATH = REPO / "policy" / "fraud-policy.md"
-PROMPT_VERSION = "memo_fp2_v1"
+PROMPT_VERSION = "memo_fp2_v2"
 
 FIELDS = ("claims", "hypotheses", "disposition", "citations", "next_check", "memo")
 CLAIM_FIELDS = ("field", "value", "statement", "derived")
