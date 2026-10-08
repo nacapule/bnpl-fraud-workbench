@@ -320,10 +320,12 @@ decline" are always in the grid. The expected-loss policy tunes only its review
 threshold; its decline rule stays fixed.
 
 **Objective and feasibility.** The objective is ledger net contribution minus
-friction cost: the $15 LTV proxy for each legitimate order declined at checkout,
-refused because its account was blocked, declined or escalated after review,
-or cancelled after an unanswered hold. "Legitimate" here means an adjudicated
-label known by the cut that records no fraud (no finding, or credit loss).
+the lost-customer cost: the $15 lifetime-value (LTV) proxy for each legitimate
+order declined at checkout, refused because its account was blocked, declined or
+escalated after review, or cancelled after an unanswered hold. The protocol and
+the result columns call it the friction cost (`friction_cost_cents`).
+"Legitimate" here means an adjudicated label known by the cut that records no
+fraud (no finding, or credit loss).
 Unknown labels count as neither fraud nor legitimate. A point is feasible
 when the review minutes it offers (the review time of every order that reached
 the queue, plus each escalation's senior minutes) fit in the allotment over the
@@ -454,10 +456,10 @@ verification rates.
 
 The measures, per seed, are:
 
-- **Rule net contribution:** ledger net for the window's orders, less friction
-  cost (the LTV proxy for each lost legitimate customer) and the analyst
-  allotment at $35 per allotted hour, including unused minutes. A policy with
-  no review route at its chosen point releases the allotment and is charged
+- **Rule net contribution:** ledger net for the window's orders, less the
+  lost-customer cost (the LTV proxy for each lost legitimate customer) and the
+  analyst allotment at $35 per allotted hour, including unused minutes. A policy
+  with no review route at its chosen point releases the allotment and is charged
   nothing, so approve-all can show whether screening pays at all.
 - **Lost legitimate customers:** legitimate orders declined at checkout,
   refused because the account was blocked, declined or escalated after review,
@@ -534,7 +536,7 @@ combinations of traffic or fraud-mix changes with staffing and replay variants.
 | Allotment | 17 and 50 minutes per shift | replays at those levels |
 | Shift layout | evening layout, 33 minutes per shift | replay on that layout |
 | Verification | `reviewer.verification_weak` (Reviewer, below) | replay variant at the base allotment |
-| LTV proxy | $5 and $45 | friction cost recomputed from the same base replays, for all seven policies; the expected-loss policy keeps $15 inside its decline rule |
+| LTV proxy | $5 and $45 | lost-customer cost recomputed from the same base replays, for all seven policies; the expected-loss policy keeps $15 inside its decline rule |
 | Fulfilment lag | ×0.5 and ×2 (`lag_half`, `lag_double`) | world families generated for the final seeds: from the test window, each order's drawn time to shipment is multiplied before the 15-minute floor; replayed at the base allotment, current layout, standard variant only |
 | Traffic and fraud mix | `acquisition_surge`, `fraud_mix_shift` | world families from the test window, replayed in every cell |
 
