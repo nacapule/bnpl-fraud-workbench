@@ -1,0 +1,1780 @@
+{
+ "1041-baseline-128009-20250603T000000": {
+  "benign": [
+   "\u00a76.5(b)",
+   "\u00a76.5(c)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)",
+   "no_nonpayment_grounds citations (FP-2 \u00a78.1)"
+  ],
+  "decisive": false,
+  "families": [
+   "Linkage"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": true,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R06(b)",
+   "R10"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "1041-baseline-129477-20250608T114034": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(c)",
+   "decline": "\u00a76.6(c)",
+   "escalate": "\u00a76.6(c)",
+   "hold": "\u00a76.6(c)",
+   "needs_check": "\u00a76.6(c)"
+  },
+  "constraints": [
+   "standard clear (FP-2 \u00a76.6(c))",
+   "prohibited decline (FP-2 \u00a76.6(c))",
+   "prohibited escalate (FP-2 \u00a76.6(c))",
+   "prohibited hold (FP-2 \u00a76.6(c))",
+   "prohibited needs_check (FP-2 \u00a76.6(c))"
+  ],
+  "decisive": true,
+  "families": [],
+  "household_exceptions": [
+   "\u00a76.4(b)"
+  ],
+  "no_installment_due": false,
+  "permitted": [],
+  "prohibited": [
+   "decline",
+   "escalate",
+   "hold",
+   "needs_check"
+  ],
+  "required_checks": [],
+  "row": "\u00a76.6(c)",
+  "rules": [
+   "R08"
+  ],
+  "settlements": [],
+  "standard": [
+   "clear"
+  ]
+ },
+ "1041-baseline-131169-20250614T163413": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(c)",
+   "decline": "\u00a76.6(c)",
+   "escalate": "\u00a76.6(c)",
+   "hold": "\u00a76.6(c)",
+   "needs_check": "\u00a76.6(c)"
+  },
+  "constraints": [
+   "standard clear (FP-2 \u00a76.6(c))",
+   "prohibited decline (FP-2 \u00a76.6(c))",
+   "prohibited escalate (FP-2 \u00a76.6(c))",
+   "prohibited hold (FP-2 \u00a76.6(c))",
+   "prohibited needs_check (FP-2 \u00a76.6(c))"
+  ],
+  "decisive": true,
+  "families": [],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [],
+  "prohibited": [
+   "decline",
+   "escalate",
+   "hold",
+   "needs_check"
+  ],
+  "required_checks": [],
+  "row": "\u00a76.6(c)",
+  "rules": [
+   "R09"
+  ],
+  "settlements": [],
+  "standard": [
+   "clear"
+  ]
+ },
+ "1041-baseline-131529-20250616T000000": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(c)",
+   "decline": "\u00a76.6(c)",
+   "escalate": "\u00a76.6(c)",
+   "hold": "\u00a76.6(c)",
+   "needs_check": "\u00a76.6(c)"
+  },
+  "constraints": [
+   "standard clear (FP-2 \u00a76.6(c))",
+   "prohibited decline (FP-2 \u00a76.6(c))",
+   "prohibited escalate (FP-2 \u00a76.6(c))",
+   "prohibited hold (FP-2 \u00a76.6(c))",
+   "prohibited needs_check (FP-2 \u00a76.6(c))"
+  ],
+  "decisive": true,
+  "families": [],
+  "household_exceptions": [
+   "\u00a76.4(b)"
+  ],
+  "no_installment_due": false,
+  "permitted": [],
+  "prohibited": [
+   "decline",
+   "escalate",
+   "hold",
+   "needs_check"
+  ],
+  "required_checks": [],
+  "row": "\u00a76.6(c)",
+  "rules": [
+   "R08"
+  ],
+  "settlements": [],
+  "standard": [
+   "clear"
+  ]
+ },
+ "1041-baseline-133031-20250621T131655": {
+  "benign": [
+   "\u00a76.5(b)",
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check contact (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Account access"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "contact"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R01"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "1041-baseline-133651-20250624T000000": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(c)",
+   "decline": "\u00a76.6(c)",
+   "escalate": "\u00a76.6(c)",
+   "hold": "\u00a76.6(c)",
+   "needs_check": "\u00a76.6(c)"
+  },
+  "constraints": [
+   "standard clear (FP-2 \u00a76.6(c))",
+   "prohibited decline (FP-2 \u00a76.6(c))",
+   "prohibited escalate (FP-2 \u00a76.6(c))",
+   "prohibited hold (FP-2 \u00a76.6(c))",
+   "prohibited needs_check (FP-2 \u00a76.6(c))"
+  ],
+  "decisive": true,
+  "families": [],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [],
+  "prohibited": [
+   "decline",
+   "escalate",
+   "hold",
+   "needs_check"
+  ],
+  "required_checks": [],
+  "row": "\u00a76.6(c)",
+  "rules": [
+   "R09"
+  ],
+  "settlements": [],
+  "standard": [
+   "clear"
+  ]
+ },
+ "1041-baseline-134771-20250627T170941": {
+  "benign": [
+   "\u00a76.5(b)",
+   "\u00a76.5(c)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)",
+   "no_nonpayment_grounds citations (FP-2 \u00a78.1)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": true,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "1041-baseline-135349-20250630T000000": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "1041-baseline-135784-20250701T091306": {
+  "benign": [
+   "\u00a76.5(b)",
+   "\u00a76.5(c)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)",
+   "no_nonpayment_grounds citations (FP-2 \u00a78.1)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": true,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "1041-baseline-137039-20250706T000000": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(c)",
+   "decline": "\u00a76.6(c)",
+   "escalate": "\u00a76.6(c)",
+   "hold": "\u00a76.6(c)",
+   "needs_check": "\u00a76.6(c)"
+  },
+  "constraints": [
+   "standard clear (FP-2 \u00a76.6(c))",
+   "prohibited decline (FP-2 \u00a76.6(c))",
+   "prohibited escalate (FP-2 \u00a76.6(c))",
+   "prohibited hold (FP-2 \u00a76.6(c))",
+   "prohibited needs_check (FP-2 \u00a76.6(c))"
+  ],
+  "decisive": true,
+  "families": [],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [],
+  "prohibited": [
+   "decline",
+   "escalate",
+   "hold",
+   "needs_check"
+  ],
+  "required_checks": [],
+  "row": "\u00a76.6(c)",
+  "rules": [
+   "R09"
+  ],
+  "settlements": [],
+  "standard": [
+   "clear"
+  ]
+ },
+ "1041-baseline-139347-20250714T000000": {
+  "benign": [
+   "\u00a76.5(b)",
+   "\u00a76.5(c)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)",
+   "no_nonpayment_grounds citations (FP-2 \u00a78.1)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": true,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "1041-baseline-141342-20250723T000000": {
+  "benign": [
+   "\u00a76.5(b)",
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check contact (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Account access"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "contact"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R01"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "1041-baseline-141740-20250722T012725": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "1041-baseline-141866-20250723T000000": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(c)",
+   "decline": "\u00a76.6(c)",
+   "escalate": "\u00a76.6(c)",
+   "hold": "\u00a76.6(c)",
+   "needs_check": "\u00a76.6(c)"
+  },
+  "constraints": [
+   "standard clear (FP-2 \u00a76.6(c))",
+   "prohibited decline (FP-2 \u00a76.6(c))",
+   "prohibited escalate (FP-2 \u00a76.6(c))",
+   "prohibited hold (FP-2 \u00a76.6(c))",
+   "prohibited needs_check (FP-2 \u00a76.6(c))"
+  ],
+  "decisive": true,
+  "families": [],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [],
+  "prohibited": [
+   "decline",
+   "escalate",
+   "hold",
+   "needs_check"
+  ],
+  "required_checks": [],
+  "row": "\u00a76.6(c)",
+  "rules": [
+   "R09"
+  ],
+  "settlements": [],
+  "standard": [
+   "clear"
+  ]
+ },
+ "1041-baseline-144108-20250730T152615": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "1041-baseline-144725-20250803T000000": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "1041-baseline-145227-20250803T155859": {
+  "benign": [
+   "\u00a76.5(b)",
+   "\u00a76.5(c)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)",
+   "no_nonpayment_grounds citations (FP-2 \u00a78.1)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": true,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "1041-baseline-148628-20250816T062718": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Linkage"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R08"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "1041-baseline-149077-20250817T151145": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "1041-baseline-149095-20250817T155133": {
+  "benign": [
+   "\u00a76.5(b)",
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "1041-baseline-150280-20250822T000000": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(c)",
+   "decline": "\u00a76.6(c)",
+   "escalate": "\u00a76.6(c)",
+   "hold": "\u00a76.6(c)",
+   "needs_check": "\u00a76.6(c)"
+  },
+  "constraints": [
+   "standard clear (FP-2 \u00a76.6(c))",
+   "prohibited decline (FP-2 \u00a76.6(c))",
+   "prohibited escalate (FP-2 \u00a76.6(c))",
+   "prohibited hold (FP-2 \u00a76.6(c))",
+   "prohibited needs_check (FP-2 \u00a76.6(c))"
+  ],
+  "decisive": true,
+  "families": [],
+  "household_exceptions": [
+   "\u00a76.4(b)"
+  ],
+  "no_installment_due": false,
+  "permitted": [],
+  "prohibited": [
+   "decline",
+   "escalate",
+   "hold",
+   "needs_check"
+  ],
+  "required_checks": [],
+  "row": "\u00a76.6(c)",
+  "rules": [
+   "R08"
+  ],
+  "settlements": [],
+  "standard": [
+   "clear"
+  ]
+ },
+ "1041-baseline-151060-20250824T123203": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(c)",
+   "decline": "\u00a76.6(c)",
+   "escalate": "\u00a76.6(c)",
+   "hold": "\u00a76.6(c)",
+   "needs_check": "\u00a76.6(c)"
+  },
+  "constraints": [
+   "standard clear (FP-2 \u00a76.6(c))",
+   "prohibited decline (FP-2 \u00a76.6(c))",
+   "prohibited escalate (FP-2 \u00a76.6(c))",
+   "prohibited hold (FP-2 \u00a76.6(c))",
+   "prohibited needs_check (FP-2 \u00a76.6(c))"
+  ],
+  "decisive": true,
+  "families": [],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [],
+  "prohibited": [
+   "decline",
+   "escalate",
+   "hold",
+   "needs_check"
+  ],
+  "required_checks": [],
+  "row": "\u00a76.6(c)",
+  "rules": [
+   "R09"
+  ],
+  "settlements": [],
+  "standard": [
+   "clear"
+  ]
+ },
+ "1041-baseline-151693-20250827T000000": {
+  "benign": [
+   "\u00a76.5(b)",
+   "\u00a76.5(c)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)",
+   "no_nonpayment_grounds citations (FP-2 \u00a78.1)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": true,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "2718-baseline-128851-20250603T000000": {
+  "benign": [
+   "\u00a76.5(b)",
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "2718-baseline-131404-20250612T000000": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "2718-baseline-132817-20250617T000000": {
+  "benign": [
+   "\u00a76.5(c)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)",
+   "no_nonpayment_grounds citations (FP-2 \u00a78.1)"
+  ],
+  "decisive": false,
+  "families": [
+   "Linkage"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": true,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R02"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "2718-baseline-147456-20250808T000000": {
+  "benign": [
+   "\u00a76.5(c)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)",
+   "no_nonpayment_grounds citations (FP-2 \u00a78.1)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": true,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "2718-baseline-152293-20250825T000000": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "2718-baseline-152582-20250826T031149": {
+  "benign": [
+   "\u00a76.5(b)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)",
+   "no_nonpayment_grounds citations (FP-2 \u00a78.1)"
+  ],
+  "decisive": false,
+  "families": [
+   "Linkage"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": true,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R02"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "2718-baseline-153263-20250828T151853": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "416-baseline-128755-20250604T124734": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Linkage"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R08"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "416-baseline-133193-20250621T000000": {
+  "benign": [
+   "\u00a76.5(b)",
+   "\u00a76.5(c)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)",
+   "no_nonpayment_grounds citations (FP-2 \u00a78.1)"
+  ],
+  "decisive": false,
+  "families": [
+   "Linkage"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": true,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R08"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "416-baseline-133383-20250621T155513": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Linkage"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R08"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "416-baseline-135760-20250630T000000": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Linkage"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R08"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "416-baseline-138232-20250709T092403": {
+  "benign": [
+   "\u00a76.5(a)",
+   "\u00a76.5(b)",
+   "\u00a76.5(c)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)",
+   "no_nonpayment_grounds citations (FP-2 \u00a78.1)"
+  ],
+  "decisive": false,
+  "families": [
+   "Linkage"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": true,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R08"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "416-baseline-140378-20250717T074808": {
+  "benign": [
+   "\u00a76.5(b)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)",
+   "no_nonpayment_grounds citations (FP-2 \u00a78.1)"
+  ],
+  "decisive": false,
+  "families": [
+   "Linkage"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": true,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R08"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "416-baseline-143163-20250727T072805": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)"
+  ],
+  "decisive": false,
+  "families": [
+   "Card"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": false,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R03"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "416-baseline-146830-20250809T055727": {
+  "benign": [
+   "\u00a76.5(b)",
+   "\u00a76.5(c)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(b)",
+   "decline": "\u00a76.6(b)",
+   "escalate": "\u00a76.6(b)",
+   "hold": "\u00a76.6(b)",
+   "needs_check": "\u00a76.6(b)"
+  },
+  "constraints": [
+   "standard hold (FP-2 \u00a76.6(b))",
+   "permitted needs_check (FP-2 \u00a76.6(b))",
+   "prohibited clear (FP-2 \u00a76.6(b))",
+   "prohibited decline (FP-2 \u00a76.6(b))",
+   "prohibited escalate (FP-2 \u00a76.6(b))",
+   "required_check id_check (FP-2 \u00a75.2)",
+   "no_nonpayment_grounds citations (FP-2 \u00a78.1)"
+  ],
+  "decisive": false,
+  "families": [
+   "Linkage"
+  ],
+  "household_exceptions": [],
+  "no_installment_due": true,
+  "permitted": [
+   "needs_check"
+  ],
+  "prohibited": [
+   "clear",
+   "decline",
+   "escalate"
+  ],
+  "required_checks": [
+   "id_check"
+  ],
+  "row": "\u00a76.6(b)",
+  "rules": [
+   "R08"
+  ],
+  "settlements": [],
+  "standard": [
+   "hold"
+  ]
+ },
+ "416-baseline-147841-20250813T000000": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(c)",
+   "decline": "\u00a76.6(c)",
+   "escalate": "\u00a76.6(c)",
+   "hold": "\u00a76.6(c)",
+   "needs_check": "\u00a76.6(c)"
+  },
+  "constraints": [
+   "standard clear (FP-2 \u00a76.6(c))",
+   "prohibited decline (FP-2 \u00a76.6(c))",
+   "prohibited escalate (FP-2 \u00a76.6(c))",
+   "prohibited hold (FP-2 \u00a76.6(c))",
+   "prohibited needs_check (FP-2 \u00a76.6(c))"
+  ],
+  "decisive": true,
+  "families": [],
+  "household_exceptions": [
+   "\u00a76.4(b)"
+  ],
+  "no_installment_due": false,
+  "permitted": [],
+  "prohibited": [
+   "decline",
+   "escalate",
+   "hold",
+   "needs_check"
+  ],
+  "required_checks": [],
+  "row": "\u00a76.6(c)",
+  "rules": [
+   "R08"
+  ],
+  "settlements": [],
+  "standard": [
+   "clear"
+  ]
+ },
+ "416-baseline-152210-20250828T000000": {
+  "benign": [
+   "\u00a76.5(f)"
+  ],
+  "clauses": {
+   "clear": "\u00a76.6(c)",
+   "decline": "\u00a76.6(c)",
+   "escalate": "\u00a76.6(c)",
+   "hold": "\u00a76.6(c)",
+   "needs_check": "\u00a76.6(c)"
+  },
+  "constraints": [
+   "standard clear (FP-2 \u00a76.6(c))",
+   "prohibited decline (FP-2 \u00a76.6(c))",
+   "prohibited escalate (FP-2 \u00a76.6(c))",
+   "prohibited hold (FP-2 \u00a76.6(c))",
+   "prohibited needs_check (FP-2 \u00a76.6(c))"
+  ],
+  "decisive": true,
+  "families": [],
+  "household_exceptions": [
+   "\u00a76.4(b)"
+  ],
+  "no_installment_due": false,
+  "permitted": [],
+  "prohibited": [
+   "decline",
+   "escalate",
+   "hold",
+   "needs_check"
+  ],
+  "required_checks": [],
+  "row": "\u00a76.6(c)",
+  "rules": [
+   "R08"
+  ],
+  "settlements": [],
+  "standard": [
+   "clear"
+  ]
+ }
+}
