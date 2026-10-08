@@ -3,7 +3,8 @@
 How the synthetic world, the evaluation protocol, the cash ledger and the
 simulated reviewer work, and what the results can and cannot say. Values in
 this document are modelling assumptions unless a source is given; each is set
-in one configuration file and stated once here.
+in one place, a configuration file or a code constant named beside it, and
+stated once here.
 
 ## World assumptions
 
@@ -70,19 +71,21 @@ never changes another's draws.
 ### Customers and their behaviour
 
 Volumes are for one world at scale 1; `--scale` shrinks a world for tests and
-CI. Every value is in `config/world.yaml`.
+CI. Every value is in `config/world.yaml`, except the code constants named in
+their rows: the account holders' age range, the order-amount spread and bounds,
+and the bounds on merchants' fulfilment medians.
 
 | Parameter | Value | Why |
 | --- | --- | --- |
 | Order attempts | about 160,000 over 20 months | The protocol's support check needs at least 30 test-window orders of every checkout pattern on every development seed with fraud held near 1%; 120,000 left some patterns under 40 per window, so the volume was raised rather than the fraud share. |
 | Households | 255 per 1,000 orders, 45% opened between July 2021 and the start of the horizon | An established book with steady growth; the repeat-order rate is calibrated from the target volume less the 1% fraud share. |
 | Household size | 1 (86%), 2 (10%), 3 (4%) accounts | Households share a home address, so rules counting accounts per address meet them. |
-| Account holders' age | born 19 to 77 calendar years before signup (every actor) | Pay-in-4 accounts are for adults. |
+| Account holders' age | born 19 to 77 calendar years before signup (every actor; `birth_year` in `simulator/population.py`) | Pay-in-4 accounts are for adults. |
 | Shared tablet | 30% of multi-account households | Households also share devices (R02's benign case). |
 | First order of a new account | 65% within minutes of signup, 25% within days (mean 10), 10% never | Most pay-in-4 accounts are opened at a merchant's checkout, so legitimate new accounts order immediately, exactly as new fraud accounts do. |
 | Large first order | 15% of new customers, 1.8 to 3 times the category median | Legitimate front-loaded first orders exist (R04's benign case). |
 | Repeat orders | Poisson, gamma-distributed rates (shape 0.8), holiday peak 1.6 times, weekends 1.15 times | Most customers order rarely and a few often. |
-| Order amounts | lognormal around the merchant category's median (sigma 0.65), $12 to $4,000, for every actor; patterns scale the median (fraud table) | One price process, so a residual price spread never marks an actor. |
+| Order amounts | lognormal around the merchant category's median (sigma 0.65), $12 to $4,000, for every actor (both in `order_amount_cents`, `simulator/population.py`); patterns scale the median (fraud table) | One price process, so a residual price spread never marks an actor. |
 | Customer lifetime | exponential, mean 900 days; 10% of older accounts dormant | Accounts stop shopping; dormant accounts exist. |
 | New phone | 0.35 a year; the old phone stays linked up to 3 days | Phones are replaced about every three years. |
 | Password reset after a new phone | 35% of new phones, within a day | A new phone often means a forgotten password (R01's benign case). |
@@ -101,7 +104,7 @@ CI. Every value is in `config/world.yaml`.
 | Defaults | 3.5% of a new customer's first plan (placed within 30 days of signup), 1.2% of other plans, 4 times for 5% fragile customers; 70% (first plans) and 35% (others) zero-effort | Credit loss, including new customers who never pay; most first-plan defaults look exactly like never-pay. |
 | After a default | 70% stop ordering | Defaulters rarely keep shopping. |
 | Reversals | 0.3% of collected installments bounce 2 to 5 days later; 75% are repaid 2 days later | Bank returns. |
-| Fulfilment | merchant median hours lognormal around 12 h (sigma 0.5, 2 to 72 h); each order lognormal around its merchant's median (sigma 0.6) | Goods ship within hours, which the replay's race between review and shipment depends on. |
+| Fulfilment | merchant median hours lognormal around 12 h (sigma 0.5, 2 to 72 h, the bounds in `onboarding_profile`, `simulator/merchants.py`); each order lognormal around its merchant's median (sigma 0.6) | Goods ship within hours, which the replay's race between review and shipment depends on. |
 | Merchant risk tier | at onboarding, tiers 1/2/3 for 65/28/7% of merchants, 30/45/25% in the resale categories (electronics, jewelry, gaming); 10% of merchants join during the horizon | One onboarding rule for every merchant, including those that later bust out. |
 | Delivery | lognormal, median 2.5 days | |
 | Lost parcels | 0.5% of shipments never delivered, 70% claimed (upheld) | Genuine item-not-received claims. |
@@ -225,7 +228,7 @@ orders.
 | `logistic` | logistic regression on the context's model features | the same |
 | `boosting` | histogram gradient boosting on the same features | the same |
 | `hybrid` | boosting score | rule score |
-| `expected_loss` | calibrated probability (boosting) times the order's cash at risk if approved | the expected loss avoided minus the expected cost of declining a legitimate order (merchant fee plus the $15 LTV proxy); declines at zero or above |
+| `expected_loss` | calibrated probability (boosting) times the order's cash at risk if approved | the expected loss avoided minus the expected cost of declining a legitimate order (merchant fee plus the $15 lifetime-value proxy, the assumed value of a lost legitimate customer); declines at zero or above |
 
 Each seed's classifiers are fitted on its baseline world's fit-window orders
 with balanced class weights. Only labels known before the classifier freeze
@@ -320,7 +323,7 @@ decline" are always in the grid. The expected-loss policy tunes only its review
 threshold; its decline rule stays fixed.
 
 **Objective and feasibility.** The objective is ledger net contribution minus
-the lost-customer cost: the $15 lifetime-value (LTV) proxy for each legitimate
+the lost-customer cost: the $15 lifetime-value proxy for each legitimate
 order declined at checkout, refused because its account was blocked, declined or
 escalated after review, or cancelled after an unanswered hold. The protocol and
 the result columns call it the friction cost (`friction_cost_cents`).
@@ -457,10 +460,11 @@ verification rates.
 The measures, per seed, are:
 
 - **Rule net contribution:** ledger net for the window's orders, less the
-  lost-customer cost (the LTV proxy for each lost legitimate customer) and the
-  analyst allotment at $35 per allotted hour, including unused minutes. A policy
-  with no review route at its chosen point releases the allotment and is charged
-  nothing, so approve-all can show whether screening pays at all.
+  lost-customer cost (the lifetime-value proxy for each lost legitimate
+  customer) and the analyst allotment at $35 per allotted hour, including unused
+  minutes. A policy with no review route at its chosen point releases the
+  allotment and is charged nothing, so approve-all can show whether screening
+  pays at all.
 - **Lost legitimate customers:** legitimate orders declined at checkout,
   refused because the account was blocked, declined or escalated after review,
   or cancelled after an unanswered hold, per 10,000 legitimate orders.
@@ -516,7 +520,7 @@ in each cell that differs from the primary cell in one respect:
 - low and high allotments;
 - evening layout at base allotment;
 - weak verification;
-- LTV proxies of $5 and $45.
+- lifetime-value proxies of $5 and $45.
 
 For the recommendation rule and flip table, sensitivities are never combined.
 For each cell the flip table states whether the primary outcome holds and, if
@@ -536,7 +540,7 @@ combinations of traffic or fraud-mix changes with staffing and replay variants.
 | Allotment | 17 and 50 minutes per shift | replays at those levels |
 | Shift layout | evening layout, 33 minutes per shift | replay on that layout |
 | Verification | `reviewer.verification_weak` (Reviewer, below) | replay variant at the base allotment |
-| LTV proxy | $5 and $45 | lost-customer cost recomputed from the same base replays, for all seven policies; the expected-loss policy keeps $15 inside its decline rule |
+| Lifetime-value proxy | $5 and $45 | lost-customer cost recomputed from the same base replays, for all seven policies; the expected-loss policy keeps $15 inside its decline rule |
 | Fulfilment lag | ×0.5 and ×2 (`lag_half`, `lag_double`) | world families generated for the final seeds: from the test window, each order's drawn time to shipment is multiplied before the 15-minute floor; replayed at the base allotment, current layout, standard variant only |
 | Traffic and fraud mix | `acquisition_surge`, `fraud_mix_shift` | world families from the test window, replayed in every cell |
 
@@ -746,9 +750,10 @@ verification pass rates or customer and attacker behaviour. Patterns, signals
 and rates are generator choices (the fraud table above); detection performance
 measures how distinct the design makes each pattern. At about 8,000 orders a
 month, the world is small for a pay-in-4 platform, which is why capacity is an
-allotment of minutes rather than headcount. Costs (LTV proxy, analyst hour,
-hurdle) and friction caps are assumptions and risk appetite, not benchmarks.
-Results describe mechanisms under these assumptions, not a real portfolio.
+allotment of minutes rather than headcount. Costs (lifetime-value proxy,
+analyst hour, hurdle) and friction caps are assumptions and risk appetite, not
+benchmarks. Results describe mechanisms under these assumptions, not a real
+portfolio.
 
 The ten final worlds share the generator and its parameters. Their spread
 measures variation between worlds, not whether the parameters are right.
@@ -772,7 +777,7 @@ evidence.
   attackers would evade them.
 - **No customer churn.** Legitimate customers keep placing generated orders
   after holds, cancellations or declines; account blocks refuse them at
-  checkout. The flat LTV proxy prices lost future value.
+  checkout. The flat lifetime-value proxy prices lost future value.
 - **Training labels for every order.** Classifiers use approve-all labels,
   including those for orders today's rules would decline.
 - **Evaluation labels from the approve-all world.** A prevented order is judged
@@ -802,7 +807,7 @@ evidence.
 | Assumption | Sensitivity | Pre-registered values | Where reported |
 | --- | --- | --- | --- |
 | Verification pass rates | weak verification | takeover `contact` 0.50 passed, 0.35 failed; takeover and third-party `id_check` 0.25 passed, 0.45 failed | flip table; [operations appendix](../reports/appendix-operations.md) |
-| The value of a lost customer | LTV proxy | $5 and $45 (base $15) | flip table; [economics appendix](../reports/appendix-economics.md) |
+| The value of a lost customer | lifetime-value proxy | $5 and $45 (base $15) | flip table; [economics appendix](../reports/appendix-economics.md) |
 | How fast goods ship | fulfilment lag | ×0.5 and ×2 from the test window | flip table; operations appendix |
 | The review allotment | allotment level | 17 and 50 minutes per shift (base 33) | flip table; operations appendix |
 | When analysts work | shift layout | evening layout at 33 minutes per shift | flip table; operations appendix |
@@ -816,5 +821,5 @@ each cell. Fixed traffic, attacker adaptation, churn and training-label
 availability have no sensitivity, and neither do the review-time distribution,
 the check answer delays, the 48-hour hold or the 20 senior minutes. Without
 attacker adaptation, the replay can overstate what declines and blocks are
-worth. Customer churn is not simulated; the flat LTV proxy is an assumed cost
+worth. Customer churn is not simulated; the flat lifetime-value proxy is an assumed cost
 of lost future value.
