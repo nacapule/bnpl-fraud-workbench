@@ -35,8 +35,9 @@ ci-world:  ## one small world end to end, into runs/ci
 final:  ## the final seeds; writes results/ and the documents; refused before the freeze
 	$(PY) pipeline.py run --profile final
 
-docs:  ## render the documents from their templates and results/summary.json
+docs:  ## render the documents and the figures from their templates and results/summary.json
 	$(PY) -m report render
+	$(PY) -m report.charts
 
 docs-check:  ## documents in sync with results, claims hold, no typed numbers
 	$(PY) -m report check
