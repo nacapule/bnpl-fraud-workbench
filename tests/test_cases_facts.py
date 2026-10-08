@@ -249,6 +249,57 @@ def test_the_facts_list_the_same_day_orders(declined_facts):
         assert alert(declined_facts, file)["decision"]["same_day_orders"] == []
 
 
+# ------------------------------------------------------------------ what FP-2 supports
+
+# FP-2 as written, read by hand: §6.6 rows (a)-(c), §5.2 checks, §4.3 needs_check.
+QUIET_VIEW = {"row": "§6.6(c)", "standard": ["clear"], "acceptable": ["clear"],
+              "prohibited": ["decline", "escalate", "hold", "needs_check"],
+              "required_checks": []}
+ONE_FAMILY = {"row": "§6.6(b)", "standard": ["hold"], "acceptable": ["hold", "needs_check"],
+              "prohibited": ["clear", "decline", "escalate"]}
+TWO_FAMILIES = {"row": "§6.6(b)", "standard": ["hold"],
+                "acceptable": ["decline", "hold", "needs_check"],
+                "prohibited": ["clear", "escalate"], "required_checks": ["id_check"]}
+SETTLED = {"row": "§6.6(a)", "standard": ["decline"], "acceptable": ["decline"],
+           "prohibited": ["clear", "escalate", "hold", "needs_check"], "required_checks": []}
+
+
+def _view(view: dict) -> dict:
+    return {key: view[key] for key in ("row", "standard", "acceptable", "prohibited",
+                                       "required_checks")}
+
+
+@pytest.mark.parametrize("override, expected", [
+    ({}, QUIET_VIEW),
+    ({"bin_ip_country_mismatch": 1, "avs_mismatch": 1},  # R03: Card
+     {**ONE_FAMILY, "required_checks": ["id_check"]}),
+    ({"bin_ip_country_mismatch": 1, "avs_mismatch": 1, "attempts_user_24h": 4},  # + R05
+     TWO_FAMILIES),
+    ({"unauthorized_disputes_lost_user": 1, "victim_reports_user": 0}, SETTLED),  # §6.3(a)
+])
+def test_the_policy_view_is_fp2s_answer_on_the_row(tables, override, expected):
+    context = asof.build_context(tables)
+    row = {**context.loc[context["order_id"] == 1].iloc[0].to_dict(), **override}
+    view = facts_module.policy_view(tables, row)
+    assert _view(view) == expected
+    assert set(view["clauses"]) == set(view["acceptable"]) | set(view["prohibited"])
+
+
+def test_each_alert_carries_the_policy_view_of_its_evidence(declined_facts, reviewed_facts):
+    # the takeover's evidence: R01 alone (Account access), no check run: hold for contact
+    for built in (declined_facts, reviewed_facts):
+        facts = alert(built, "account_takeover")
+        assert facts["evidence"]["rules_held"] == ["R01"]
+        assert _view(facts["policy_view"]) == {**ONE_FAMILY, "required_checks": ["contact"]}
+        assert facts["policy_view"]["clauses"]["hold"] == "§6.6(b)"
+    reviewed = alert(reviewed_facts, "account_takeover")
+    assert reviewed["policy_view"]["standard"] == [reviewed["decision"]["recorded_action"]]
+    for built in (declined_facts, reviewed_facts):
+        for entry in built.values():
+            for facts in entry["alerts"].values():
+                assert facts["selected"] is False or "policy_view" in facts
+
+
 # ------------------------------------------------------------------ amounts and the ledger
 
 

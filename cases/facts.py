@@ -19,6 +19,11 @@ manifest. :func:`build` writes, per file of the protocol's ``cases.files``, and 
   conditions that hold on it and the rule score (computed from the row alone);
   ``routing``: the same for the checkout row; ``reviewer``: for a reviewed alert, how the
   decision table reads the row (it must give the recorded disposition);
+* ``policy_view``: what FP-2 supports on that evidence, as the memo referee states it for
+  the memo drafter's packet of the same row (``llm.referee.view``): the decision-table row,
+  the standard, also-permitted (together: ``acceptable``) and prohibited dispositions, the
+  checks still required and the clause each rests on (for a reviewed alert it must agree
+  with the reviewer's reading);
 * ``later``: the review's later checks and final disposition, the incumbent's fate, the
   order's realized events and cash under the incumbent to the end of observation, the
   world's approve-all events and cash where they differ, the adjudicated label, and the
@@ -49,6 +54,8 @@ from core import actions, asof, config, evidence, ledger
 from core import protocol as protocol_module
 from core import world as world_module
 from core.results import canonical_json, file_sha256
+from llm import referee
+from llm.packet import build_packets
 from pipeline import KEPT_FRAMES, manifest_identity
 from queue_sim import stage
 from rules import engine
@@ -242,6 +249,15 @@ def _rules(row: Mapping[str, Any]) -> dict[str, Any]:
     held = evidence.conditions(frame)
     return {"rules_held": [rule for rule in evidence.RULE_FAMILY if bool(held[rule].iloc[0])],
             "rule_score": float(engine.score(frame)[0])}
+
+
+def policy_view(tables: Mapping[str, pd.DataFrame], row: Mapping[str, Any]) -> dict[str, Any]:
+    """FP-2's answer on a saved row with no checks completed: the memo referee's view of
+    the packet the memo drafter gets for it (``llm.packet.build_packets``)."""
+    frame = pd.DataFrame([{column: row[column] for column in ROW_COLUMNS}])
+    (packet,) = build_packets(tables, frame).values()
+    view = referee.view(packet)
+    return {**view.as_dict(), "acceptable": sorted(view.standard | view.permitted)}
 
 
 def _reviewer(row: Mapping[str, Any]) -> dict[str, Any]:
@@ -451,12 +467,19 @@ def alert_facts(run: Run, pick: Pick, realized: Mapping[str, pd.DataFrame],
         "evidence": {"row": row, **_rules(row)},
         "routing": _routing(run, order, decision["band"]),
     }
+    facts["policy_view"] = policy_view(tables, row)
     if decision["kind"] == "review":
         facts["reviewer"] = _reviewer(row)
-        if facts["reviewer"]["standard_disposition"] != decision["recorded_action"]:
+        reading = facts["reviewer"]
+        if reading["standard_disposition"] != decision["recorded_action"]:
             raise RuleError(f"order {order}: the saved row gives "
-                            f"{facts['reviewer']['standard_disposition']}, the replay recorded "
+                            f"{reading['standard_disposition']}, the replay recorded "
                             f"{decision['recorded_action']}")
+        view = facts["policy_view"]
+        if (view["row"], view["standard"]) != (reading["decision_table_row"],
+                                               [reading["standard_disposition"]]):
+            raise RuleError(f"order {order}: the packet's policy view differs from the "
+                            "reviewer's reading of the same row")
     cut = run.protocol.observed_until
     incumbent = {"events": events(realized, order, cut),
                  **cash(realized["cash_events"], order, cut)}
