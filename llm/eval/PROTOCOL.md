@@ -68,9 +68,10 @@ All cases come from the test windows, under the incumbent rules at their tuned t
   benchmark.
 - **Probes and seed.** 40 final cases are also asked twice more: with their facts
   shuffled, and with fresh placeholder names. Selection uses seed `20261006`.
-- **Why 80 decisions after a check.** It is about their share of analyst decisions in
-  the development pools: 283 of 743 (460 first decisions and 283 completions in the
-  development run's three baseline worlds; `2026-10-dev-checks` records the 283).
+- **Why 80 decisions after a check.** It is about their share of analyst decisions on
+  the development seeds: 283 decisions after a check (the eligible count
+  `2026-10-dev-checks` records) against 460 first decisions, counted in the development
+  run's kept review decisions (pipeline output, not committed). That is 283 of 743.
 - **Why baseline worlds only.** A lag-sensitivity world repeats its baseline world's
   reviewed orders, and the shifted futures would blend other populations into one
   natural-mix rate.
@@ -165,8 +166,7 @@ Beside it are the unweighted rate, and each axis's unweighted and weighted (Háj
 - **`2026-10-dev`.** Every development case passed: all 40 memos from `sol` passed every
   component, with no claim error in 889 claims. All 40 were first decisions with no
   check run (§6.6(c) and §6.6(b) with one family), which is why the cases after a check
-  were added. Rebuilt with the current code, the set names one review stratum of the
-  pools (`P-MERCH`) that had no case after phase one.
+  were added.
 - **`2026-10-dev-checks`.** Every disposition was acceptable and standard, and the next
   check was right in all 25 cases (§5.3(a) 10, §5.3(b) without Linkage 9, with Linkage
   6). There was no claim error in 529 claims. 24 of 25 memos passed. The one that did not
@@ -187,14 +187,16 @@ Beside it are the unweighted rate, and each axis's unweighted and weighted (Háj
 - **The referee and the simulated reviewer share one reading of FP-2.** Both apply
   `core.evidence`. On the development run's three baseline worlds, the referee's
   standard on the packets built at the 283 completions contained the reviewer's decision
-  at each of them (a check made before selection; the committed set holds 25 of those
-  packets). That agreement checks the packet's round trip (fields, values, checks); it is
+  at each of them. That was a check run on the development run's output before selection
+  and is not committed; the committed set holds 25 of those packets. That agreement checks the packet's round trip (fields, values, checks); it is
   not two independent readings of the policy. The scoring rules have not been checked by
   a person until the author's referee check (below) is complete.
 - **The verifier reads structure, not meaning.** It checks each claim's field, value and
   declared calculation against the packet. It does not check that a claim's sentence says
-  what the field shows: a sentence that misstates a correct field passes. Words of the
-  memo that match no packet value are counted and reported, but do not fail a memo.
+  what the field shows: a sentence that misstates a correct field passes. It also looks
+  for concrete tokens in the memo (numbers, amounts, times, entity ids) that match no
+  packet value; memos with one are counted and reported, but do not fail. Ordinary words
+  are not checked, so an assertion without such a token goes unchecked.
   Whether the sentences mean what they cite, whether decision-critical evidence is left
   out and whether a memo is defensible are left to the author's referee check.
 - **The decisions are simulated.** Every decision after a check rests on facts as of the
@@ -238,12 +240,14 @@ python -m llm.eval.select_cases --id <final id> --phase final --world <run>/worl
     --development 2026-10-dev --development 2026-10-dev-checks --development 2026-10-dev-opus
 python -m llm.eval.select_cases --id <case memos id> --case-memos <run> --arm sol
 python -m llm.eval.harness --benchmark <id>             # every arm, from the cache
-python -m llm.eval.harness --benchmark 2026-10-dev-opus --arm opus   # one arm, no pairing
+python -m llm.eval.harness --benchmark 2026-10-dev-checks --arm sol \
+    --amend-scoring "the scoring changes made after this set ran"
 python -m llm.eval.harness --benchmark 2026-10-dev --arm sol \
     --amend-scoring "the scoring additions made after this set ran"
 ```
 
-The development sets each hold one arm's records (`sol` for `2026-10-dev` and
-`2026-10-dev-checks`, `opus` for `2026-10-dev-opus`), so they are scored with `--arm`.
+The development sets each take one arm, so they are scored with `--arm`. `2026-10-dev`
+and `2026-10-dev-checks` hold `sol`'s records. `2026-10-dev-opus` is prepared for `opus`
+and can be scored once its live run has made its records.
 `2026-10-dev` and `2026-10-dev-checks` were fixed before the last scoring changes, so
 scoring them names the change with `--amend-scoring`, which the results record.
