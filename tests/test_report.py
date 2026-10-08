@@ -854,8 +854,12 @@ def test_the_repository_wording_covers_what_the_evaluation_compares() -> None:
     import pipeline
 
     claims, wording = claims_module.load_claims()
-    assert claims == []
     protocol = proto.load_protocol()
+    for claim in claims:  # each published claim compares what the evaluation compared
+        assert {claim.policy, claim.reference} <= {*protocol.raw["policies"],
+                                                   *pipeline.REFERENCES}, claim.id
+        assert claim.metric in pipeline.OUTCOME_METRICS, claim.id
+        assert claim.family is None or claim.family in protocol.raw["families"], claim.id
     assert set(protocol.raw["policies"]) <= set(wording.policies)
     assert set(pipeline.REFERENCES) <= set(wording.policies)
     assert set(pipeline.OUTCOME_METRICS) == set(wording.metrics)
@@ -871,6 +875,7 @@ def test_the_repository_wording_covers_what_the_evaluation_compares() -> None:
     names = {pipeline.capacity_name(cell, policy_cfg["roster"]["layout"])
              for cell in pipeline.expected_cells(policy_cfg)}
     assert names == set(wording.capacities)
+    assert all(claim.capacity is None or claim.capacity in names for claim in claims)
     for name, words in wording.metrics.items():  # each difference prints in its own unit
         unit, _, denominator, _ = pipeline.OUTCOME_METRICS[name]
         formats.apply(words["format"], formats.Value(

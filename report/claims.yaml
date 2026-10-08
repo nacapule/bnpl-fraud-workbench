@@ -17,7 +17,49 @@
 #     # alpha: 0.05                           # optional
 #     # key: evaluate.net_contribution...     # optional: another result key
 #     # keys: [<...>.only_policy, <...>.only_reference]   # mcnemar instead of key
-claims: []
+claims:
+  # Screening pays at all: today's rules against approving every order.
+  - id: rules-cash-vs-approve-all
+    policy: incumbent_rules
+    reference: approve_all
+    metric: net_contribution
+    test: sign
+    direction: positive
+  # The hybrid policy, the other challenger that clears the bar in the primary cell.
+  - id: hybrid-loss-vs-rules
+    policy: hybrid
+    reference: incumbent_rules
+    metric: loss_of_gmv
+    test: sign
+    direction: negative
+  - id: hybrid-declined-vs-rules
+    policy: hybrid
+    reference: incumbent_rules
+    metric: legitimate_declined_per_10k
+    test: sign
+    direction: no_detected_difference
+  # Why logistic regression is not eligible in the primary cell.
+  - id: logistic-declined-vs-rules
+    policy: logistic
+    reference: incumbent_rules
+    metric: legitimate_declined_per_10k
+    test: sign
+    direction: positive
+  # The acquisition surge, the one cell where the answer changes.
+  - id: surge-boosting-cash
+    policy: boosting
+    reference: incumbent_rules
+    metric: net_contribution
+    family: acquisition_surge
+    test: sign
+    direction: positive
+  - id: surge-boosting-declines
+    policy: boosting
+    reference: incumbent_rules
+    metric: legitimate_declined_per_10k
+    family: acquisition_surge
+    test: sign
+    direction: positive
 
 # How sentences name things. A metric's more and less read "<policy> <more>
 # <reference>"; its noun names it in no-difference and equivalence sentences;
@@ -34,9 +76,9 @@ wording:
     expected_loss: "the expected-loss policy"
   metrics:
     net_contribution:
-      more: "earned more net contribution than"
-      less: "earned less net contribution than"
-      noun: "net contribution"
+      more: "kept more net cash than"
+      less: "kept less net cash than"
+      noun: "net cash"
       format: "usd"
     loss_of_gmv:
       more: "lost a larger share of GMV to fraud and abuse than"
