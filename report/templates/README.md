@@ -68,7 +68,7 @@ shipping away from home. The platform's written fraud policy, FP-2, calls for a 
 to resolve that explanation (§6.5(b)). On the evidence available, it supports a hold for an
 identity check, not a decline (§6.6(b), §5.2).
 
-The analyst held the order before it shipped. The identity check failed on {{ fact:account_takeover:alerts.account_takeover.later.review.checks.0.completed_at | date }}, and the order was declined and voided. It was labelled an account takeover on {{ fact:account_takeover:alerts.account_takeover.later.label.label_known_at | date }}. The [case file](cases/account-takeover.md) has the evidence table, competing explanations, later outcomes and a change to the rules tested in the replay.
+The analyst held the order before it shipped. The identity check failed on {{ fact:account_takeover:alerts.account_takeover.later.review.checks.0.completed_at | date }}, and the order was declined and voided. The order's label comes from the approve-all counterfactual, in which it ships: there, on {{ fact:account_takeover:alerts.account_takeover.later.label.label_known_at | date }}, the account holder reported it as an order they did not place, which marks it an account takeover (FP-2 §9(b)). Every policy is scored with that label. The [case file](cases/account-takeover.md) has the evidence table, competing explanations, later outcomes and a change to the rules tested in the replay.
 
 Five case files follow single alerts from the canonical world through the replay:
 the evidence at the decision, the recommendation the fraud policy supports, the
