@@ -112,6 +112,9 @@ def test_the_replay_reads_only_the_runs_own_inputs(run, tmp_path, monkeypatch) -
     changed = {**tables, "account_events": tables["account_events"].iloc[1:]}
     with pytest.raises(check_points.ReplayMismatch, match="does not match its manifest"):
         check_points.completion_decisions(world_dir, kept, seed=SEED, tables=changed)
+    broken = {**tables, "account_events": tables["account_events"].drop(columns="event_id")}
+    with pytest.raises(check_points.ReplayMismatch):
+        check_points.completion_decisions(world_dir, kept, seed=SEED, tables=broken)
     with monkeypatch.context() as patch:  # the configuration the modules read is the file's
         loaded = check_points.config.load("policy")
         patch.setattr(check_points.config, "load",

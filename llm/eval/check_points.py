@@ -34,7 +34,7 @@ import yaml
 from core import asof, config
 from core.evidence import CheckResult
 from core.protocol import load_protocol
-from core.world import coerce, read_world, verify_manifest
+from core.world import SchemaError, coerce, read_world, verify_manifest
 from model.train import RuleScorer
 from queue_sim import policies, stage
 from queue_sim.replay import PolicyHistory, Settings
@@ -116,10 +116,10 @@ def check_inputs(world_dir: Path, tables: Mapping[str, pd.DataFrame], tune_path:
 
     world_dir = Path(world_dir)
     manifest = json.loads((world_dir / "manifest.json").read_text())
-    coerced = {name: coerce(name, frame) for name, frame in tables.items()}
     try:
+        coerced = {name: coerce(name, frame) for name, frame in tables.items()}
         verify_manifest(coerced, manifest)
-    except ValueError as error:
+    except (SchemaError, ValueError, KeyError) as error:
         raise ReplayMismatch(f"{world_dir.name}: {error}") from error
     recorded = replay_inputs(world_dir.resolve().parent.parent)
     if not recorded:
