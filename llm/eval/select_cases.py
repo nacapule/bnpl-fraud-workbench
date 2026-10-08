@@ -484,6 +484,27 @@ def _read_decisions(world_dir: Path) -> pd.DataFrame:
     raise FileNotFoundError(f"no review decisions in {world_dir}")
 
 
+def check_final_worlds(world_dirs: Sequence[Path], protocol: Any) -> None:
+    """The final cohort reads the baseline world of every final seed its run generated:
+    one run, and its lineage's final seeds, all of them (at least the protocol's
+    ``seeds.minimum_final``), so leaving a world out cannot change the population."""
+    runs = {Path(world_dir).resolve().parent.parent for world_dir in world_dirs}
+    if len(runs) != 1:
+        raise ValueError(f"final worlds come from one run, not {len(runs)}")
+    lineage = next(iter(runs)) / "lineage.json"
+    if not lineage.exists():
+        raise ValueError(f"no lineage in {next(iter(runs)).name}: its seeds are unknown")
+    generated = set(json.loads(lineage.read_text()).get("seeds") or ()) & set(
+        protocol.final_seeds)
+    supplied = {int(json.loads((Path(world_dir) / "manifest.json").read_text())["seed"])
+                for world_dir in world_dirs}
+    minimum = int(protocol.raw["seeds"].get("minimum_final", MIN_FINAL_SEEDS))
+    if supplied != generated or len(generated) < minimum:
+        raise ValueError(f"the final cohort reads the baseline world of every final seed of "
+                         f"the run (at least {minimum}): the run has {sorted(generated)}, "
+                         f"{sorted(supplied)} were given")
+
+
 def phase_axes(phase: str, axis: str | None = None,
                sizes: Mapping[str, Any] | None = None) -> dict[str, int]:
     """The cases a benchmark of ``phase`` takes on each axis: the final cohort's split,
@@ -553,6 +574,7 @@ def build(benchmark_id: str, phase: str, world_dirs: Sequence[Path], *, rng_seed
         pool.loc[review, "stratum"] = stratify(pool.loc[review])
     exclude: dict[str, set[str]] = {"accounts": set(), "episodes": set()}
     if phase == "final":
+        check_final_worlds(world_dirs, protocol)
         earlier_ids = [development] if isinstance(development, str) else list(development or ())
         if not earlier_ids:
             raise ValueError("a final cohort is checked against its development cohorts")

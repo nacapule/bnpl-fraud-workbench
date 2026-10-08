@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import shutil
 from collections import Counter
+from dataclasses import replace
 from pathlib import Path
 
 import pandas as pd
@@ -199,6 +200,18 @@ QUIET = json.loads((Path(__file__).resolve().parent / "fixtures" / "llm" /
                     "quiet_case.json").read_text())["context_row"]
 
 
+FINAL_SEEDS = (35244829, 931592514, 2066792625)
+
+
+def final_run(root: Path, seeds=FINAL_SEEDS, generated=None) -> list[Path]:
+    """A final run folder: the baseline world of each seed and a lineage naming the seeds
+    the run generated (``generated``, default ``seeds``)."""
+    root.mkdir(parents=True)
+    (root / "lineage.json").write_text(json.dumps({"seeds": list(generated or seeds)}))
+    return [mini_world_with_reviews(root / "worlds" / f"{seed}-baseline", seed)
+            for seed in seeds]
+
+
 def mini_world_with_reviews(directory: Path, seed: int) -> Path:
     """The mini world as a run directory: its tables, a manifest for ``seed`` and review
     decisions an hour after each approved order (context values from the fixture)."""
@@ -228,6 +241,10 @@ def mini_phases(tmp_path, monkeypatch):
               for name, rules in select_cases.PHASES.items()}
     monkeypatch.setattr(select_cases, "PHASES", phases)
     monkeypatch.setattr(select_cases, "BENCHMARKS", tmp_path / "benchmarks")
+    protocol = select_cases.load_protocol()  # three final seeds are enough here
+    small = replace(protocol, raw={**protocol.raw,
+                                   "seeds": {**protocol.raw["seeds"], "minimum_final": 3}})
+    monkeypatch.setattr(select_cases, "load_protocol", lambda: small)
     monkeypatch.setattr(harness, "SIZES", {**harness.SIZES, "development_cases": 12,
                                            "final_cases": 18, "final_axes": {"review": 18},
                                            "probe_cases": 3})
@@ -248,8 +265,7 @@ def test_benchmarks_are_built_from_worlds_and_their_review_decisions(tmp_path, m
         packet = json.loads((bench / "packets" / f"{case['case_id']}.json").read_text())
         assert packet["context"]["account_age_days"] == QUIET["account_age_days"]
         assert "pattern" not in json.dumps(packet) and "P-" not in json.dumps(packet)
-    finals = [mini_world_with_reviews(tmp_path / f"final-{seed}", seed)
-              for seed in (35244829, 931592514, 2066792625)]
+    finals = final_run(tmp_path / "final")
     final = select_cases.build("t-final", "final", finals, rng_seed=2, development="t-dev")
     assert len({case["seed"] for case in final["cases"]}) == 3
     assert set(final["probes"]) == {"shuffled", "renamed"}
@@ -261,6 +277,13 @@ def test_benchmarks_are_built_from_worlds_and_their_review_decisions(tmp_path, m
 
     assert all(case["packet_sha256"] for case in final["cases"])
     assert not list((tmp_path / "benchmarks").glob(".*staging"))
+    # every final seed of the run, or nothing
+    partial = final_run(tmp_path / "partial", seeds=FINAL_SEEDS[:2], generated=FINAL_SEEDS)
+    with pytest.raises(ValueError, match="every final seed"):
+        select_cases.build("t-partial", "final", partial, rng_seed=2, development="t-dev")
+    with pytest.raises(ValueError, match="one run"):
+        select_cases.build("t-mixed", "final", [*partial, finals[2]], rng_seed=2,
+                           development="t-dev")
 
 
 @pytest.mark.parametrize("form", ["triples", "results"])
@@ -448,8 +471,7 @@ def test_a_final_cohort_takes_both_axes(tmp_path, mini_phases, monkeypatch) -> N
     select_cases.build("t-dev", "development", [dev], rng_seed=1)
     select_cases.build("t-dev-checks", "development", [dev], rng_seed=1,
                        axis="check_completed")
-    finals = [mini_world_with_reviews(tmp_path / f"final-{seed}", seed)
-              for seed in (35244829, 931592514, 2066792625)]
+    finals = final_run(tmp_path / "final")
     for final in finals:
         with_completions(final, monkeypatch)
     definition = select_cases.build("t-final", "final", finals, rng_seed=2,

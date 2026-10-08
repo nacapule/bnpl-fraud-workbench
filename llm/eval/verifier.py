@@ -36,7 +36,9 @@ FALSE = {"0", "false", "no"}
 MISSING = object()
 PACKET_TIME = "%Y-%m-%d %H:%M:%S"  # how a packet writes a time (llm.packet)
 UNIT_SECONDS = {"second": 1, "minute": 60, "hour": 3600, "day": 86400}
-UNIT = re.compile(r"\b(second|minute|hour|day)s?\b", re.IGNORECASE)
+# a unit word, delimited by anything but a letter (so ``decision_hours`` names hours and
+# ``holiday`` names none)
+UNIT = re.compile(r"(?<![A-Za-z])(second|minute|hour|day)s?(?![A-Za-z])", re.IGNORECASE)
 
 
 def resolve(packet: Mapping[str, Any], path: str) -> Any:

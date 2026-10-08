@@ -163,6 +163,8 @@ SPAN = ["decision.decision_at", "order.placed_at"]
     ("minutes since placement", "s", "312", "derived_ok"),
     ("time since placement", "About 5 hours have passed.", "5", "derived_ok"),
     ("days since placement", "s", "0.22", "derived_ok"),
+    ("placement_to_decision_hours", "s", "5.2", "derived_ok"),
+    ("holiday gap", "s", "0.22", "derived_invalid"),  # a unit inside a word names none
     ("time since placement", "s", "5.2", "derived_invalid"),  # no unit named
 ])
 def test_a_difference_of_two_times_is_a_duration_in_the_named_unit(field, statement, value,
