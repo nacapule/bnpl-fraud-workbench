@@ -583,9 +583,109 @@ count would give.
 
 ## Reviewer
 
-*To be written with the reviewer procedure: the evidence standard it applies
-(`core/evidence.py`), the verification checks and their rates, and its
-confusion matrix by pattern, decision point and evidence strength.*
+The simulated analyst (`queue_sim/reviewer.py`) follows a fixed procedure
+through `core/evidence.py`, shared with the memo referee. Both use the same
+written fraud policy. The analyst reads evidence and takes the standard
+disposition; simulation truth supplies verification answers, never the action.
+
+### What it reads
+
+Each evaluation reads the order's as-of context row and completed checks.
+Checkout columns (the attempt, velocity, tenure, link ages, credential
+changes) stay as at checkout. Decision-time columns (linkage, current email,
+earlier outcomes that settle an order, repayment and shipment status, blocks)
+are as known at the evaluation, under the replayed policy's decisions. The
+reviewer never reads labels, latent tables or policy scores (FP-2 §6.5(d)).
+
+| Moment | Evidence |
+| --- | --- |
+| Checkout | the policy routes the order; the reviewer is not involved |
+| End of the review (first decision) | on the checkout day, the checkout row; on a later day, the row as known at 00:00 that day |
+| A check answers | the row as for a first decision on that day, with every check completed so far |
+| The hold's 48 hours end | no evaluation: an order not yet shipped is cancelled, a shipped one is unchanged |
+
+Evidence can be up to one replay day old, never from the future.
+
+### Procedure
+
+Each evaluation has two steps:
+
+1. **Classify** (`evidence.classify`): identify the FP-2 §6.2 rule conditions
+   that hold, §6.4 household exceptions to R02 or R08, §6.3 earlier outcomes
+   that settle the order, and completed checks. A family is present if a
+   condition holds without an exception. Evidence strength counts the adverse
+   families present: Account access, Card, Velocity and Linkage. Context never
+   counts.
+2. **Decide** (`evidence.permitted_actions`, the §6.6 table): take the first
+   applicable action:
+   - an earlier outcome settles the order (§6.3): decline, or escalate if
+     Linkage is present, regardless of check results;
+   - a check failed: decline, or escalate if Linkage is present; after shipment
+     the loss stands, but blocks apply;
+   - no adverse family is present: clear;
+   - every required check passed: clear;
+   - otherwise: hold and start required checks that have not run.
+
+Under §5.2, Account access requires `contact`; Card, Velocity or Linkage
+requires `id_check`. Both run when required, each at most once per order.
+The procedure always takes the standard disposition. It does not take the
+decline also permitted by §6.6(b) with two or more families: only a failed
+check or settling outcome leads to decline.
+
+### Checks and their rates
+
+The latent pattern determines actor class (`reviewer.actor_class` in
+`config/policy.yaml`); orders without a pattern are legitimate. Checks
+establish who is ordering, never intent (FP-2 §5.1), so first-party fraud
+passes at customer rates.
+
+| Class | Patterns | `contact` passed / failed | `id_check` passed / failed |
+| --- | --- | --- | --- |
+| Legitimate | none; merchant bust-out (the customer is genuine) | 0.85 / 0 | 0.85 / 0.02 |
+| First party | never-pay, item-not-received abuse, promotion farm | 0.85 / 0 | 0.85 / 0.02 |
+| Takeover | account takeover: the holder answers and disowns the order | 0.25 / 0.60 | 0.05 / 0.60 |
+| Third party | stolen card (holds the account, not the card); synthetic identity | 0.85 / 0 | 0.05 / 0.60 |
+
+The remaining probability is no response. Weak verification
+(`reviewer.verification_weak`) assumes better-prepared attackers: takeover
+`contact` passes at 0.50 and fails at 0.35; takeover and third-party
+`id_check` passes at 0.25 and fails at 0.45. Other classes are unchanged.
+
+Outcomes are drawn per order and check, keyed by order id, independently of
+evidence, time and other orders, so two orders by one fraudster are drawn
+separately. Answer
+delays use the same keying and are lognormal, with median 6 hours and sigma
+1.0. Only answers arriving before the hold's 48 hours end are delivered.
+These rates are simulation assumptions (FP-2 §11).
+
+### Timing and capacity
+
+Review time is drawn per order from a lognormal distribution with arithmetic
+mean 7 minutes and sigma 0.6. Analysts use the shifts, allotments and senior
+work priority described under Capacity. Re-evaluation when a check answers
+takes no analyst time.
+
+### Upper bound
+
+The perfect reviewer uses simulation truth at review completion, without
+checks: it declines every order generated as fraud or abuse and clears the
+rest. It
+uses the same queue, timing and allotment and is reported as a labelled upper
+bound diagnostic. Its declines include undelivered merchant bust-out orders
+whose customers are genuine. Simulation-truth friction counts treat those
+customers as legitimate, so these declines count as friction; adjudicated
+counts used by the rule follow each order's label. This treatment applies
+only to the perfect-reviewer replay, not the primary cell.
+
+### Its confusion matrix
+
+The replay records each reviewed order's final outcome (clear, decline,
+escalate, cancelled after an unanswered hold, unchanged after shipment,
+undecided) by adjudicated label basis, shipment status at the first decision,
+and evidence strength then (0, 1, 2 or more adverse families). A diagnostic
+substitutes latent pattern for label. Both appear as `replay.confusion` and
+`replay.confusion_latent` in `results/replay.json` and are rendered in the
+[operations appendix](../reports/appendix-operations.md).
 
 ## Limits
 
