@@ -1,0 +1,1218 @@
+{
+  "cells": [
+    {
+      "capacity": "low",
+      "incumbent_misses": {
+        "column": "incumbent_misses",
+        "row": {
+          "cell": "low"
+        },
+        "table": "evaluate.flips",
+        "value": "service_p1, service_p2"
+      },
+      "label": "low allotment",
+      "minutes_per_shift": {
+        "setting": "capacity.levels.low",
+        "value": 17
+      },
+      "name": "low",
+      "note": {
+        "column": "note",
+        "row": {
+          "cell": "low"
+        },
+        "table": "evaluate.flips",
+        "value": null
+      },
+      "outcome": {
+        "assessed": true,
+        "column": "outcome",
+        "row": {
+          "cell": "low"
+        },
+        "table": "evaluate.flips",
+        "value": "recommend"
+      }
+    },
+    {
+      "capacity": "base",
+      "incumbent_misses": {
+        "column": "incumbent_misses",
+        "row": {
+          "cell": "primary"
+        },
+        "table": "evaluate.flips",
+        "value": "service_p1, service_p2"
+      },
+      "label": "base allotment",
+      "minutes_per_shift": {
+        "setting": "capacity.levels.base",
+        "value": 33
+      },
+      "name": "primary",
+      "note": {
+        "column": "note",
+        "row": {
+          "cell": "primary"
+        },
+        "table": "evaluate.flips",
+        "value": null
+      },
+      "outcome": {
+        "assessed": true,
+        "column": "outcome",
+        "row": {
+          "cell": "primary"
+        },
+        "table": "evaluate.flips",
+        "value": "recommend"
+      }
+    },
+    {
+      "capacity": "high",
+      "incumbent_misses": {
+        "column": "incumbent_misses",
+        "row": {
+          "cell": "high"
+        },
+        "table": "evaluate.flips",
+        "value": ""
+      },
+      "label": "high allotment",
+      "minutes_per_shift": {
+        "setting": "capacity.levels.high",
+        "value": 50
+      },
+      "name": "high",
+      "note": {
+        "column": "note",
+        "row": {
+          "cell": "high"
+        },
+        "table": "evaluate.flips",
+        "value": null
+      },
+      "outcome": {
+        "assessed": true,
+        "column": "outcome",
+        "row": {
+          "cell": "high"
+        },
+        "table": "evaluate.flips",
+        "value": "recommend"
+      }
+    },
+    {
+      "capacity": "redesigned_layout",
+      "incumbent_misses": {
+        "column": "incumbent_misses",
+        "row": {
+          "cell": "redesigned_layout"
+        },
+        "table": "evaluate.flips",
+        "value": "service_p1, service_p2"
+      },
+      "label": "evening layout",
+      "minutes_per_shift": null,
+      "name": "redesigned_layout",
+      "note": {
+        "column": "note",
+        "row": {
+          "cell": "redesigned_layout"
+        },
+        "table": "evaluate.flips",
+        "value": null
+      },
+      "outcome": {
+        "assessed": true,
+        "column": "outcome",
+        "row": {
+          "cell": "redesigned_layout"
+        },
+        "table": "evaluate.flips",
+        "value": "recommend"
+      }
+    }
+  ],
+  "chart": "staffing",
+  "hurdle_usd": {
+    "setting": "reporting.recommendation_rule.hurdle.mean_improvement_usd_per_1000_orders",
+    "value": 100
+  },
+  "policies": [
+    {
+      "label": "approve all",
+      "points": [
+        {
+          "cell": "low",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "low",
+              "policy": "approve_all"
+            },
+            "table": "evaluate.recommendation",
+            "value": true
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "low",
+              "policy": "approve_all"
+            },
+            "table": "evaluate.recommendation",
+            "value": ""
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.low.approve_all",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "low",
+              "policy": "approve_all"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "low",
+              "policy": "approve_all"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": -64514.87156603743
+        },
+        {
+          "cell": "primary",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "primary",
+              "policy": "approve_all"
+            },
+            "table": "evaluate.recommendation",
+            "value": true
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "primary",
+              "policy": "approve_all"
+            },
+            "table": "evaluate.recommendation",
+            "value": ""
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.approve_all",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "primary",
+              "policy": "approve_all"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "primary",
+              "policy": "approve_all"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": -61673.205645432594
+        },
+        {
+          "cell": "high",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "high",
+              "policy": "approve_all"
+            },
+            "table": "evaluate.recommendation",
+            "value": true
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "high",
+              "policy": "approve_all"
+            },
+            "table": "evaluate.recommendation",
+            "value": ""
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.high.approve_all",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "high",
+              "policy": "approve_all"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "high",
+              "policy": "approve_all"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": -58040.83214482079
+        },
+        {
+          "cell": "redesigned_layout",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "approve_all"
+            },
+            "table": "evaluate.recommendation",
+            "value": true
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "approve_all"
+            },
+            "table": "evaluate.recommendation",
+            "value": ""
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.redesigned_layout.approve_all",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "approve_all"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "approve_all"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": -61878.805866030976
+        }
+      ],
+      "policy": "approve_all"
+    },
+    {
+      "label": "tree (depth 3)",
+      "points": [
+        {
+          "cell": "low",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "low",
+              "policy": "tree_depth3"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "low",
+              "policy": "tree_depth3"
+            },
+            "table": "evaluate.recommendation",
+            "value": "service_p2"
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.low.tree_depth3",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "low",
+              "policy": "tree_depth3"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "low",
+              "policy": "tree_depth3"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": -21073.63930493449
+        },
+        {
+          "cell": "primary",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "primary",
+              "policy": "tree_depth3"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "primary",
+              "policy": "tree_depth3"
+            },
+            "table": "evaluate.recommendation",
+            "value": "service_p2"
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.tree_depth3",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "primary",
+              "policy": "tree_depth3"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "primary",
+              "policy": "tree_depth3"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": -18552.5242961336
+        },
+        {
+          "cell": "high",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "high",
+              "policy": "tree_depth3"
+            },
+            "table": "evaluate.recommendation",
+            "value": true
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "high",
+              "policy": "tree_depth3"
+            },
+            "table": "evaluate.recommendation",
+            "value": ""
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.high.tree_depth3",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "high",
+              "policy": "tree_depth3"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "high",
+              "policy": "tree_depth3"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": -15444.863917311339
+        },
+        {
+          "cell": "redesigned_layout",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "tree_depth3"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "tree_depth3"
+            },
+            "table": "evaluate.recommendation",
+            "value": "service_p2"
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.redesigned_layout.tree_depth3",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "tree_depth3"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "tree_depth3"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": -18741.208936174993
+        }
+      ],
+      "policy": "tree_depth3"
+    },
+    {
+      "label": "logistic",
+      "points": [
+        {
+          "cell": "low",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "low",
+              "policy": "logistic"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "low",
+              "policy": "logistic"
+            },
+            "table": "evaluate.recommendation",
+            "value": "lost_mean"
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.low.logistic",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "low",
+              "policy": "logistic"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "low",
+              "policy": "logistic"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": 97710.40753355295
+        },
+        {
+          "cell": "primary",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "primary",
+              "policy": "logistic"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "primary",
+              "policy": "logistic"
+            },
+            "table": "evaluate.recommendation",
+            "value": "lost_mean"
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.logistic",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "primary",
+              "policy": "logistic"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "primary",
+              "policy": "logistic"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": 97838.09172608706
+        },
+        {
+          "cell": "high",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "high",
+              "policy": "logistic"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "high",
+              "policy": "logistic"
+            },
+            "table": "evaluate.recommendation",
+            "value": "lost_mean"
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.high.logistic",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "high",
+              "policy": "logistic"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "high",
+              "policy": "logistic"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": 98475.03050660444
+        },
+        {
+          "cell": "redesigned_layout",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "logistic"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "logistic"
+            },
+            "table": "evaluate.recommendation",
+            "value": "lost_mean"
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.redesigned_layout.logistic",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "logistic"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "logistic"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": 97860.84271113285
+        }
+      ],
+      "policy": "logistic"
+    },
+    {
+      "label": "boosting",
+      "points": [
+        {
+          "cell": "low",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "low",
+              "policy": "boosting"
+            },
+            "table": "evaluate.recommendation",
+            "value": true
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "low",
+              "policy": "boosting"
+            },
+            "table": "evaluate.recommendation",
+            "value": ""
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.low.boosting",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "low",
+              "policy": "boosting"
+            },
+            "table": "evaluate.recommendation",
+            "value": true
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "low",
+              "policy": "boosting"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": 88134.19176037471
+        },
+        {
+          "cell": "primary",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "primary",
+              "policy": "boosting"
+            },
+            "table": "evaluate.recommendation",
+            "value": true
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "primary",
+              "policy": "boosting"
+            },
+            "table": "evaluate.recommendation",
+            "value": ""
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.boosting",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "primary",
+              "policy": "boosting"
+            },
+            "table": "evaluate.recommendation",
+            "value": true
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "primary",
+              "policy": "boosting"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": 88922.49966736845
+        },
+        {
+          "cell": "high",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "high",
+              "policy": "boosting"
+            },
+            "table": "evaluate.recommendation",
+            "value": true
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "high",
+              "policy": "boosting"
+            },
+            "table": "evaluate.recommendation",
+            "value": ""
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.high.boosting",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "high",
+              "policy": "boosting"
+            },
+            "table": "evaluate.recommendation",
+            "value": true
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "high",
+              "policy": "boosting"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": 90036.72012779095
+        },
+        {
+          "cell": "redesigned_layout",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "boosting"
+            },
+            "table": "evaluate.recommendation",
+            "value": true
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "boosting"
+            },
+            "table": "evaluate.recommendation",
+            "value": ""
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.redesigned_layout.boosting",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "boosting"
+            },
+            "table": "evaluate.recommendation",
+            "value": true
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "boosting"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": 89481.94913899685
+        }
+      ],
+      "policy": "boosting"
+    },
+    {
+      "label": "hybrid",
+      "points": [
+        {
+          "cell": "low",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "low",
+              "policy": "hybrid"
+            },
+            "table": "evaluate.recommendation",
+            "value": true
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "low",
+              "policy": "hybrid"
+            },
+            "table": "evaluate.recommendation",
+            "value": ""
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.low.hybrid",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "low",
+              "policy": "hybrid"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "low",
+              "policy": "hybrid"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": 8373.954092794012
+        },
+        {
+          "cell": "primary",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "primary",
+              "policy": "hybrid"
+            },
+            "table": "evaluate.recommendation",
+            "value": true
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "primary",
+              "policy": "hybrid"
+            },
+            "table": "evaluate.recommendation",
+            "value": ""
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.hybrid",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "primary",
+              "policy": "hybrid"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "primary",
+              "policy": "hybrid"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": 10386.562247471224
+        },
+        {
+          "cell": "high",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "high",
+              "policy": "hybrid"
+            },
+            "table": "evaluate.recommendation",
+            "value": true
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "high",
+              "policy": "hybrid"
+            },
+            "table": "evaluate.recommendation",
+            "value": ""
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.high.hybrid",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "high",
+              "policy": "hybrid"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "high",
+              "policy": "hybrid"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": 9422.186100949748
+        },
+        {
+          "cell": "redesigned_layout",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "hybrid"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "hybrid"
+            },
+            "table": "evaluate.recommendation",
+            "value": "service_p1"
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.redesigned_layout.hybrid",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "hybrid"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "hybrid"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": 9502.0527393177
+        }
+      ],
+      "policy": "hybrid"
+    },
+    {
+      "label": "expected loss",
+      "points": [
+        {
+          "cell": "low",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "low",
+              "policy": "expected_loss"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "low",
+              "policy": "expected_loss"
+            },
+            "table": "evaluate.recommendation",
+            "value": "service_p1, service_p2"
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.low.expected_loss",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "low",
+              "policy": "expected_loss"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "low",
+              "policy": "expected_loss"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": 80669.76305386584
+        },
+        {
+          "cell": "primary",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "primary",
+              "policy": "expected_loss"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "primary",
+              "policy": "expected_loss"
+            },
+            "table": "evaluate.recommendation",
+            "value": "service_p1, service_p2"
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.expected_loss",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "primary",
+              "policy": "expected_loss"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "primary",
+              "policy": "expected_loss"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": 81429.45386786261
+        },
+        {
+          "cell": "high",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "high",
+              "policy": "expected_loss"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "high",
+              "policy": "expected_loss"
+            },
+            "table": "evaluate.recommendation",
+            "value": "service_p1"
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.high.expected_loss",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "high",
+              "policy": "expected_loss"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "high",
+              "policy": "expected_loss"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": 80574.5767180722
+        },
+        {
+          "cell": "redesigned_layout",
+          "eligible": {
+            "column": "eligible",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "expected_loss"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "evaluated": true,
+          "fails": {
+            "column": "fails",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "expected_loss"
+            },
+            "table": "evaluate.recommendation",
+            "value": "service_p1, service_p2"
+          },
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.redesigned_layout.expected_loss",
+          "note": null,
+          "recommended": {
+            "column": "recommended",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "expected_loss"
+            },
+            "table": "evaluate.recommendation",
+            "value": false
+          },
+          "seeds_count": {
+            "column": "seeds_count",
+            "row": {
+              "cell": "redesigned_layout",
+              "policy": "expected_loss"
+            },
+            "table": "evaluate.recommendation",
+            "value": 10
+          },
+          "value": 81631.42647314018
+        }
+      ],
+      "policy": "expected_loss"
+    }
+  ],
+  "primary": {
+    "capacity": "base",
+    "family": "baseline",
+    "ltv_cents": 1500,
+    "name": "primary"
+  }
+}

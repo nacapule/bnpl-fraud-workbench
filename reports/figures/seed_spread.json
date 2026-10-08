@@ -1,0 +1,728 @@
+{
+  "cell": {
+    "capacity": "base",
+    "family": "baseline",
+    "ltv_cents": 1500,
+    "name": "primary",
+    "note": {
+      "column": "note",
+      "row": {
+        "cell": "primary"
+      },
+      "table": "evaluate.flips",
+      "value": null
+    },
+    "outcome": {
+      "assessed": true,
+      "column": "outcome",
+      "row": {
+        "cell": "primary"
+      },
+      "table": "evaluate.flips",
+      "value": "recommend"
+    }
+  },
+  "chart": "seed_spread",
+  "hurdle_usd": {
+    "setting": "reporting.recommendation_rule.hurdle.mean_improvement_usd_per_1000_orders",
+    "value": 100
+  },
+  "policies": [
+    {
+      "eligible": {
+        "column": "eligible",
+        "row": {
+          "cell": "primary",
+          "policy": "approve_all"
+        },
+        "table": "evaluate.recommendation",
+        "value": true
+      },
+      "evaluated": true,
+      "fails": {
+        "column": "fails",
+        "row": {
+          "cell": "primary",
+          "policy": "approve_all"
+        },
+        "table": "evaluate.recommendation",
+        "value": ""
+      },
+      "label": "approve all",
+      "mean": {
+        "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.approve_all",
+        "note": null,
+        "value": -61673.205645432594
+      },
+      "paired_seeds": {
+        "column": "paired_seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "approve_all"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      },
+      "policy": "approve_all",
+      "positive_seeds": {
+        "column": "positive_seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "approve_all"
+        },
+        "table": "evaluate.recommendation",
+        "value": 0
+      },
+      "recommended": {
+        "column": "recommended",
+        "row": {
+          "cell": "primary",
+          "policy": "approve_all"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "seeds": [
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.approve_all",
+          "seed": 35244829,
+          "value": -67061.73321872314
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.approve_all",
+          "seed": 200041300,
+          "value": -48026.2647070475
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.approve_all",
+          "seed": 717729117,
+          "value": -54185.432821648996
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.approve_all",
+          "seed": 793746605,
+          "value": -54819.457212518486
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.approve_all",
+          "seed": 931592514,
+          "value": -28612.44269283359
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.approve_all",
+          "seed": 1260106251,
+          "value": -85695.42107957006
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.approve_all",
+          "seed": 1629189384,
+          "value": -85544.19156936473
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.approve_all",
+          "seed": 1671034716,
+          "value": -72967.88315357981
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.approve_all",
+          "seed": 1891170948,
+          "value": -63532.66213080584
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.approve_all",
+          "seed": 2066792625,
+          "value": -56286.56786823381
+        }
+      ],
+      "seeds_count": {
+        "column": "seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "approve_all"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      }
+    },
+    {
+      "eligible": {
+        "column": "eligible",
+        "row": {
+          "cell": "primary",
+          "policy": "tree_depth3"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "evaluated": true,
+      "fails": {
+        "column": "fails",
+        "row": {
+          "cell": "primary",
+          "policy": "tree_depth3"
+        },
+        "table": "evaluate.recommendation",
+        "value": "service_p2"
+      },
+      "label": "tree (depth 3)",
+      "mean": {
+        "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.tree_depth3",
+        "note": null,
+        "value": -18552.5242961336
+      },
+      "paired_seeds": {
+        "column": "paired_seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "tree_depth3"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      },
+      "policy": "tree_depth3",
+      "positive_seeds": {
+        "column": "positive_seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "tree_depth3"
+        },
+        "table": "evaluate.recommendation",
+        "value": 2
+      },
+      "recommended": {
+        "column": "recommended",
+        "row": {
+          "cell": "primary",
+          "policy": "tree_depth3"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "seeds": [
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.tree_depth3",
+          "seed": 35244829,
+          "value": -1478.354301789482
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.tree_depth3",
+          "seed": 200041300,
+          "value": 2586.45961256586
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.tree_depth3",
+          "seed": 717729117,
+          "value": -20999.36698844754
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.tree_depth3",
+          "seed": 793746605,
+          "value": 10155.401894560135
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.tree_depth3",
+          "seed": 931592514,
+          "value": -24683.58401029518
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.tree_depth3",
+          "seed": 1260106251,
+          "value": -35257.45108075121
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.tree_depth3",
+          "seed": 1629189384,
+          "value": -10752.345141500098
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.tree_depth3",
+          "seed": 1671034716,
+          "value": -72967.88315357981
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.tree_depth3",
+          "seed": 1891170948,
+          "value": -13269.949266527707
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.tree_depth3",
+          "seed": 2066792625,
+          "value": -18858.170525570975
+        }
+      ],
+      "seeds_count": {
+        "column": "seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "tree_depth3"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      }
+    },
+    {
+      "eligible": {
+        "column": "eligible",
+        "row": {
+          "cell": "primary",
+          "policy": "logistic"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "evaluated": true,
+      "fails": {
+        "column": "fails",
+        "row": {
+          "cell": "primary",
+          "policy": "logistic"
+        },
+        "table": "evaluate.recommendation",
+        "value": "lost_mean"
+      },
+      "label": "logistic",
+      "mean": {
+        "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.logistic",
+        "note": null,
+        "value": 97838.09172608706
+      },
+      "paired_seeds": {
+        "column": "paired_seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "logistic"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      },
+      "policy": "logistic",
+      "positive_seeds": {
+        "column": "positive_seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "logistic"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      },
+      "recommended": {
+        "column": "recommended",
+        "row": {
+          "cell": "primary",
+          "policy": "logistic"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "seeds": [
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.logistic",
+          "seed": 35244829,
+          "value": 102855.04415097288
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.logistic",
+          "seed": 200041300,
+          "value": 90729.8260904013
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.logistic",
+          "seed": 717729117,
+          "value": 91290.03798069315
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.logistic",
+          "seed": 793746605,
+          "value": 125316.47947559855
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.logistic",
+          "seed": 931592514,
+          "value": 122064.82747526743
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.logistic",
+          "seed": 1260106251,
+          "value": 122938.02905626205
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.logistic",
+          "seed": 1629189384,
+          "value": 79371.1854343954
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.logistic",
+          "seed": 1671034716,
+          "value": 56663.668563696425
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.logistic",
+          "seed": 1891170948,
+          "value": 110593.6996106501
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.logistic",
+          "seed": 2066792625,
+          "value": 76558.11942293329
+        }
+      ],
+      "seeds_count": {
+        "column": "seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "logistic"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      }
+    },
+    {
+      "eligible": {
+        "column": "eligible",
+        "row": {
+          "cell": "primary",
+          "policy": "boosting"
+        },
+        "table": "evaluate.recommendation",
+        "value": true
+      },
+      "evaluated": true,
+      "fails": {
+        "column": "fails",
+        "row": {
+          "cell": "primary",
+          "policy": "boosting"
+        },
+        "table": "evaluate.recommendation",
+        "value": ""
+      },
+      "label": "boosting",
+      "mean": {
+        "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.boosting",
+        "note": null,
+        "value": 88922.49966736845
+      },
+      "paired_seeds": {
+        "column": "paired_seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "boosting"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      },
+      "policy": "boosting",
+      "positive_seeds": {
+        "column": "positive_seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "boosting"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      },
+      "recommended": {
+        "column": "recommended",
+        "row": {
+          "cell": "primary",
+          "policy": "boosting"
+        },
+        "table": "evaluate.recommendation",
+        "value": true
+      },
+      "seeds": [
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.boosting",
+          "seed": 35244829,
+          "value": 101963.15542705322
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.boosting",
+          "seed": 200041300,
+          "value": 60934.35803985263
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.boosting",
+          "seed": 717729117,
+          "value": 76913.67304953316
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.boosting",
+          "seed": 793746605,
+          "value": 111398.77692953356
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.boosting",
+          "seed": 931592514,
+          "value": 105368.1331939194
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.boosting",
+          "seed": 1260106251,
+          "value": 111213.70920114966
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.boosting",
+          "seed": 1629189384,
+          "value": 86607.59944587374
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.boosting",
+          "seed": 1671034716,
+          "value": 58655.35081784535
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.boosting",
+          "seed": 1891170948,
+          "value": 109895.81940456995
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.boosting",
+          "seed": 2066792625,
+          "value": 66274.42116435395
+        }
+      ],
+      "seeds_count": {
+        "column": "seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "boosting"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      }
+    },
+    {
+      "eligible": {
+        "column": "eligible",
+        "row": {
+          "cell": "primary",
+          "policy": "hybrid"
+        },
+        "table": "evaluate.recommendation",
+        "value": true
+      },
+      "evaluated": true,
+      "fails": {
+        "column": "fails",
+        "row": {
+          "cell": "primary",
+          "policy": "hybrid"
+        },
+        "table": "evaluate.recommendation",
+        "value": ""
+      },
+      "label": "hybrid",
+      "mean": {
+        "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.hybrid",
+        "note": null,
+        "value": 10386.562247471224
+      },
+      "paired_seeds": {
+        "column": "paired_seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "hybrid"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      },
+      "policy": "hybrid",
+      "positive_seeds": {
+        "column": "positive_seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "hybrid"
+        },
+        "table": "evaluate.recommendation",
+        "value": 9
+      },
+      "recommended": {
+        "column": "recommended",
+        "row": {
+          "cell": "primary",
+          "policy": "hybrid"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "seeds": [
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.hybrid",
+          "seed": 35244829,
+          "value": 7347.190747831523
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.hybrid",
+          "seed": 200041300,
+          "value": -3811.31402765123
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.hybrid",
+          "seed": 717729117,
+          "value": 4458.142111093527
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.hybrid",
+          "seed": 793746605,
+          "value": 23236.50025980255
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.hybrid",
+          "seed": 931592514,
+          "value": 12793.493123140031
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.hybrid",
+          "seed": 1260106251,
+          "value": 17548.17118784204
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.hybrid",
+          "seed": 1629189384,
+          "value": 5687.03740352266
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.hybrid",
+          "seed": 1671034716,
+          "value": 11171.807219325825
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.hybrid",
+          "seed": 1891170948,
+          "value": 15554.017383096709
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.hybrid",
+          "seed": 2066792625,
+          "value": 9880.577066708596
+        }
+      ],
+      "seeds_count": {
+        "column": "seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "hybrid"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      }
+    },
+    {
+      "eligible": {
+        "column": "eligible",
+        "row": {
+          "cell": "primary",
+          "policy": "expected_loss"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "evaluated": true,
+      "fails": {
+        "column": "fails",
+        "row": {
+          "cell": "primary",
+          "policy": "expected_loss"
+        },
+        "table": "evaluate.recommendation",
+        "value": "service_p1, service_p2"
+      },
+      "label": "expected loss",
+      "mean": {
+        "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.expected_loss",
+        "note": null,
+        "value": 81429.45386786261
+      },
+      "paired_seeds": {
+        "column": "paired_seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "expected_loss"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      },
+      "policy": "expected_loss",
+      "positive_seeds": {
+        "column": "positive_seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "expected_loss"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      },
+      "recommended": {
+        "column": "recommended",
+        "row": {
+          "cell": "primary",
+          "policy": "expected_loss"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "seeds": [
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.expected_loss",
+          "seed": 35244829,
+          "value": 99839.06384308822
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.expected_loss",
+          "seed": 200041300,
+          "value": 51468.486313037276
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.expected_loss",
+          "seed": 717729117,
+          "value": 69054.51811995568
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.expected_loss",
+          "seed": 793746605,
+          "value": 119596.66653343459
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.expected_loss",
+          "seed": 931592514,
+          "value": 89705.46127242017
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.expected_loss",
+          "seed": 1260106251,
+          "value": 75020.35513209182
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.expected_loss",
+          "seed": 1629189384,
+          "value": 86008.3118939244
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.expected_loss",
+          "seed": 1671034716,
+          "value": 50086.759262944244
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.expected_loss",
+          "seed": 1891170948,
+          "value": 104662.99602784442
+        },
+        {
+          "key": "evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.expected_loss",
+          "seed": 2066792625,
+          "value": 68851.92027988522
+        }
+      ],
+      "seeds_count": {
+        "column": "seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "expected_loss"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      }
+    }
+  ]
+}

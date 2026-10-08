@@ -1,0 +1,407 @@
+{
+  "cell": {
+    "capacity": "base",
+    "family": "baseline",
+    "ltv_cents": 1500,
+    "name": "primary"
+  },
+  "chart": "frontier",
+  "lost_cap": {
+    "setting": "reporting.recommendation_rule.eligibility.lost_legitimate_per_10000.mean_at_most",
+    "value": 100
+  },
+  "policies": [
+    {
+      "eligible": {
+        "column": "eligible",
+        "row": {
+          "cell": "primary",
+          "policy": "approve_all"
+        },
+        "table": "evaluate.recommendation",
+        "value": true
+      },
+      "evaluated": true,
+      "fails": {
+        "column": "fails",
+        "row": {
+          "cell": "primary",
+          "policy": "approve_all"
+        },
+        "table": "evaluate.recommendation",
+        "value": ""
+      },
+      "held": {
+        "key": "evaluate.rule_held_legitimate_per_10k.baseline.base.approve_all",
+        "note": null,
+        "value": 0.0
+      },
+      "label": "approve all",
+      "loss": {
+        "key": "evaluate.loss_of_gmv.baseline.base.approve_all",
+        "note": null,
+        "value": 115.87548271360086
+      },
+      "lost": {
+        "key": "evaluate.rule_lost_legitimate_per_10k.baseline.base.approve_all",
+        "note": null,
+        "value": 0.0
+      },
+      "policy": "approve_all",
+      "recommended": {
+        "column": "recommended",
+        "row": {
+          "cell": "primary",
+          "policy": "approve_all"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "seeds_count": {
+        "column": "seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "approve_all"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      }
+    },
+    {
+      "eligible": {
+        "column": "eligible",
+        "row": {
+          "cell": "primary",
+          "policy": "incumbent_rules"
+        },
+        "table": "evaluate.recommendation",
+        "value": null
+      },
+      "evaluated": true,
+      "fails": {
+        "column": "fails",
+        "row": {
+          "cell": "primary",
+          "policy": "incumbent_rules"
+        },
+        "table": "evaluate.recommendation",
+        "value": "service_p1, service_p2"
+      },
+      "held": {
+        "key": "evaluate.rule_held_legitimate_per_10k.baseline.base.incumbent_rules",
+        "note": null,
+        "value": 30.273902253519783
+      },
+      "label": "incumbent rules",
+      "loss": {
+        "key": "evaluate.loss_of_gmv.baseline.base.incumbent_rules",
+        "note": null,
+        "value": 77.9405576152106
+      },
+      "lost": {
+        "key": "evaluate.rule_lost_legitimate_per_10k.baseline.base.incumbent_rules",
+        "note": null,
+        "value": 34.95713924462316
+      },
+      "policy": "incumbent_rules",
+      "recommended": {
+        "column": "recommended",
+        "row": {
+          "cell": "primary",
+          "policy": "incumbent_rules"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "seeds_count": {
+        "column": "seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "incumbent_rules"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      }
+    },
+    {
+      "eligible": {
+        "column": "eligible",
+        "row": {
+          "cell": "primary",
+          "policy": "tree_depth3"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "evaluated": true,
+      "fails": {
+        "column": "fails",
+        "row": {
+          "cell": "primary",
+          "policy": "tree_depth3"
+        },
+        "table": "evaluate.recommendation",
+        "value": "service_p2"
+      },
+      "held": {
+        "key": "evaluate.rule_held_legitimate_per_10k.baseline.base.tree_depth3",
+        "note": null,
+        "value": 0.6385441194077504
+      },
+      "label": "tree (depth 3)",
+      "loss": {
+        "key": "evaluate.loss_of_gmv.baseline.base.tree_depth3",
+        "note": null,
+        "value": 89.92402088504946
+      },
+      "lost": {
+        "key": "evaluate.rule_lost_legitimate_per_10k.baseline.base.tree_depth3",
+        "note": null,
+        "value": 46.0224382438195
+      },
+      "policy": "tree_depth3",
+      "recommended": {
+        "column": "recommended",
+        "row": {
+          "cell": "primary",
+          "policy": "tree_depth3"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "seeds_count": {
+        "column": "seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "tree_depth3"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      }
+    },
+    {
+      "eligible": {
+        "column": "eligible",
+        "row": {
+          "cell": "primary",
+          "policy": "logistic"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "evaluated": true,
+      "fails": {
+        "column": "fails",
+        "row": {
+          "cell": "primary",
+          "policy": "logistic"
+        },
+        "table": "evaluate.recommendation",
+        "value": "lost_mean"
+      },
+      "held": {
+        "key": "evaluate.rule_held_legitimate_per_10k.baseline.base.logistic",
+        "note": null,
+        "value": 1.9958373417366193
+      },
+      "label": "logistic",
+      "loss": {
+        "key": "evaluate.loss_of_gmv.baseline.base.logistic",
+        "note": null,
+        "value": 29.961000091634666
+      },
+      "lost": {
+        "key": "evaluate.rule_lost_legitimate_per_10k.baseline.base.logistic",
+        "note": null,
+        "value": 111.45390048589749
+      },
+      "policy": "logistic",
+      "recommended": {
+        "column": "recommended",
+        "row": {
+          "cell": "primary",
+          "policy": "logistic"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "seeds_count": {
+        "column": "seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "logistic"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      }
+    },
+    {
+      "eligible": {
+        "column": "eligible",
+        "row": {
+          "cell": "primary",
+          "policy": "boosting"
+        },
+        "table": "evaluate.recommendation",
+        "value": true
+      },
+      "evaluated": true,
+      "fails": {
+        "column": "fails",
+        "row": {
+          "cell": "primary",
+          "policy": "boosting"
+        },
+        "table": "evaluate.recommendation",
+        "value": ""
+      },
+      "held": {
+        "key": "evaluate.rule_held_legitimate_per_10k.baseline.base.boosting",
+        "note": null,
+        "value": 0.8788546982375616
+      },
+      "label": "boosting",
+      "loss": {
+        "key": "evaluate.loss_of_gmv.baseline.base.boosting",
+        "note": null,
+        "value": 33.39960742855387
+      },
+      "lost": {
+        "key": "evaluate.rule_lost_legitimate_per_10k.baseline.base.boosting",
+        "note": null,
+        "value": 85.03250059676725
+      },
+      "policy": "boosting",
+      "recommended": {
+        "column": "recommended",
+        "row": {
+          "cell": "primary",
+          "policy": "boosting"
+        },
+        "table": "evaluate.recommendation",
+        "value": true
+      },
+      "seeds_count": {
+        "column": "seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "boosting"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      }
+    },
+    {
+      "eligible": {
+        "column": "eligible",
+        "row": {
+          "cell": "primary",
+          "policy": "hybrid"
+        },
+        "table": "evaluate.recommendation",
+        "value": true
+      },
+      "evaluated": true,
+      "fails": {
+        "column": "fails",
+        "row": {
+          "cell": "primary",
+          "policy": "hybrid"
+        },
+        "table": "evaluate.recommendation",
+        "value": ""
+      },
+      "held": {
+        "key": "evaluate.rule_held_legitimate_per_10k.baseline.base.hybrid",
+        "note": null,
+        "value": 3.2771556517561384
+      },
+      "label": "hybrid",
+      "loss": {
+        "key": "evaluate.loss_of_gmv.baseline.base.hybrid",
+        "note": null,
+        "value": 72.33211305759438
+      },
+      "lost": {
+        "key": "evaluate.rule_lost_legitimate_per_10k.baseline.base.hybrid",
+        "note": null,
+        "value": 35.128399662215955
+      },
+      "policy": "hybrid",
+      "recommended": {
+        "column": "recommended",
+        "row": {
+          "cell": "primary",
+          "policy": "hybrid"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "seeds_count": {
+        "column": "seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "hybrid"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      }
+    },
+    {
+      "eligible": {
+        "column": "eligible",
+        "row": {
+          "cell": "primary",
+          "policy": "expected_loss"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "evaluated": true,
+      "fails": {
+        "column": "fails",
+        "row": {
+          "cell": "primary",
+          "policy": "expected_loss"
+        },
+        "table": "evaluate.recommendation",
+        "value": "service_p1, service_p2"
+      },
+      "held": {
+        "key": "evaluate.rule_held_legitimate_per_10k.baseline.base.expected_loss",
+        "note": null,
+        "value": 1.8319991167163359
+      },
+      "label": "expected loss",
+      "loss": {
+        "key": "evaluate.loss_of_gmv.baseline.base.expected_loss",
+        "note": null,
+        "value": 39.75299796598014
+      },
+      "lost": {
+        "key": "evaluate.rule_lost_legitimate_per_10k.baseline.base.expected_loss",
+        "note": null,
+        "value": 28.613811925339423
+      },
+      "policy": "expected_loss",
+      "recommended": {
+        "column": "recommended",
+        "row": {
+          "cell": "primary",
+          "policy": "expected_loss"
+        },
+        "table": "evaluate.recommendation",
+        "value": false
+      },
+      "seeds_count": {
+        "column": "seeds_count",
+        "row": {
+          "cell": "primary",
+          "policy": "expected_loss"
+        },
+        "table": "evaluate.recommendation",
+        "value": 10
+      }
+    }
+  ]
+}
