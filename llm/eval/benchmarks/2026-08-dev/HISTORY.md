@@ -8,10 +8,13 @@ and GPT-5.6 Luna and GPT-5.6 Terra with prompt v2. A provider quota cut Terra's 
 Its published results cover the first 86 cases; 8 stored replies for later cases are not
 scored.
 
-`original/` preserves the cases, packets, prompts, the 997 stored responses, result files,
-iteration log and FP-1 policy the memos cite, byte for byte. `MANIFEST.json` holds their
+`original/` preserves the cases, packets, prompts, the 997 stored responses, result files
+and FP-1 policy the memos cite, byte for byte. `MANIFEST.json` holds their
 hashes. The world, packet builder and action-scoring method have since been replaced. This
 archive records the earlier study and the corrections to its published results.
+
+The [iteration log](ITERATION.md) is a narrative record of the study's prompt changes
+and results.
 
 `python -m llm.eval.history` replays the stored responses offline using the study's own
 protocol. It writes `corrected/`: `statistics.json` (every number with its numerator and

@@ -54,7 +54,6 @@
  },
  "description": "The memo drafter's August 2026 development study, archived unchanged. Every file under original/ is byte-for-byte the file at the source commit; corrected/ and HISTORY.md beside it hold the replay's corrected statistics and their commentary.",
  "files": {
-  "ITERATION.md": "cd3a7b58fdc0b8523a2bdec7f1823bd8837f5faa370915bc036a2e002b745c1c",
   "cache/004972121196782e7b749cea148aca5d.json": "2cba34ffbf710de40cb828dfb9580a5c90b981c185fb5d270e801c62fed05eb3",
   "cache/00bf6d6fcc48cdf798e54ce26078d05a.json": "977416604f5290b564c13f415e7ad9fe40b655fd2cf9cf0e3cd0c5ed4eed3efc",
   "cache/0150dcf3cbe0a5c59b63cb80c067bebf.json": "356e1d1e42056db6a834d5bbaaeff345face72106200addef6454e170682ffc5",
@@ -1270,7 +1269,6 @@
  },
  "source_commit": "16d223cac72e19681d61f175943cf1e3277810bb",
  "source_paths": {
-  "ITERATION.md": "llm/eval/ITERATION.md",
   "cache/": "llm/eval/cache/",
   "cases.json": "llm/eval/cases.json",
   "fraud-policy-FP-1.md": "policy/fraud-policy.md",

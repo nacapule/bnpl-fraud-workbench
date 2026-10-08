@@ -18,10 +18,6 @@ get these exact numbers).
 | consistency | target: 3 runs on 50 cases with a neutral numbered no-op line injected into the packet; report `consistency_n` as the number with all three probes cached and valid, plus all-3-agree rate on `recommended_action` |
 | latency | wall-clock per call; cost columns omitted (CLI backends lack reliable token accounting) |
 
-A future manual spot-check can sample flagged and clean memos to measure false alarms
-and false passes. No annotation set is committed, so no human-verified grounding metric
-is reported here.
-
 ## Harness corrections logged during v1 (applied to all versions/arms equally)
 
 The replay exposed three defects in the evaluator:

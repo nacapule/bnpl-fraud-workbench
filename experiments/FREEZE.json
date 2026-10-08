@@ -16,9 +16,8 @@
     "experiments/protocol.yaml": "77f921daffd4e1607363b5fd9c58de6f6212887330673f815c5c83a6828978c7",
     "llm/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "llm/eval/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "llm/eval/benchmarks/2026-08-dev/MANIFEST.json": "dfee425fb9ed64ec9a109a2b14e2d080f1864dc6038eb1afcc8e0248a7cdf402",
+    "llm/eval/benchmarks/2026-08-dev/MANIFEST.json": "c47668c1fbb74cde0a729d4c4cfe8e8dfc177064c8db9585f4806addb521024a",
     "llm/eval/benchmarks/2026-08-dev/corrected/world_checks.json": "b7add0f98bfe0454efe659b839c4fcbacc0c00f7a6772bd11ac5958ffac3a05f",
-    "llm/eval/benchmarks/2026-08-dev/original/ITERATION.md": "cd3a7b58fdc0b8523a2bdec7f1823bd8837f5faa370915bc036a2e002b745c1c",
     "llm/eval/benchmarks/2026-08-dev/original/cache/004972121196782e7b749cea148aca5d.json": "2cba34ffbf710de40cb828dfb9580a5c90b981c185fb5d270e801c62fed05eb3",
     "llm/eval/benchmarks/2026-08-dev/original/cache/00bf6d6fcc48cdf798e54ce26078d05a.json": "977416604f5290b564c13f415e7ad9fe40b655fd2cf9cf0e3cd0c5ed4eed3efc",
     "llm/eval/benchmarks/2026-08-dev/original/cache/0150dcf3cbe0a5c59b63cb80c067bebf.json": "356e1d1e42056db6a834d5bbaaeff345face72106200addef6454e170682ffc5",
@@ -1261,5 +1260,14 @@
     "simulator/support.py": "67caf0c3d949374546ec198bf389e1a6ad2c3ab1ef4157c7def9a43da6bbc4c8",
     "simulator/timing.py": "f20a3e61da6e0b23ec44f6877538b7bb5c154a87f3e38fbde57401ce6dcfa2ee"
   },
-  "fixes": []
+  "fixes": [
+    {
+      "effect": "Cases, packets, prompts, policies, cached responses, scoring code and published results are unchanged.",
+      "files": [
+        "llm/eval/benchmarks/2026-08-dev/MANIFEST.json",
+        "llm/eval/benchmarks/2026-08-dev/original/ITERATION.md"
+      ],
+      "what": "Move the prompt iteration narrative beside the preserved benchmark payloads."
+    }
+  ]
 }

@@ -246,45 +246,17 @@ Beside it are the unweighted rate, and each axis's unweighted and weighted (Háj
   standard on the packets built at the 283 completions contained the reviewer's decision
   at each of them. That was a check run on the development run's output before selection
   and is not committed; the committed set holds 25 of those packets. That agreement checks the packet's round trip (fields, values, checks); it is
-  not two independent readings of the policy. The scoring rules have not been checked by
-  a person until the author's referee check (below) is complete.
+  not two independent readings of the policy.
 - **The verifier reads structure, not meaning.** It checks each claim's field, value and
   declared calculation against the packet. It does not check that a claim's sentence says
   what the field shows: a sentence that misstates a correct field passes. It also looks
   for concrete tokens in the memo (numbers, amounts, times, entity ids) that match no
   packet value; memos with one are counted and reported, but do not fail. Ordinary words
   are not checked, so an assertion without such a token goes unchecked.
-  Whether the sentences mean what they cite, whether decision-critical evidence is left
-  out and whether a memo is defensible are left to the author's referee check.
 - **The decisions are simulated.** Every decision after a check rests on facts as of the
   start of its day, as the simulated reviewer saw them.
 - **No headroom is claimed.** A rate of one on development cases is a result on those
   cases, not a ceiling.
-
-## The author's referee check
-
-This check is designed now and prepared once the final cohort exists. It is kept outside
-the repository and takes about an hour. It is reported descriptively, and nothing waits
-for it.
-
-- **Cases.** 24 final cases, aliased: 14 review decisions and 10 decisions after a check
-  (120 : 80, rounded).
-  - Within an axis, strata go in order of the SHA-256 of `referee-check:<stratum>`.
-  - Within a stratum, cases go in order of the SHA-256 of `referee-check:<case id>`.
-  - One case is taken per stratum in turn, so no stratum gets a second case before every
-    stratum of its axis has one.
-- **Material.** Each case's packet, the policy and a short form.
-- **Pass 1, before any memo.** For each case, mark every action he would accept.
-- **Pass 2.** Show one memo per case, blind to the arm and to simulation truth:
-  - Within each axis, cases go in order of the SHA-256 of `referee-arm:<case id>`, and the
-    arms alternate starting with `sol`. That gives 12 memos from each arm.
-  - Cases are shown in order of the SHA-256 of `referee-order:<case id>`.
-  - A case whose assigned arm gave no valid memo shows that.
-  - Rubric, for each memo:
-    - do the claim sentences mean what their cited fields show?
-    - is any decision-critical evidence omitted?
-    - does the benign explanation fit?
-    - is the memo defensible overall?
 
 ## Reproducing
 

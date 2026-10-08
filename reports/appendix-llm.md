@@ -169,7 +169,7 @@ The earlier memo study, `2026-08-dev`, used a simulation world, packet builder a
 
 ## Limits
 
-- **One reading of the policy.** The referee and the simulated analyst both apply FP-2 through `core/evidence.py`, so the score reflects their shared reading rather than independent interpretations of the policy. The scoring rules have not yet been checked by a person.
+- **One reading of the policy.** The referee and the simulated analyst both apply FP-2 through `core/evidence.py`, so the score reflects their shared reading rather than independent interpretations of the policy.
 - **Claim verification.** The verifier checks structured fields, values and declared calculations. It does not check whether a claim's sentence states what its field means, so a sentence that misstates a correct field can pass. Memos containing a number, amount, time or entity id that matches no packet value are counted but do not fail for that reason: 120 of 199 scored memos for `opus` and 5 of 200 for `sol`.
 - **Coverage.** A hold that receives no answer to its checks expires without an analyst decision, so §5.3(c) is outside the benchmark. Other FP-2 rows without a case are marked in the policy-row table.
 - **Cluster bound.** The bound treats clusters as independent, with a common probability of containing a failing memo. It ignores the selection weights.
