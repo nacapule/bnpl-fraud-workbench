@@ -39,8 +39,9 @@ docs:  ## render the documents and the figures from their templates and results/
 	$(PY) -m report render
 	$(PY) -m report.charts
 
-docs-check:  ## documents in sync with results, claims hold, no typed numbers
+docs-check:  ## documents and figures in sync with results, claims hold, no typed numbers
 	$(PY) -m report check
+	$(PY) -m report.charts --check
 
 llm-history:  ## replay the archived LLM benchmark offline and compare its corrected statistics
 	$(PY) -m llm.eval.history --check
