@@ -1,0 +1,65 @@
+{
+ "attempts": 1,
+ "duration_ms": 41945,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "sol",
+  "backend": "codex",
+  "benchmark": "2026-10-final",
+  "case": "1891170948-baseline-147472-20250809T212252",
+  "cli_version": "codex-cli 0.159.2",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol",
+  "packet_sha256": "b9f3b70afc0def3d2add99184f19194d4c0531016862215a169575e98ff24444",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "shuffled",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "codex",
+  "cli_version": "codex-cli 0.159.2",
+  "effort": "high",
+  "event_counts": {
+   "item.completed:agent_message": 1,
+   "thread.started": 1,
+   "turn.completed": 1,
+   "turn.started": 1
+  },
+  "input_tokens": 7334,
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol",
+  "n_error_events": 0,
+  "n_events": 4,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 1325,
+  "protocol_ok": true,
+  "tools_offered": null
+ },
+ "text": "{\n  \"claims\": [\n    {\n      \"field\": \"decision.checks[0].check\",\n      \"value\": \"id_check\",\n      \"statement\": \"The completed verification was an identity check.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"decision.checks[0].outcome\",\n      \"value\": \"passed\",\n      \"statement\": \"The identity check passed.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.accounts_on_address_30d\",\n      \"value\": 4,\n      \"statement\": \"Four accounts had activity at the shipping address within the specified window.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.ship_to_home\",\n      \"value\": 1,\n      \"statement\": \"The order ships to the account's home address.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.home_address_age_days\",\n      \"value\": 0.01204861111111111,\n      \"statement\": \"The home address was registered only 0.01204861111111111 days before the order.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.account_age_days\",\n      \"value\": 0.01204861111111111,\n      \"statement\": \"The account was 0.01204861111111111 days old at the order.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.is_first_attempt_user\",\n      \"value\": 1,\n      \"statement\": \"This was the account's first order attempt.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.accounts_on_device_30d\",\n      \"value\": 1,\n      \"statement\": \"Only this account was active on the device within the specified window.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.email_root_other_accounts\",\n      \"value\": 0,\n      \"statement\": \"No other account had a matching normalized email.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.unauthorized_disputes_lost_user\",\n      \"value\": 0,\n      \"statement\": \"No earlier unauthorized-use dispute was resolved against the platform.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.never_pay_determined_user\",\n      \"value\": 0,\n      \"statement\": \"The account has no earlier never-pay determination.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.inr_claims_rejected_user\",\n      \"value\": 0,\n      \"statement\": \"No earlier item-not-received claim was resolved against the account on a delivered order.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.installments_due_user\",\n      \"value\": 0,\n      \"statement\": \"No account installment was due before the decision.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.shipped_at_decision\",\n      \"value\": 0,\n      \"statement\": \"The order had not shipped at the decision.\",\n      \"derived\": null\n    }\n  ],\n  \"hypotheses\": [\n    {\n      \"explanation\": \"household\",\n      \"likelihood\": \"high\",\n      \"reasoning\": \"A new account ordering to a shared home plausibly explains the address linkage. The passed identity check establishes that the customer holds both the account identity and payment credentials.\"\n    },\n    {\n      \"explanation\": \"synthetic_identity\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"A newly opened account using an address shared by other accounts raises this possibility. The passed identity check and absence of shared-device or normalized-email linkage weaken it.\"\n    }\n  ],\n  \"disposition\": \"clear\",\n  \"citations\": [\n    \"R08\",\n    \"FP-2 \u00a76.4(b)\",\n    \"FP-2 \u00a76.3\",\n    \"FP-2 \u00a76.6(b)\",\n    \"FP-2 \u00a75.2\",\n    \"FP-2 \u00a75.3(a)\",\n    \"FP-2 \u00a78.1\"\n  ],\n  \"next_check\": \"none\",\n  \"memo\": \"Only R08 holds, making Linkage the sole adverse family. Four accounts share the shipping address; although it is the customer's home, its recent registration prevents the household exception. No earlier outcome settles the order. Row \u00a76.6(b) initially required id_check, and that check passed. Under \u00a75.3(a), every required check has passed, so clear is mandatory and further friction is prohibited. A legitimate household member opening an account is the strongest benign explanation. No installments were due, so repayment intent cannot support an adverse recommendation. No further check is needed.\"\n}",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 8659,
+  "input_tokens": 7334,
+  "output_tokens": 1325,
+  "unknown_usage_calls": 0
+ }
+}

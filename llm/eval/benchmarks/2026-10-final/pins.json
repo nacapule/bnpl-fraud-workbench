@@ -5,5 +5,12 @@
   "effort": "high",
   "isolation": "439c77528d16c642d4185bca4f1c32bc89717128852021de479fe1728066b228",
   "model": "claude-opus-5-5"
+ },
+ "sol": {
+  "backend": "codex",
+  "cli_version": "codex-cli 0.159.2",
+  "effort": "high",
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol"
  }
 }

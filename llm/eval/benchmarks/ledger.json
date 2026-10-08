@@ -2615,6 +2615,10 @@
   },
   "sol": {
    "by_benchmark": {
+    "2026-10-cases": {
+     "calls": 7,
+     "charged_tokens": 52707
+    },
     "2026-10-dev": {
      "calls": 41,
      "charged_tokens": 342856
@@ -2622,15 +2626,75 @@
     "2026-10-dev-checks": {
      "calls": 26,
      "charged_tokens": 216708
+    },
+    "2026-10-final": {
+     "calls": 281,
+     "charged_tokens": 2438914
     }
    },
-   "calls": 67,
-   "charged_tokens": 559564,
-   "input_tokens": 469036,
+   "calls": 355,
+   "charged_tokens": 3051185,
+   "input_tokens": 2560525,
    "interrupted_calls": 0,
-   "output_tokens": 90528,
+   "output_tokens": 490660,
    "pending": {},
    "receipts": {
+    "2026-10-cases:82136:0bc6aa97dc0b": {
+     "calls": 1,
+     "case": "cfbec517740af76a47e3b9d910f9583d",
+     "charged_tokens": 8715,
+     "input_tokens": 7292,
+     "output_tokens": 1423,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-cases:82136:1ae4b1a25bce": {
+     "calls": 1,
+     "case": "6d8b1541a9fe910d12f231c3b3a45dc6",
+     "charged_tokens": 8582,
+     "input_tokens": 7297,
+     "output_tokens": 1285,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-cases:82136:2ad7d216752d": {
+     "calls": 1,
+     "case": "ef7678bc5c2faf63d01907be63bef3a8",
+     "charged_tokens": 8738,
+     "input_tokens": 7289,
+     "output_tokens": 1449,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-cases:82136:2f571bc5d325": {
+     "calls": 1,
+     "case": "5cbe8793da7b8517f74d7592e53bb010",
+     "charged_tokens": 8833,
+     "input_tokens": 7295,
+     "output_tokens": 1538,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-cases:82136:35b54fd15b3e": {
+     "calls": 1,
+     "case": "5d9725388ab045e0367a4eeea89765e4",
+     "charged_tokens": 8689,
+     "input_tokens": 7296,
+     "output_tokens": 1393,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-cases:82136:8489e098f4e0": {
+     "calls": 1,
+     "case": "ec0fe81de510247e391a5e66424778e0",
+     "charged_tokens": 8592,
+     "input_tokens": 7297,
+     "output_tokens": 1295,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-cases:82136:e7aa5a3cb3e5": {
+     "calls": 1,
+     "case": "isolation-check:2026-10-cases:canary-82136-6f7996",
+     "charged_tokens": 558,
+     "input_tokens": 514,
+     "output_tokens": 44,
+     "unknown_usage_calls": 0
+    },
     "2026-10-dev-checks:75091:0c63332d1243": {
      "calls": 1,
      "case": "b75ad24822f672e64563b9a850449d33",
@@ -3165,6 +3229,2254 @@
      "charged_tokens": 8625,
      "input_tokens": 7185,
      "output_tokens": 1440,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:00436c2be2db": {
+     "calls": 1,
+     "case": "isolation-check:2026-10-final:canary-56078-74ce9d",
+     "charged_tokens": 547,
+     "input_tokens": 514,
+     "output_tokens": 33,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:0044f4ac50f6": {
+     "calls": 1,
+     "case": "006c115037b5bf7dc9c369e041b68d76",
+     "charged_tokens": 8848,
+     "input_tokens": 7299,
+     "output_tokens": 1549,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:00e4116c67e2": {
+     "calls": 1,
+     "case": "69a03b08ca8445fbe51d65fdcbddd4d0",
+     "charged_tokens": 8660,
+     "input_tokens": 7332,
+     "output_tokens": 1328,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:046cd087a5c1": {
+     "calls": 1,
+     "case": "086f83c9adeb7af3be346a09380387b9",
+     "charged_tokens": 8702,
+     "input_tokens": 7293,
+     "output_tokens": 1409,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:061ca3ffad5a": {
+     "calls": 1,
+     "case": "7a96af5e10c282a0c3a28a4710f53128",
+     "charged_tokens": 8575,
+     "input_tokens": 7293,
+     "output_tokens": 1282,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:075617a8c239": {
+     "calls": 1,
+     "case": "0f204ee6b16a6cb0691f9b9c7d2e69f5",
+     "charged_tokens": 8657,
+     "input_tokens": 7337,
+     "output_tokens": 1320,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:0758eb750615": {
+     "calls": 1,
+     "case": "6ed53ae60ab12c843631ea63dcd4e858",
+     "charged_tokens": 8711,
+     "input_tokens": 7292,
+     "output_tokens": 1419,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:085f0647f751": {
+     "calls": 1,
+     "case": "7e3608e95c0ba4df107792c21512628a",
+     "charged_tokens": 8515,
+     "input_tokens": 7290,
+     "output_tokens": 1225,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:0bd9da433a69": {
+     "calls": 1,
+     "case": "97156b703d770cf1151f2f11c0dcf138",
+     "charged_tokens": 8525,
+     "input_tokens": 7333,
+     "output_tokens": 1192,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:0df736da3a5a": {
+     "calls": 1,
+     "case": "3cf830b86edf23796fe8cfb521f9b780",
+     "charged_tokens": 8972,
+     "input_tokens": 7297,
+     "output_tokens": 1675,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:0df92cb77a18": {
+     "calls": 1,
+     "case": "d32a1c0587505c8a40473fa881c847c6",
+     "charged_tokens": 8921,
+     "input_tokens": 7280,
+     "output_tokens": 1641,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:0fb0c47fa0dc": {
+     "calls": 1,
+     "case": "99c6c386d1167274c5140bf81b2778f1",
+     "charged_tokens": 8624,
+     "input_tokens": 7296,
+     "output_tokens": 1328,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:116f97b326f3": {
+     "calls": 1,
+     "case": "d08261729b273037c41909862944c313",
+     "charged_tokens": 8813,
+     "input_tokens": 7345,
+     "output_tokens": 1468,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:15310a2f6b3b": {
+     "calls": 1,
+     "case": "ccaeb4603f82d3e8f24b8a6a74a3b1ac",
+     "charged_tokens": 8446,
+     "input_tokens": 7290,
+     "output_tokens": 1156,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:15702f947049": {
+     "calls": 1,
+     "case": "ccd18f767eb40f96b85b8e0f94d24bd2",
+     "charged_tokens": 8770,
+     "input_tokens": 7304,
+     "output_tokens": 1466,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:16d8f2efd4ea": {
+     "calls": 1,
+     "case": "b4581d6355a56a19e2561516dd6e11e9",
+     "charged_tokens": 8798,
+     "input_tokens": 7336,
+     "output_tokens": 1462,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:172f953dad17": {
+     "calls": 1,
+     "case": "9b08c0b4c748f010498a0cd2789e76e3",
+     "charged_tokens": 8739,
+     "input_tokens": 7294,
+     "output_tokens": 1445,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:176a11d8d5e3": {
+     "calls": 1,
+     "case": "2ba0965eae8d69acbb96cf4b06278a6c",
+     "charged_tokens": 8478,
+     "input_tokens": 7337,
+     "output_tokens": 1141,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:18d06d9d1c5c": {
+     "calls": 1,
+     "case": "8533ee7f919ddcd00b57dc87dd9b66a5",
+     "charged_tokens": 8655,
+     "input_tokens": 7294,
+     "output_tokens": 1361,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:1a171a7af54a": {
+     "calls": 1,
+     "case": "0f7c7487c29963a7dc0e929a01602f55",
+     "charged_tokens": 8761,
+     "input_tokens": 7297,
+     "output_tokens": 1464,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:1abaf7349cc7": {
+     "calls": 1,
+     "case": "01a066865d0f9bc371fb8b9c42b7c19e",
+     "charged_tokens": 8679,
+     "input_tokens": 7295,
+     "output_tokens": 1384,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:1b5360c7b289": {
+     "calls": 1,
+     "case": "c9be9d321c840dac6574a72f87e02020",
+     "charged_tokens": 8612,
+     "input_tokens": 7305,
+     "output_tokens": 1307,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:1b7e9813f06e": {
+     "calls": 1,
+     "case": "22fc1ffa5f4f2b6cffdca94e009727d1",
+     "charged_tokens": 8673,
+     "input_tokens": 7338,
+     "output_tokens": 1335,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:1c6ffc50c547": {
+     "calls": 1,
+     "case": "d00003f05cc194a369e7b2e2fd93552f",
+     "charged_tokens": 8777,
+     "input_tokens": 7337,
+     "output_tokens": 1440,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:1d169bff2d78": {
+     "calls": 1,
+     "case": "f4f6f28b2335c46406d30a58c4e58311",
+     "charged_tokens": 8618,
+     "input_tokens": 7291,
+     "output_tokens": 1327,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:1df41e20ebda": {
+     "calls": 1,
+     "case": "9bb353c6e967f5f350dbda1a5572aea4",
+     "charged_tokens": 9077,
+     "input_tokens": 7344,
+     "output_tokens": 1733,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:1f10360f43ae": {
+     "calls": 1,
+     "case": "2b1b3d471e4bdbe2dd4faa3adc42bd16",
+     "charged_tokens": 8462,
+     "input_tokens": 7330,
+     "output_tokens": 1132,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:1f66ba6155e8": {
+     "calls": 1,
+     "case": "df16fce42e0dd47af2b3ac6dddc94be4",
+     "charged_tokens": 8786,
+     "input_tokens": 7291,
+     "output_tokens": 1495,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:208cba7abdaa": {
+     "calls": 1,
+     "case": "5b992ebfbbdcbeefa14f74ad59e30472",
+     "charged_tokens": 8598,
+     "input_tokens": 7346,
+     "output_tokens": 1252,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:2377fa8c23c7": {
+     "calls": 1,
+     "case": "be7a49923bed873e45838cf9840691bb",
+     "charged_tokens": 8554,
+     "input_tokens": 7295,
+     "output_tokens": 1259,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:240a87bec6d7": {
+     "calls": 1,
+     "case": "42f7d6b73ad2787eacb868830246144f",
+     "charged_tokens": 8570,
+     "input_tokens": 7294,
+     "output_tokens": 1276,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:241b8d2c7ebb": {
+     "calls": 1,
+     "case": "1df5d74ec8a9f49773bc809088cbd37e",
+     "charged_tokens": 9049,
+     "input_tokens": 7297,
+     "output_tokens": 1752,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:24f78d067b3d": {
+     "calls": 1,
+     "case": "a5050237e2f3eb8383f4cd6368f0d4cd",
+     "charged_tokens": 8721,
+     "input_tokens": 7295,
+     "output_tokens": 1426,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:25086e28ff88": {
+     "calls": 1,
+     "case": "b8617221df4742fdcca2d34356cc611e",
+     "charged_tokens": 8969,
+     "input_tokens": 7303,
+     "output_tokens": 1666,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:2530e279177f": {
+     "calls": 1,
+     "case": "0cb30b9e0a6004193cf486e4fc28e5b4",
+     "charged_tokens": 8790,
+     "input_tokens": 7329,
+     "output_tokens": 1461,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:25dea22e1632": {
+     "calls": 1,
+     "case": "22c1f2964533f5bc0ba8b2d736e95e93",
+     "charged_tokens": 8808,
+     "input_tokens": 7341,
+     "output_tokens": 1467,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:2722c56e473e": {
+     "calls": 1,
+     "case": "68140440d13b79cd25759dd6674a5015",
+     "charged_tokens": 8738,
+     "input_tokens": 7335,
+     "output_tokens": 1403,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:27353d634c7b": {
+     "calls": 1,
+     "case": "2ebeca5a0fdb9cdf0e4e19a495adf901",
+     "charged_tokens": 8542,
+     "input_tokens": 7290,
+     "output_tokens": 1252,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:28d0562fe060": {
+     "calls": 1,
+     "case": "ec26f660bdf4a9255252f97cd3530f9a",
+     "charged_tokens": 8656,
+     "input_tokens": 7293,
+     "output_tokens": 1363,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:28f52c1c71a3": {
+     "calls": 1,
+     "case": "8c9488b235f41e0d2d37cc0e438d7f64",
+     "charged_tokens": 8759,
+     "input_tokens": 7331,
+     "output_tokens": 1428,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:2953df06010b": {
+     "calls": 1,
+     "case": "8f3bf90abc740e9d08dee48bcedf2dfc",
+     "charged_tokens": 8690,
+     "input_tokens": 7293,
+     "output_tokens": 1397,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:29e3a997b072": {
+     "calls": 1,
+     "case": "3f72292d85bcf7a24d895725530dcdfd",
+     "charged_tokens": 8578,
+     "input_tokens": 7290,
+     "output_tokens": 1288,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:2ccee6b5098c": {
+     "calls": 1,
+     "case": "ba1309d26588dbdede75007135026762",
+     "charged_tokens": 8782,
+     "input_tokens": 7334,
+     "output_tokens": 1448,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:2d147a1758c4": {
+     "calls": 1,
+     "case": "96ae36cb421143bfd22deaadda11182f",
+     "charged_tokens": 8624,
+     "input_tokens": 7337,
+     "output_tokens": 1287,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:2dfcdbedacb4": {
+     "calls": 1,
+     "case": "f1cfa8cba2632dd89170453f17012ee7",
+     "charged_tokens": 8616,
+     "input_tokens": 7347,
+     "output_tokens": 1269,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:2ea44de875c7": {
+     "calls": 1,
+     "case": "d2feb6a7ee6dd32e4c930702c2bf0f29",
+     "charged_tokens": 8782,
+     "input_tokens": 7335,
+     "output_tokens": 1447,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:2f4f6cf3a366": {
+     "calls": 1,
+     "case": "0dbf1d4d084a29a64155a6ab5a976d6d",
+     "charged_tokens": 8601,
+     "input_tokens": 7288,
+     "output_tokens": 1313,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:2f86b9f642a2": {
+     "calls": 1,
+     "case": "345f8998eec77c7e437a58f71cc091ae",
+     "charged_tokens": 8662,
+     "input_tokens": 7303,
+     "output_tokens": 1359,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:30094643f615": {
+     "calls": 1,
+     "case": "937fddb2a27836458dff9ee24895398b",
+     "charged_tokens": 8504,
+     "input_tokens": 7298,
+     "output_tokens": 1206,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:304405c9ab52": {
+     "calls": 1,
+     "case": "1ed074d9fcef5c68a095961e05bb5523",
+     "charged_tokens": 8832,
+     "input_tokens": 7302,
+     "output_tokens": 1530,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:31be73f2bbf9": {
+     "calls": 1,
+     "case": "46db06405694f73595e49cc8b94174ea",
+     "charged_tokens": 8781,
+     "input_tokens": 7345,
+     "output_tokens": 1436,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:35213a9329da": {
+     "calls": 1,
+     "case": "42cd22610ab228d2e2f21e7671f74c1c",
+     "charged_tokens": 8790,
+     "input_tokens": 7295,
+     "output_tokens": 1495,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:3608ac1f5364": {
+     "calls": 1,
+     "case": "9023a10e50e24dd4b56e5f555b5eeece",
+     "charged_tokens": 8882,
+     "input_tokens": 7305,
+     "output_tokens": 1577,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:38d495f44a62": {
+     "calls": 1,
+     "case": "bb7b36bba5089b4c35e9109daf8a309d",
+     "charged_tokens": 8603,
+     "input_tokens": 7335,
+     "output_tokens": 1268,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:3a881768183c": {
+     "calls": 1,
+     "case": "70412a78c08f777ba8ffb5d311ba212d",
+     "charged_tokens": 8685,
+     "input_tokens": 7294,
+     "output_tokens": 1391,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:3ba63b76f8cf": {
+     "calls": 1,
+     "case": "9b744e5d3e8ba0fb09a0da68ba34fd0e",
+     "charged_tokens": 8636,
+     "input_tokens": 7297,
+     "output_tokens": 1339,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:3bb07b85a3be": {
+     "calls": 1,
+     "case": "e5bbb60f778be278f7f30c0421bbde55",
+     "charged_tokens": 8966,
+     "input_tokens": 7338,
+     "output_tokens": 1628,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:3d0b3c770889": {
+     "calls": 1,
+     "case": "99c2de5079498940a155432671dd549d",
+     "charged_tokens": 8750,
+     "input_tokens": 7300,
+     "output_tokens": 1450,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:3da6be426bd4": {
+     "calls": 1,
+     "case": "f3a32b43d8f0899dcf75ffde740fbbc6",
+     "charged_tokens": 8495,
+     "input_tokens": 7294,
+     "output_tokens": 1201,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:3dbd5f9ae884": {
+     "calls": 1,
+     "case": "67dcc461383a8a096af98c9c8cafaa33",
+     "charged_tokens": 8823,
+     "input_tokens": 7299,
+     "output_tokens": 1524,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:3e6844dcd080": {
+     "calls": 1,
+     "case": "d941e9273e48bfec63c850ec36742fa7",
+     "charged_tokens": 8532,
+     "input_tokens": 7299,
+     "output_tokens": 1233,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:3f37b7f68252": {
+     "calls": 1,
+     "case": "347d75a6a3b8294140567359094362ce",
+     "charged_tokens": 8707,
+     "input_tokens": 7339,
+     "output_tokens": 1368,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:4001541fa89c": {
+     "calls": 1,
+     "case": "188f722f3c70a5cb485595feac783041",
+     "charged_tokens": 8521,
+     "input_tokens": 7290,
+     "output_tokens": 1231,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:4052e88224a3": {
+     "calls": 1,
+     "case": "7ebe334e1ccb5bc1e6d392968cc8a835",
+     "charged_tokens": 8735,
+     "input_tokens": 7295,
+     "output_tokens": 1440,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:41d171aba493": {
+     "calls": 1,
+     "case": "7436ed9055c32b74275c5f2d34a23eae",
+     "charged_tokens": 8603,
+     "input_tokens": 7290,
+     "output_tokens": 1313,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:426253b5b445": {
+     "calls": 1,
+     "case": "9045d008aade0b0ec277f23e87c10496",
+     "charged_tokens": 8444,
+     "input_tokens": 7292,
+     "output_tokens": 1152,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:4358ffbe3138": {
+     "calls": 1,
+     "case": "40a7ce4e4e07324916edb4343472e83c",
+     "charged_tokens": 8659,
+     "input_tokens": 7288,
+     "output_tokens": 1371,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:43fb2bbd9bd3": {
+     "calls": 1,
+     "case": "046dafb01b023d2d93c22a0abe8a73cb",
+     "charged_tokens": 8591,
+     "input_tokens": 7286,
+     "output_tokens": 1305,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:45e9520a395c": {
+     "calls": 1,
+     "case": "c26d2aea2c58f9d8ca2d62f05ec62f58",
+     "charged_tokens": 8707,
+     "input_tokens": 7338,
+     "output_tokens": 1369,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:45f59a050f70": {
+     "calls": 1,
+     "case": "6eb0633059da159dc50391980fb907e6",
+     "charged_tokens": 8660,
+     "input_tokens": 7339,
+     "output_tokens": 1321,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:470cd9e25ee8": {
+     "calls": 1,
+     "case": "2d1f828d33e10ac93e38a8d5b50630b7",
+     "charged_tokens": 8568,
+     "input_tokens": 7289,
+     "output_tokens": 1279,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:47f0f146d7da": {
+     "calls": 1,
+     "case": "883720342024b3dd8e41ae2031cebb8e",
+     "charged_tokens": 8688,
+     "input_tokens": 7328,
+     "output_tokens": 1360,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:48701e2237bf": {
+     "calls": 1,
+     "case": "73efdd703f3660a6c6f25b728f522744",
+     "charged_tokens": 8611,
+     "input_tokens": 7298,
+     "output_tokens": 1313,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:4a259f33eaee": {
+     "calls": 1,
+     "case": "7550eddfe50fa35982fa6403237177a0",
+     "charged_tokens": 8723,
+     "input_tokens": 7292,
+     "output_tokens": 1431,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:4ae006704fe4": {
+     "calls": 1,
+     "case": "7943501960bc6173bba3a8df071ccabd",
+     "charged_tokens": 8773,
+     "input_tokens": 7335,
+     "output_tokens": 1438,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:4b2ba0bbd56e": {
+     "calls": 1,
+     "case": "34652dc66aa697141bff1fbbc8a3c086",
+     "charged_tokens": 8741,
+     "input_tokens": 7291,
+     "output_tokens": 1450,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:4e607ac760e4": {
+     "calls": 1,
+     "case": "9988c33a78fc826e6ce8844c7cb66601",
+     "charged_tokens": 8607,
+     "input_tokens": 7289,
+     "output_tokens": 1318,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:4e8a439de99c": {
+     "calls": 1,
+     "case": "f509d297e5d79a4c6bd3295b83f54fb2",
+     "charged_tokens": 8695,
+     "input_tokens": 7281,
+     "output_tokens": 1414,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:4eb2fc9ab91e": {
+     "calls": 1,
+     "case": "49de004da7647a72ed5399889172aba3",
+     "charged_tokens": 8436,
+     "input_tokens": 7314,
+     "output_tokens": 1122,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:4fdeb516bb4b": {
+     "calls": 1,
+     "case": "7276b5a0a850ff95be7c1b5595c6fe01",
+     "charged_tokens": 8886,
+     "input_tokens": 7351,
+     "output_tokens": 1535,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:5128d62d6fd3": {
+     "calls": 1,
+     "case": "395651b61d399010cc89754d404d6c80",
+     "charged_tokens": 8726,
+     "input_tokens": 7300,
+     "output_tokens": 1426,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:51c968505cd1": {
+     "calls": 1,
+     "case": "8d91258cccf434de2df9fa3a80ea9a53",
+     "charged_tokens": 8494,
+     "input_tokens": 7291,
+     "output_tokens": 1203,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:544c27ebb7b4": {
+     "calls": 1,
+     "case": "02ece1341e5fd38976419a4c38b1d10f",
+     "charged_tokens": 8665,
+     "input_tokens": 7332,
+     "output_tokens": 1333,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:54ca2da2e384": {
+     "calls": 1,
+     "case": "daf7a83644ed7b124ad43143bdfb2360",
+     "charged_tokens": 8570,
+     "input_tokens": 7285,
+     "output_tokens": 1285,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:561f02868e6b": {
+     "calls": 1,
+     "case": "48b07d77de72ed7835f3d44a860da3f1",
+     "charged_tokens": 8751,
+     "input_tokens": 7299,
+     "output_tokens": 1452,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:563904c8a0b7": {
+     "calls": 1,
+     "case": "3ca48bb1ad49291b7e6854e4a8320324",
+     "charged_tokens": 8828,
+     "input_tokens": 7276,
+     "output_tokens": 1552,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:5737e0b51cda": {
+     "calls": 1,
+     "case": "dccc4e2fbdd3332c0e87b17dd33f9fd2",
+     "charged_tokens": 8855,
+     "input_tokens": 7337,
+     "output_tokens": 1518,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:590eead64743": {
+     "calls": 1,
+     "case": "0e2f7558c9aba7bb9fdf1819300938b9",
+     "charged_tokens": 9164,
+     "input_tokens": 7337,
+     "output_tokens": 1827,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:594b5c0a0b57": {
+     "calls": 1,
+     "case": "83a5ffb0c0520e7a285047b2877537a9",
+     "charged_tokens": 8616,
+     "input_tokens": 7307,
+     "output_tokens": 1309,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:5b932449a265": {
+     "calls": 1,
+     "case": "3ef58a07b8f44ed6b2df19b94f2d7fe3",
+     "charged_tokens": 8650,
+     "input_tokens": 7338,
+     "output_tokens": 1312,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:5c06ec3ea499": {
+     "calls": 1,
+     "case": "391c0a8c668a00f79a95685efb938022",
+     "charged_tokens": 8742,
+     "input_tokens": 7337,
+     "output_tokens": 1405,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:5cc48c1b0848": {
+     "calls": 1,
+     "case": "c6cebffc2b92ceea931d98593761ca39",
+     "charged_tokens": 8653,
+     "input_tokens": 7333,
+     "output_tokens": 1320,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:5d0b88ba2a74": {
+     "calls": 1,
+     "case": "ee76aac575196b5644f32435d54a519f",
+     "charged_tokens": 8835,
+     "input_tokens": 7291,
+     "output_tokens": 1544,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:5ebc3da3e80d": {
+     "calls": 1,
+     "case": "5008bd0954c527a57db7974d43bb91a6",
+     "charged_tokens": 8766,
+     "input_tokens": 7330,
+     "output_tokens": 1436,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:5f87c109c3e6": {
+     "calls": 1,
+     "case": "cdf55713f72cc5aad617f42993beaa01",
+     "charged_tokens": 8523,
+     "input_tokens": 7296,
+     "output_tokens": 1227,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:60ed18a3d8e6": {
+     "calls": 1,
+     "case": "63672bb3eaf8d477a35d0b9916691d19",
+     "charged_tokens": 8658,
+     "input_tokens": 7302,
+     "output_tokens": 1356,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:61b3c98de6a8": {
+     "calls": 1,
+     "case": "c1e153a3324e22b71f8d306ba73814fb",
+     "charged_tokens": 8631,
+     "input_tokens": 7333,
+     "output_tokens": 1298,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:643fd09ed5ea": {
+     "calls": 1,
+     "case": "b61fc836ccf60ce58bfdc2b4618a1675",
+     "charged_tokens": 8632,
+     "input_tokens": 7302,
+     "output_tokens": 1330,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:647637781b0d": {
+     "calls": 1,
+     "case": "d00d3e7c13ccf7e5154513ea0194c4f7",
+     "charged_tokens": 8703,
+     "input_tokens": 7343,
+     "output_tokens": 1360,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:6501b7f09b2f": {
+     "calls": 1,
+     "case": "e4cb275cff1d83d7e07485d81f6c7180",
+     "charged_tokens": 8821,
+     "input_tokens": 7333,
+     "output_tokens": 1488,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:650792c34c46": {
+     "calls": 1,
+     "case": "733ebf615cc3af8545d9c6e33518bb03",
+     "charged_tokens": 8539,
+     "input_tokens": 7336,
+     "output_tokens": 1203,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:653fabdc4e3f": {
+     "calls": 1,
+     "case": "00616386f0cce33fab924b519456c48d",
+     "charged_tokens": 8801,
+     "input_tokens": 7340,
+     "output_tokens": 1461,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:6551f18042b6": {
+     "calls": 1,
+     "case": "b8c3fb64c16b20b3a7d190011b7b15b8",
+     "charged_tokens": 8542,
+     "input_tokens": 7293,
+     "output_tokens": 1249,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:67f19be3cb78": {
+     "calls": 1,
+     "case": "7d687c6e82b397a21c64edce79010c1a",
+     "charged_tokens": 8632,
+     "input_tokens": 7308,
+     "output_tokens": 1324,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:68c9fe65db7f": {
+     "calls": 1,
+     "case": "c6fbbb84e27bdc82ac47ce616a1492e7",
+     "charged_tokens": 8601,
+     "input_tokens": 7285,
+     "output_tokens": 1316,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:690eb0d04e4e": {
+     "calls": 1,
+     "case": "3c378993b734bfa01599bd1b0f0b2e9e",
+     "charged_tokens": 8734,
+     "input_tokens": 7300,
+     "output_tokens": 1434,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:6a526ef8c5ab": {
+     "calls": 1,
+     "case": "1cb110caf2fcecdc02261d15287abb86",
+     "charged_tokens": 8664,
+     "input_tokens": 7289,
+     "output_tokens": 1375,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:6aed1a7c0c4d": {
+     "calls": 1,
+     "case": "72ce05520c2ec714cc09a84e90dfd7a2",
+     "charged_tokens": 8765,
+     "input_tokens": 7299,
+     "output_tokens": 1466,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:6b743a7d5063": {
+     "calls": 1,
+     "case": "3e92f78f906971d2cecd7df4282c3869",
+     "charged_tokens": 8902,
+     "input_tokens": 7291,
+     "output_tokens": 1611,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:6c482232b8ef": {
+     "calls": 1,
+     "case": "6246d829ec6192a007714eb5986a2d83",
+     "charged_tokens": 8671,
+     "input_tokens": 7284,
+     "output_tokens": 1387,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:6f0f2c0b0aa1": {
+     "calls": 1,
+     "case": "bedebe057a1c07256c7300419f591d9c",
+     "charged_tokens": 8686,
+     "input_tokens": 7296,
+     "output_tokens": 1390,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:702406523985": {
+     "calls": 1,
+     "case": "ca2f6109ee611b1d9c22813bd39c5b82",
+     "charged_tokens": 8856,
+     "input_tokens": 7291,
+     "output_tokens": 1565,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:716eb4949c77": {
+     "calls": 1,
+     "case": "108b7be8ce30e597ba5f16341b98d64d",
+     "charged_tokens": 8596,
+     "input_tokens": 7299,
+     "output_tokens": 1297,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:71f0bf065773": {
+     "calls": 1,
+     "case": "dcd38dfabe275b268033585d2d8c8965",
+     "charged_tokens": 8451,
+     "input_tokens": 7292,
+     "output_tokens": 1159,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:72eb4574c99c": {
+     "calls": 1,
+     "case": "23330862063ec206a1a119addcd1ab53",
+     "charged_tokens": 8569,
+     "input_tokens": 7291,
+     "output_tokens": 1278,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:73722dfc27bf": {
+     "calls": 1,
+     "case": "d542499dde3aaecf83eb833b70d4c4e5",
+     "charged_tokens": 8555,
+     "input_tokens": 7299,
+     "output_tokens": 1256,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:74e32cb8e8b4": {
+     "calls": 1,
+     "case": "c8788830745db7167546512f084c7e9e",
+     "charged_tokens": 8769,
+     "input_tokens": 7288,
+     "output_tokens": 1481,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:77207d0880c5": {
+     "calls": 1,
+     "case": "ecf80be3207e1230e6e024fd052cb4d1",
+     "charged_tokens": 8808,
+     "input_tokens": 7294,
+     "output_tokens": 1514,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:797561bf65d3": {
+     "calls": 1,
+     "case": "bd325efa058e025229a7569b7dc901a9",
+     "charged_tokens": 8676,
+     "input_tokens": 7339,
+     "output_tokens": 1337,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:7aa223b70b3c": {
+     "calls": 1,
+     "case": "f2da256c70afa0be4c6bcfeb07be1162",
+     "charged_tokens": 8584,
+     "input_tokens": 7289,
+     "output_tokens": 1295,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:7b2b37a537c8": {
+     "calls": 1,
+     "case": "b554b433a287808f0b8f114fb04ebce4",
+     "charged_tokens": 8781,
+     "input_tokens": 7326,
+     "output_tokens": 1455,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:7da9e7468b92": {
+     "calls": 1,
+     "case": "f06739cdde6745bd3ebcdc2912a28d42",
+     "charged_tokens": 8726,
+     "input_tokens": 7330,
+     "output_tokens": 1396,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:7e844159d877": {
+     "calls": 1,
+     "case": "63f5f3993e36e9b2b445b9014a0c95d2",
+     "charged_tokens": 8864,
+     "input_tokens": 7299,
+     "output_tokens": 1565,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:7eee0f7acc45": {
+     "calls": 1,
+     "case": "9124be91117d6acb05f593967a51c596",
+     "charged_tokens": 8518,
+     "input_tokens": 7296,
+     "output_tokens": 1222,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:7fd358128eef": {
+     "calls": 1,
+     "case": "dfe718735b03571407c8e2cbead28fc4",
+     "charged_tokens": 8567,
+     "input_tokens": 7287,
+     "output_tokens": 1280,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:8030e3e29649": {
+     "calls": 1,
+     "case": "81407129ba2e26de7980bdb34d66ed11",
+     "charged_tokens": 8812,
+     "input_tokens": 7289,
+     "output_tokens": 1523,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:807694f94d14": {
+     "calls": 1,
+     "case": "2d98f6853d497c3eb2cb78cef3fa304b",
+     "charged_tokens": 8459,
+     "input_tokens": 7300,
+     "output_tokens": 1159,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:81beebf97196": {
+     "calls": 1,
+     "case": "27de5e5762d38abb68f317fcafa57866",
+     "charged_tokens": 8885,
+     "input_tokens": 7293,
+     "output_tokens": 1592,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:8239b7c8d072": {
+     "calls": 1,
+     "case": "4407081a35321599d912fd31b979f308",
+     "charged_tokens": 8748,
+     "input_tokens": 7303,
+     "output_tokens": 1445,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:82ad0d5ddc72": {
+     "calls": 1,
+     "case": "abfbed5234cfa985f08d63fe8cf98a35",
+     "charged_tokens": 8565,
+     "input_tokens": 7298,
+     "output_tokens": 1267,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:830e1eecad34": {
+     "calls": 1,
+     "case": "c06157c7130f9ba5286c50019ca715c8",
+     "charged_tokens": 8890,
+     "input_tokens": 7341,
+     "output_tokens": 1549,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:8421b4b82cda": {
+     "calls": 1,
+     "case": "7742ee7f17b92444754165518acb67aa",
+     "charged_tokens": 8640,
+     "input_tokens": 7292,
+     "output_tokens": 1348,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:88923e0e341d": {
+     "calls": 1,
+     "case": "1604314a4211ad8a2e58e628afdc54ce",
+     "charged_tokens": 8602,
+     "input_tokens": 7321,
+     "output_tokens": 1281,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:88b90ba57856": {
+     "calls": 1,
+     "case": "6b7a10a2f33924ad408a3518be50b182",
+     "charged_tokens": 8599,
+     "input_tokens": 7311,
+     "output_tokens": 1288,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:8900dcfac864": {
+     "calls": 1,
+     "case": "e0da465f6038a88046cf5bf7aeda6e77",
+     "charged_tokens": 8707,
+     "input_tokens": 7331,
+     "output_tokens": 1376,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:893c5b811292": {
+     "calls": 1,
+     "case": "dd4271f2051f1b062828a26ce9ca3061",
+     "charged_tokens": 8930,
+     "input_tokens": 7326,
+     "output_tokens": 1604,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:8a258d2231b2": {
+     "calls": 1,
+     "case": "f0cac75daa5980c0702db483416e9196",
+     "charged_tokens": 8532,
+     "input_tokens": 7341,
+     "output_tokens": 1191,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:8a770a028ce4": {
+     "calls": 1,
+     "case": "b490f93a08275857b3a1dd3bff129bc9",
+     "charged_tokens": 8697,
+     "input_tokens": 7288,
+     "output_tokens": 1409,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:8ba4b318f661": {
+     "calls": 1,
+     "case": "0efb27805578c393719a25e87ea623a7",
+     "charged_tokens": 8793,
+     "input_tokens": 7341,
+     "output_tokens": 1452,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:8c6974c91614": {
+     "calls": 1,
+     "case": "d8dca1b070cd35c205e8b7ee2ee2a30d",
+     "charged_tokens": 8812,
+     "input_tokens": 7295,
+     "output_tokens": 1517,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:8c84cdc7a469": {
+     "calls": 1,
+     "case": "22301b8fac280d43294a2dfdd85b5df0",
+     "charged_tokens": 8660,
+     "input_tokens": 7290,
+     "output_tokens": 1370,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:8d246ccf3a62": {
+     "calls": 1,
+     "case": "3878f60f74bd1a36332cdd7809bbe865",
+     "charged_tokens": 8824,
+     "input_tokens": 7289,
+     "output_tokens": 1535,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:8fef70419d0e": {
+     "calls": 1,
+     "case": "13023f58691b2ece1908b3300ffa8db3",
+     "charged_tokens": 8841,
+     "input_tokens": 7292,
+     "output_tokens": 1549,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:91187db14ae6": {
+     "calls": 1,
+     "case": "ccc91b1604fbf1a5775a870df1c3faae",
+     "charged_tokens": 8480,
+     "input_tokens": 7284,
+     "output_tokens": 1196,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:91da242ab380": {
+     "calls": 1,
+     "case": "56c1f9c83c50fbd207601fdba8cda617",
+     "charged_tokens": 8724,
+     "input_tokens": 7337,
+     "output_tokens": 1387,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:924e5cd70af8": {
+     "calls": 1,
+     "case": "3ecd0515f36427142335ba26822becb1",
+     "charged_tokens": 8720,
+     "input_tokens": 7296,
+     "output_tokens": 1424,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:94c801b674ea": {
+     "calls": 1,
+     "case": "1a26b2727731de0ed2880adbe6163e6d",
+     "charged_tokens": 8798,
+     "input_tokens": 7303,
+     "output_tokens": 1495,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:958945e122a8": {
+     "calls": 1,
+     "case": "dbdeec1851c958bff4d6cec3cb4dee4d",
+     "charged_tokens": 8680,
+     "input_tokens": 7293,
+     "output_tokens": 1387,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:95aa96abe3c1": {
+     "calls": 1,
+     "case": "1f67c2b7bd3449fb4578e1627449db9d",
+     "charged_tokens": 8775,
+     "input_tokens": 7330,
+     "output_tokens": 1445,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:95d83ef6421e": {
+     "calls": 1,
+     "case": "4337388166b4c232d56949445f3eeb1e",
+     "charged_tokens": 8747,
+     "input_tokens": 7331,
+     "output_tokens": 1416,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:96b5fcd6798d": {
+     "calls": 1,
+     "case": "c28180cea86d78955d4370b26defab2a",
+     "charged_tokens": 8619,
+     "input_tokens": 7299,
+     "output_tokens": 1320,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:96f3d4f5b308": {
+     "calls": 1,
+     "case": "cd68173ed2d1097c993a72d10c61865c",
+     "charged_tokens": 8640,
+     "input_tokens": 7298,
+     "output_tokens": 1342,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:971bc584fae5": {
+     "calls": 1,
+     "case": "80da163a70d942b84d86a857eaf369a4",
+     "charged_tokens": 8615,
+     "input_tokens": 7286,
+     "output_tokens": 1329,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:97551ceebd6e": {
+     "calls": 1,
+     "case": "6a046836ef7eb4ee87c18b18c2da15a7",
+     "charged_tokens": 8833,
+     "input_tokens": 7329,
+     "output_tokens": 1504,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:9827c1c0da2f": {
+     "calls": 1,
+     "case": "f28cc30709006bda00f57717de94b021",
+     "charged_tokens": 8659,
+     "input_tokens": 7334,
+     "output_tokens": 1325,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:991492a69df0": {
+     "calls": 1,
+     "case": "78a526cc202a82e3d383f772454de0ea",
+     "charged_tokens": 8830,
+     "input_tokens": 7326,
+     "output_tokens": 1504,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:99aa12703189": {
+     "calls": 1,
+     "case": "b3eb1f6d47dfc002c57a98dd68a19ecb",
+     "charged_tokens": 8784,
+     "input_tokens": 7287,
+     "output_tokens": 1497,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:99c2afcd23d5": {
+     "calls": 1,
+     "case": "6a3e9850c4a965b9433cec0863116ee9",
+     "charged_tokens": 9240,
+     "input_tokens": 7353,
+     "output_tokens": 1887,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:9a0a9792c1f2": {
+     "calls": 1,
+     "case": "170ab44cdcfe7cc9c0df21de23af28d3",
+     "charged_tokens": 8596,
+     "input_tokens": 7334,
+     "output_tokens": 1262,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:9c416bdb3040": {
+     "calls": 1,
+     "case": "63aab006a6716484ddc2ec2e9c7fbd9d",
+     "charged_tokens": 8836,
+     "input_tokens": 7284,
+     "output_tokens": 1552,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:9c8987544a27": {
+     "calls": 1,
+     "case": "9f36abc3abe78d17741d3163c96cc6b7",
+     "charged_tokens": 8530,
+     "input_tokens": 7337,
+     "output_tokens": 1193,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:9e08e90d4800": {
+     "calls": 1,
+     "case": "e8ef2caf5641245c2488ca5325d16c1c",
+     "charged_tokens": 8663,
+     "input_tokens": 7305,
+     "output_tokens": 1358,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:9ef2167a32f9": {
+     "calls": 1,
+     "case": "408458f021d180d28603fb7e02c5d444",
+     "charged_tokens": 8840,
+     "input_tokens": 7298,
+     "output_tokens": 1542,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:9fc5d59c8eb0": {
+     "calls": 1,
+     "case": "983fda32aacaa4df120c8fd4df53dd98",
+     "charged_tokens": 8772,
+     "input_tokens": 7329,
+     "output_tokens": 1443,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:a02a6983e606": {
+     "calls": 1,
+     "case": "c638db5a558f143ffe2a9bbe02857f41",
+     "charged_tokens": 8792,
+     "input_tokens": 7327,
+     "output_tokens": 1465,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:a05f28504f3e": {
+     "calls": 1,
+     "case": "ac6256d65478b1ac12c763ee897f65ef",
+     "charged_tokens": 8742,
+     "input_tokens": 7299,
+     "output_tokens": 1443,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:a25682ccb3e8": {
+     "calls": 1,
+     "case": "c1795f6e992496a57741bf81b8a2ea31",
+     "charged_tokens": 8757,
+     "input_tokens": 7294,
+     "output_tokens": 1463,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:a3370050a524": {
+     "calls": 1,
+     "case": "18b5a69e164c6ed1fccfd0b0441663f1",
+     "charged_tokens": 8795,
+     "input_tokens": 7292,
+     "output_tokens": 1503,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:a38538fb2452": {
+     "calls": 1,
+     "case": "f03694b3db7d8c2ef1fbcade66b4606f",
+     "charged_tokens": 9106,
+     "input_tokens": 7344,
+     "output_tokens": 1762,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:a4a2c62404c9": {
+     "calls": 1,
+     "case": "e17be5f06d41376deaeba449d3bcc5c1",
+     "charged_tokens": 8619,
+     "input_tokens": 7291,
+     "output_tokens": 1328,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:a4b14f9e63c5": {
+     "calls": 1,
+     "case": "af15a3e4eb3f800e8a1c15da577ff8a9",
+     "charged_tokens": 8793,
+     "input_tokens": 7293,
+     "output_tokens": 1500,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:a61779f66791": {
+     "calls": 1,
+     "case": "e04534a9758595218f879dc3dfb32858",
+     "charged_tokens": 8676,
+     "input_tokens": 7294,
+     "output_tokens": 1382,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:ab1ddf0ad176": {
+     "calls": 1,
+     "case": "6e767a0bd7ffc5f6bce51316e2b153c0",
+     "charged_tokens": 8589,
+     "input_tokens": 7292,
+     "output_tokens": 1297,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:ab21f4608820": {
+     "calls": 1,
+     "case": "b82644023fb04016f0da8ba4c63b20a5",
+     "charged_tokens": 8784,
+     "input_tokens": 7328,
+     "output_tokens": 1456,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:ac1435ae9a1a": {
+     "calls": 1,
+     "case": "87ddb8de7f966b7969336bab6db13e25",
+     "charged_tokens": 8794,
+     "input_tokens": 7310,
+     "output_tokens": 1484,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:af434a002f98": {
+     "calls": 1,
+     "case": "d596c615691468e780ee99273bc042d2",
+     "charged_tokens": 8841,
+     "input_tokens": 7327,
+     "output_tokens": 1514,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:af9721a9c364": {
+     "calls": 1,
+     "case": "e037f29d7bb80c17900cffb7e258bde9",
+     "charged_tokens": 8752,
+     "input_tokens": 7336,
+     "output_tokens": 1416,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:afcee233f108": {
+     "calls": 1,
+     "case": "b76d0a2f30c5e4fbf9b2098ae019d23f",
+     "charged_tokens": 8700,
+     "input_tokens": 7291,
+     "output_tokens": 1409,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:b04f15f1c62f": {
+     "calls": 1,
+     "case": "29fbec58bd3045f4ca7bbfff34458f16",
+     "charged_tokens": 8735,
+     "input_tokens": 7296,
+     "output_tokens": 1439,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:b2accb99aef3": {
+     "calls": 1,
+     "case": "9ba35b9253953eba4e8c969afd6913d4",
+     "charged_tokens": 8806,
+     "input_tokens": 7308,
+     "output_tokens": 1498,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:b2fb059766f6": {
+     "calls": 1,
+     "case": "bbb6f14dc40d809a0a5f964b215ceaf8",
+     "charged_tokens": 8936,
+     "input_tokens": 7334,
+     "output_tokens": 1602,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:b3ae8474019b": {
+     "calls": 1,
+     "case": "79b6bb5e3f33b446ba2d8d14280e7b3a",
+     "charged_tokens": 8470,
+     "input_tokens": 7292,
+     "output_tokens": 1178,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:b3db1d58e184": {
+     "calls": 1,
+     "case": "a07f98bf52c3bbc8c4d10a6c91227a9e",
+     "charged_tokens": 8802,
+     "input_tokens": 7305,
+     "output_tokens": 1497,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:b3f144f1a7e5": {
+     "calls": 1,
+     "case": "4602567423f6723a1e6c4826747c74d6",
+     "charged_tokens": 8818,
+     "input_tokens": 7328,
+     "output_tokens": 1490,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:b424ed6e16f6": {
+     "calls": 1,
+     "case": "f72caed9614da097e2b83ac5982c8c36",
+     "charged_tokens": 8594,
+     "input_tokens": 7287,
+     "output_tokens": 1307,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:b50870753212": {
+     "calls": 1,
+     "case": "a1923b9e781cb2da98bfda0f676e3ced",
+     "charged_tokens": 8647,
+     "input_tokens": 7280,
+     "output_tokens": 1367,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:b5e19ac75496": {
+     "calls": 1,
+     "case": "28e807c96428d7e1e319421f6c5979e3",
+     "charged_tokens": 8603,
+     "input_tokens": 7289,
+     "output_tokens": 1314,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:b6c935537e59": {
+     "calls": 1,
+     "case": "ca8d64aeff9589f3b1d4e293a6acd779",
+     "charged_tokens": 8641,
+     "input_tokens": 7299,
+     "output_tokens": 1342,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:b767ba7cd72a": {
+     "calls": 1,
+     "case": "a46c010a7c7b45e2ebb3370ce7faf878",
+     "charged_tokens": 8567,
+     "input_tokens": 7286,
+     "output_tokens": 1281,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:b7b5a62d34ba": {
+     "calls": 1,
+     "case": "466767911699d447e7d662c6582175d8",
+     "charged_tokens": 8408,
+     "input_tokens": 7293,
+     "output_tokens": 1115,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:b88b6c6ace32": {
+     "calls": 1,
+     "case": "0c892c0adfadd643f0fef5c59fed9cfb",
+     "charged_tokens": 8740,
+     "input_tokens": 7339,
+     "output_tokens": 1401,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:b8e8f756a615": {
+     "calls": 1,
+     "case": "828f254bff572e83eaa590633f9a8ae8",
+     "charged_tokens": 8752,
+     "input_tokens": 7296,
+     "output_tokens": 1456,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:b9b22632dd77": {
+     "calls": 1,
+     "case": "95b090416cd0fc2e38b08af2c6360746",
+     "charged_tokens": 8986,
+     "input_tokens": 7342,
+     "output_tokens": 1644,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:b9b2a0e23c0e": {
+     "calls": 1,
+     "case": "3790b02086a567606db8762dc1febd67",
+     "charged_tokens": 8575,
+     "input_tokens": 7298,
+     "output_tokens": 1277,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:ba92e9ae5c15": {
+     "calls": 1,
+     "case": "5708c36dfa04039cad637fbe30f13094",
+     "charged_tokens": 8660,
+     "input_tokens": 7287,
+     "output_tokens": 1373,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:bbcb49384d09": {
+     "calls": 1,
+     "case": "9dcf78bd9b99e4afe35c2aaf9744bef2",
+     "charged_tokens": 8875,
+     "input_tokens": 7294,
+     "output_tokens": 1581,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:bc966775f7d6": {
+     "calls": 1,
+     "case": "3f3f373f515b6e6448ab8498f0477b03",
+     "charged_tokens": 8683,
+     "input_tokens": 7323,
+     "output_tokens": 1360,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:bd1e56d30137": {
+     "calls": 1,
+     "case": "f73fc4ff305571e9661e82907f8c490a",
+     "charged_tokens": 8611,
+     "input_tokens": 7293,
+     "output_tokens": 1318,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:be7fb34e507c": {
+     "calls": 1,
+     "case": "026740a004bbeda2ab76ce5e7b7e59a9",
+     "charged_tokens": 8736,
+     "input_tokens": 7311,
+     "output_tokens": 1425,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:bed8339ee7ec": {
+     "calls": 1,
+     "case": "51b09fa65bbe84baa4104c009b4257d6",
+     "charged_tokens": 8663,
+     "input_tokens": 7289,
+     "output_tokens": 1374,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:bee9ec288f4e": {
+     "calls": 1,
+     "case": "e0a36d1a13029e96dfd9332d7d5ac252",
+     "charged_tokens": 8785,
+     "input_tokens": 7297,
+     "output_tokens": 1488,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:c2d7768c3468": {
+     "calls": 1,
+     "case": "d9ead40d2aea101ccfe7890c36a31d40",
+     "charged_tokens": 8580,
+     "input_tokens": 7280,
+     "output_tokens": 1300,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:c3535d1662a0": {
+     "calls": 1,
+     "case": "6e4f9e65566f7f17384b3d6ede65cb1e",
+     "charged_tokens": 8617,
+     "input_tokens": 7291,
+     "output_tokens": 1326,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:c4a2f80e43fa": {
+     "calls": 1,
+     "case": "d80ed6bfa462b7ddb0a4cc6de64b8f30",
+     "charged_tokens": 8575,
+     "input_tokens": 7292,
+     "output_tokens": 1283,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:c56f7f0a2d9e": {
+     "calls": 1,
+     "case": "47a094695406b9f92f8d26ba7ca8ecf2",
+     "charged_tokens": 8916,
+     "input_tokens": 7298,
+     "output_tokens": 1618,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:c75c00207162": {
+     "calls": 1,
+     "case": "536deb34ad8b920541f16b74d182a691",
+     "charged_tokens": 8626,
+     "input_tokens": 7336,
+     "output_tokens": 1290,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:c79a819c50a0": {
+     "calls": 1,
+     "case": "559ba80af3fe1bf9934794efddcf5228",
+     "charged_tokens": 8786,
+     "input_tokens": 7324,
+     "output_tokens": 1462,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:c7a0b9d1a60c": {
+     "calls": 1,
+     "case": "4490b4b3377c07632babf3c166422521",
+     "charged_tokens": 8520,
+     "input_tokens": 7286,
+     "output_tokens": 1234,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:c8cb6a1fa6a5": {
+     "calls": 1,
+     "case": "b01da353fda7d84ca385ab9d292f15ea",
+     "charged_tokens": 8636,
+     "input_tokens": 7305,
+     "output_tokens": 1331,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:c8eaaf59cfe0": {
+     "calls": 1,
+     "case": "c5aad945ee573f2a9dfe8be724365f87",
+     "charged_tokens": 8629,
+     "input_tokens": 7291,
+     "output_tokens": 1338,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:c90c149d2a51": {
+     "calls": 1,
+     "case": "c635ba9dfab1daf4935ede44b48fbdb1",
+     "charged_tokens": 8659,
+     "input_tokens": 7334,
+     "output_tokens": 1325,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:c92b35d627da": {
+     "calls": 1,
+     "case": "77fdf0adf2dfb642333c1eda498b24b6",
+     "charged_tokens": 8884,
+     "input_tokens": 7339,
+     "output_tokens": 1545,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:cc166de60d4f": {
+     "calls": 1,
+     "case": "7dc752c2bef541b1b67660326a5d33cf",
+     "charged_tokens": 8758,
+     "input_tokens": 7332,
+     "output_tokens": 1426,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:cc3a6fd5aa99": {
+     "calls": 1,
+     "case": "691cb836cefd3480fb7e435003d9f295",
+     "charged_tokens": 8568,
+     "input_tokens": 7289,
+     "output_tokens": 1279,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:cc5afce49c44": {
+     "calls": 1,
+     "case": "30abeaff087226b0413697ed5e0bb92c",
+     "charged_tokens": 8679,
+     "input_tokens": 7294,
+     "output_tokens": 1385,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:cced80e277dc": {
+     "calls": 1,
+     "case": "3252b1cedb963918c712f1100c3ac1be",
+     "charged_tokens": 8670,
+     "input_tokens": 7328,
+     "output_tokens": 1342,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:cd5764fc9bb0": {
+     "calls": 1,
+     "case": "d515370fdacd05fe89b597cc216c92e0",
+     "charged_tokens": 8621,
+     "input_tokens": 7304,
+     "output_tokens": 1317,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:ce3b267e8100": {
+     "calls": 1,
+     "case": "d05485d748d97bd63deaee045c43b87e",
+     "charged_tokens": 8685,
+     "input_tokens": 7297,
+     "output_tokens": 1388,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:ce44236cef35": {
+     "calls": 1,
+     "case": "e040b4bfb895dc010b37592381ec7346",
+     "charged_tokens": 8718,
+     "input_tokens": 7585,
+     "output_tokens": 1133,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:d08f24b1f6f3": {
+     "calls": 1,
+     "case": "a141943484b35e94836dad89067b769f",
+     "charged_tokens": 8721,
+     "input_tokens": 7296,
+     "output_tokens": 1425,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:d10ecb76e982": {
+     "calls": 1,
+     "case": "bdc9b3da1ebc051ae4a47ccfb8078dc3",
+     "charged_tokens": 8808,
+     "input_tokens": 7338,
+     "output_tokens": 1470,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:d1daa7641e85": {
+     "calls": 1,
+     "case": "85bc3c39a6b97c6cd0ab4c801c11bc72",
+     "charged_tokens": 8606,
+     "input_tokens": 7299,
+     "output_tokens": 1307,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:d23d6db8d5ca": {
+     "calls": 1,
+     "case": "d97bf84dee382de4037fa7d24652ec75",
+     "charged_tokens": 8818,
+     "input_tokens": 7296,
+     "output_tokens": 1522,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:d2771e0a2092": {
+     "calls": 1,
+     "case": "1536709f24522a0707cf659cffd04661",
+     "charged_tokens": 9173,
+     "input_tokens": 7300,
+     "output_tokens": 1873,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:d30616f470c7": {
+     "calls": 1,
+     "case": "799535213513ff332797b9c0f1a9baaf",
+     "charged_tokens": 8630,
+     "input_tokens": 7291,
+     "output_tokens": 1339,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:d3b0cf8edec3": {
+     "calls": 1,
+     "case": "f119de637cad777fd04bf5cf34fcb5d6",
+     "charged_tokens": 8518,
+     "input_tokens": 7341,
+     "output_tokens": 1177,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:d45aa90192be": {
+     "calls": 1,
+     "case": "2ff5ab6efcce7082786ceab159546e2d",
+     "charged_tokens": 8867,
+     "input_tokens": 7333,
+     "output_tokens": 1534,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:d489a045f32d": {
+     "calls": 1,
+     "case": "ef2ea4e7ede7c9ce64572fe80ee1becd",
+     "charged_tokens": 8773,
+     "input_tokens": 7293,
+     "output_tokens": 1480,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:d48ae92fc9a4": {
+     "calls": 1,
+     "case": "e9734d56599609fdd83d10a8e2bd5322",
+     "charged_tokens": 8633,
+     "input_tokens": 7293,
+     "output_tokens": 1340,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:d6c1ee0a149b": {
+     "calls": 1,
+     "case": "3f9d173c20f5d682e421c617e5a0df52",
+     "charged_tokens": 8728,
+     "input_tokens": 7337,
+     "output_tokens": 1391,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:d734843b5bcd": {
+     "calls": 1,
+     "case": "7a61c611bbd532ab012e5d7bcd9281cd",
+     "charged_tokens": 8736,
+     "input_tokens": 7291,
+     "output_tokens": 1445,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:d755272fea70": {
+     "calls": 1,
+     "case": "61aff61dad3ae5453910e63abf07a1a6",
+     "charged_tokens": 8649,
+     "input_tokens": 7339,
+     "output_tokens": 1310,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:d7e5a11d1981": {
+     "calls": 1,
+     "case": "827b6c6e0407d9cdec4a65af2318251e",
+     "charged_tokens": 8826,
+     "input_tokens": 7336,
+     "output_tokens": 1490,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:d88309bd11e0": {
+     "calls": 1,
+     "case": "52b29855a2cfa448b493c2276821b3e2",
+     "charged_tokens": 8528,
+     "input_tokens": 7293,
+     "output_tokens": 1235,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:d989e74509e6": {
+     "calls": 1,
+     "case": "2e7b6df54cae286a82922a0337a36451",
+     "charged_tokens": 8968,
+     "input_tokens": 7331,
+     "output_tokens": 1637,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:da829179e655": {
+     "calls": 1,
+     "case": "640c89661f238eac2fa4c1646ed8cbe6",
+     "charged_tokens": 8632,
+     "input_tokens": 7302,
+     "output_tokens": 1330,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:da9cca9f9653": {
+     "calls": 1,
+     "case": "d6f40da54a674aecfb6226bad43799a4",
+     "charged_tokens": 8802,
+     "input_tokens": 7279,
+     "output_tokens": 1523,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:db2684eb1b6d": {
+     "calls": 1,
+     "case": "9ee9bbd47a19f02c3ab633c38be301e8",
+     "charged_tokens": 9209,
+     "input_tokens": 7330,
+     "output_tokens": 1879,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:db53012c868e": {
+     "calls": 1,
+     "case": "7ef7cca0c1e1de11caf23fc4c5ab49e7",
+     "charged_tokens": 8904,
+     "input_tokens": 7293,
+     "output_tokens": 1611,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:de24df4f3872": {
+     "calls": 1,
+     "case": "6d1a562b08e38d1ae6f839fc59ef7808",
+     "charged_tokens": 8645,
+     "input_tokens": 7314,
+     "output_tokens": 1331,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:de962f6edaab": {
+     "calls": 1,
+     "case": "6cdec3681f62a3d0b0f705e54baee08d",
+     "charged_tokens": 8678,
+     "input_tokens": 7289,
+     "output_tokens": 1389,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:e0c301a8436a": {
+     "calls": 1,
+     "case": "c336def0b30afc709fc7b222196eb52f",
+     "charged_tokens": 8502,
+     "input_tokens": 7292,
+     "output_tokens": 1210,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:e151fd9ebc5a": {
+     "calls": 1,
+     "case": "f4aa117d1fa2625a79aa1492d1bd7185",
+     "charged_tokens": 8604,
+     "input_tokens": 7334,
+     "output_tokens": 1270,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:e75620cef08d": {
+     "calls": 1,
+     "case": "7bc23a3dffc3cf58324b82b71e12d5da",
+     "charged_tokens": 8946,
+     "input_tokens": 7334,
+     "output_tokens": 1612,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:e7f585b86ea5": {
+     "calls": 1,
+     "case": "4d8c4a4fbdc39159f9f14f88363c475c",
+     "charged_tokens": 8815,
+     "input_tokens": 7324,
+     "output_tokens": 1491,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:e92c4f94469d": {
+     "calls": 1,
+     "case": "a28a8ae839171785ba9288fe45906925",
+     "charged_tokens": 8725,
+     "input_tokens": 7334,
+     "output_tokens": 1391,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:ea31c0f446bf": {
+     "calls": 1,
+     "case": "299dfefaf631c53b2da17a8793fd2f3f",
+     "charged_tokens": 8561,
+     "input_tokens": 7339,
+     "output_tokens": 1222,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:ead97d48b85c": {
+     "calls": 1,
+     "case": "6dd124aaec35b4a7112f4c241a5adfbf",
+     "charged_tokens": 8709,
+     "input_tokens": 7291,
+     "output_tokens": 1418,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:eb720b4b2e3f": {
+     "calls": 1,
+     "case": "0fa9c3dec4db388610a5d2ca214446e3",
+     "charged_tokens": 8514,
+     "input_tokens": 7281,
+     "output_tokens": 1233,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:eb89d2803438": {
+     "calls": 1,
+     "case": "eebea3cb45cc6d5f12244c9605f5d626",
+     "charged_tokens": 8834,
+     "input_tokens": 7326,
+     "output_tokens": 1508,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:ebac224b6299": {
+     "calls": 1,
+     "case": "dd779514ae2267b81ea80b258905b23b",
+     "charged_tokens": 8500,
+     "input_tokens": 7297,
+     "output_tokens": 1203,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:ee9737267108": {
+     "calls": 1,
+     "case": "62ea00a3ec58e09bc98178c89309cfd3",
+     "charged_tokens": 8757,
+     "input_tokens": 7338,
+     "output_tokens": 1419,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:eeb1bc22b139": {
+     "calls": 1,
+     "case": "b055e34654a6156b95ec643074412e9e",
+     "charged_tokens": 8647,
+     "input_tokens": 7312,
+     "output_tokens": 1335,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:eef67a3680ac": {
+     "calls": 1,
+     "case": "3f7b05b2eabaf7c60167bbbefc762e5b",
+     "charged_tokens": 8750,
+     "input_tokens": 7291,
+     "output_tokens": 1459,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:ef0a2945886c": {
+     "calls": 1,
+     "case": "a7c7451fcbcf268bb9e1249a6d4e9ebb",
+     "charged_tokens": 8655,
+     "input_tokens": 7283,
+     "output_tokens": 1372,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:ef3c24999f26": {
+     "calls": 1,
+     "case": "1d23e5416abe960e0be9ec53f57b5230",
+     "charged_tokens": 8733,
+     "input_tokens": 7294,
+     "output_tokens": 1439,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:ef87f9878cab": {
+     "calls": 1,
+     "case": "1b0b35521d1db77d24abe0410f9b7939",
+     "charged_tokens": 9086,
+     "input_tokens": 7337,
+     "output_tokens": 1749,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f07197310c49": {
+     "calls": 1,
+     "case": "5c7e948610e461d7876cd1f1cb0f03f0",
+     "charged_tokens": 8756,
+     "input_tokens": 7286,
+     "output_tokens": 1470,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f1521d196bdb": {
+     "calls": 1,
+     "case": "c393f77b991cba73e28c4dbf5c22e357",
+     "charged_tokens": 8539,
+     "input_tokens": 7286,
+     "output_tokens": 1253,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f199ebc0ac22": {
+     "calls": 1,
+     "case": "1894ce1abfcc6197d1d737ab9b82da7b",
+     "charged_tokens": 8700,
+     "input_tokens": 7288,
+     "output_tokens": 1412,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f1bcc1d7f009": {
+     "calls": 1,
+     "case": "4ac009be93ab4597a72de58e7bcfbf43",
+     "charged_tokens": 8738,
+     "input_tokens": 7292,
+     "output_tokens": 1446,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f1e9377e6bab": {
+     "calls": 1,
+     "case": "d1137c8fd52eb5b5d0ec962852dd4bc4",
+     "charged_tokens": 8791,
+     "input_tokens": 7291,
+     "output_tokens": 1500,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f238308fdeab": {
+     "calls": 1,
+     "case": "2a47deed0e1936c705232146c4620fdb",
+     "charged_tokens": 8756,
+     "input_tokens": 7295,
+     "output_tokens": 1461,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f27a19fce9ac": {
+     "calls": 1,
+     "case": "bbf98d3ca08ed71e3d277440529baf4b",
+     "charged_tokens": 8724,
+     "input_tokens": 7293,
+     "output_tokens": 1431,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f34322416af8": {
+     "calls": 1,
+     "case": "91d5f947a9e3303c67e967b4a2afaa6c",
+     "charged_tokens": 8946,
+     "input_tokens": 7296,
+     "output_tokens": 1650,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f4ec1a0ddbcd": {
+     "calls": 1,
+     "case": "dfe1dc83436f805d0a6175d3c4e0fb0d",
+     "charged_tokens": 8742,
+     "input_tokens": 7341,
+     "output_tokens": 1401,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f54cc93a2c61": {
+     "calls": 1,
+     "case": "8a8890ebcce304f39c148e60fbed1aaf",
+     "charged_tokens": 8579,
+     "input_tokens": 7296,
+     "output_tokens": 1283,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f57cc99fa41b": {
+     "calls": 1,
+     "case": "c13a6cd217077e9071f492dacd25b205",
+     "charged_tokens": 8799,
+     "input_tokens": 7344,
+     "output_tokens": 1455,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f58a6130bf73": {
+     "calls": 1,
+     "case": "c6d4c082d1b768f1db0f35431f85c212",
+     "charged_tokens": 8940,
+     "input_tokens": 7297,
+     "output_tokens": 1643,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f60c717bbade": {
+     "calls": 1,
+     "case": "87cb55005a7fc7631ae05da736fef771",
+     "charged_tokens": 8788,
+     "input_tokens": 7338,
+     "output_tokens": 1450,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f62ee042a69b": {
+     "calls": 1,
+     "case": "bbdab86cdd910fd491f1f404f41c06a9",
+     "charged_tokens": 8703,
+     "input_tokens": 7293,
+     "output_tokens": 1410,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f684fbab2c3a": {
+     "calls": 1,
+     "case": "bb063cbfca9e4dcd3dc8de294a5923f4",
+     "charged_tokens": 8854,
+     "input_tokens": 7343,
+     "output_tokens": 1511,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f73f1ea8b0b3": {
+     "calls": 1,
+     "case": "7cb60202f62b89c240316e06131dc254",
+     "charged_tokens": 8616,
+     "input_tokens": 7292,
+     "output_tokens": 1324,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f82929c2cfc9": {
+     "calls": 1,
+     "case": "19bc4c53a18337ea74b0415e4fa8aa13",
+     "charged_tokens": 8828,
+     "input_tokens": 7340,
+     "output_tokens": 1488,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f83f02c1b169": {
+     "calls": 1,
+     "case": "ab678bc35117f9059c0ee2b7c20d31ca",
+     "charged_tokens": 8526,
+     "input_tokens": 7335,
+     "output_tokens": 1191,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:f968c411f141": {
+     "calls": 1,
+     "case": "dc3236995e8be467a9e6eea7bb8d5a61",
+     "charged_tokens": 8642,
+     "input_tokens": 7298,
+     "output_tokens": 1344,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:fb87c0a86612": {
+     "calls": 1,
+     "case": "70ccfe29b33b0b340f0fea1e0b212254",
+     "charged_tokens": 8684,
+     "input_tokens": 7296,
+     "output_tokens": 1388,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:fc4ad7547d54": {
+     "calls": 1,
+     "case": "3e05e4506de96bf247e01acf5242dbb3",
+     "charged_tokens": 8724,
+     "input_tokens": 7295,
+     "output_tokens": 1429,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:fc533ea92ed1": {
+     "calls": 1,
+     "case": "9cb1ad02bd7a5059d60834a51f9ea37a",
+     "charged_tokens": 8645,
+     "input_tokens": 7341,
+     "output_tokens": 1304,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:fda613abe14a": {
+     "calls": 1,
+     "case": "e03ff7b7ca108119b683386399007abf",
+     "charged_tokens": 8576,
+     "input_tokens": 7290,
+     "output_tokens": 1286,
+     "unknown_usage_calls": 0
+    },
+    "2026-10-final:56078:fdb30711bb6e": {
+     "calls": 1,
+     "case": "22fc97c93214d45ba7471cc05647de5f",
+     "charged_tokens": 8527,
+     "input_tokens": 7290,
+     "output_tokens": 1237,
      "unknown_usage_calls": 0
     }
    },

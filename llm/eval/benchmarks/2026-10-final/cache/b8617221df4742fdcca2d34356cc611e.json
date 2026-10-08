@@ -1,0 +1,65 @@
+{
+ "attempts": 1,
+ "duration_ms": 43177,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "sol",
+  "backend": "codex",
+  "benchmark": "2026-10-final",
+  "case": "931592514-baseline-128082-20250604T000000",
+  "cli_version": "codex-cli 0.159.2",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol",
+  "packet_sha256": "a3d3a29fd70ca83bb53942a8c1456128c6d7ee4c1f1852d9d4a7159cd9066694",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "renamed",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "codex",
+  "cli_version": "codex-cli 0.159.2",
+  "effort": "high",
+  "event_counts": {
+   "item.completed:agent_message": 1,
+   "thread.started": 1,
+   "turn.completed": 1,
+   "turn.started": 1
+  },
+  "input_tokens": 7303,
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol",
+  "n_error_events": 0,
+  "n_events": 4,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 1666,
+  "protocol_ok": true,
+  "tools_offered": null
+ },
+ "text": "{\n  \"claims\": [\n    {\n      \"field\": \"order.ip_country\",\n      \"value\": \"US\",\n      \"statement\": \"The order IP country is US.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"order.card_bin_country\",\n      \"value\": \"GB\",\n      \"statement\": \"The card issuing country is GB.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"order.avs_result\",\n      \"value\": \"N\",\n      \"statement\": \"Address verification failed.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.card_first_use_age_hours\",\n      \"value\": 4633.671944444444,\n      \"statement\": \"The card was first used on this account 4633.671944444444 hours before the order.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.device_link_age_hours\",\n      \"value\": 4633.822222222222,\n      \"statement\": \"The device was first used on this account 4633.822222222222 hours before the order.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.geo_kmh_from_previous_attempt\",\n      \"value\": 0.0,\n      \"statement\": \"The recorded implied speed from the previous attempt is 0.0 km/h.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.processor_declines_card_24h\",\n      \"value\": 0,\n      \"statement\": \"There were no processor declines on the card in the preceding window.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.processor_declines_device_24h\",\n      \"value\": 0,\n      \"statement\": \"There were no processor declines on the device in the preceding window.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.attempts_user_24h\",\n      \"value\": 1,\n      \"statement\": \"The account had one order attempt in the recorded window.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.attempts_device_24h\",\n      \"value\": 1,\n      \"statement\": \"The device had one order attempt in the recorded window.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.accounts_on_device_30d\",\n      \"value\": 1,\n      \"statement\": \"Only this account had recorded activity on the device in the linkage window.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.accounts_on_address_30d\",\n      \"value\": 1,\n      \"statement\": \"Only this account had recorded activity at the shipping address in the linkage window.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.email_root_other_accounts\",\n      \"value\": 0,\n      \"statement\": \"No other account shares the normalized email.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"order.promotion_used\",\n      \"value\": false,\n      \"statement\": \"The order did not use a promotion.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.email_domain_class\",\n      \"value\": 0,\n      \"statement\": \"The email uses a common provider rather than a disposable domain.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.is_first_attempt_user\",\n      \"value\": 0,\n      \"statement\": \"This is not the account's first order attempt.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.inr_disputes_opened_user\",\n      \"value\": 0,\n      \"statement\": \"The account has opened no item-not-received disputes.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.unauthorized_disputes_lost_user\",\n      \"value\": 0,\n      \"statement\": \"No earlier unauthorized-use dispute was resolved against the platform.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.never_pay_determined_user\",\n      \"value\": 0,\n      \"statement\": \"There is no earlier never-pay determination on the account.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.inr_claims_rejected_user\",\n      \"value\": 0,\n      \"statement\": \"No earlier item-not-received claim was resolved against the account on a delivered order.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"decision.checks\",\n      \"value\": [],\n      \"statement\": \"No verification check has been completed.\",\n      \"derived\": null\n    }\n  ],\n  \"hypotheses\": [\n    {\n      \"explanation\": \"stolen_card\",\n      \"likelihood\": \"medium\",\n      \"reasoning\": \"The issuing-country/IP mismatch combined with failed address verification satisfies R03. There is no supporting processor-decline, velocity or linkage evidence.\"\n    },\n    {\n      \"explanation\": \"legitimate_customer\",\n      \"likelihood\": \"medium\",\n      \"reasoning\": \"A legitimate customer could be using a foreign-issued card with an address-verification mismatch. The card has longstanding use on the account, but that does not establish who placed this order.\"\n    }\n  ],\n  \"disposition\": \"needs_check\",\n  \"citations\": [\n    \"R03\",\n    \"FP-2 \u00a76.2\",\n    \"FP-2 \u00a76.3\",\n    \"FP-2 \u00a76.4\",\n    \"FP-2 \u00a76.5\",\n    \"FP-2 \u00a76.6(b)\",\n    \"FP-2 \u00a74.3\",\n    \"FP-2 \u00a75.1(b)\",\n    \"FP-2 \u00a75.2\",\n    \"FP-2 \u00a75.3(a)\"\n  ],\n  \"next_check\": \"id_check\",\n  \"memo\": \"R03 holds: the GB-issued card was used from a US IP and AVS failed. Card is the only adverse family; no other rule holds, and no household exception is needed. No earlier outcome settles the order, and no verification has run. Legitimate use of a foreign-issued card with an address mismatch remains plausible; longstanding card use does not establish the current purchaser's identity. Recommend needs_check under FP-2 \u00a76.6(b), implemented as a hold for id_check. This is the only required check and directly tests account identity and cardholder authentication. A pass clears the order; a failure requires decline without Linkage.\"\n}",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 8969,
+  "input_tokens": 7303,
+  "output_tokens": 1666,
+  "unknown_usage_calls": 0
+ }
+}

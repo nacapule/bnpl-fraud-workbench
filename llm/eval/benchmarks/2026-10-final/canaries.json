@@ -7,5 +7,14 @@
   "outcome": "passed",
   "output_tokens": 31,
   "verdict": "no"
+ },
+ {
+  "arm": "sol",
+  "cli_version": "codex-cli 0.159.2",
+  "input_tokens": 514,
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "outcome": "passed",
+  "output_tokens": 33,
+  "verdict": "no"
  }
 ]

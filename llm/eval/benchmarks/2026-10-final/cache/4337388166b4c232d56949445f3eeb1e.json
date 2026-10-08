@@ -1,0 +1,65 @@
+{
+ "attempts": 1,
+ "duration_ms": 42014,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "sol",
+  "backend": "codex",
+  "benchmark": "2026-10-final",
+  "case": "931592514-baseline-143995-20250801T134937",
+  "cli_version": "codex-cli 0.159.2",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol",
+  "packet_sha256": "12fc3b434ad15bf864debd09da953629728c25784afcac18727cfdfdb484d03b",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "shuffled",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "codex",
+  "cli_version": "codex-cli 0.159.2",
+  "effort": "high",
+  "event_counts": {
+   "item.completed:agent_message": 1,
+   "thread.started": 1,
+   "turn.completed": 1,
+   "turn.started": 1
+  },
+  "input_tokens": 7331,
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol",
+  "n_error_events": 0,
+  "n_events": 4,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 1416,
+  "protocol_ok": true,
+  "tools_offered": null
+ },
+ "text": "{\n  \"claims\": [\n    {\"field\":\"decision.checks[0].check\",\"value\":\"id_check\",\"statement\":\"The completed check was an identity and issuer-authentication check.\",\"derived\":null},\n    {\"field\":\"decision.checks[0].outcome\",\"value\":\"failed\",\"statement\":\"The identity check failed.\",\"derived\":null},\n    {\"field\":\"context.accounts_on_address_30d\",\"value\":3,\"statement\":\"Three accounts used the shipping address within the activity window.\",\"derived\":null},\n    {\"field\":\"context.ship_to_home\",\"value\":1,\"statement\":\"The shipping address is the account's home address.\",\"derived\":null},\n    {\"field\":\"context.home_address_age_days\",\"value\":68.78185185185185,\"statement\":\"The home address was registered 68.78185185185185 days before the order.\",\"derived\":null},\n    {\"field\":\"context.account_age_days\",\"value\":68.78185185185185,\"statement\":\"The account was 68.78185185185185 days old at the order.\",\"derived\":null},\n    {\"field\":\"context.accounts_on_device_30d\",\"value\":1,\"statement\":\"One account used the device within the activity window.\",\"derived\":null},\n    {\"field\":\"context.email_root_other_accounts\",\"value\":0,\"statement\":\"No other account has a matching normalized email.\",\"derived\":null},\n    {\"field\":\"order.promotion_used\",\"value\":false,\"statement\":\"The order did not use a promotion.\",\"derived\":null},\n    {\"field\":\"context.geo_kmh_from_previous_attempt\",\"value\":0.0,\"statement\":\"The recorded implied speed from the previous attempt is zero.\",\"derived\":null},\n    {\"field\":\"context.bin_ip_country_mismatch\",\"value\":0,\"statement\":\"The card issuing country and IP country match.\",\"derived\":null},\n    {\"field\":\"context.cvv_mismatch\",\"value\":1,\"statement\":\"CVV verification failed.\",\"derived\":null},\n    {\"field\":\"context.processor_declines_card_24h\",\"value\":0,\"statement\":\"The card had no processor declines in the preceding window.\",\"derived\":null},\n    {\"field\":\"context.processor_declines_device_24h\",\"value\":0,\"statement\":\"The device had no processor declines in the preceding window.\",\"derived\":null},\n    {\"field\":\"context.attempts_user_24h\",\"value\":1,\"statement\":\"The account made one order attempt in the attempt window.\",\"derived\":null},\n    {\"field\":\"context.attempts_device_24h\",\"value\":1,\"statement\":\"The device had one order attempt in the attempt window.\",\"derived\":null},\n    {\"field\":\"context.email_domain_class\",\"value\":0,\"statement\":\"The email uses a common provider rather than a disposable domain.\",\"derived\":null},\n    {\"field\":\"context.is_first_attempt_user\",\"value\":0,\"statement\":\"This was not the account's first order attempt.\",\"derived\":null},\n    {\"field\":\"context.inr_disputes_opened_user\",\"value\":0,\"statement\":\"The account opened no earlier item-not-received disputes.\",\"derived\":null},\n    {\"field\":\"context.unauthorized_disputes_lost_user\",\"value\":0,\"statement\":\"No earlier unauthorized-use dispute was resolved against the platform.\",\"derived\":null},\n    {\"field\":\"context.never_pay_determined_user\",\"value\":0,\"statement\":\"There is no earlier never-pay determination on the account.\",\"derived\":null},\n    {\"field\":\"context.inr_claims_rejected_user\",\"value\":0,\"statement\":\"No earlier delivered-order item-not-received claim was resolved against the account.\",\"derived\":null},\n    {\"field\":\"context.shipped_at_decision\",\"value\":0,\"statement\":\"The order had not shipped at decision time.\",\"derived\":null}\n  ],\n  \"hypotheses\": [\n    {\n      \"explanation\":\"stolen_card\",\n      \"likelihood\":\"medium\",\n      \"reasoning\":\"The failed identity and issuer-authentication check supports unauthorized payment use, but does not identify which component failed. CVV failure alone does not establish stolen-card evidence under R03 because the countries match.\"\n    },\n    {\n      \"explanation\":\"household\",\n      \"likelihood\":\"medium\",\n      \"reasoning\":\"Multiple accounts shipping to the current home address plausibly reflect household sharing. A legitimate customer could fail verification, but household sharing neither qualifies for the address exception here nor overrides the failed check.\"\n    }\n  ],\n  \"disposition\":\"escalate\",\n  \"citations\":[\n    \"FP-2 \u00a76.2\",\n    \"R08\",\n    \"FP-2 \u00a76.4(b)\",\n    \"FP-2 \u00a76.3\",\n    \"FP-2 \u00a76.6(b)\",\n    \"FP-2 \u00a75.2\",\n    \"FP-2 \u00a75.3(b)\",\n    \"FP-2 \u00a76.5(a)\",\n    \"FP-2 \u00a72.5\"\n  ],\n  \"next_check\":\"none\",\n  \"memo\":\"R08 holds because three accounts used the shipping address. Although it is the current home address, its registration is too recent for the household exception. Linkage is the only adverse family; no other rule condition holds, and no earlier outcome settles the order. Household sharing is plausible, while CVV failure without geographic mismatch does not establish R03. The required id_check failed, so \u00a75.3(b) overrides the ordinary \u00a76.6(b) hold path and makes escalation standard; decline is also permitted. Recommend escalation before shipment, with linked-account scope limited by \u00a72.5. No further check is needed to decide this order.\"\n}",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 8747,
+  "input_tokens": 7331,
+  "output_tokens": 1416,
+  "unknown_usage_calls": 0
+ }
+}

@@ -1,0 +1,65 @@
+{
+ "attempts": 1,
+ "duration_ms": 46790,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "sol",
+  "backend": "codex",
+  "benchmark": "2026-10-final",
+  "case": "1671034716-baseline-145343-20250803T000000",
+  "cli_version": "codex-cli 0.159.2",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol",
+  "packet_sha256": "5d530a54e7e5971c4e71b53812654feb1f0cf65892be2a0aefaadd519ca6dbdb",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "codex",
+  "cli_version": "codex-cli 0.159.2",
+  "effort": "high",
+  "event_counts": {
+   "item.completed:agent_message": 1,
+   "thread.started": 1,
+   "turn.completed": 1,
+   "turn.started": 1
+  },
+  "input_tokens": 7298,
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol",
+  "n_error_events": 0,
+  "n_events": 4,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 1542,
+  "protocol_ok": true,
+  "tools_offered": null
+ },
+ "text": "{\n  \"claims\": [\n    {\n      \"field\": \"context.accounts_on_address_30d\",\n      \"value\": 3,\n      \"statement\": \"Three accounts have used the shipping address in the relevant window.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.ship_to_home\",\n      \"value\": 1,\n      \"statement\": \"The shipping address is the account's current home address.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.home_address_age_days\",\n      \"value\": 201.11761574074075,\n      \"statement\": \"The home address has been registered for 201.11761574074075 days.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.device_link_age_hours\",\n      \"value\": 4826.822777777777,\n      \"statement\": \"The device was first used on the account 4826.822777777777 hours before the order.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.geo_kmh_from_previous_attempt\",\n      \"value\": 0.0,\n      \"statement\": \"The recorded implied speed from the previous attempt is 0.0 km/h.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.bin_ip_country_mismatch\",\n      \"value\": 0,\n      \"statement\": \"The card issuing country and IP country do not differ.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.processor_declines_card_24h\",\n      \"value\": 0,\n      \"statement\": \"There were no processor declines on the card in the preceding window.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.processor_declines_device_24h\",\n      \"value\": 0,\n      \"statement\": \"There were no processor declines on the device in the preceding window.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.attempts_user_24h\",\n      \"value\": 1,\n      \"statement\": \"The account made one attempt in the relevant window.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.attempts_device_24h\",\n      \"value\": 1,\n      \"statement\": \"The device recorded one attempt in the relevant window.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.accounts_on_device_30d\",\n      \"value\": 1,\n      \"statement\": \"Only this account has activity on the device in the relevant window.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.email_root_other_accounts\",\n      \"value\": 0,\n      \"statement\": \"No other account has a matching normalized email.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.email_domain_class\",\n      \"value\": 0,\n      \"statement\": \"The email uses a common provider rather than a disposable domain.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.is_first_attempt_user\",\n      \"value\": 0,\n      \"statement\": \"This is not the account's first order attempt.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"order.promotion_used\",\n      \"value\": false,\n      \"statement\": \"The order does not use a promotion.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.inr_disputes_opened_user\",\n      \"value\": 0,\n      \"statement\": \"The account has opened no item-not-received disputes.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.unauthorized_disputes_lost_user\",\n      \"value\": 0,\n      \"statement\": \"No earlier unauthorized-use dispute was resolved against the platform.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.never_pay_determined_user\",\n      \"value\": 0,\n      \"statement\": \"No earlier plan has a never-pay determination.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"context.inr_claims_rejected_user\",\n      \"value\": 0,\n      \"statement\": \"No item-not-received claim was resolved against the account on a delivered order.\",\n      \"derived\": null\n    },\n    {\n      \"field\": \"decision.checks\",\n      \"value\": [],\n      \"statement\": \"No verification checks have been completed.\",\n      \"derived\": null\n    }\n  ],\n  \"hypotheses\": [\n    {\n      \"explanation\": \"household\",\n      \"likelihood\": \"high\",\n      \"reasoning\": \"Shared shipping to a long-established current home is the strongest benign explanation. The address meets the household exception, while device and normalized-email linkage are absent.\"\n    },\n    {\n      \"explanation\": \"stolen_card\",\n      \"likelihood\": \"low\",\n      \"reasoning\": \"The packet shows neither card/IP geography mismatch nor processor-decline activity. Shared delivery alone does not establish stolen-card use.\"\n    }\n  ],\n  \"disposition\": \"clear\",\n  \"citations\": [\n    \"R08\",\n    \"FP-2 \u00a76.4(b)\",\n    \"FP-2 \u00a76.2\",\n    \"FP-2 \u00a76.3\",\n    \"FP-2 \u00a76.6(c)\",\n    \"FP-2 \u00a710\"\n  ],\n  \"next_check\": \"none\",\n  \"memo\": \"R08 holds because three accounts use the shipping address, but \u00a76.4(b) excludes it from the family count: this is the current home, registered for 201.11761574074075 days. No other \u00a76.2 condition holds, and no earlier outcome settles the order under \u00a76.3. No checks have run, but none is required because no adverse family remains. Household sharing is more plausible than stolen-card use on these facts. Recommend clear under \u00a76.6(c); no next check is needed. This recommendation is advisory and sets no queue priority.\"\n}",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 8840,
+  "input_tokens": 7298,
+  "output_tokens": 1542,
+  "unknown_usage_calls": 0
+ }
+}

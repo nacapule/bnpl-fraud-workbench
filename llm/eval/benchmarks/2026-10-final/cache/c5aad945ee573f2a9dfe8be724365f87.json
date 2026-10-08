@@ -1,0 +1,65 @@
+{
+ "attempts": 1,
+ "duration_ms": 42291,
+ "failed_attempts": 0,
+ "identity": {
+  "arm": "sol",
+  "backend": "codex",
+  "benchmark": "2026-10-final",
+  "case": "1891170948-baseline-130001-20250611T000000",
+  "cli_version": "codex-cli 0.159.2",
+  "code_sha256": {
+   "core/actions.py": "9fb37b2d7ea65b534e40d56776852c13e2c0b8b9011f23c7767275a37ec53dc3",
+   "core/asof.py": "cff69f87a5c8d6c11e841266c9bd43773e72eeddadb9de1e56eb39ce08a0b24f",
+   "core/evidence.py": "47f218d70dff7070d9f170a6bfe5515628a15607c8a521f3041a5782cc2c8b8a",
+   "core/stats.py": "d6b2ee1372cb2dd2da7ca7471248c30170d72027c56444e245fb205d91ada4c9",
+   "llm/eval/harness.py": "20e02c8481e55d54d165a0e5d72969d7b95000f42cef8b9087b08e940c9ba46a",
+   "llm/eval/tokens.py": "231ae63152064260500eba1089aca9e3b42b22d013ea0c0a4b13bccb831e9d35",
+   "llm/eval/verifier.py": "74100d233dbdaccc44c619397d69aa1198e15e45f95442abea1c17a0ab8bb5ba",
+   "llm/memo.py": "488901e805de2fa512aa75aaaf41c1f63f606a8d710372d8cd4fef24f7aedaac",
+   "llm/packet.py": "19183c2b94c4f7a8d38860807ee487028ac54f2de64371b98e7aa1ed9a05a993",
+   "llm/referee.py": "e80cc067ad1eb6a5a46a657835f6e75729a88754749ade308351858ec90059ed"
+  },
+  "effort": "high",
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol",
+  "packet_sha256": "5b3d4cd69433b590e3afcbc82b9f06759973dc2f6784ebbee332d4773a829624",
+  "policy": "FP-2",
+  "policy_sha256": "0adab81137736fadd8b38204e5893f651d780a3af1debb63b10c99658b5f0f75",
+  "probe": "primary",
+  "prompt_sha256": "5bf273b25043a828abd6f6e2cf998a9ea75bd71303e552d270692f85db9c5c58",
+  "prompt_version": "memo_fp2_v2"
+ },
+ "outcome": "response",
+ "summary": {
+  "backend": "codex",
+  "cli_version": "codex-cli 0.159.2",
+  "effort": "high",
+  "event_counts": {
+   "item.completed:agent_message": 1,
+   "thread.started": 1,
+   "turn.completed": 1,
+   "turn.started": 1
+  },
+  "input_tokens": 7291,
+  "isolation": "b85557ffb6595db3661f101aadf49d49ec6b4899420dbeaea9f1c7c0f30d4bc8",
+  "model": "gpt-6.1-sol",
+  "n_error_events": 0,
+  "n_events": 4,
+  "n_file_events": 0,
+  "n_hook_events": 0,
+  "n_tool_events": 0,
+  "n_unrecognized_events": 0,
+  "output_tokens": 1338,
+  "protocol_ok": true,
+  "tools_offered": null
+ },
+ "text": "{\n  \"claims\": [\n    {\"field\":\"decision.checks\",\"value\":[],\"statement\":\"No verification checks have been completed.\",\"derived\":null},\n    {\"field\":\"context.account_age_days\",\"value\":0.0013425925925925925,\"statement\":\"The account was 0.0013425925925925925 days old at the order.\",\"derived\":null},\n    {\"field\":\"context.is_first_attempt_user\",\"value\":1,\"statement\":\"This was the account's first order attempt.\",\"derived\":null},\n    {\"field\":\"context.amount_over_category_p95\",\"value\":1.5662834597265427,\"statement\":\"The amount was 1.5662834597265427 times the category's earlier processor-approved amount percentile reference.\",\"derived\":null},\n    {\"field\":\"context.bin_ip_country_mismatch\",\"value\":0,\"statement\":\"The card issuing country and IP country matched.\",\"derived\":null},\n    {\"field\":\"context.avs_mismatch\",\"value\":0,\"statement\":\"AVS did not fail.\",\"derived\":null},\n    {\"field\":\"context.cvv_mismatch\",\"value\":0,\"statement\":\"CVV did not fail.\",\"derived\":null},\n    {\"field\":\"context.processor_declines_card_24h\",\"value\":0,\"statement\":\"There were no processor declines on the card in the preceding daily window.\",\"derived\":null},\n    {\"field\":\"context.processor_declines_device_24h\",\"value\":0,\"statement\":\"There were no processor declines on the device in the preceding daily window.\",\"derived\":null},\n    {\"field\":\"context.attempts_user_24h\",\"value\":1,\"statement\":\"The account had one attempt in the daily window including this order.\",\"derived\":null},\n    {\"field\":\"context.attempts_device_24h\",\"value\":1,\"statement\":\"The device had one attempt in the daily window including this order.\",\"derived\":null},\n    {\"field\":\"context.geo_kmh_from_previous_attempt\",\"value\":0.0,\"statement\":\"The recorded implied speed from the previous attempt was zero.\",\"derived\":null},\n    {\"field\":\"context.accounts_on_device_30d\",\"value\":1,\"statement\":\"Only this account had qualifying recent activity on the device.\",\"derived\":null},\n    {\"field\":\"context.accounts_on_address_30d\",\"value\":1,\"statement\":\"Only this account had qualifying recent orders to the address.\",\"derived\":null},\n    {\"field\":\"context.email_root_other_accounts\",\"value\":0,\"statement\":\"No other account shared the normalized email.\",\"derived\":null},\n    {\"field\":\"context.email_domain_class\",\"value\":0,\"statement\":\"The email domain was a common provider.\",\"derived\":null},\n    {\"field\":\"order.promotion_used\",\"value\":false,\"statement\":\"The order did not use a promotion.\",\"derived\":null},\n    {\"field\":\"context.unauthorized_disputes_lost_user\",\"value\":0,\"statement\":\"There were no earlier unauthorized-use disputes resolved against the platform.\",\"derived\":null},\n    {\"field\":\"context.never_pay_determined_user\",\"value\":0,\"statement\":\"There was no earlier never-pay determination.\",\"derived\":null},\n    {\"field\":\"context.inr_disputes_opened_user\",\"value\":0,\"statement\":\"The account had opened no earlier item-not-received disputes.\",\"derived\":null},\n    {\"field\":\"context.inr_claims_rejected_user\",\"value\":0,\"statement\":\"There were no rejected item-not-received claims on delivered orders.\",\"derived\":null},\n    {\"field\":\"context.installments_due_user\",\"value\":0,\"statement\":\"No account installment was due before the decision.\",\"derived\":null},\n    {\"field\":\"context.shipped_at_decision\",\"value\":1,\"statement\":\"The order had shipped by the decision.\",\"derived\":null}\n  ],\n  \"hypotheses\": [\n    {\n      \"explanation\":\"new_customer\",\n      \"likelihood\":\"high\",\n      \"reasoning\":\"A genuine new customer making a large first purchase best explains the available facts. Matching card geography, successful payment verification results and no elevated attempt activity support this explanation without proving legitimacy.\"\n    },\n    {\n      \"explanation\":\"synthetic_identity\",\n      \"likelihood\":\"low\",\n      \"reasoning\":\"A newly created account making a comparatively large first purchase could reflect a fabricated identity. However, there is no disposable email, duplicate normalized email or qualifying account linkage to corroborate that explanation.\"\n    }\n  ],\n  \"disposition\":\"clear\",\n  \"citations\":[\"FP-2 \u00a76.2\",\"R04\",\"FP-2 \u00a76.3\",\"FP-2 \u00a76.4\",\"FP-2 \u00a76.6(c)\",\"FP-2 \u00a78.1\",\"FP-2 \u00a710\"],\n  \"next_check\":\"none\",\n  \"memo\":\"Only R04 holds: this is a newly opened account's first attempt, with an amount above the category reference. R04 is Context, not an adverse family. No other rule holds, no household exception is needed, and no earlier outcome settles the order. No checks have completed or are required. Apply \u00a76.6(c): clear. A legitimate new customer's large purchase is more plausible than synthetic identity on these facts. With no installments due, non-payment cannot support an adverse recommendation. The order has already shipped; clearance is not a finding that it is proven legitimate.\"\n}",
+ "usage": {
+  "calls": 1,
+  "charged_tokens": 8629,
+  "input_tokens": 7291,
+  "output_tokens": 1338,
+  "unknown_usage_calls": 0
+ }
+}
