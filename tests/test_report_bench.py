@@ -69,7 +69,8 @@ RESULTS = {
             "cluster_bootstrap": [0.9, 0.1], "difference_cluster_bootstrap": [2.0, 3.0],
             "pass_share_interval": [0.1, 0.2, 0.3], "pair": [0.1, 0.2], "speed": 0.25,
             "cluster_sign_test_p": 1.5,
-            "claims": {"value": 12, "wilson": [0.1, 0.2]},
+            "claims": {"value": 12, "wilson": [0.1, 0.2],
+                       "text": {"value": "0.0242", "statement": "The account is new."}},
             "alias": {"source": "/bad/claims/value", "value": 12}},
 }
 
@@ -108,9 +109,10 @@ def bench(pointer: str, sources: Sources, form: str = "") -> str:
     ("/arms/opus/disagreement/hold -> needs_check", "", "61"),
     ("/pins/opus/model", "", "a-model"),
     ("/statistics/arms/sol/complete_pass/degenerate", "", "every case passed"),
-    # a claim's field is text
+    # a claim's field and statement are text
     ("/case_memos/[slot=never_pay]/claims/[field=context.account_age_days]/field", "",
      "context.account_age_days"),
+    ("/bad/claims/text/statement", "", "The account is new."),
     # keys holding / and ~ are escaped as ~1 and ~0, in selectors too
     ("/arms/opus/cases/case-1~1primary/outcome", "", "scored"),
     ("/arms/opus/cases/case-1~1primary/complete_pass", "", "yes"),
@@ -179,6 +181,7 @@ def test_a_benchmark_value_prints_in_its_kind(sources, pointer, form, text):
     ("/bad/cluster_sign_test_p", "num", "1.5 is not a p-value between 0 and 1"),
     ("/bad/alias", "", "a claim's value has no unit the results state"),
     ("/bad/claims/wilson", "bounds", "a claim's value has no unit the results state"),
+    ("/bad/claims/text/value", "", "a claim's value has no unit the results state"),
     ("/statistics/arms/opus/complete_pass/natural", "bounds", "prints with pct, not bounds"),
     ("/statistics/arms/opus/complete_pass/cluster_bootstrap", "pct",
      "a benchmark interval prints with bounds, not pct"),

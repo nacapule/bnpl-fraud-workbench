@@ -306,8 +306,9 @@ def bench_value(expression: str, sources: Sources) -> tuple[Value, str]:
     shares. A number is a share, a difference of shares or a sign test's p-value by its
     key (see :data:`BENCH_SHARES`), or else a whole count. Text and flags print as they
     are. Anything else fails: a null (a degenerate interval), a share outside 0 to 1, a
-    difference outside -1 to 1, an interval out of order, another fraction, anything but
-    text or a flag in a case memo's claims, however reached, another list or object."""
+    difference outside -1 to 1, an interval out of order, another fraction, a claim's value
+    in a case memo, in whatever type it is written, and anything else in its claims but text
+    or a flag, however reached, another list or object."""
     match = BENCH.fullmatch(expression)
     if not match:
         raise KeyError(f"{expression!r} is not <benchmark id>:<JSON pointer>")
@@ -317,7 +318,7 @@ def bench_value(expression: str, sources: Sources) -> tuple[Value, str]:
                        "results.json)")
     node, parent, key, trail = _walk(sources.benchmarks[name], pointer, name)
     where = f"benchmark {name!r} {pointer}"
-    if "claims" in trail and not isinstance(node, str | bool):
+    if "claims" in trail and (key == "value" or not isinstance(node, str | bool)):
         raise KeyError(f"{where}: a claim's value has no unit the results state; print the "
                        "claim's statement instead")
     if node is None:
