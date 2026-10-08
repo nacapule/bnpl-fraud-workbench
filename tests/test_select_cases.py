@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import shutil
+from collections import Counter
 from pathlib import Path
 
 import pandas as pd
@@ -228,7 +229,8 @@ def mini_phases(tmp_path, monkeypatch):
     monkeypatch.setattr(select_cases, "PHASES", phases)
     monkeypatch.setattr(select_cases, "BENCHMARKS", tmp_path / "benchmarks")
     monkeypatch.setattr(harness, "SIZES", {**harness.SIZES, "development_cases": 12,
-                                           "final_cases": 18, "probe_cases": 3})
+                                           "final_cases": 18, "final_axes": {"review": 18},
+                                           "probe_cases": 3})
     (tmp_path / "benchmarks").mkdir()
 
 
@@ -293,6 +295,7 @@ def test_review_decisions_in_the_pipelines_pickle_are_read(tmp_path, mini_phases
     ("development", 35244829, "baseline"),      # a final seed in development
     ("development", 1041, "fraud_mix_shift"),   # development uses baseline worlds only
     ("final", 1041, "baseline"),                # a development seed in the final cohort
+    ("final", 35244829, "lag_half"),            # final cases come from baseline worlds too
 ])
 def test_a_phase_refuses_worlds_outside_its_seeds_and_families(tmp_path, mini_phases,
                                                                phase, seed, family):
@@ -302,3 +305,198 @@ def test_a_phase_refuses_worlds_outside_its_seeds_and_families(tmp_path, mini_ph
     with pytest.raises(ValueError):
         select_cases.build("t-x", phase, [world_dir], rng_seed=1, development="t-dev")
     assert not (tmp_path / "benchmarks" / "t-x").exists()
+
+
+# ------------------------------------------------------- decisions at check completions
+
+
+def checked(outcome: str, check: str = "id_check") -> tuple[CheckResult, ...]:
+    return (CheckResult(Check(check), CheckOutcome(outcome),
+                        pd.Timestamp("2025-06-01 12:00").to_pydatetime()),)
+
+
+def two_axis_pool() -> pd.DataFrame:
+    """The synthetic world's review decisions, and for every second order a decision
+    after its id_check: failed for the ring, passed for the others."""
+    review = pool(1041)
+    later = review.iloc[::2].copy()
+    later["axis"] = "check_completed"
+    later["case_id"] = later["case_id"] + "-after"
+    fraud = later["latent_class"].eq("fraud")
+    later["check_outcome"] = fraud.map({True: "failed", False: "passed"})
+    later["stratum"] = [
+        select_cases.check_stratum(checked(outcome), {"decline" if outcome == "failed"
+                                                      else "clear"}, latent)
+        for outcome, latent in zip(later["check_outcome"], later["latent_class"], strict=True)]
+    return pd.concat([review, later], ignore_index=True)
+
+
+def test_check_strata_name_the_checks_the_standard_and_the_latent_class() -> None:
+    both = checked("passed") + checked("failed", "contact")
+    assert select_cases.check_stratum(both, {"escalate"}, "fraud") == \
+        "after_check:contact=failed+id_check=passed:escalate:fraud"
+    assert select_cases.check_outcome(both) == "failed"
+    assert select_cases.check_outcome(checked("passed")) == "passed"
+    with pytest.raises(ValueError):
+        select_cases.check_outcome(())
+
+
+def test_the_axes_share_the_cluster_cap_and_each_fills_its_count() -> None:
+    frame = two_axis_pool()
+    chosen = select(frame, {"review": 8, "check_completed": 4}, rng_seed=0)
+    assert chosen["axis"].value_counts().to_dict() == {"review": 8, "check_completed": 4}
+    for key in ("account_key", "cluster"):  # two per group over both axes
+        assert chosen[key].value_counts().max() <= MAX_PER_CLUSTER
+    assert set(chosen.loc[chosen["axis"] == "review", "stratum"]) == {
+        "P-STOLEN", "legitimate:traveller", "legitimate:new_customer", "legitimate:other"}
+    assert set(chosen.loc[chosen["axis"] == "check_completed", "check_outcome"]) == {
+        "passed", "failed"}
+    # an int asks for review decisions only, and the other axis's rows play no part
+    assert select(frame, 8, rng_seed=0).equals(select(pool(1041), 8, rng_seed=0))
+    with pytest.raises(ValueError, match="unknown decision-point axes"):
+        select(frame, {"later": 2}, rng_seed=0)
+
+
+def test_every_check_outcome_gets_its_minimum_or_the_selection_is_refused() -> None:
+    sizes = {"p1": 20, "p2": 20, "p3": 20, "f1": 30}
+    group = {"p1": "passed", "p2": "passed", "p3": "passed", "f1": "failed"}
+    quota = select_cases._allocation(sizes, 20)
+    assert quota == {"f1": 5, "p1": 5, "p2": 5, "p3": 5}
+    moved = select_cases._with_minimum(quota, sizes, group, 8)
+    assert moved["f1"] == 8 and sum(moved.values()) == 20
+    assert min(moved.values()) >= 1
+    with pytest.raises(ValueError, match="cases after a failed check"):
+        select_cases._with_minimum(quota, {**sizes, "f1": 6}, group, 8)
+    with pytest.raises(ValueError, match="cannot give"):
+        select_cases._with_minimum({"p1": 1, "f1": 1}, {"p1": 5, "f1": 5},
+                                   {"p1": "passed", "f1": "failed"}, 2)
+    frame = two_axis_pool()
+    chosen = select(frame, {"review": 8, "check_completed": 6}, rng_seed=0, min_per_outcome=3)
+    assert (chosen.loc[chosen["axis"] == "check_completed", "check_outcome"]
+            .value_counts().min() >= 3)
+
+
+def test_the_axes_are_weighted_by_their_share_of_eligible_decisions() -> None:
+    frame = two_axis_pool()
+    axes = select_cases.eligible_axes(frame, {"review": 8, "check_completed": 4},
+                                      exclude_accounts={"1041:0"})
+    # account 0's three review decisions and two decisions after a check are excluded
+    assert axes["review"] == {"cases": 8, "eligible": 87, "share": 87 / 130}
+    assert axes["check_completed"] == {"cases": 4, "eligible": 43, "share": 43 / 130}
+    assert abs(sum(item["share"] for item in axes.values()) - 1) < 1e-12
+
+
+def subset_source(axis: str, n: int, strata: int, accounts: int) -> list[dict]:
+    return [{"case_id": f"{axis}-{i}", "stratum": f"{axis}-s{i % strata}",
+             "account": f"1:{i % accounts}", "episode": None, "axis": axis}
+            for i in range(n)]
+
+
+def test_the_subset_rule_goes_round_the_strata_in_hash_order_within_the_cap() -> None:
+    sources = {"dev": subset_source("review", 12, 4, 12),
+               "dev-checks": subset_source("check_completed", 9, 3, 3)}
+    picked = select_cases.subset_cases(sources, {"dev": 4, "dev-checks": 3})
+    assert picked == select_cases.subset_cases(sources, {"dev": 4, "dev-checks": 3})
+    by_source = {name: [case for source, case in picked if source == name] for name in sources}
+    assert len({case["stratum"] for case in by_source["dev"]}) == 4  # one per stratum
+    assert len({case["stratum"] for case in by_source["dev-checks"]}) == 3
+    accounts = pd.Series([case["account"] for _, case in picked]).value_counts()
+    assert accounts.max() <= MAX_PER_CLUSTER
+    crowded = {"dev": subset_source("review", 6, 3, 1)}  # one account: two cases at most
+    with pytest.raises(ValueError, match="gives 2 of the 3"):
+        select_cases.subset_cases(crowded, {"dev": 3})
+
+
+R03 = {"bin_ip_country_mismatch": 1, "avs_mismatch": 1}  # one Card condition: row (b)
+
+
+def with_completions(directory: Path, monkeypatch) -> None:
+    """Keep the mini world's review decisions as the pipeline's pickle, and stand in for
+    the replay: every odd order's id_check answers two hours after its first decision,
+    failed for orders divisible by three, passed otherwise."""
+    frame = pd.read_csv(directory / "review_decisions.csv")
+    frame["decision_at"] = pd.to_datetime(frame["decision_at"])
+    frame["checks"] = [[] for _ in range(len(frame))]
+    frame.to_pickle(directory / "review_decisions.pkl")
+
+    def completions(world_dir, kept, *, seed, tables=None, **_):
+        rows = []
+        for row in pd.read_csv(Path(world_dir) / "review_decisions.csv").itertuples():
+            if row.order_id % 2 == 0:
+                continue
+            at = pd.Timestamp(row.decision_at) + pd.Timedelta(hours=2)
+            outcome = "failed" if row.order_id % 3 == 0 else "passed"
+            rows.append({**QUIET, **R03, "order_id": row.order_id, "user_id": row.user_id,
+                         "merchant_id": row.merchant_id, "decision_at": at,
+                         "assembled_at": pd.Timestamp(row.decision_at),
+                         "checks": (CheckResult(Check("id_check"), CheckOutcome(outcome),
+                                                at.to_pydatetime()),),
+                         "disposition": "decline" if outcome == "failed" else "clear",
+                         "first_decision_at": pd.Timestamp(row.decision_at)})
+        return pd.DataFrame(rows)
+
+    monkeypatch.setattr(select_cases.check_points, "completion_decisions", completions)
+
+
+def test_a_final_cohort_takes_both_axes(tmp_path, mini_phases, monkeypatch) -> None:
+    monkeypatch.setattr(harness, "SIZES", {**harness.SIZES, "final_cases": 18,
+                                           "final_axes": {"review": 12, "check_completed": 6},
+                                           "min_cases_per_check_outcome": 2,
+                                           "development_check_cases": 6})
+    dev = mini_world_with_reviews(tmp_path / "dev", 1041)
+    with_completions(dev, monkeypatch)
+    select_cases.build("t-dev", "development", [dev], rng_seed=1)
+    select_cases.build("t-dev-checks", "development", [dev], rng_seed=1,
+                       axis="check_completed")
+    finals = [mini_world_with_reviews(tmp_path / f"final-{seed}", seed)
+              for seed in (35244829, 931592514, 2066792625)]
+    for final in finals:
+        with_completions(final, monkeypatch)
+    definition = select_cases.build("t-final", "final", finals, rng_seed=2,
+                                    development=["t-dev", "t-dev-checks"])
+    axes = pd.Series([case["axis"] for case in definition["cases"]]).value_counts()
+    assert axes.to_dict() == {"review": 12, "check_completed": 6}
+    assert set(definition["axes"]) == {"review", "check_completed"}
+    assert abs(sum(item["share"] for item in definition["axes"].values()) - 1) < 1e-12
+    bench = tmp_path / "benchmarks" / "t-final"
+    views = json.loads((bench / "referee.json").read_text())
+    outcomes = []
+    for case in definition["cases"]:
+        packet = json.loads((bench / "packets" / f"{case['case_id']}.json").read_text())
+        if case["axis"] == "check_completed":
+            assert packet["decision"]["point"] == "check_completed"
+            (done,) = packet["decision"]["checks"]
+            outcomes.append(done["outcome"])
+            assert case["stratum"] == (f"after_check:id_check={done['outcome']}:"
+                                       f"{views[case['case_id']]['standard'][0]}:"
+                                       f"{case['latent']['class']}")
+        else:
+            assert packet["decision"]["point"] == "review"
+    assert min(Counter(outcomes).values()) >= 2
+    earlier = {case["account"] for name in ("t-dev", "t-dev-checks") for case in json.loads(
+        (tmp_path / "benchmarks" / name / "benchmark.json").read_text())["cases"]}
+    assert not earlier & {case["account"] for case in definition["cases"]}
+
+
+def test_a_development_subset_draws_from_both_sets(tmp_path, mini_phases, monkeypatch) -> None:
+    monkeypatch.setattr(harness, "SIZES", {**harness.SIZES, "development_check_cases": 6,
+                                           "development_combined": {"review": 4,
+                                                                    "check_completed": 3}})
+    dev = mini_world_with_reviews(tmp_path / "dev", 1041)
+    with_completions(dev, monkeypatch)
+    select_cases.build("t-dev", "development", [dev], rng_seed=1)
+    checks = select_cases.build("t-dev-checks", "development", [dev], rng_seed=1,
+                                axis="check_completed")
+    assert checks["axes"] == {"check_completed": {"cases": 6, "eligible": 10, "share": 1.0}}
+    subset = select_cases.combine("t-dev-both", ["t-dev", "t-dev-checks"], arms=["opus"])
+    assert set(subset["arms"]) == {"opus"}
+    assert subset["drawn_from"]["counts"] == {"t-dev": 4, "t-dev-checks": 3}
+    assert {axis: item["cases"] for axis, item in subset["axes"].items()} == {
+        "review": 4, "check_completed": 3}
+    root = tmp_path / "benchmarks"
+    for case in subset["cases"]:
+        source = "t-dev-checks" if case["axis"] == "check_completed" else "t-dev"
+        assert (root / "t-dev-both" / "packets" / f"{case['case_id']}.json").read_bytes() == \
+            (root / source / "packets" / f"{case['case_id']}.json").read_bytes()
+    with pytest.raises(ValueError, match="unknown arms"):
+        select_cases.combine("t-dev-other", ["t-dev", "t-dev-checks"], arms=["nobody"])

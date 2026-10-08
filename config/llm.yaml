@@ -12,8 +12,12 @@ arms:                               # one name per model; effort is always expli
   opus: {backend: claude, model: claude-opus-5-5, effort: high}
 
 benchmark:
-  development_cases: 40             # from development seeds; at most two prompt versions
+  development_cases: 40             # review decisions from development seeds
+  development_check_cases: 25       # decisions at check completions from development seeds
+  development_combined: {review: 20, check_completed: 20}  # drawn from the two above
   final_cases: 200                  # from the test windows of at least min_final_seeds
+  final_axes: {review: 120, check_completed: 80}  # the final cases by decision point
+  min_cases_per_check_outcome: 20   # final cases after each check outcome in the pool
   min_final_seeds: 3
   max_cases_per_cluster: 2          # per account and per episode
   probe_cases: 40                   # invariance probes on final cases
