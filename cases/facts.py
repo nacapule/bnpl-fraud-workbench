@@ -2,8 +2,9 @@
 
 :func:`load_run` reads what the run kept: the world's tables, the incumbent's review
 decisions, the context rows its checkout routing read and every test-window order's fate
-(``pipeline.KEPT_FRAMES``), and the incumbent's tuned thresholds. :func:`build` writes,
-per file of the protocol's ``cases.files``, and per alert:
+(``pipeline.KEPT_FRAMES``), and the incumbent's tuned thresholds, each checked against the
+run's lineage (the replay stage's world, tuning result and kept files) and the world's
+manifest. :func:`build` writes, per file of the protocol's ``cases.files``, and per alert:
 
 * ``publication``: order id, alert id, policy version, selection hash, tier and the
   candidate counts (:class:`cases.rule.Pick`);
@@ -47,8 +48,9 @@ from cases.rule import Pick, Rule, RuleError, load_rule, population, select
 from core import actions, asof, config, evidence, ledger
 from core import protocol as protocol_module
 from core import world as world_module
-from core.results import canonical_json
+from core.results import canonical_json, file_sha256
 from pipeline import KEPT_FRAMES, manifest_identity
+from queue_sim import stage
 from rules import engine
 
 DECIMALS = 4
@@ -80,6 +82,7 @@ class Run:
     review_threshold: float | None
     decline_threshold: float | None
     run_dir: Path
+    results_dir: Path
     _tables: dict[str, pd.DataFrame] | None = field(default=None, repr=False)
 
     @property
@@ -105,8 +108,6 @@ class Run:
 def _check_cell(rule: Rule, protocol: protocol_module.Protocol) -> None:
     """The kept frames are the incumbent's main run (base level, current layout, main
     variant, test window): refuse a case cell they are not."""
-    from queue_sim import stage
-
     policy_cfg = config.load("policy")
     staffing = stage.staffing(policy_cfg)
     try:
@@ -122,9 +123,32 @@ def _check_cell(rule: Rule, protocol: protocol_module.Protocol) -> None:
         raise RuleError(f"the replay keeps frames only for {kept}; the case cell names {wrong}")
 
 
-def load_run(run_dir: Path, protocol: protocol_module.Protocol | None = None) -> Run:
+def _check_lineage(run_dir: Path, results_dir: Path, world: str,
+                   manifest: Mapping[str, Any]) -> None:
+    """The kept files, the tuning result and the world are those the run's replay stage
+    recorded, and the world's tables match its manifest."""
+    replay = json.loads((run_dir / "lineage.json").read_text())["stages"]["replay"]
+    expected = {f"worlds/{world}/{name}": replay["outputs"].get(f"worlds/{world}/{name}")
+                for name in KEPT.values()}
+    problems = [path for path, digest in expected.items()
+                if digest is None or file_sha256(run_dir / path) != digest]
+    if file_sha256(results_dir / "tune.json") != replay["inputs"].get("results/tune.json"):
+        problems.append(str(results_dir / "tune.json"))
+    if manifest_identity(manifest) != replay["inputs"].get(f"world:{world}"):
+        problems.append(f"world {world}")
+    world_dir = run_dir / "worlds" / world
+    problems += [f"{name}.csv" for name, entry in manifest["tables"].items()
+                 if file_sha256(world_dir / f"{name}.csv") != entry["sha256"]]
+    if problems:
+        raise RuleError(f"not what the run's replay used or its manifest names: {problems}")
+
+
+def load_run(run_dir: Path, protocol: protocol_module.Protocol | None = None,
+             results_dir: Path | None = None) -> Run:
     """The canonical world of a pipeline run directory (``runs/<name>``) and what its
-    replay kept, for the protocol's case cell."""
+    replay kept, for the protocol's case cell. ``results_dir`` is where the run wrote its
+    results (default: ``<run>/results``, or for a run that published them the directory
+    its lineage names)."""
     run_dir = Path(run_dir)
     protocol = protocol or protocol_module.load_protocol()
     rule = load_rule(protocol.raw)
@@ -134,10 +158,20 @@ def load_run(run_dir: Path, protocol: protocol_module.Protocol | None = None) ->
     world_dir = run_dir / "worlds" / rule.world
     missing = [name for name in ("manifest.json", *KEPT.values())
                if not (world_dir / name).exists()]
+    if not (run_dir / "lineage.json").exists():
+        missing.append("lineage.json")
     if missing:
-        raise RuleError(f"{world_dir} lacks {missing}: run the pipeline's replay stage")
+        raise RuleError(f"{run_dir} lacks {missing}: run the pipeline's replay stage")
+    if results_dir is None:
+        results_dir = run_dir / "results"
+        if not (results_dir / "tune.json").exists():
+            results_dir = Path(json.loads((run_dir / "lineage.json").read_text())
+                               .get("results_dir") or results_dir)
+    results_dir = Path(results_dir)
+    manifest = json.loads((world_dir / "manifest.json").read_text())
+    _check_lineage(run_dir, results_dir, rule.world, manifest)
     frames = {key: pd.read_pickle(world_dir / name) for key, name in KEPT.items()}
-    tune = json.loads((run_dir / "results" / "tune.json").read_text())
+    tune = json.loads((results_dir / "tune.json").read_text())
     chosen = [row for row in tune["tables"]["tune.chosen"]
               if row["seed"] == rule.seed and row["policy"] == rule.replay["policy"]]
     if len(chosen) != 1 or chosen[0]["chosen_version"] is None:
@@ -147,12 +181,12 @@ def load_run(run_dir: Path, protocol: protocol_module.Protocol | None = None) ->
     if recorded and recorded != {version}:
         raise RuleError(f"review decisions name policy versions {sorted(recorded)}, the "
                         f"tuned incumbent is {version}")
-    return Run(rule=rule, protocol=protocol, world_dir=world_dir,
-               manifest=json.loads((world_dir / "manifest.json").read_text()),
+    return Run(rule=rule, protocol=protocol, world_dir=world_dir, manifest=manifest,
                fates=frames["fates"], reviews=frames["reviews"],
                checkout_rows=frames["checkout_rows"], policy_version=version,
                review_threshold=_number(chosen[0]["review_threshold"]),
-               decline_threshold=_number(chosen[0]["decline_threshold"]), run_dir=run_dir)
+               decline_threshold=_number(chosen[0]["decline_threshold"]), run_dir=run_dir,
+               results_dir=results_dir)
 
 
 def _number(value: Any) -> float | None:
@@ -503,7 +537,8 @@ def write(facts: Mapping[str, Mapping[str, Any]], out_dir: Path) -> list[Path]:
 # --------------------------------------------------------------------- memo packets
 
 
-def memo_inputs(run_dir: Path, protocol: protocol_module.Protocol | None = None) -> pd.DataFrame:
+def memo_inputs(run_dir: Path, protocol: protocol_module.Protocol | None = None,
+                results_dir: Path | None = None) -> pd.DataFrame:
     """The selected alerts as the memo drafter's packets need them: one row per selected
     alert with ``file``, ``slot``, ``tier``, ``alert_id``, ``policy_version``,
     ``evidence_at`` and the saved row the replay decided on (``core.asof`` KEY_COLUMNS +
@@ -511,7 +546,7 @@ def memo_inputs(run_dir: Path, protocol: protocol_module.Protocol | None = None)
     verification check had completed at these decisions (checks start with a hold), so
     the packets carry none. ``llm.packet.build_packets(tables, frame[ROW_COLUMNS])``
     builds them."""
-    run = load_run(run_dir, protocol)
+    run = load_run(run_dir, protocol, results_dir)
     records = []
     for slot, pick in run.picks().items():
         if not pick.selected:

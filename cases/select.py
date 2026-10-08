@@ -1,6 +1,6 @@
 """Choose the case files' alerts and write their facts.
 
-    python -m cases.select --run runs/final [--out cases/facts] [--no-changes]
+    python -m cases.select --run runs/final [--results DIR] [--out cases/facts] [--no-changes]
 
 Reads the protocol's ``cases`` rule and the run's canonical world with what its replay
 kept (:mod:`cases.facts`), selects one alert per slot (:mod:`cases.rule`), runs each
@@ -36,11 +36,14 @@ def main(argv: list[str] | None = None) -> int:
                                      description=__doc__.splitlines()[0])
     parser.add_argument("--run", type=Path, required=True,
                         help="a pipeline run directory (runs/<name>)")
+    parser.add_argument("--results", type=Path, default=None,
+                        help="the run's results directory (default: <run>/results, else the "
+                             "one its lineage names)")
     parser.add_argument("--out", type=Path, default=FACTS, help="where the facts go")
     parser.add_argument("--no-changes", action="store_true",
                         help="leave out the tested changes (no replays)")
     args = parser.parse_args(argv)
-    run = facts_module.load_run(args.run)
+    run = facts_module.load_run(args.run, results_dir=args.results)
     picks = run.picks()
     for pick in picks.values():
         print(describe(pick))

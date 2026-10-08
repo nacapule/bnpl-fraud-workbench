@@ -499,7 +499,7 @@ def _check_incumbent(run: Run, incumbent: Measured) -> None:
     mine = incumbent.result.fates.reset_index(drop=True)
     if not kept.equals(mine):
         raise RuleError("the incumbent replayed for the tested changes differs from the run's")
-    path = run.run_dir / "results" / "replay.json"
+    path = run.results_dir / "replay.json"
     if not path.exists():
         return
     rows = [row for row in json.loads(path.read_text())["tables"]["replay.outcomes"]

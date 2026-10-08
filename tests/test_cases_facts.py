@@ -24,7 +24,9 @@ from cases import facts as facts_module
 from cases import select as select_module
 from cases.rule import RuleError
 from core import asof, config, world
+from core.results import file_sha256
 from model.train import RuleScorer
+from pipeline import manifest_identity
 from queue_sim import policies, stage
 from rules import definitions, engine
 
@@ -74,7 +76,22 @@ def make_run(tmp: Path, tables, review: float, decline: float) -> Path:
          "review_threshold": review, "decline_threshold": decline},
         {"seed": 416, "policy": "logistic", "chosen_version": "other",
          "review_threshold": 0.5, "decline_threshold": None}]}}))
+    write_lineage(tmp)
     return tmp
+
+
+def write_lineage(tmp: Path) -> None:
+    """The replay stage's record of what it read and kept, as the pipeline writes it."""
+    world_dir = tmp / "worlds" / "416-baseline"
+    manifest = json.loads((world_dir / "manifest.json").read_text())
+    kept = ("review_decisions.pkl", "checkout_rows.pkl", "incumbent_fates.pkl")
+    (tmp / "lineage.json").write_text(json.dumps({
+        "results_dir": str(tmp / "results"),
+        "stages": {"replay": {
+            "inputs": {"results/tune.json": file_sha256(tmp / "results" / "tune.json"),
+                       "world:416-baseline": manifest_identity(manifest)},
+            "outputs": {f"worlds/416-baseline/{name}": file_sha256(world_dir / name)
+                        for name in kept}}}}))
 
 
 @pytest.fixture(scope="module")
@@ -360,15 +377,29 @@ def test_a_run_without_the_tuned_incumbent_or_its_frames_is_refused(declines, tm
     tune = json.loads((copy / "results" / "tune.json").read_text())
     tune["tables"]["tune.chosen"][0]["chosen_version"] = "elsewhere"
     (copy / "results" / "tune.json").write_text(json.dumps(tune))
+    with pytest.raises(RuleError, match="not what the run's replay used"):
+        facts_module.load_run(copy)  # the tuning result is not the one the replay read
+    write_lineage(copy)
     with pytest.raises(RuleError, match="policy versions"):
         facts_module.load_run(copy)
     tune["tables"]["tune.chosen"] = tune["tables"]["tune.chosen"][1:]
     (copy / "results" / "tune.json").write_text(json.dumps(tune))
+    write_lineage(copy)
     with pytest.raises(RuleError, match="no tuned incumbent_rules"):
         facts_module.load_run(copy)
     (copy / "worlds" / "416-baseline" / "checkout_rows.pkl").unlink()
     with pytest.raises(RuleError, match="checkout_rows.pkl"):
         facts_module.load_run(copy)
+
+
+def test_kept_files_or_tables_other_than_the_runs_are_refused(declines, tmp_path):
+    for target in ("worlds/416-baseline/review_decisions.pkl", "worlds/416-baseline/plans.csv"):
+        copy = tmp_path / target.replace("/", "_")
+        shutil.copytree(declines, copy)
+        with (copy / target).open("ab") as handle:
+            handle.write(b"\n")
+        with pytest.raises(RuleError, match="not what the run's replay used"):
+            facts_module.load_run(copy)
 
 
 # ------------------------------------------------------------------ memo packets
