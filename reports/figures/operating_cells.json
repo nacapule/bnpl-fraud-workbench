@@ -19,7 +19,7 @@
         "table": "evaluate.flips",
         "value": null
       },
-      "label": "baseline, base allotment",
+      "label": "primary cell",
       "ltv_cents": 1500,
       "name": "primary",
       "note": {
@@ -988,7 +988,7 @@
         "table": "evaluate.flips",
         "value": true
       },
-      "label": "fulfilment lag doubled",
+      "label": "shipping time doubled",
       "ltv_cents": 1500,
       "name": "lag_double",
       "note": {
@@ -1311,7 +1311,7 @@
         "table": "evaluate.flips",
         "value": true
       },
-      "label": "fulfilment lag halved",
+      "label": "shipping time halved",
       "ltv_cents": 1500,
       "name": "lag_half",
       "note": {
@@ -2603,7 +2603,7 @@
         "table": "evaluate.flips",
         "value": true
       },
-      "label": "evening shift layout",
+      "label": "evening layout",
       "ltv_cents": 1500,
       "name": "redesigned_layout",
       "note": {
@@ -2926,7 +2926,7 @@
         "table": "evaluate.flips",
         "value": true
       },
-      "label": "customer value $5",
+      "label": "lifetime-value proxy, low ($5)",
       "ltv_cents": 500,
       "name": "ltv_5_usd",
       "note": {
@@ -3249,7 +3249,7 @@
         "table": "evaluate.flips",
         "value": true
       },
-      "label": "customer value $45",
+      "label": "lifetime-value proxy, high ($45)",
       "ltv_cents": 4500,
       "name": "ltv_45_usd",
       "note": {

@@ -17,7 +17,7 @@ not assess (no incumbent point), are left out of the figure and recorded in the 
 with the reason.
 
 The charts, all in money the recommendation rule uses (rule net contribution:
-ledger net after the friction cost, less the analyst allotment):
+ledger net minus the lost-customer cost and the allotment cost):
 
 ``frontier``
     In the primary cell, each policy's fraud and abuse loss in basis points of GMV
@@ -74,14 +74,14 @@ LABELS = {
     "expected_loss": "expected loss",
 }
 CELL_LABELS = {
-    "primary": "baseline, base allotment",
+    "primary": "primary cell",
     "acquisition_surge": "acquisition surge",
     "fraud_mix_shift": "fraud-mix shift",
-    "lag_half": "fulfilment lag halved",
-    "lag_double": "fulfilment lag doubled",
+    "lag_half": "shipping time halved",
+    "lag_double": "shipping time doubled",
     "low": "low allotment",
     "high": "high allotment",
-    "redesigned_layout": "evening shift layout",
+    "redesigned_layout": "evening layout",
     "base_weak_verification": "weak verification",
 }
 CRITERIA = {"lost_mean": "over the lost-customer cap",
@@ -272,8 +272,9 @@ def collect_operating_cells(summary: Mapping[str, Any], protocol: Mapping[str, A
             "note": _cell_of(summary, FLIPS, where, "note"),
             "policies": [],
         }
-        if row["cell"].startswith("ltv_"):
-            cell["label"] = f"customer value ${row['ltv_cents'] / 100:g}"
+        if row["varies"] == "ltv":
+            level = "low" if row["ltv_cents"] < primary["ltv_cents"] else "high"
+            cell["label"] = f"lifetime-value proxy, {level} (${row['ltv_cents'] / 100:g})"
         for policy in challengers:
             point: dict[str, Any] = {"policy": policy, "label": _label(policy),
                                      **_standing(summary, row["cell"], policy)}
@@ -476,7 +477,7 @@ def draw_seed_spread(data: Mapping[str, Any]):
     figure, axes = _figure(
         8.4, 4.6, "Paired difference from the incumbent, seed by seed",
         "Baseline family, base allotment, test window: each dot is one seed's rule net "
-        "contribution (ledger net after the friction cost, less the analyst allotment) minus "
+        "contribution (ledger net minus the lost-customer cost and the allotment cost) minus "
         "the incumbent's on the same world, per 1,000 orders decided; the bar is the mean "
         "over seeds, the count at the right how many seeds come out above the incumbent. The "
         "row labels say which policy the rule recommends and which fail an eligibility "
@@ -521,13 +522,13 @@ def draw_operating_cells(data: Mapping[str, Any]):
     cells = data["cells"]
     figure, axes = _figure(
         8.4, 3.0 + 0.34 * len(cells), "Where the recommendation holds: every operating cell",
-        "Each challenger's mean rule net contribution (ledger net after the friction cost, "
-        "less the analyst allotment) minus the incumbent's, per 1,000 orders decided, with the "
+        "Each challenger's mean rule net contribution (ledger net minus the lost-customer cost "
+        "and the allotment cost) minus the incumbent's, per 1,000 orders decided, with the "
         "recommendation rule applied in every operating cell on its own (the first row is the "
         "primary cell). Hollow: fails an eligibility criterion in that cell; ringed: the "
         "rule's recommendation there. At the right, the cell's outcome and the best eligible "
         "challenger, or the best of all when none is eligible.",
-        left=0.235, right=0.77, bottom=0.13)
+        left=0.27, right=0.77, bottom=0.13)
     hurdle = data["hurdle_usd"]["value"] * 100
     rows = list(range(len(cells)))[::-1]
     for y, cell in zip(rows, cells, strict=True):
