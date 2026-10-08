@@ -10,6 +10,12 @@ reviewer with standard verification) on the test window.
 
 ## The queue
 
+How each policy routed the window's orders at checkout, totals over the final seeds' worlds:
+
+{{ table:replay.outcomes where family=baseline capacity_level=base layout=current history=policy reviewer=evidence verification=verification sum orders, fraud_declined_checkout, legitimate_declined_checkout, legitimate_blocked_checkout, reviews by policy | policy "Policy" label, orders "Orders" count, fraud_declined_checkout "Fraud declined at checkout" count, legitimate_declined_checkout "Legitimate declined at checkout" count, legitimate_blocked_checkout "Legitimate refused for a blocked account" count, reviews "Sent to review" count, rows_count "Worlds" count }}
+
+*Fraud declined at checkout* counts fraud orders declined there, including those refused because review had already blocked the account; *legitimate refused for a blocked account* counts legitimate orders refused that way. An order whose label is not yet known is in none of these columns. Every other order went through; one sent to review shipped unless the analyst decided or held it first.
+
 {{ table:replay.outcomes where family=baseline capacity_level=base layout=current history=policy reviewer=evidence verification=verification sum reviews, holds, checks_run, escalations, accounts_blocked, decided_after_shipping by policy | policy "Policy" label, reviews "Reviews" count, holds "Holds" count, checks_run "Checks" count, escalations "Escalations" count, accounts_blocked "Accounts blocked" count, decided_after_shipping "Decided after shipping" count, rows_count "Worlds" count }}
 
 *Reviews:* orders that entered the queue. *Holds:* orders paused for verification (at most {{ config:policy:actions.hold_max_hours }} hours; an order the checks have not cleared by then is cancelled before it ships). *Checks:* verification checks started. *Escalations:* declines that also blocked linked accounts and added {{ config:policy:actions.senior_review_minutes }} minutes of senior review. *Accounts blocked:* distinct accounts whose later orders were refused. *Decided after shipping:* reviews first decided after the goods shipped. All are totals over the final seeds' worlds (the last column counts them).
@@ -71,8 +77,11 @@ orders summed over the final seeds' baseline worlds.
 
 *Cleared:* cleared by the analyst, at once or once the checks passed; a held order then ships. *Declined* and *escalated:* declined after a failed check or an earlier outcome that settles the order; an order not yet shipped is voided, a shipped one's loss stands, and the account is blocked (an escalation also blocks linked accounts and adds senior review). *Cancelled:* held before shipment with no answer to the checks within {{ config:policy:actions.hold_max_hours }} hours, then cancelled and refunded. *Unchanged:* held after shipment with no answer, which changes nothing. The analyst reads only the evidence known at the decision, so a fraud order cleared here showed no adverse evidence or passed its checks, with nothing yet known that settled it ([methods](../docs/methods.md#procedure)).
 
-<!-- Phase B: add the recommended (or leading) challenger's matrix if it reviews, with
-the columns its final values need. -->
+The same for gradient boosting's queue. Its chosen point has a review route on some seeds only ([detection appendix](appendix-detection.md#tuned-thresholds)), so these counts come from those seeds' worlds:
+
+{{ table:replay.confusion where family=baseline policy=boosting decision_point=before_shipping sum orders by truth across final | truth "Decided before shipping" label, clear "Cleared" count, decline "Declined" count, escalate "Escalated" count, cancelled "Cancelled" count }}
+
+{{ table:replay.confusion where family=baseline policy=boosting decision_point=after_shipping sum orders by truth across final | truth "Decided after shipping" label, clear "Cleared" count, decline "Declined" count, escalate "Escalated" count, unchanged "Unchanged" count }}
 
 The same decisions by the order's latent pattern, a diagnostic the analyst never
 sees ("legitimate" is no pattern; a bust-out merchant's customers are genuine):
@@ -86,6 +95,16 @@ sees ("legitimate" is no pattern; a bust-out merchant's customers are genuine):
 The recommendation rule was applied again in each cell that differs from the primary cell in one respect, with the primary cell's thresholds: the acquisition surge and fraud-mix shift families, goods shipping in {{ protocol:sensitivity.fulfilment_lag.families.lag_half | num:1 }} and {{ protocol:sensitivity.fulfilment_lag.families.lag_double | num:1 }} times the drawn time from the test window on, the low and high allotments, the evening layout, and weaker verification (a takeover's contact check passing at {{ config:policy:reviewer.verification_weak.takeover.contact.passed | num:2 }} instead of {{ config:policy:reviewer.verification.takeover.contact.passed | num:2 }}, and takeover and third-party identity checks at {{ config:policy:reviewer.verification_weak.takeover.id_check.passed | num:2 }} instead of {{ config:policy:reviewer.verification.takeover.id_check.passed | num:2 }}). The outcome in each cell is the flip table in the [operating review](operating-review.md#when-the-answer-changes); the rule's figures for every policy in each cell follow.
 
 ![Each challenger's gain over the incumbent in each operating cell](figures/operating_cells.svg)
+
+The recommended policy, gradient boosting, in every cell:
+
+{{ table:evaluate.recommendation where policy=boosting | cell "Cell" label, rule_net_vs_incumbent_rules_per_1000_mean_cents "Mean gain" usd:signed, positive_seeds_count "Seeds positive" count, lost_legitimate_per_10k_mean_bps "Lost per 10k" num:1, lost_legitimate_per_10k_max_bps "Lost per 10k (highest seed)" num:1, held_legitimate_per_10k_mean_bps "Held per 10k" num:1, service_p1_in_time_mean_share "P1 in time" pct, service_p2_in_time_mean_share "P2 in time" pct, eligible "Eligible", fails "Misses" label }}
+
+Today's rules in every cell:
+
+{{ table:evaluate.recommendation where policy=incumbent_rules | cell "Cell" label, lost_legitimate_per_10k_mean_bps "Lost per 10k" num:1, held_legitimate_per_10k_mean_bps "Held per 10k" num:1, service_p1_in_time_mean_share "P1 in time" pct, service_p2_in_time_mean_share "P2 in time" pct, fails "Misses" label }}
+
+A criterion today's rules miss in a cell holds each challenger there to today's level instead, so a challenger can be eligible while missing the service target itself, as boosting does at the low allotment.
 
 <details>
 <summary>World families: the rule's figures in each</summary>
@@ -114,9 +133,6 @@ The recommendation rule was applied again in each cell that differs from the pri
 as in the operating review; lost and held customers per 10,000 legitimate orders,
 mean over seeds; entries pooled over seeds, and a priority with too few entries is not
 assessed, whatever its share in time. P0 entries are too few to assess in any cell.
-
-<!-- Phase B: check the P0 sentence against the final evaluate.recommendation
-(service_p0_assessed); drop it if any cell assesses P0. -->
 
 ## A reviewer who always knows the truth (a diagnostic)
 

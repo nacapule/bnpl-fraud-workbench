@@ -101,6 +101,18 @@ decline rates ([methods](../docs/methods.md#threshold-tuning)). The chosen point
 whether either sits at the edge of the searched grid, and every replayed point are in
 `results/tune.json` (`tune.chosen` and `tune.frontier`).
 
-<!-- Phase B: if any chosen point sits on the grid's edge (tune.chosen review_on_boundary
-or decline_on_boundary), show which policies and how often, with a where clause on
-that column, and say a wider grid might find another point. -->
+The gradient-boosting policy's chosen points, seed by seed (the canonical world, seed {{ protocol:seeds.canonical }}, is tuned too, for the case files; it is not one of the final seeds):
+
+{{ table:tune.chosen where policy=boosting | seed "Seed" id, review_threshold "Review threshold" num:3, decline_threshold "Decline threshold" num:3, review_on_boundary "Review at the grid's edge", decline_on_boundary "Decline at the grid's edge", feasible_points "Feasible points" count, points "Points replayed" count }}
+
+*Review threshold* and *decline threshold* are cut-points on boosting's own score, which ranks orders but is not a probability (the classifiers weight the two classes equally in fitting; only the expected-loss policy routes on calibrated probabilities); "n/a" means the chosen point has no review route on that seed, so the policy only approves or declines there. *At the grid's edge:* the threshold is the cut-point for the highest rate searched, so a wider grid might choose another point. *Points replayed:* the grid points the frozen screen replayed; *feasible points:* those whose offered review minutes fit the allotment.
+
+Every chosen point that sits at the edge of the grid, for any policy. Decline thresholds at the edge:
+
+{{ table:tune.chosen where decline_on_boundary=true | policy "Policy" label, seed "Seed" id, review_threshold "Review threshold" num:3, decline_threshold "Decline threshold" num:3, review_on_boundary "Review at the edge" }}
+
+Review thresholds at the edge:
+
+{{ table:tune.chosen where review_on_boundary=true | policy "Policy" label, seed "Seed" id, review_threshold "Review threshold" num:3, decline_threshold "Decline threshold" num:3, decline_on_boundary "Decline at the edge" }}
+
+Thresholds are on each policy's own score: the summed rule weights for today's rules and for the hybrid's decline threshold, and the classifier's own score for the depth-3 tree, logistic regression and gradient boosting, and for the hybrid's review threshold, which uses boosting's score. A decline threshold at the edge is the cut-point for the highest decline rate searched, the lowest score the grid would decline at.

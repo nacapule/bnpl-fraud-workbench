@@ -14,18 +14,11 @@ verification rates.
 
 ## Decision
 
-<!-- Phase B, from evaluate.flips (primary row) and evaluate.recommendation:
-- If the incumbent misses a criterion in the primary cell (evaluate.flips
-  incumbent_misses), open with that: today's rules miss the target on <criteria>;
-  the rule then holds challengers to today's level on that criterion.
-- The rule's outcome: recommend <policy> or keep the incumbent rules, in one sentence.
-- The deciding numbers through placeholders: the recommended (or best eligible)
-  challenger's mean gain and range (the seeds format on
-  evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.<policy>), never a
-  p-value for the selected policy.
-- The verdict line: holds in N of M cells (evaluate.recommendation.holds numerator,
-  denominator), pointing to "When the answer changes".
-- One line on what the memo cannot say (synthetic world; see Limits). -->
+**Replace today's rules with the gradient-boosting policy, after a pilot.** In the primary cell it is the eligible challenger with the highest mean gain in rule net contribution over today's rules: {{ evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.boosting | usd:signed }} per 1,000 orders on the mean, against a hurdle of ${{ protocol:reporting.recommendation_rule.hurdle.mean_improvement_usd_per_1000_orders }}, and {{ evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.boosting | signs }}. It works mainly by declining at checkout on its score ([operations appendix](appendix-operations.md#the-queue)), and it pays for the gain in lost customers: {{ evaluate.rule_lost_legitimate_per_10k.baseline.base.boosting | num:1 }} legitimate customers lost per 10,000 legitimate orders on the mean, inside the guardrail of {{ protocol:reporting.recommendation_rule.eligibility.lost_legitimate_per_10000.mean_at_most }}, against {{ evaluate.rule_lost_legitimate_per_10k.baseline.base.incumbent_rules | num:1 }} under today's rules. The cost of those customers, at the lifetime-value proxy, is already deducted from its gain.
+
+**Today's rules miss the service target.** At the P1 and P2 priorities they decide under the required share of queue entries within the service target (table below), so the rule holds challengers to today's level on both. Gradient boosting meets the P2 target and today's level at P1; it does not fix the P1 miss.
+
+**The answer holds in {{ evaluate.recommendation.holds | numerator }} of the {{ evaluate.recommendation.holds | denominator }} other operating cells.** In the acquisition surge of new customers, gradient boosting loses too many legitimate customers for the guardrail, and today's rules stay ([When the answer changes](#when-the-answer-changes)). The world is synthetic, so these are results about how the policies behave under stated assumptions, not estimates for a real book ([Limits](#limits-that-bear-on-this-decision)).
 
 ## The options and the rule that chooses
 
@@ -47,7 +40,7 @@ Every policy's thresholds were chosen on the validation window through the same
 replay, before the test window was seen ([methods](../docs/methods.md#threshold-tuning)).
 A rule written down before any final world existed then chooses among them:
 
-- **Eligibility.** Lost legitimate customers (below) within {{ protocol:reporting.recommendation_rule.eligibility.lost_legitimate_per_10000.mean_at_most }} per 10,000 legitimate orders on the mean over seeds and within {{ protocol:reporting.recommendation_rule.eligibility.lost_legitimate_per_10000.any_seed_at_most }} on every seed; legitimate orders held within {{ protocol:reporting.recommendation_rule.eligibility.held_legitimate_per_10000.mean_at_most }} and {{ protocol:reporting.recommendation_rule.eligibility.held_legitimate_per_10000.any_seed_at_most }}; and at each queue priority, a share of entries decided within the service target of {{ protocol:reporting.recommendation_rule.eligibility.service_share_at_least | num:2 }} or above (a priority with too few entries is reported, not assessed). Where today's rules miss a criterion, challengers are held only to today's level on it.
+- **Eligibility.** Lost legitimate customers (below) within {{ protocol:reporting.recommendation_rule.eligibility.lost_legitimate_per_10000.mean_at_most }} per 10,000 legitimate orders on the mean over seeds and within {{ protocol:reporting.recommendation_rule.eligibility.lost_legitimate_per_10000.any_seed_at_most }} on every seed; legitimate orders held within {{ protocol:reporting.recommendation_rule.eligibility.held_legitimate_per_10000.mean_at_most }} and {{ protocol:reporting.recommendation_rule.eligibility.held_legitimate_per_10000.any_seed_at_most }}; and at each queue priority, a minimum share of {{ protocol:reporting.recommendation_rule.eligibility.service_share_at_least | num:2 }} of the entries decided within the service target (a priority with too few entries is reported, not assessed). Where today's rules miss a criterion, challengers are held only to today's level on it.
 - **Hurdle.** A mean gain in rule net contribution over the incumbent of ${{ protocol:reporting.recommendation_rule.hurdle.mean_improvement_usd_per_1000_orders }} per 1,000 orders or above, an allowance for the cost of changing a policy, and a positive gain on nearly every seed (the count needed is in the table). This is a consistency bar across simulated worlds, not a significance test.
 - **Choice.** Among eligible challengers that clear the hurdle, the one with the highest mean gain. If none clears it, the incumbent stays.
 
@@ -81,11 +74,9 @@ minutes allotted to the queue during the window. *Decided after shipping:* revie
 whose first decision came after the goods had shipped, when a hold can no longer
 stop the shipment; mean per world.
 
-![Fraud loss against lost legitimate customers, each policy in the primary cell](figures/frontier.svg)
+Screening pays in this world. {{ claim:rules-cash-vs-approve-all }} Two challengers clear the bar. Gradient boosting has the highest mean gain among them. The hybrid policy keeps today's rules for declines and lets the boosting score pick which orders to review; it gains {{ evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.hybrid | usd:signed }} per 1,000 orders and loses {{ evaluate.rule_lost_legitimate_per_10k.baseline.base.hybrid | num:1 }} legitimate customers per 10,000, against today's {{ evaluate.rule_lost_legitimate_per_10k.baseline.base.incumbent_rules | num:1 }}. {{ claim:hybrid-loss-vs-rules }} {{ claim:hybrid-declined-vs-rules }} Logistic regression has the highest mean gain of all, {{ evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.logistic | usd:signed }} per 1,000 orders, but loses {{ evaluate.rule_lost_legitimate_per_10k.baseline.base.logistic | num:1 }} legitimate customers per 10,000, over the guardrail. {{ claim:logistic-declined-vs-rules }} The expected-loss policy uses {{ evaluate.review_minutes_used_share.baseline.base.expected_loss }} of the allotted review minutes and misses today's service level at both priorities.
 
-<!-- Phase B: two or three sentences on what these tables show, directions only through
-claims (report/claims.yaml), e.g. a policy's loss against the incumbent's (sign test)
-and its lost customers against the incumbent's, never for the selected policy. -->
+![Fraud loss against lost legitimate customers, each policy in the primary cell](figures/frontier.svg)
 
 ## Review capacity and staffing
 
@@ -111,9 +102,7 @@ is in the flip table below and in the [operations appendix](appendix-operations.
 
 ![Gain over the incumbent per 1,000 orders at each staffing level](figures/staffing.svg)
 
-<!-- Phase B: what the staffing comparison shows (does the answer depend on the
-allotment or the layout; is the incumbent's service miss a staffing problem), with
-directions only through claims or the rule's own outcome per column. -->
+Staffing does not change the answer: gradient boosting is recommended at the low and the high allotment and on the evening layout. It does change service. Today's rules meet both service targets only at the high allotment, where the miss that opens this memo disappears; at the low allotment every policy that reviews misses them. The evening layout decides {{ evaluate.decided_after_shipping.baseline.redesigned_layout.incumbent_rules | num:1 }} of today's reviews per world after the goods have shipped, against {{ evaluate.decided_after_shipping.baseline.base.incumbent_rules | num:1 }} on the current layout, but no analyst is on shift before noon while the service clock starts at {{ config:policy:sla.calendar.start }}, so P1 entries placed in the morning wait for the first shift ([operations appendix](appendix-operations.md#staffing)).
 
 ## What checkout review cannot reach
 
@@ -122,17 +111,15 @@ merchant's fraud: its customers are genuine, pass every check, and claim non-del
 only after the merchant has closed. Never-pay customers are first-party: they pass
 verification at customers' rates, because checks establish who is ordering and not
 what they intend, so review clears them unless an earlier outcome already settles the
-order; what stops them is a decline on the score at checkout. Credit loss is not
-fraud and appears for scale.
+order; what stops them is a decline on the score at checkout. Credit loss appears
+for scale.
 
 {{ table:replay.prevented_by_pattern where family=baseline policy=approve_all sum orders, approve_all_net_cents by basis | basis "Adjudicated label" label, orders "Orders" count, approve_all_net_cents "Net cash under approve-all" usd }}
 
 *Orders and net cash* are summed over the final seeds' baseline worlds for the test
-window's orders, by the label each order earned; a negative figure is a loss. What each
-policy prevented in each row is in the [detection appendix](appendix-detection.md).
+window's orders, by the label each order earned; a negative figure is a loss.
 
-<!-- Phase B: one or two sentences placing the unreachable share in context, from the
-table (no computed share is rendered; state the rows, not a percentage). -->
+Review settles few of the never-pay and bust-out orders: the analyst's checks pass first-party fraudsters at genuine customers' rates, so a reviewed never-pay order is usually cleared, and every reviewed bust-out order was ([operations appendix](appendix-operations.md#the-analysts-decisions-by-label)). What can stop them is a decline at checkout on a score; the [detection appendix](appendix-detection.md#what-each-policy-prevented-by-label) gives what each policy prevented, label by label. Declining a bust-out merchant's orders also turns away its genuine customers, who are counted here as fraud orders, not as lost legitimate customers.
 
 ## When the answer changes
 
@@ -144,22 +131,15 @@ The primary cell's outcome holds in {{ evaluate.recommendation.holds | numerator
 
 ![The rule's outcome in each operating cell](figures/operating_cells.svg)
 
-<!-- Phase B: name the cells where the answer changes and why (the flip table's reason),
-and what that means for the decision. -->
+The answer changes in one cell, the acquisition surge, and for one reason: gradient boosting's lost customers. {{ claim:surge-boosting-cash }} {{ claim:surge-boosting-declines }} It loses {{ evaluate.rule_lost_legitimate_per_10k.acquisition_surge.base.boosting | num:1 }} legitimate customers per 10,000 there on the mean, over the guardrail, and over the per-seed cap on some seeds. The hybrid policy is eligible there but gains {{ evaluate.rule_net_per_1000_orders.vs_incumbent_rules.acquisition_surge.base.hybrid | usd:signed }} per 1,000 orders, short of the hurdle, so today's rules stay. A growth campaign is therefore the condition under which this recommendation should be reviewed before it runs.
 
 ## Piloting it
 
-<!-- Phase B outline:
-- What to pilot: the rule's outcome (switch to <policy>, or keep the rules and fix
-  what they miss, e.g. P1 service if it is still missed).
-- Shadow first: score live orders with the candidate beside today's rules, without
-  acting, for a fixed period; compare its routing with the rules' on the same orders.
-- Then a randomized share of traffic, with the rule's guardrails as stop criteria
-  (lost and held legitimate customers per 10,000, service at each priority), checked
-  weekly, and loss measured once labels mature (the label horizon).
-- Check what the replay assumes and cannot test: attackers adapting to declines,
-  customers leaving after friction, real verification pass rates, the real allotment.
-- The flip table's cells that change the answer are the conditions to watch. -->
+1. **Shadow.** Score live orders with the gradient-boosting policy beside today's rules for a full label horizon ({{ protocol:label_horizon_days }} days), acting on neither, and compare their routing on the same orders: which orders each would decline, which it would review, and the lost-customer rate the candidate implies.
+2. **A randomized share of traffic.** Route a fixed share of checkouts through the candidate, with the rule's guardrails as stop criteria checked every week: lost legitimate customers within {{ protocol:reporting.recommendation_rule.eligibility.lost_legitimate_per_10000.mean_at_most }} per 10,000 legitimate orders, legitimate orders held within {{ protocol:reporting.recommendation_rule.eligibility.held_legitimate_per_10000.mean_at_most }}, and service at each priority held to today's level. Judge fraud loss only once the share's labels have matured.
+3. **Keep the queue's minutes.** Gradient boosting uses {{ evaluate.review_minutes_used_share.baseline.base.boosting }} of the allotted review minutes, against {{ evaluate.review_minutes_used_share.baseline.base.incumbent_rules }} under today's rules, and on some seeds reviews nothing ([operations appendix](appendix-operations.md#the-queue)). That is not capacity to cut: at the base allotment its P1 service still misses the target, and only the high allotment meets it ([operations appendix](appendix-operations.md#operating-sensitivities)). Keep the allotment through the pilot, and size it again on the queue the shadow period shows.
+4. **Pause it for a growth campaign.** The acquisition surge is the one cell where the recommendation fails its guardrail; run today's rules, or re-check the candidate's lost-customer rate, while a campaign brings new customers in.
+5. **Check what the replay cannot.** Attackers who adapt to declines, customers who leave after a decline or a hold, real verification pass rates and the real allotment are assumptions here; the pilot is where each meets data.
 
 ## Limits that bear on this decision
 
@@ -178,6 +158,10 @@ and what that means for the decision. -->
   the weak-verification cell tests one change to them.
 - **Costs and caps are assumptions:** the lifetime-value proxy, the analyst hour, the
   hurdle and the guardrails are stated risk appetite, not benchmarks.
+- **The searched grid has an edge.** On some seeds the model policies' chosen decline
+  threshold sits at the highest decline rate searched, so a wider grid might decline
+  still others; gradient boosting reviews nothing at all on some seeds
+  ([detection appendix](appendix-detection.md#tuned-thresholds)).
 
 The full list, and which sensitivity tests which assumption, is in the
 [methods](../docs/methods.md#limits).

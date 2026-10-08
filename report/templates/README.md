@@ -23,13 +23,9 @@ is the decision memo; the appendices hold the tables behind it.
 
 ## The answer
 
-<!-- Phase B, two or three sentences:
-- the rule's outcome in the primary cell (recommend <policy>, or keep the rules),
-  and that it holds in N of M cells (evaluate.recommendation.holds numerator and
-  denominator);
-- if today's rules miss a service target in the primary cell, say so;
-- what changes the answer (the flip table's cells), in one clause;
-- link the operating review. Directions only through claims. -->
+**Replace today's rules with the gradient-boosting policy, after a pilot.** In the primary cell (the baseline world at the base review allotment) the rule set before the final results existed recommends it: per 1,000 orders it gains {{ evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.boosting | usd:signed }} in rule net contribution over today's rules on the mean, against a hurdle of ${{ protocol:reporting.recommendation_rule.hurdle.mean_improvement_usd_per_1000_orders }}, and the gain is {{ evaluate.rule_net_per_1000_orders.vs_incumbent_rules.baseline.base.boosting | signs }}. It works mainly by declining at checkout on its score, and it loses {{ evaluate.rule_lost_legitimate_per_10k.baseline.base.boosting | num:1 }} legitimate customers per 10,000 legitimate orders, inside the guardrail of {{ protocol:reporting.recommendation_rule.eligibility.lost_legitimate_per_10000.mean_at_most }}, against {{ evaluate.rule_lost_legitimate_per_10k.baseline.base.incumbent_rules | num:1 }} under today's rules; the cost of those customers is already deducted from its gain. Today's rules miss the service target at the P1 and P2 priorities, and gradient boosting does not fix the P1 miss.
+
+The answer holds in {{ evaluate.recommendation.holds | numerator }} of the {{ evaluate.recommendation.holds | denominator }} other operating cells (each world family, staffing level, the evening shift layout, weaker verification and two other values of a lost customer). In an acquisition surge of new customers it loses too many legitimate customers for the guardrail, and today's rules stay. {{ claim:surge-boosting-declines }} The [operating review](reports/operating-review.md) gives the decision, the alternatives, the staffing comparison and a pilot plan.
 
 All results come from synthetic worlds, not from a real portfolio: they show how these policies behave under the stated assumptions, not real fraud rates. The table covers the primary cell (the baseline world at the base review allotment) on the test window, from {{ protocol:windows.test.start | date }} until {{ protocol:windows.test.end | date }}, each figure a mean over the final seeds, one simulated world per seed.
 
@@ -63,10 +59,7 @@ assumption.
 
 ## One investigation
 
-<!-- Phase B: one short example from a case file through its facts placeholders:
-the alert, the evidence at decision time, the competing explanation (including the
-benign one), what FP-2 supports, the simulated action, and what happened later;
-then the tested change. -->
+On {{ fact:account_takeover:alerts.account_takeover.decision.checkout_at | date }}, an account {{ fact:account_takeover:alerts.account_takeover.evidence.row.account_age_days | num:0 }} days old placed a {{ fact:account_takeover:alerts.account_takeover.evidence.row.amount_cents | usd:2 }} order from a device linked to it {{ fact:account_takeover:alerts.account_takeover.evidence.row.device_link_age_hours | num:2 }} hours earlier, to an address it had never shipped to, from an IP outside the customer's home country, with a failed card security code. Today's rules sent it to review on {{ fact:account_takeover:alerts.account_takeover.evidence.rules_held.0 }} (the card's issuing country and the IP's differ, and a card check failed). A benign explanation fits the same evidence: an established customer travelling with a new phone and shipping away from home, which the fraud policy says a check should settle (FP-2 §6.5(b)). On that evidence the policy supports a hold for an identity check, not a decline (§6.6(b), §5.2). The analyst held the order before it shipped; the identity check failed on {{ fact:account_takeover:alerts.account_takeover.later.review.checks.0.completed_at | date }}, and the order was declined and voided. On {{ fact:account_takeover:alerts.account_takeover.later.label.label_known_at | date }} it was labelled an account takeover. The [case file](cases/account-takeover.md) has the evidence table, the competing explanations, what happened later and a change to the rules tested in the replay.
 
 Five case files follow single alerts from the canonical world through the replay:
 the evidence at the decision, the recommendation the fraud policy supports, the
@@ -76,11 +69,11 @@ than measure it.
 
 | Case | What it shows |
 | --- | --- |
-| [Account takeover](cases/account-takeover.md) | <!-- Phase B: one line from the case's title --> |
-| [Never-pay or hardship](cases/never-pay-vs-hardship.md) | <!-- Phase B --> |
-| [A traveller cleared](cases/traveller.md) | <!-- Phase B --> |
-| [Card testing](cases/card-testing.md) | <!-- Phase B --> |
-| [A linked ring](cases/ring.md) | <!-- Phase B --> |
+| [Account takeover](cases/account-takeover.md) | An established account orders from a new device to a new address; held for an identity check that failed, declined before shipping. |
+| [Never-pay or hardship](cases/never-pay-vs-hardship.md) | Two new customers cleared after a passed identity check: one never paid after checkout, the other paid part of its plan and then defaulted. |
+| [A traveller cleared](cases/traveller.md) | A legitimate customer abroad, held for an identity check that passed, cleared and shipped. |
+| [Card testing](cases/card-testing.md) | A new account's order declined at checkout on R07 and R05. |
+| [A linked ring](cases/ring.md) | A ring member's order declined at checkout on R02 alone, with no account block. |
 
 ## How it works
 
