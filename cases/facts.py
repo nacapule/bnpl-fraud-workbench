@@ -275,9 +275,11 @@ def _order_tables(tables: Mapping[str, pd.DataFrame], order_id: int) -> dict[str
     return out
 
 
-def events(tables: Mapping[str, pd.DataFrame], order_id: int) -> list[dict[str, Any]]:
+def events(tables: Mapping[str, pd.DataFrame], order_id: int,
+           until: Any = None) -> list[dict[str, Any]]:
     """The order's dated observations in ``tables`` (the world's, or a policy's realized
-    ones): ``event``, ``detail``, ``occurred_at``, ``known_at``, ``amount_cents``."""
+    ones) known by ``until`` (all when None): ``event``, ``detail``, ``occurred_at``,
+    ``known_at``, ``amount_cents``."""
     t = _order_tables(tables, order_id)
     rows: list[dict[str, Any]] = []
 
@@ -301,15 +303,20 @@ def events(tables: Mapping[str, pd.DataFrame], order_id: int) -> list[dict[str, 
     add(t["dispute_resolutions"], "dispute resolved", lambda r: str(r["outcome"]))
     add(t["victim_reports"], "victim report")
     add(t["plan_writeoffs"], "written off", None, "outstanding_cents")
+    if until is not None:
+        rows = [r for r in rows if pd.Timestamp(r["known_at"]) <= pd.Timestamp(until)]
     rows.sort(key=lambda r: (pd.Timestamp(r["known_at"]), pd.Timestamp(r["occurred_at"]),
                              EVENT_RANK[r["event"]], str(r["detail"])))
     return rows
 
 
-def cash(ledger_events: pd.DataFrame, order_id: int) -> dict[str, Any]:
-    """The order's cash events in a ledger, their sum by kind and in total."""
-    frame = ledger_events.loc[ledger_events["order_id"] == order_id].sort_values(
-        ["occurred_at", "known_at", "event_id"], kind="stable")
+def cash(ledger_events: pd.DataFrame, order_id: int, until: Any = None) -> dict[str, Any]:
+    """The order's cash events in a ledger known by ``until`` (all when None), as the
+    results count cash, with their sum by kind and in total."""
+    frame = ledger_events.loc[ledger_events["order_id"] == order_id]
+    if until is not None:
+        frame = frame.loc[frame["known_at"] <= pd.Timestamp(until)]
+    frame = frame.sort_values(["occurred_at", "known_at", "event_id"], kind="stable")
     listed = [{"event_id": int(r["event_id"]), "kind": str(r["kind"]),
                "amount_cents": int(r["amount_cents"]), "cause": str(r["cause"]),
                "occurred_at": r["occurred_at"], "known_at": r["known_at"]}
@@ -450,8 +457,10 @@ def alert_facts(run: Run, pick: Pick, realized: Mapping[str, pd.DataFrame],
             raise RuleError(f"order {order}: the saved row gives "
                             f"{facts['reviewer']['standard_disposition']}, the replay recorded "
                             f"{decision['recorded_action']}")
-    incumbent = {"events": events(realized, order), **cash(realized["cash_events"], order)}
-    world_view = {"events": events(tables, order), **cash(tables["cash_events"], order)}
+    cut = run.protocol.observed_until
+    incumbent = {"events": events(realized, order, cut),
+                 **cash(realized["cash_events"], order, cut)}
+    world_view = {"events": events(tables, order, cut), **cash(tables["cash_events"], order, cut)}
     approve_all = {"differs": (incumbent["events"] != world_view["events"]
                                or incumbent["cash"] != world_view["cash"]), **world_view}
     user = int(row["user_id"])

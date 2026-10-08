@@ -287,6 +287,20 @@ def test_amounts_reconcile_with_the_ledger(which, request, tables):
                 if c["kind"] == "customer_payment"][0] == down
 
 
+def test_cash_counts_what_is_known_by_the_end_of_observation():
+    ledger = pd.DataFrame({
+        "event_id": [3, 1, 2, 4], "order_id": [9, 9, 9, 8], "kind": [
+            "recovery", "customer_payment", "merchant_settlement", "customer_payment"],
+        "amount_cents": [500, 2_500, -9_500, 100], "cause": "natural",
+        "occurred_at": pd.to_datetime(["2025-12-20", "2025-06-01", "2025-06-02", "2025-06-01"]),
+        "known_at": pd.to_datetime(["2026-01-05", "2025-06-01", "2025-06-02", "2025-06-01"])})
+    view = facts_module.cash(ledger, 9, pd.Timestamp("2025-12-29 23:59:59"))
+    assert [c["event_id"] for c in view["cash"]] == [1, 2]
+    assert view["net_cents"] == -7_000
+    assert view["cash_by_kind"] == {"customer_payment": 2_500, "merchant_settlement": -9_500}
+    assert facts_module.cash(ledger, 9)["net_cents"] == -6_500
+
+
 def test_what_the_incumbent_did_shows_in_its_cash(declined_facts, reviewed_facts):
     # declined at checkout: no order, no cash; the world's loss is what was prevented
     takeover = alert(declined_facts, "account_takeover")["later"]
